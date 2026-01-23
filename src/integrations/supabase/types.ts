@@ -356,6 +356,60 @@ export type Database = {
         }
         Relationships: []
       }
+      tax_calculations: {
+        Row: {
+          created_at: string
+          has_simulated_data: boolean | null
+          id: string
+          input_data: Json
+          items_count: number | null
+          municipio_codigo: number | null
+          municipio_nome: string | null
+          result_data: Json | null
+          total_cbs: number | null
+          total_geral: number | null
+          total_ibs_mun: number | null
+          total_ibs_uf: number | null
+          total_is: number | null
+          uf: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          has_simulated_data?: boolean | null
+          id?: string
+          input_data: Json
+          items_count?: number | null
+          municipio_codigo?: number | null
+          municipio_nome?: string | null
+          result_data?: Json | null
+          total_cbs?: number | null
+          total_geral?: number | null
+          total_ibs_mun?: number | null
+          total_ibs_uf?: number | null
+          total_is?: number | null
+          uf?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          has_simulated_data?: boolean | null
+          id?: string
+          input_data?: Json
+          items_count?: number | null
+          municipio_codigo?: number | null
+          municipio_nome?: string | null
+          result_data?: Json | null
+          total_cbs?: number | null
+          total_geral?: number | null
+          total_ibs_mun?: number | null
+          total_ibs_uf?: number | null
+          total_is?: number | null
+          uf?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       tributbot_messages: {
         Row: {
           created_at: string
