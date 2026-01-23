@@ -4,10 +4,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calculator, Clock, Search, Filter, ArrowRight, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Calculator, Clock, Search, Filter, ArrowRight, Trash2, Eye, FileText, Scale, DollarSign, RefreshCw } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { format, formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { toast } from "@/hooks/use-toast";
@@ -20,22 +21,38 @@ interface Simulation {
   created_at: string;
 }
 
+const PLAN_CAN_PDF = ['PROFISSIONAL', 'PREMIUM'];
+
 const Historico = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [simulations, setSimulations] = useState<Simulation[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCalculator, setFilterCalculator] = useState("all");
+  const [filterPeriod, setFilterPeriod] = useState("30d");
+  const [selectedSimulation, setSelectedSimulation] = useState<Simulation | null>(null);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+
+  const canGeneratePDF = PLAN_CAN_PDF.includes(profile?.plano || 'FREE');
 
   useEffect(() => {
     const fetchSimulations = async () => {
       if (!user) return;
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('simulations')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
+
+      // Apply period filter
+      if (filterPeriod !== 'all') {
+        const days = { '7d': 7, '30d': 30, '90d': 90 }[filterPeriod] || 30;
+        const since = subDays(new Date(), days);
+        query = query.gte('created_at', since.toISOString());
+      }
+
+      const { data, error } = await query;
       
       if (error) {
         console.error('Error fetching simulations:', error);
@@ -47,7 +64,7 @@ const Historico = () => {
     };
 
     fetchSimulations();
-  }, [user]);
+  }, [user, filterPeriod]);
 
   const handleDelete = async (id: string) => {
     const { error } = await supabase
@@ -68,6 +85,11 @@ const Historico = () => {
         description: "A simulação foi removida do histórico.",
       });
     }
+  };
+
+  const handleViewDetails = (sim: Simulation) => {
+    setSelectedSimulation(sim);
+    setIsDetailDialogOpen(true);
   };
 
   const formatCurrency = (value: number) => {
@@ -96,6 +118,11 @@ const Historico = () => {
     return labels[slug] || slug;
   };
 
+  const getCalculatorIcon = (slug: string) => {
+    if (slug === 'split-payment') return <DollarSign className="w-5 h-5 text-success" />;
+    return <Scale className="w-5 h-5 text-primary" />;
+  };
+
   const getSimulationSummary = (sim: Simulation) => {
     if (sim.calculator_slug === 'split-payment') {
       const outputs = sim.outputs as { mensal_min?: number; mensal_max?: number };
@@ -113,6 +140,20 @@ const Historico = () => {
     return 'Ver detalhes';
   };
 
+  const getInputSummary = (sim: Simulation) => {
+    const inputs = sim.inputs || {};
+    const faturamento = inputs.faturamento_mensal || inputs.faturamento;
+    const setor = inputs.setor;
+    const percentualPJ = inputs.percentual_vendas_pj;
+
+    const parts = [];
+    if (faturamento) parts.push(`Faturamento: ${formatCurrency(faturamento)}/mês`);
+    if (setor) parts.push(`Setor: ${setor.charAt(0).toUpperCase() + setor.slice(1)}`);
+    if (percentualPJ) parts.push(`${Math.round(percentualPJ * 100)}% vendas PJ`);
+
+    return parts.join(' · ') || 'Sem dados';
+  };
+
   const filteredSimulations = simulations.filter((sim) => {
     const matchesSearch = getCalculatorLabel(sim.calculator_slug)
       .toLowerCase()
@@ -122,6 +163,22 @@ const Historico = () => {
   });
 
   const uniqueCalculators = [...new Set(simulations.map((sim) => sim.calculator_slug))];
+
+  const handleDownloadPDF = (sim: Simulation) => {
+    if (!canGeneratePDF) {
+      toast({
+        title: "Recurso Premium",
+        description: "Faça upgrade para o plano Profissional ou Premium para baixar PDFs.",
+        variant: "destructive",
+      });
+      return;
+    }
+    // TODO: Implement PDF generation
+    toast({
+      title: "Em breve!",
+      description: "A geração de PDF estará disponível em breve.",
+    });
+  };
 
   return (
     <DashboardLayout title="Histórico de Simulações">
@@ -138,33 +195,46 @@ const Historico = () => {
         </div>
 
         {/* Filters */}
-        {simulations.length > 0 && (
-          <div className="flex flex-col sm:flex-row gap-3 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar simulações..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+        <Card className="mb-6">
+          <CardContent className="pt-4">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar simulações..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={filterCalculator} onValueChange={setFilterCalculator}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <Filter className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Calculadora" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  {uniqueCalculators.map((slug) => (
+                    <SelectItem key={slug} value={slug}>
+                      {getCalculatorLabel(slug)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={filterPeriod} onValueChange={setFilterPeriod}>
+                <SelectTrigger className="w-full sm:w-40">
+                  <SelectValue placeholder="Período" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7d">Últimos 7 dias</SelectItem>
+                  <SelectItem value="30d">Últimos 30 dias</SelectItem>
+                  <SelectItem value="90d">Últimos 90 dias</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Select value={filterCalculator} onValueChange={setFilterCalculator}>
-              <SelectTrigger className="w-full sm:w-48">
-                <Filter className="w-4 h-4 mr-2" />
-                <SelectValue placeholder="Filtrar" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
-                {uniqueCalculators.map((slug) => (
-                  <SelectItem key={slug} value={slug}>
-                    {getCalculatorLabel(slug)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+          </CardContent>
+        </Card>
 
         {/* Content */}
         {loading ? (
@@ -206,53 +276,161 @@ const Historico = () => {
             </CardContent>
           </Card>
         ) : (
-          <Card>
-            <CardContent className="p-0">
-              <div className="divide-y divide-border">
-                {filteredSimulations.map((sim) => (
-                  <div 
-                    key={sim.id} 
-                    className="flex items-start sm:items-center justify-between p-4 hover:bg-muted/50 transition-colors gap-4"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">
-                        {getCalculatorLabel(sim.calculator_slug)}
-                      </p>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {getSimulationSummary(sim)}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {formatDistanceToNow(new Date(sim.created_at), { addSuffix: true, locale: ptBR })} · {format(new Date(sim.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                      </p>
+          <div className="space-y-4">
+            {filteredSimulations.map((sim) => (
+              <Card key={sim.id} className="hover:border-primary/50 transition-colors">
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      {getCalculatorIcon(sim.calculator_slug)}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link to={`/simulacao/${sim.id}`}>
-                          Ver
-                        </Link>
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => handleDelete(sim.id)}
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <h3 className="font-semibold text-foreground">
+                            {getCalculatorLabel(sim.calculator_slug)}
+                          </h3>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {format(new Date(sim.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                          </p>
+                        </div>
+                        <p className="text-xs text-muted-foreground whitespace-nowrap">
+                          {formatDistanceToNow(new Date(sim.created_at), { addSuffix: true, locale: ptBR })}
+                        </p>
+                      </div>
+                      
+                      <div className="mt-3 space-y-1">
+                        <p className="text-sm text-muted-foreground">
+                          {getInputSummary(sim)}
+                        </p>
+                        <p className="text-sm font-medium text-foreground">
+                          {getSimulationSummary(sim)}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2 mt-4">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleViewDetails(sim)}
+                          className="gap-1.5"
+                        >
+                          <Eye className="w-4 h-4" />
+                          Ver detalhes
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleDownloadPDF(sim)}
+                          className={`gap-1.5 ${!canGeneratePDF ? 'opacity-50' : ''}`}
+                          disabled={!canGeneratePDF}
+                        >
+                          <FileText className="w-4 h-4" />
+                          PDF
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleDelete(sim.id)}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-1.5"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Excluir
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         )}
 
         {/* Stats */}
         {simulations.length > 0 && (
           <p className="text-sm text-muted-foreground text-center mt-6">
-            {filteredSimulations.length} de {simulations.length} simulações
+            Mostrando {filteredSimulations.length} de {simulations.length} simulações
           </p>
         )}
+
+        {/* Detail Dialog */}
+        <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                {selectedSimulation && getCalculatorIcon(selectedSimulation.calculator_slug)}
+                {selectedSimulation && getCalculatorLabel(selectedSimulation.calculator_slug)}
+              </DialogTitle>
+              <DialogDescription>
+                {selectedSimulation && format(new Date(selectedSimulation.created_at), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedSimulation && (
+              <div className="space-y-6">
+                {/* Inputs */}
+                <div>
+                  <h4 className="font-medium text-foreground mb-3">Dados da Simulação</h4>
+                  <div className="bg-muted rounded-lg p-4 space-y-2">
+                    {Object.entries(selectedSimulation.inputs || {}).map(([key, value]) => (
+                      <div key={key} className="flex justify-between text-sm">
+                        <span className="text-muted-foreground capitalize">
+                          {key.replace(/_/g, ' ')}:
+                        </span>
+                        <span className="text-foreground font-medium">
+                          {typeof value === 'number' 
+                            ? key.includes('percentual') 
+                              ? `${Math.round((value as number) * 100)}%`
+                              : formatCurrency(value as number)
+                            : String(value)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Outputs */}
+                <div>
+                  <h4 className="font-medium text-foreground mb-3">Resultado</h4>
+                  <div className="bg-primary/10 border border-primary/30 rounded-lg p-4 space-y-2">
+                    {Object.entries(selectedSimulation.outputs || {}).map(([key, value]) => (
+                      <div key={key} className="flex justify-between text-sm">
+                        <span className="text-muted-foreground capitalize">
+                          {key.replace(/_/g, ' ')}:
+                        </span>
+                        <span className="text-foreground font-medium">
+                          {typeof value === 'number' 
+                            ? key.includes('percentual') 
+                              ? `${value.toFixed(1)}%`
+                              : formatCurrency(value as number)
+                            : String(value)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button 
+                variant="outline" 
+                onClick={() => handleDownloadPDF(selectedSimulation!)}
+                disabled={!canGeneratePDF}
+                className="gap-2"
+              >
+                <FileText className="w-4 h-4" />
+                Baixar PDF
+              </Button>
+              <Button asChild className="gap-2">
+                <Link to={`/calculadora/${selectedSimulation?.calculator_slug}`}>
+                  <RefreshCw className="w-4 h-4" />
+                  Refazer simulação
+                </Link>
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

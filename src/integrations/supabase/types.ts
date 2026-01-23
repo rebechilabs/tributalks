@@ -47,6 +47,51 @@ export type Database = {
         }
         Relationships: []
       }
+      consultorias: {
+        Row: {
+          calendly_event_id: string | null
+          calendly_event_uri: string | null
+          created_at: string | null
+          data_agendada: string | null
+          duracao_minutos: number | null
+          especialista: string | null
+          id: string
+          notas: string | null
+          status: string | null
+          tema: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          calendly_event_id?: string | null
+          calendly_event_uri?: string | null
+          created_at?: string | null
+          data_agendada?: string | null
+          duracao_minutos?: number | null
+          especialista?: string | null
+          id?: string
+          notas?: string | null
+          status?: string | null
+          tema?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          calendly_event_id?: string | null
+          calendly_event_uri?: string | null
+          created_at?: string | null
+          data_agendada?: string | null
+          duracao_minutos?: number | null
+          especialista?: string | null
+          id?: string
+          notas?: string | null
+          status?: string | null
+          tema?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           cnae: string | null
@@ -57,12 +102,18 @@ export type Database = {
           faturamento_mensal: number | null
           id: string
           nome: string | null
+          notif_consultorias: boolean | null
+          notif_legislacao: boolean | null
+          notif_novidades: boolean | null
           onboarding_complete: boolean | null
           percentual_vendas_pj: number | null
           plano: string | null
           regime: string | null
           setor: string | null
           stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_period_end: string | null
+          subscription_status: string | null
           updated_at: string | null
           user_id: string
         }
@@ -75,12 +126,18 @@ export type Database = {
           faturamento_mensal?: number | null
           id?: string
           nome?: string | null
+          notif_consultorias?: boolean | null
+          notif_legislacao?: boolean | null
+          notif_novidades?: boolean | null
           onboarding_complete?: boolean | null
           percentual_vendas_pj?: number | null
           plano?: string | null
           regime?: string | null
           setor?: string | null
           stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_period_end?: string | null
+          subscription_status?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -93,12 +150,18 @@ export type Database = {
           faturamento_mensal?: number | null
           id?: string
           nome?: string | null
+          notif_consultorias?: boolean | null
+          notif_legislacao?: boolean | null
+          notif_novidades?: boolean | null
           onboarding_complete?: boolean | null
           percentual_vendas_pj?: number | null
           plano?: string | null
           regime?: string | null
           setor?: string | null
           stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_period_end?: string | null
+          subscription_status?: string | null
           updated_at?: string | null
           user_id?: string
         }
@@ -128,6 +191,39 @@ export type Database = {
           inputs?: Json
           outputs?: Json
           user_id?: string
+        }
+        Relationships: []
+      }
+      subscription_events: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          payload: Json | null
+          processed: boolean | null
+          processed_at: string | null
+          stripe_event_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id?: string
+          payload?: Json | null
+          processed?: boolean | null
+          processed_at?: string | null
+          stripe_event_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          processed?: boolean | null
+          processed_at?: string | null
+          stripe_event_id?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
