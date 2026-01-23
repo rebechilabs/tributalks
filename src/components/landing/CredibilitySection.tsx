@@ -18,8 +18,8 @@ const stats = [
   },
   {
     icon: Building,
-    value: "+30 empresas",
-    label: "em 14 estados",
+    value: "+1.500",
+    label: "empresas atendidas",
   },
 ];
 
