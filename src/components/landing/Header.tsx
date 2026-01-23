@@ -1,34 +1,48 @@
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { CONFIG } from "@/config/site";
 import logoTributech from "@/assets/logo-tributech.png";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 glass-effect">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? "bg-background/80 backdrop-blur-md border-b border-border"
+          : "bg-transparent"
+      }`}
+    >
+      <div className="container mx-auto px-4 md:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <img src={logoTributech} alt="TribuTech" className="h-10 w-auto" />
+            <img src={logoTributech} alt="TribuTech" className="h-10 md:h-12 w-auto" />
           </Link>
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
             <Link to="/login">
-              <Button variant="outline" className="border-primary/50 text-foreground hover:bg-primary/10">
+              <Button variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10">
                 Entrar
               </Button>
             </Link>
-            <a href={CONFIG.STRIPE_PAYMENT_LINK} target="_blank" rel="noopener noreferrer">
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-                Assinar
+            <Link to="/cadastro">
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
+                Começar grátis
               </Button>
-            </a>
+            </Link>
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -47,17 +61,17 @@ export function Header() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-border animate-fade-in">
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-3">
               <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="outline" className="w-full border-primary/50 text-foreground hover:bg-primary/10">
+                <Button variant="ghost" className="w-full text-primary hover:text-primary hover:bg-primary/10">
                   Entrar
                 </Button>
               </Link>
-              <a href={CONFIG.STRIPE_PAYMENT_LINK} target="_blank" rel="noopener noreferrer">
-                <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                  Assinar
+              <Link to="/cadastro" onClick={() => setMobileMenuOpen(false)}>
+                <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
+                  Começar grátis
                 </Button>
-              </a>
+              </Link>
             </div>
           </div>
         )}
