@@ -14,7 +14,123 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      calculators: {
+        Row: {
+          created_at: string | null
+          descricao: string | null
+          icone: string | null
+          id: string
+          nome: string
+          ordem: number | null
+          slug: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          nome: string
+          ordem?: number | null
+          slug: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          nome?: string
+          ordem?: number | null
+          slug?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          cnae: string | null
+          created_at: string | null
+          email: string | null
+          empresa: string | null
+          estado: string | null
+          faturamento_mensal: number | null
+          id: string
+          nome: string | null
+          onboarding_complete: boolean | null
+          percentual_vendas_pj: number | null
+          plano: string | null
+          regime: string | null
+          setor: string | null
+          stripe_customer_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cnae?: string | null
+          created_at?: string | null
+          email?: string | null
+          empresa?: string | null
+          estado?: string | null
+          faturamento_mensal?: number | null
+          id?: string
+          nome?: string | null
+          onboarding_complete?: boolean | null
+          percentual_vendas_pj?: number | null
+          plano?: string | null
+          regime?: string | null
+          setor?: string | null
+          stripe_customer_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cnae?: string | null
+          created_at?: string | null
+          email?: string | null
+          empresa?: string | null
+          estado?: string | null
+          faturamento_mensal?: number | null
+          id?: string
+          nome?: string | null
+          onboarding_complete?: boolean | null
+          percentual_vendas_pj?: number | null
+          plano?: string | null
+          regime?: string | null
+          setor?: string | null
+          stripe_customer_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      simulations: {
+        Row: {
+          calculator_slug: string
+          created_at: string | null
+          id: string
+          inputs: Json
+          outputs: Json
+          user_id: string
+        }
+        Insert: {
+          calculator_slug: string
+          created_at?: string | null
+          id?: string
+          inputs: Json
+          outputs: Json
+          user_id: string
+        }
+        Update: {
+          calculator_slug?: string
+          created_at?: string | null
+          id?: string
+          inputs?: Json
+          outputs?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

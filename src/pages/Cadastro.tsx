@@ -2,9 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Calculator, ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Calculator, ArrowLeft, Loader2 } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "@/hooks/use-toast";
 
 const Cadastro = () => {
   const [formData, setFormData] = useState({
@@ -14,11 +16,51 @@ const Cadastro = () => {
     confirmarSenha: "",
     aceitaTermos: false,
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const { signUp } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implementar cadastro com Supabase
-    console.log("Cadastro:", formData);
+    
+    if (formData.senha !== formData.confirmarSenha) {
+      toast({
+        title: "Senhas não conferem",
+        description: "Verifique se as senhas digitadas são iguais.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (formData.senha.length < 6) {
+      toast({
+        title: "Senha muito curta",
+        description: "A senha deve ter pelo menos 6 caracteres.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      await signUp(formData.email, formData.senha, formData.nome);
+      toast({
+        title: "Conta criada com sucesso!",
+        description: "Bem-vindo ao TribuTech. Vamos configurar seu perfil.",
+      });
+      navigate('/onboarding');
+    } catch (error: any) {
+      toast({
+        title: "Erro no cadastro",
+        description: error.message === 'User already registered' 
+          ? 'Este e-mail já está cadastrado' 
+          : error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleChange = (field: string, value: string | boolean) => {
@@ -66,6 +108,7 @@ const Cadastro = () => {
                 value={formData.nome}
                 onChange={(e) => handleChange("nome", e.target.value)}
                 required
+                disabled={isLoading}
                 className="h-12"
               />
             </div>
@@ -79,6 +122,7 @@ const Cadastro = () => {
                 value={formData.email}
                 onChange={(e) => handleChange("email", e.target.value)}
                 required
+                disabled={isLoading}
                 className="h-12"
               />
             </div>
@@ -92,6 +136,7 @@ const Cadastro = () => {
                 value={formData.senha}
                 onChange={(e) => handleChange("senha", e.target.value)}
                 required
+                disabled={isLoading}
                 className="h-12"
               />
             </div>
@@ -105,6 +150,7 @@ const Cadastro = () => {
                 value={formData.confirmarSenha}
                 onChange={(e) => handleChange("confirmarSenha", e.target.value)}
                 required
+                disabled={isLoading}
                 className="h-12"
               />
             </div>
@@ -114,6 +160,7 @@ const Cadastro = () => {
                 id="termos"
                 checked={formData.aceitaTermos}
                 onCheckedChange={(checked) => handleChange("aceitaTermos", checked as boolean)}
+                disabled={isLoading}
               />
               <Label htmlFor="termos" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
                 Li e aceito os{" "}
@@ -131,9 +178,16 @@ const Cadastro = () => {
               type="submit" 
               size="lg" 
               className="w-full"
-              disabled={!formData.aceitaTermos}
+              disabled={!formData.aceitaTermos || isLoading}
             >
-              Criar conta
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Criando conta...
+                </>
+              ) : (
+                'Criar conta'
+              )}
             </Button>
           </form>
 

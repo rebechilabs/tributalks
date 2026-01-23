@@ -1,18 +1,42 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calculator, ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Calculator, ArrowLeft, Loader2 } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "@/hooks/use-toast";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { signIn, profile } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implementar autenticação com Supabase
-    console.log("Login:", { email, password });
+    setIsLoading(true);
+
+    try {
+      await signIn(email, password);
+      toast({
+        title: "Login realizado!",
+        description: "Bem-vindo de volta ao TribuTech.",
+      });
+      // Navigation will be handled by auth state change
+      navigate(profile?.onboarding_complete ? '/dashboard' : '/onboarding');
+    } catch (error: any) {
+      toast({
+        title: "Erro no login",
+        description: error.message === 'Invalid login credentials' 
+          ? 'E-mail ou senha incorretos' 
+          : error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -56,6 +80,7 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={isLoading}
                 className="h-12"
               />
             </div>
@@ -69,12 +94,20 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={isLoading}
                 className="h-12"
               />
             </div>
 
-            <Button type="submit" size="lg" className="w-full">
-              Entrar
+            <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Entrando...
+                </>
+              ) : (
+                'Entrar'
+              )}
             </Button>
           </form>
 
