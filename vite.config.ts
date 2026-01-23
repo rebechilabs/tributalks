@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => ({
         name: "TribuTech - Inteligência Tributária",
         short_name: "TribuTech",
         description: "Calculadoras, IA e especialistas que mostram o impacto real das decisões tributárias no seu caixa.",
-        theme_color: "#E5A836",
+        theme_color: "#0A0A0A",
         background_color: "#0a0a0a",
         display: "standalone",
         orientation: "portrait",
