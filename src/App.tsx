@@ -23,6 +23,7 @@ import TribuBot from "./pages/TribuBot";
 import Comunidade from "./pages/Comunidade";
 import Consultorias from "./pages/Consultorias";
 import Configuracoes from "./pages/Configuracoes";
+import Noticias from "./pages/Noticias";
 
 // Calculadoras
 import SplitPayment from "./pages/calculadora/SplitPayment";
@@ -63,6 +64,14 @@ const App = () => (
               } 
             />
             <Route 
+              path="/noticias" 
+              element={
+                <ProtectedRoute>
+                  <Noticias />
+                </ProtectedRoute>
+              } 
+            />
+            <Route
               path="/perfil" 
               element={
                 <ProtectedRoute>

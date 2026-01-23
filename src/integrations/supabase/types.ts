@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      alertas_configuracao: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          id: string
+          regimes_filtro: string[] | null
+          relevancia_minima: string | null
+          setores_filtro: string[] | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          id?: string
+          regimes_filtro?: string[] | null
+          relevancia_minima?: string | null
+          setores_filtro?: string[] | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          id?: string
+          regimes_filtro?: string[] | null
+          relevancia_minima?: string | null
+          setores_filtro?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       calculators: {
         Row: {
           created_at: string | null
@@ -89,6 +122,66 @@ export type Database = {
           tema?: string | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      noticias_tributarias: {
+        Row: {
+          acao_recomendada: string | null
+          categoria: string | null
+          conteudo_original: string | null
+          created_at: string | null
+          data_publicacao: string | null
+          fonte: string
+          fonte_url: string | null
+          id: string
+          o_que_muda: string | null
+          publicado: boolean | null
+          quem_e_afetado: string | null
+          regimes_afetados: string[] | null
+          relevancia: string | null
+          resumo_executivo: string | null
+          setores_afetados: string[] | null
+          titulo_original: string
+          tributos_relacionados: string[] | null
+        }
+        Insert: {
+          acao_recomendada?: string | null
+          categoria?: string | null
+          conteudo_original?: string | null
+          created_at?: string | null
+          data_publicacao?: string | null
+          fonte: string
+          fonte_url?: string | null
+          id?: string
+          o_que_muda?: string | null
+          publicado?: boolean | null
+          quem_e_afetado?: string | null
+          regimes_afetados?: string[] | null
+          relevancia?: string | null
+          resumo_executivo?: string | null
+          setores_afetados?: string[] | null
+          titulo_original: string
+          tributos_relacionados?: string[] | null
+        }
+        Update: {
+          acao_recomendada?: string | null
+          categoria?: string | null
+          conteudo_original?: string | null
+          created_at?: string | null
+          data_publicacao?: string | null
+          fonte?: string
+          fonte_url?: string | null
+          id?: string
+          o_que_muda?: string | null
+          publicado?: boolean | null
+          quem_e_afetado?: string | null
+          regimes_afetados?: string[] | null
+          relevancia?: string | null
+          resumo_executivo?: string | null
+          setores_afetados?: string[] | null
+          titulo_original?: string
+          tributos_relacionados?: string[] | null
         }
         Relationships: []
       }
