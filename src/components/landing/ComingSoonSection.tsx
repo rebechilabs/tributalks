@@ -1,6 +1,12 @@
 import { BarChart3, BookOpen, TrendingUp, Bell, Activity } from "lucide-react";
 
+import { Calculator } from "lucide-react";
+
 const upcomingFeatures = [
+  {
+    icon: Calculator,
+    label: "Todas as calculadoras",
+  },
   {
     icon: BarChart3,
     label: "Reforma Tributária",
@@ -32,7 +38,7 @@ export function ComingSoonSection() {
             E tem mais chegando...
           </h2>
           <p className="text-muted-foreground">
-            Sua assinatura inclui todas as atualizações:
+            Sua assinatura profissional em diante inclui todas as atualizações:
           </p>
         </div>
 
