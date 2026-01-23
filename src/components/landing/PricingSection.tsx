@@ -77,8 +77,8 @@ const plans: Plan[] = [
   },
   {
     name: "PREMIUM",
-    priceMonthly: 500,
-    priceAnnual: 5000,
+    priceMonthly: 1997,
+    priceAnnual: 19970,
     features: [
       { text: "Tudo do Profissional", included: true },
       { text: "Filtros e Alertas de Notícias", included: true },
@@ -88,7 +88,7 @@ const plans: Plan[] = [
     ctaText: "Assinar",
     linkMonthly: CONFIG.STRIPE_PAYMENT_LINKS.PREMIUM_MENSAL,
     linkAnnual: CONFIG.STRIPE_PAYMENT_LINKS.PREMIUM_ANUAL,
-    specialNote: "2x 30min = 1h consultoria\nValor de mercado: ~R$1.000\nVocê paga: R$500 total",
+    specialNote: "2x 30min = 1h consultoria\nValor de mercado: ~R$1.000\nVocê paga: R$1.997 total",
   },
 ];
 
