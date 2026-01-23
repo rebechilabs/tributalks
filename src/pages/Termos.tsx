@@ -33,7 +33,7 @@ export default function Termos() {
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-4">1. DEFINIÇÕES</h2>
-            <p><strong>1.1.</strong> "TribuTech" ou "Plataforma": refere-se ao site, aplicativo e serviços disponibilizados pela Rebechi & Silva Advogados Associados, inscrita no CNPJ sob nº 47.706.144/0001-21, com sede na Avenida Marquês de São Vicente, 1619 - conjunto 2712 - Barra Funda - São Paulo - SP.</p>
+            <p><strong>1.1.</strong> "TribuTech" ou "Plataforma": refere-se ao site, aplicativo e serviços disponibilizados pela Rebechi & Silva Produções, inscrita no CNPJ sob nº 47.706.144/0001-21, com sede na Avenida Marquês de São Vicente, 1619 - conjunto 2712 - Barra Funda - São Paulo - SP.</p>
             <p><strong>1.2.</strong> "Usuário": qualquer pessoa física ou jurídica que acessa ou utiliza a Plataforma.</p>
             <p><strong>1.3.</strong> "Conteúdo": todas as informações, textos, gráficos, simulações, cálculos, notícias e materiais disponibilizados na Plataforma.</p>
             <p><strong>1.4.</strong> "Serviços": as funcionalidades oferecidas pela Plataforma, incluindo calculadoras tributárias, TribuBot (assistente de IA), notícias tributárias, comunidade e consultorias.</p>
@@ -86,7 +86,7 @@ export default function Termos() {
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-4">6. CONSULTORIAS (PLANO PREMIUM)</h2>
-            <p><strong>6.1.</strong> O plano Premium inclui 2 (duas) sessões de consultoria de 30 minutos por mês com especialistas da Rebechi & Silva Advogados.</p>
+            <p><strong>6.1.</strong> O plano Premium inclui 2 (duas) sessões de consultoria de 30 minutos por mês com especialistas da Rebechi & Silva Produções.</p>
             <p><strong>6.2.</strong> As consultorias são de natureza orientativa e não configuram relação de prestação de serviços advocatícios ou contábeis continuados.</p>
             <p><strong>6.3.</strong> As sessões não utilizadas no mês NÃO são cumulativas para o mês seguinte.</p>
             <p><strong>6.4.</strong> O agendamento está sujeito à disponibilidade de horários dos especialistas.</p>
@@ -180,7 +180,7 @@ export default function Termos() {
             <h2 className="text-xl font-semibold text-foreground mb-4">14. CONTATO</h2>
             <p>Para dúvidas, sugestões ou reclamações sobre estes Termos:</p>
             <div className="bg-card border border-border rounded-lg p-4 mt-4">
-              <p className="font-medium text-foreground">TribuTech — Uma iniciativa Rebechi & Silva Advogados Associados</p>
+              <p className="font-medium text-foreground">TribuTech — Uma iniciativa Rebechi & Silva Produções</p>
               <p>E-mail: contato@tributech.com.br</p>
               <p>Endereço: Avenida Marquês de São Vicente, 1619 - conjunto 2712 - Barra Funda - São Paulo - SP</p>
               <p>Telefone: +55 11 91452-3971</p>
