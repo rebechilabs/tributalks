@@ -2,11 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Calculator, ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import logoTributech from "@/assets/logo-tributech.png";
 
 const Cadastro = () => {
   const [formData, setFormData] = useState({
@@ -16,30 +17,46 @@ const Cadastro = () => {
     confirmarSenha: "",
     aceitaTermos: false,
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [generalError, setGeneralError] = useState<string | null>(null);
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (formData.senha !== formData.confirmarSenha) {
-      toast({
-        title: "Senhas não conferem",
-        description: "Verifique se as senhas digitadas são iguais.",
-        variant: "destructive",
-      });
-      return;
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (formData.nome.trim().length < 3) {
+      newErrors.nome = "Nome deve ter pelo menos 3 caracteres";
     }
 
-    if (formData.senha.length < 6) {
-      toast({
-        title: "Senha muito curta",
-        description: "A senha deve ter pelo menos 6 caracteres.",
-        variant: "destructive",
-      });
-      return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "E-mail inválido";
     }
+
+    if (formData.senha.length < 8) {
+      newErrors.senha = "Senha deve ter pelo menos 8 caracteres";
+    }
+
+    if (formData.senha !== formData.confirmarSenha) {
+      newErrors.confirmarSenha = "Senhas não conferem";
+    }
+
+    if (!formData.aceitaTermos) {
+      newErrors.aceitaTermos = "Você deve aceitar os termos";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setGeneralError(null);
+
+    if (!validateForm()) return;
 
     setIsLoading(true);
 
@@ -51,13 +68,11 @@ const Cadastro = () => {
       });
       navigate('/onboarding');
     } catch (error: any) {
-      toast({
-        title: "Erro no cadastro",
-        description: error.message === 'User already registered' 
-          ? 'Este e-mail já está cadastrado' 
-          : error.message,
-        variant: "destructive",
-      });
+      if (error.message?.includes('already registered')) {
+        setGeneralError('Este e-mail já está cadastrado');
+      } else {
+        setGeneralError('Erro ao criar conta. Tente novamente.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -65,42 +80,55 @@ const Cadastro = () => {
 
   const handleChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
   };
 
-  return (
-    <div className="min-h-screen bg-background flex">
-      {/* Left Side - Form */}
-      <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mx-auto w-full max-w-md">
-          {/* Back Link */}
-          <Link 
-            to="/" 
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Voltar
-          </Link>
+  const isFormValid = formData.nome.trim() !== "" && 
+    formData.email.trim() !== "" && 
+    formData.senha.trim() !== "" && 
+    formData.confirmarSenha.trim() !== "" && 
+    formData.aceitaTermos;
 
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Back Link */}
+        <Link 
+          to="/" 
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Voltar
+        </Link>
+
+        {/* Card */}
+        <div className="bg-card rounded-xl border border-border p-8 shadow-lg">
           {/* Logo */}
-          <div className="flex items-center gap-2 mb-8">
-            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-              <Calculator className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold text-foreground">TribuTech</span>
+          <div className="flex justify-center mb-6">
+            <img src={logoTributech} alt="TribuTech" className="h-16 w-auto" />
           </div>
 
           {/* Heading */}
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Criar Conta no TribuTech
+          <h1 className="text-2xl font-bold text-foreground text-center mb-8">
+            Crie sua conta
           </h1>
-          <p className="text-muted-foreground mb-8">
-            Comece sua jornada de inteligência tributária
-          </p>
+
+          {/* General Error Message */}
+          {generalError && (
+            <div className="mb-6 p-4 rounded-lg bg-destructive/10 border border-destructive/20">
+              <p className="text-sm text-destructive">{generalError}</p>
+            </div>
+          )}
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="nome">Nome completo</Label>
+              <Label htmlFor="nome" className="text-sm font-medium text-foreground">
+                Nome completo
+              </Label>
               <Input
                 id="nome"
                 type="text"
@@ -109,12 +137,15 @@ const Cadastro = () => {
                 onChange={(e) => handleChange("nome", e.target.value)}
                 required
                 disabled={isLoading}
-                className="h-12"
+                className={`h-12 bg-secondary border-border focus:border-primary ${errors.nome ? 'border-destructive' : ''}`}
               />
+              {errors.nome && <p className="text-xs text-destructive">{errors.nome}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
+              <Label htmlFor="email" className="text-sm font-medium text-foreground">
+                E-mail
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -123,36 +154,62 @@ const Cadastro = () => {
                 onChange={(e) => handleChange("email", e.target.value)}
                 required
                 disabled={isLoading}
-                className="h-12"
+                className={`h-12 bg-secondary border-border focus:border-primary ${errors.email ? 'border-destructive' : ''}`}
               />
+              {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="senha">Senha</Label>
-              <Input
-                id="senha"
-                type="password"
-                placeholder="••••••••"
-                value={formData.senha}
-                onChange={(e) => handleChange("senha", e.target.value)}
-                required
-                disabled={isLoading}
-                className="h-12"
-              />
+              <Label htmlFor="senha" className="text-sm font-medium text-foreground">
+                Senha
+              </Label>
+              <div className="relative">
+                <Input
+                  id="senha"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={formData.senha}
+                  onChange={(e) => handleChange("senha", e.target.value)}
+                  required
+                  disabled={isLoading}
+                  className={`h-12 bg-secondary border-border focus:border-primary pr-12 ${errors.senha ? 'border-destructive' : ''}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground">Mínimo 8 caracteres</p>
+              {errors.senha && <p className="text-xs text-destructive">{errors.senha}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmarSenha">Confirmar senha</Label>
-              <Input
-                id="confirmarSenha"
-                type="password"
-                placeholder="••••••••"
-                value={formData.confirmarSenha}
-                onChange={(e) => handleChange("confirmarSenha", e.target.value)}
-                required
-                disabled={isLoading}
-                className="h-12"
-              />
+              <Label htmlFor="confirmarSenha" className="text-sm font-medium text-foreground">
+                Confirmar senha
+              </Label>
+              <div className="relative">
+                <Input
+                  id="confirmarSenha"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={formData.confirmarSenha}
+                  onChange={(e) => handleChange("confirmarSenha", e.target.value)}
+                  required
+                  disabled={isLoading}
+                  className={`h-12 bg-secondary border-border focus:border-primary pr-12 ${errors.confirmarSenha ? 'border-destructive' : ''}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              {errors.confirmarSenha && <p className="text-xs text-destructive">{errors.confirmarSenha}</p>}
             </div>
 
             <div className="flex items-start gap-3">
@@ -161,6 +218,7 @@ const Cadastro = () => {
                 checked={formData.aceitaTermos}
                 onCheckedChange={(checked) => handleChange("aceitaTermos", checked as boolean)}
                 disabled={isLoading}
+                className="mt-0.5 border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
               <Label htmlFor="termos" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
                 Li e aceito os{" "}
@@ -177,8 +235,8 @@ const Cadastro = () => {
             <Button 
               type="submit" 
               size="lg" 
-              className="w-full"
-              disabled={!formData.aceitaTermos || isLoading}
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+              disabled={!isFormValid || isLoading}
             >
               {isLoading ? (
                 <>
@@ -186,47 +244,21 @@ const Cadastro = () => {
                   Criando conta...
                 </>
               ) : (
-                'Criar conta'
+                'Criar minha conta'
               )}
             </Button>
           </form>
 
-          {/* Links */}
-          <p className="mt-6 text-center text-muted-foreground">
+          {/* Divider */}
+          <div className="my-6 border-t border-border" />
+
+          {/* Sign In Link */}
+          <p className="text-center text-muted-foreground">
             Já tem conta?{" "}
             <Link to="/login" className="text-primary hover:underline font-medium">
               Entrar
             </Link>
           </p>
-        </div>
-      </div>
-
-      {/* Right Side - Visual */}
-      <div className="hidden lg:flex flex-1 items-center justify-center p-12" style={{ background: 'var(--gradient-primary)' }}>
-        <div className="max-w-md text-primary-foreground">
-          <div className="w-24 h-24 rounded-2xl bg-primary-foreground/10 backdrop-blur flex items-center justify-center mb-8">
-            <Calculator className="w-12 h-12" />
-          </div>
-          <h2 className="text-2xl font-bold mb-4">
-            Sua jornada começa aqui
-          </h2>
-          <p className="text-primary-foreground/80 mb-8">
-            Acesse ferramentas poderosas de inteligência tributária desenvolvidas para empresas como a sua.
-          </p>
-          <ul className="space-y-3 text-primary-foreground/80">
-            <li className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-primary-foreground" />
-              Calculadoras personalizadas
-            </li>
-            <li className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-primary-foreground" />
-              Simulações ilimitadas
-            </li>
-            <li className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-primary-foreground" />
-              Histórico completo
-            </li>
-          </ul>
         </div>
       </div>
     </div>
