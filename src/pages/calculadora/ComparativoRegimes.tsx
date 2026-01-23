@@ -34,41 +34,68 @@ const MARGENS_LUCRO = [
 
 // Insumos creditáveis de PIS/COFINS no Lucro Real
 // Alíquota combinada PIS (1,65%) + COFINS (7,6%) = 9,25%
-const INSUMOS_CREDITAVEIS = [
+// IMPORTANTE: Os insumos variam por setor (comércio/indústria vs serviços)
+
+interface InsumoCreditable {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  tooltip: string;
+  aliquota: number;
+  setores: string[]; // quais setores podem usar este insumo
+}
+
+const INSUMOS_CREDITAVEIS: InsumoCreditable[] = [
+  // Comércio e Indústria
   { 
     id: 'mercadorias', 
     label: 'Mercadorias para revenda', 
     icon: Package,
     tooltip: 'Produtos adquiridos para revenda. Crédito de 9,25% sobre o valor.',
-    aliquota: 0.0925
+    aliquota: 0.0925,
+    setores: ['comercio', 'industria']
   },
   { 
     id: 'insumos_producao', 
     label: 'Insumos de produção', 
     icon: Wrench,
     tooltip: 'Matérias-primas, embalagens e materiais usados na fabricação. Crédito de 9,25%.',
-    aliquota: 0.0925
+    aliquota: 0.0925,
+    setores: ['industria']
   },
+  // Todos os setores
   { 
     id: 'energia', 
     label: 'Energia elétrica', 
     icon: Zap,
     tooltip: 'Consumo de energia elétrica na atividade. Crédito de 9,25%.',
-    aliquota: 0.0925
+    aliquota: 0.0925,
+    setores: ['comercio', 'industria', 'servicos', 'tecnologia', 'outro']
   },
   { 
     id: 'aluguel', 
     label: 'Aluguel de imóveis (PJ)', 
     icon: Building2,
     tooltip: 'Aluguel pago a pessoa jurídica para uso na atividade. Crédito de 9,25%.',
-    aliquota: 0.0925
+    aliquota: 0.0925,
+    setores: ['comercio', 'industria', 'servicos', 'tecnologia', 'outro']
   },
   { 
     id: 'frete', 
     label: 'Frete sobre vendas', 
     icon: Truck,
     tooltip: 'Frete na operação de venda (quando pago pelo vendedor). Crédito de 9,25%.',
-    aliquota: 0.0925
+    aliquota: 0.0925,
+    setores: ['comercio', 'industria']
+  },
+  // Serviços e Tecnologia
+  { 
+    id: 'servicos_terceiros', 
+    label: 'Serviços de terceiros (PJ)', 
+    icon: Wrench,
+    tooltip: 'Serviços essenciais contratados de PJ (TI, manutenção, limpeza, segurança). Crédito de 9,25%.',
+    aliquota: 0.0925,
+    setores: ['servicos', 'tecnologia', 'outro']
   },
 ];
 
@@ -93,7 +120,13 @@ const ComparativoRegimes = () => {
     energia: "",
     aluguel: "",
     frete: "",
+    servicos_terceiros: "",
   });
+
+  // Filtra insumos baseado no setor selecionado
+  const insumosDoSetor = INSUMOS_CREDITAVEIS.filter(
+    (insumo) => insumo.setores.includes(formData.setor) || formData.setor === ""
+  );
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -473,47 +506,68 @@ const ComparativoRegimes = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <TooltipProvider>
-                      <div className="grid md:grid-cols-2 gap-4">
-                        {INSUMOS_CREDITAVEIS.map((insumo) => {
-                          const Icon = insumo.icon;
-                          const valorInsumo = parseFloat(insumos[insumo.id]) || 0;
-                          const creditoInsumo = valorInsumo * insumo.aliquota;
-                          
-                          return (
-                            <div key={insumo.id} className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <Icon className="w-4 h-4 text-primary" />
-                                <Label htmlFor={insumo.id} className="flex-1">{insumo.label}</Label>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
-                                  </TooltipTrigger>
-                                  <TooltipContent className="max-w-xs">
-                                    <p>{insumo.tooltip}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </div>
-                              <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span>
-                                <Input
-                                  id={insumo.id}
-                                  value={formatInputCurrency(insumos[insumo.id])}
-                                  onChange={handleInsumoChange(insumo.id)}
-                                  placeholder="0"
-                                  className="h-10 pl-10 pr-24"
-                                />
-                                {valorInsumo > 0 && (
-                                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-secondary font-medium">
-                                    Crédito: {formatCurrency(creditoInsumo)}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
+                    {/* Disclaimer de Marketing */}
+                    <div className="mb-4 p-3 bg-warning/10 border border-warning/30 rounded-lg">
+                      <div className="flex gap-2">
+                        <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
+                        <div className="text-xs text-muted-foreground">
+                          <p className="font-medium mb-1 text-foreground">⚠️ Importante: Esta é apenas uma estimativa ilustrativa.</p>
+                          <p>
+                            Os insumos creditáveis variam conforme a atividade específica da empresa e a interpretação da legislação. 
+                            Para garantia jurídica e aproveitamento correto dos créditos, <span className="font-semibold text-primary">consulte um advogado tributarista</span>.
+                          </p>
+                        </div>
                       </div>
-                    </TooltipProvider>
+                    </div>
+
+                    {!formData.setor ? (
+                      <div className="text-center py-6 text-muted-foreground">
+                        <Info className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">Selecione o setor da empresa acima para ver os insumos aplicáveis.</p>
+                      </div>
+                    ) : (
+                      <TooltipProvider>
+                        <div className="grid md:grid-cols-2 gap-4">
+                          {insumosDoSetor.map((insumo) => {
+                            const Icon = insumo.icon;
+                            const valorInsumo = parseFloat(insumos[insumo.id]) || 0;
+                            const creditoInsumo = valorInsumo * insumo.aliquota;
+                            
+                            return (
+                              <div key={insumo.id} className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <Icon className="w-4 h-4 text-primary" />
+                                  <Label htmlFor={insumo.id} className="flex-1">{insumo.label}</Label>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-xs">
+                                      <p>{insumo.tooltip}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </div>
+                                <div className="relative">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span>
+                                  <Input
+                                    id={insumo.id}
+                                    value={formatInputCurrency(insumos[insumo.id])}
+                                    onChange={handleInsumoChange(insumo.id)}
+                                    placeholder="0"
+                                    className="h-10 pl-10 pr-24"
+                                  />
+                                  {valorInsumo > 0 && (
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-secondary font-medium">
+                                      Crédito: {formatCurrency(creditoInsumo)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </TooltipProvider>
+                    )}
 
                     {/* Total de créditos calculados */}
                     {calcularCreditosPisCofins() > 0 && (
