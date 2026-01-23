@@ -5,11 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calculator, ArrowLeft, Wallet, Info, TrendingDown, Calendar, RefreshCw, FileDown, Loader2, CheckCircle } from "lucide-react";
+import { Wallet, Info, TrendingDown, Calendar, RefreshCw, FileDown, Loader2, CheckCircle, Calculator } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 interface SplitPaymentResult {
   mensal_min: number;
   mensal_max: number;
@@ -168,23 +168,8 @@ const SplitPayment = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-16">
-            <Link to="/dashboard" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-              <ArrowLeft className="w-4 h-4" />
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <Calculator className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="font-bold text-foreground">TribuTech</span>
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <DashboardLayout title="Split Payment">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <nav className="text-sm text-muted-foreground mb-6">
           <Link to="/dashboard" className="hover:text-foreground">Dashboard</Link>
@@ -203,7 +188,7 @@ const SplitPayment = () => {
             <h1 className="text-2xl font-bold text-foreground">Impacto do Split Payment</h1>
           </div>
           <p className="text-muted-foreground">
-            Descubra quanto vai ficar retido no seu caixa com o novo sistema.
+            Descubra quanto vai ficar retido no seu caixa com o novo sistema de pagamento (2026+).
           </p>
         </div>
 
@@ -408,8 +393,8 @@ const SplitPayment = () => {
             </CardContent>
           </Card>
         )}
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 };
 
