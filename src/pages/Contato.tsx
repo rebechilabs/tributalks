@@ -199,7 +199,7 @@ export default function Contato() {
                 <span className="font-medium">ENDEREÇO</span>
               </div>
               <div className="text-muted-foreground">
-                <p className="text-foreground font-medium">Rebechi & Silva Advogados Associados</p>
+                <p className="text-foreground font-medium">Rebechi & Silva Produções</p>
                 <p>Avenida Marquês de São Vicente, 1619</p>
                 <p>Conjunto 2712 - Barra Funda</p>
                 <p>São Paulo/SP - CEP: 01139-003</p>

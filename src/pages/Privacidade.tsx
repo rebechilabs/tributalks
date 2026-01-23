@@ -28,13 +28,13 @@ export default function Privacidade() {
 
         <div className="prose prose-invert prose-sm max-w-none space-y-8 text-muted-foreground">
           <p>
-            A TribuTech, operada pela Rebechi & Silva Advogados Associados, está comprometida com a proteção da sua privacidade. Esta Política descreve como coletamos, usamos, armazenamos e protegemos seus dados pessoais, em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).
+            A TribuTech, operada pela Rebechi & Silva Produções, está comprometida com a proteção da sua privacidade. Esta Política descreve como coletamos, usamos, armazenamos e protegemos seus dados pessoais, em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).
           </p>
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-4">1. CONTROLADOR DOS DADOS</h2>
             <div className="bg-card border border-border rounded-lg p-4">
-              <p className="font-medium text-foreground">Rebechi & Silva Advogados Associados</p>
+              <p className="font-medium text-foreground">Rebechi & Silva Produções</p>
               <p>CNPJ: 47.706.144/0001-21</p>
               <p>Endereço: Avenida Marquês de São Vicente, 1619 - conjunto 2712 - Barra Funda - São Paulo - SP</p>
               <p>E-mail do Encarregado (DPO): privacidade@tributech.com.br</p>
@@ -218,7 +218,7 @@ export default function Privacidade() {
               <p className="font-medium text-foreground">Encarregado de Proteção de Dados (DPO)</p>
               <p>E-mail: privacidade@tributech.com.br</p>
               <div className="mt-4 pt-4 border-t border-border">
-                <p className="font-medium text-foreground">TribuTech — Uma iniciativa Rebechi & Silva Advogados Associados</p>
+                <p className="font-medium text-foreground">TribuTech — Uma iniciativa Rebechi & Silva Produções</p>
                 <p>Endereço: Avenida Marquês de São Vicente, 1619 - conjunto 2712 - Barra Funda - São Paulo - SP</p>
                 <p>Telefone: +55 11 91452-3971</p>
               </div>
