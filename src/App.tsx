@@ -24,6 +24,7 @@ import Comunidade from "./pages/Comunidade";
 import Consultorias from "./pages/Consultorias";
 import Configuracoes from "./pages/Configuracoes";
 import Noticias from "./pages/Noticias";
+import AdminNoticias from "./pages/AdminNoticias";
 
 // Calculadoras
 import SplitPayment from "./pages/calculadora/SplitPayment";
@@ -134,6 +135,16 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <ComparativoRegimes />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Admin */}
+            <Route 
+              path="/admin/noticias" 
+              element={
+                <ProtectedRoute>
+                  <AdminNoticias />
                 </ProtectedRoute>
               } 
             />
