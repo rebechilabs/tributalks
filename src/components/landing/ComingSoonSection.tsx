@@ -25,7 +25,7 @@ const upcomingFeatures = [
 
 export function ComingSoonSection() {
   return (
-    <section className="py-16 bg-background">
+    <section className="py-16 bg-card border-y border-border">
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
           <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
@@ -40,7 +40,7 @@ export function ComingSoonSection() {
           {upcomingFeatures.map((feature, index) => (
             <div
               key={feature.label}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-muted rounded-full text-sm font-medium text-foreground animate-fade-in-up"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-secondary rounded-full text-sm font-medium text-foreground border border-border animate-fade-in-up"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <feature.icon className="w-4 h-4 text-primary" />

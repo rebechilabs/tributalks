@@ -4,11 +4,11 @@ import { CONFIG } from "@/config/site";
 
 export function HeroSection() {
   return (
-    <section className="relative min-h-screen flex items-center pt-16" style={{ background: 'var(--gradient-hero)' }}>
+    <section className="relative min-h-screen flex items-center pt-16 bg-background">
       {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-[0.03]">
+      <div className="absolute inset-0 opacity-[0.02]">
         <div className="absolute inset-0" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231E40AF' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FBBF24' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
         }} />
       </div>
 
@@ -17,7 +17,7 @@ export function HeroSection() {
           {/* Main Heading */}
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 animate-fade-in-up">
             Inteligência Tributária para Empresas{" "}
-            <span className="gradient-text">acima de R$1M/mês</span>
+            <span className="text-primary">acima de R$1M/mês</span>
           </h1>
 
           {/* Subheading */}
@@ -29,7 +29,7 @@ export function HeroSection() {
           {/* CTA Button */}
           <div className="flex flex-col items-center gap-4 mb-6 animate-fade-in-up animation-delay-200">
             <a href={CONFIG.STRIPE_PAYMENT_LINK} target="_blank" rel="noopener noreferrer">
-              <Button variant="heroPrimary" size="xl" className="group">
+              <Button size="xl" className="bg-primary text-primary-foreground hover:bg-primary/90 group">
                 Assinar por R$197/mês
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
@@ -43,15 +43,8 @@ export function HeroSection() {
         </div>
       </div>
 
-      {/* Bottom Wave */}
-      <div className="absolute bottom-0 left-0 right-0">
-        <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
-          <path
-            d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z"
-            fill="hsl(var(--background))"
-          />
-        </svg>
-      </div>
+      {/* Bottom gradient fade */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
     </section>
   );
 }

@@ -13,7 +13,7 @@ const benefits = [
 
 export function PricingSection() {
   return (
-    <section id="preco" className="py-24 bg-muted/30">
+    <section id="preco" className="py-24 bg-background">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground">
@@ -23,10 +23,10 @@ export function PricingSection() {
 
         <div className="max-w-lg mx-auto">
           {/* Pricing Card */}
-          <div className="relative bg-card rounded-xl p-8 md:p-10 border-2 border-primary shadow-xl">
+          <div className="relative bg-card rounded-xl p-8 md:p-10 border-2 border-primary">
             {/* Badge */}
             <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent text-accent-foreground text-sm font-semibold shadow-md">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold">
                 <Sparkles className="w-4 h-4" />
                 Mais Popular
               </div>
@@ -42,7 +42,7 @@ export function PricingSection() {
                 <span className="text-muted-foreground">/mês</span>
               </div>
               <p className="text-sm text-muted-foreground mt-2">
-                ou R$1.970/ano <span className="text-success font-medium">(2 meses grátis)</span>
+                ou R$1.970/ano <span className="text-primary font-medium">(2 meses grátis)</span>
               </p>
             </div>
 
@@ -53,8 +53,8 @@ export function PricingSection() {
             <ul className="space-y-4 mb-8">
               {benefits.map((benefit) => (
                 <li key={benefit} className="flex items-center gap-3">
-                  <div className="w-5 h-5 rounded-full bg-success/20 flex items-center justify-center flex-shrink-0">
-                    <Check className="w-3 h-3 text-success" />
+                  <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                    <Check className="w-3 h-3 text-primary" />
                   </div>
                   <span className="text-foreground">{benefit}</span>
                 </li>
@@ -63,7 +63,7 @@ export function PricingSection() {
 
             {/* CTA Button */}
             <a href={CONFIG.STRIPE_PAYMENT_LINK} target="_blank" rel="noopener noreferrer" className="block">
-              <Button variant="heroPrimary" size="xl" className="w-full group">
+              <Button size="xl" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 group">
                 Assinar Agora — R$197/mês
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
@@ -81,7 +81,7 @@ export function PricingSection() {
               Menos que 1 hora de consultoria tributária.
             </p>
             <p className="text-muted-foreground">
-              Se encontrar <span className="text-foreground font-medium">UMA oportunidade de R$10k</span>, já pagou 4 anos.
+              Se encontrar <span className="text-primary font-medium">UMA oportunidade de R$10k</span>, já pagou 4 anos.
             </p>
           </div>
         </div>

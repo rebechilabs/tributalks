@@ -23,7 +23,7 @@ const testimonials = [
 
 export function TestimonialsSection() {
   return (
-    <section className="py-24 bg-background">
+    <section className="py-24 bg-card border-y border-border">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -35,12 +35,12 @@ export function TestimonialsSection() {
           {testimonials.map((testimonial, index) => (
             <div
               key={testimonial.author}
-              className="relative bg-card rounded-xl p-8 border border-border/50 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300 animate-fade-in-up"
+              className="relative bg-secondary rounded-xl p-8 border border-border hover:border-primary/50 transition-all duration-300 animate-fade-in-up"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               {/* Quote Icon */}
               <div className="absolute -top-4 left-8">
-                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-md">
+                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
                   <Quote className="w-5 h-5 text-primary-foreground" />
                 </div>
               </div>
@@ -52,7 +52,7 @@ export function TestimonialsSection() {
 
               {/* Author */}
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
                   <span className="text-primary font-semibold text-lg">
                     {testimonial.author.charAt(0)}
                   </span>

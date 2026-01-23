@@ -25,14 +25,14 @@ const stats = [
 
 export function CredibilitySection() {
   return (
-    <section className="py-24 bg-background">
+    <section className="py-24 bg-card border-y border-border">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Quem está por trás
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            TribuTech é uma iniciativa da <span className="text-foreground font-medium">Rebechi & Silva Advogados</span>, escritório especializado em planejamento tributário para empresas do middle market brasileiro.
+            TribuTech é uma iniciativa da <span className="text-primary font-medium">Rebechi & Silva Advogados</span>, escritório especializado em planejamento tributário para empresas do middle market brasileiro.
           </p>
         </div>
 
