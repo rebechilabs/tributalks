@@ -12,7 +12,7 @@ export function Footer() {
 
           {/* Description */}
           <p className="text-muted-foreground text-sm">
-            Uma iniciativa Rebechi & Silva Advogados
+            Uma iniciativa Rebechi & Silva Produções
           </p>
 
           {/* Links */}
@@ -21,21 +21,28 @@ export function Footer() {
               to="/termos"
               className="text-muted-foreground hover:text-primary transition-colors text-sm"
             >
-              Termos
+              Termos de Uso
             </Link>
             <Link
               to="/privacidade"
               className="text-muted-foreground hover:text-primary transition-colors text-sm"
             >
-              Privacidade
+              Política de Privacidade
             </Link>
-            <a
-              href={`mailto:${CONFIG.CONTACT_EMAIL}`}
+            <Link
+              to="/contato"
               className="text-muted-foreground hover:text-primary transition-colors text-sm"
             >
               Contato
-            </a>
+            </Link>
           </nav>
+
+          {/* Legal Disclaimer */}
+          <p className="text-muted-foreground/70 text-xs max-w-2xl leading-relaxed">
+            As simulações e informações desta plataforma têm caráter exclusivamente educativo e informativo, 
+            não constituindo parecer jurídico, contábil ou recomendação de decisão. 
+            Consulte um profissional habilitado antes de tomar qualquer decisão tributária.
+          </p>
 
           {/* Copyright */}
           <div className="text-muted-foreground text-xs">
