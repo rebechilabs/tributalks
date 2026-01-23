@@ -8,7 +8,7 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Link } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-
+import DOMPurify from "dompurify";
 interface Message {
   role: "user" | "assistant";
   content: string;
@@ -200,7 +200,13 @@ Como posso te ajudar hoje?`,
       .replace(/(<li>.*<\/li>\n?)+/g, "<ul class='list-disc list-inside space-y-1 my-2'>$&</ul>")
       .replace(/\n/g, "<br/>");
     
-    return <div dangerouslySetInnerHTML={{ __html: html }} />;
+    // Sanitize HTML to prevent XSS attacks
+    const sanitizedHtml = DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: ['strong', 'ul', 'li', 'br'],
+      ALLOWED_ATTR: ['class'],
+    });
+    
+    return <div dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />;
   };
 
   if (!hasAccess) {
