@@ -13,6 +13,9 @@ import Cadastro from "./pages/Cadastro";
 import RecuperarSenha from "./pages/RecuperarSenha";
 import RedefinirSenha from "./pages/RedefinirSenha";
 import NotFound from "./pages/NotFound";
+import Termos from "./pages/Termos";
+import Privacidade from "./pages/Privacidade";
+import Contato from "./pages/Contato";
 
 // Páginas protegidas
 import Onboarding from "./pages/Onboarding";
@@ -46,6 +49,9 @@ const App = () => (
             <Route path="/cadastro" element={<Cadastro />} />
             <Route path="/recuperar-senha" element={<RecuperarSenha />} />
             <Route path="/redefinir-senha" element={<RedefinirSenha />} />
+            <Route path="/termos" element={<Termos />} />
+            <Route path="/privacidade" element={<Privacidade />} />
+            <Route path="/contato" element={<Contato />} />
             
             {/* Protegidas */}
             <Route 

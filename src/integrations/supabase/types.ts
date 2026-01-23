@@ -125,6 +125,42 @@ export type Database = {
         }
         Relationships: []
       }
+      contatos: {
+        Row: {
+          assunto: string
+          created_at: string | null
+          email: string
+          id: string
+          mensagem: string
+          nome: string
+          respondido: boolean | null
+          respondido_em: string | null
+          respondido_por: string | null
+        }
+        Insert: {
+          assunto: string
+          created_at?: string | null
+          email: string
+          id?: string
+          mensagem: string
+          nome: string
+          respondido?: boolean | null
+          respondido_em?: string | null
+          respondido_por?: string | null
+        }
+        Update: {
+          assunto?: string
+          created_at?: string | null
+          email?: string
+          id?: string
+          mensagem?: string
+          nome?: string
+          respondido?: boolean | null
+          respondido_em?: string | null
+          respondido_por?: string | null
+        }
+        Relationships: []
+      }
       noticias_tributarias: {
         Row: {
           acao_recomendada: string | null
