@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -18,12 +18,10 @@ import {
   AlertTriangle,
   Newspaper,
   Link as LinkIcon,
-  FileText
+  FileText,
+  ShieldAlert
 } from "lucide-react";
 import { Navigate } from "react-router-dom";
-
-// E-mails autorizados a acessar o admin
-const ADMIN_EMAILS = ["admin@tributech.com.br", "contato@tributech.com.br"];
 
 interface ProcessedNews {
   id: string;
@@ -36,7 +34,8 @@ interface ProcessedNews {
 }
 
 export default function AdminNoticias() {
-  const { profile, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [fonte, setFonte] = useState("");
   const [fonteUrl, setFonteUrl] = useState("");
   const [titulo, setTitulo] = useState("");
@@ -50,10 +49,38 @@ export default function AdminNoticias() {
     fontes_disponiveis?: { nome: string; url: string }[];
   } | null>(null);
 
-  // Verificar se usuário é admin
-  const isAdmin = profile?.email && ADMIN_EMAILS.includes(profile.email);
+  // Verificar se usuário é admin via tabela user_roles
+  useEffect(() => {
+    const checkAdminRole = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        return;
+      }
 
-  if (authLoading) {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (error) {
+        console.error("Erro ao verificar role:", error);
+        setIsAdmin(false);
+        return;
+      }
+
+      setIsAdmin(!!data);
+    };
+
+    if (!authLoading && user) {
+      checkAdminRole();
+    } else if (!authLoading && !user) {
+      setIsAdmin(false);
+    }
+  }, [user, authLoading]);
+
+  if (authLoading || isAdmin === null) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
@@ -64,7 +91,25 @@ export default function AdminNoticias() {
   }
 
   if (!isAdmin) {
-    return <Navigate to="/dashboard" replace />;
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <Card className="max-w-md w-full">
+            <CardContent className="pt-8 pb-8 text-center">
+              <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+                <ShieldAlert className="w-8 h-8 text-destructive" />
+              </div>
+              <h2 className="text-xl font-bold text-foreground mb-2">
+                Acesso Restrito
+              </h2>
+              <p className="text-muted-foreground">
+                Esta área é restrita a administradores do sistema.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
   }
 
   const handleProcessar = async () => {
@@ -102,7 +147,7 @@ export default function AdminNoticias() {
         setTitulo("");
         setConteudo("");
       } else {
-        toast.error(data.message || "Erro ao processar notícia");
+        toast.error(data.message || data.error || "Erro ao processar notícia");
       }
     } catch (error) {
       console.error("Erro:", error);
@@ -120,6 +165,11 @@ export default function AdminNoticias() {
       const { data, error } = await supabase.functions.invoke("fetch-news");
 
       if (error) throw error;
+
+      if (data.error) {
+        toast.error(data.error);
+        return;
+      }
 
       setFetchStatus(data);
 
