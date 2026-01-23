@@ -7,19 +7,14 @@ const stats = [
     label: "economia gerada",
   },
   {
-    icon: BookOpen,
-    value: "Best-seller",
-    label: '"Faça Direito..."',
-  },
-  {
     icon: Users,
     value: "+270.000",
     label: "seguidores",
   },
   {
     icon: Building,
-    value: "+30",
-    label: "empresas em 14 estados",
+    value: "+1.500",
+    label: "empresas atendidas no Brasil",
   },
 ];
 

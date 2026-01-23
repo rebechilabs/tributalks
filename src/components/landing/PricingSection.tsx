@@ -83,7 +83,6 @@ const plans: Plan[] = [
       { text: "Tudo do Profissional", included: true },
       { text: "Filtros e Alertas de Notícias", included: true },
       { text: "2 consultorias/mês com especialista", included: true },
-      { text: "Suporte VIP", included: true },
       { text: "Prioridade em novos recursos", included: true },
     ],
     ctaText: "Assinar",
