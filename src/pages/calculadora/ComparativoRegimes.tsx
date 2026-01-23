@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calculator, ArrowLeft, Scale, Info, Star, AlertTriangle, RefreshCw, FileDown, Loader2, CheckCircle, Calendar, XCircle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Calculator, ArrowLeft, Scale, Info, Star, AlertTriangle, RefreshCw, FileDown, Loader2, CheckCircle, Calendar, XCircle, Package, Zap, Truck, Building2, Wrench, HelpCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface RegimeResult {
   simples: number | null;
@@ -18,6 +20,7 @@ interface RegimeResult {
   economia_mensal: number;
   economia_anual: number;
   simples_elegivel: boolean;
+  creditos_pis_cofins: number;
 }
 
 const MARGENS_LUCRO = [
@@ -29,11 +32,52 @@ const MARGENS_LUCRO = [
   { value: '0.45', label: 'Acima de 40%' },
 ];
 
+// Insumos creditáveis de PIS/COFINS no Lucro Real
+// Alíquota combinada PIS (1,65%) + COFINS (7,6%) = 9,25%
+const INSUMOS_CREDITAVEIS = [
+  { 
+    id: 'mercadorias', 
+    label: 'Mercadorias para revenda', 
+    icon: Package,
+    tooltip: 'Produtos adquiridos para revenda. Crédito de 9,25% sobre o valor.',
+    aliquota: 0.0925
+  },
+  { 
+    id: 'insumos_producao', 
+    label: 'Insumos de produção', 
+    icon: Wrench,
+    tooltip: 'Matérias-primas, embalagens e materiais usados na fabricação. Crédito de 9,25%.',
+    aliquota: 0.0925
+  },
+  { 
+    id: 'energia', 
+    label: 'Energia elétrica', 
+    icon: Zap,
+    tooltip: 'Consumo de energia elétrica na atividade. Crédito de 9,25%.',
+    aliquota: 0.0925
+  },
+  { 
+    id: 'aluguel', 
+    label: 'Aluguel de imóveis (PJ)', 
+    icon: Building2,
+    tooltip: 'Aluguel pago a pessoa jurídica para uso na atividade. Crédito de 9,25%.',
+    aliquota: 0.0925
+  },
+  { 
+    id: 'frete', 
+    label: 'Frete sobre vendas', 
+    icon: Truck,
+    tooltip: 'Frete na operação de venda (quando pago pelo vendedor). Crédito de 9,25%.',
+    aliquota: 0.0925
+  },
+];
+
 const ComparativoRegimes = () => {
   const { user, profile } = useAuth();
   const [isCalculating, setIsCalculating] = useState(false);
   const [result, setResult] = useState<RegimeResult | null>(null);
   const [saved, setSaved] = useState(false);
+  const [showInsumos, setShowInsumos] = useState(false);
 
   const [formData, setFormData] = useState({
     faturamento_mensal: profile?.faturamento_mensal?.toString() || "",
@@ -43,8 +87,23 @@ const ComparativoRegimes = () => {
     regime_atual: profile?.regime || "",
   });
 
+  const [insumos, setInsumos] = useState<Record<string, string>>({
+    mercadorias: "",
+    insumos_producao: "",
+    energia: "",
+    aluguel: "",
+    frete: "",
+  });
+
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    setResult(null);
+    setSaved(false);
+  };
+
+  const handleInsumoChange = (insumoId: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/\D/g, '');
+    setInsumos((prev) => ({ ...prev, [insumoId]: rawValue }));
     setResult(null);
     setSaved(false);
   };
@@ -99,6 +158,17 @@ const ComparativoRegimes = () => {
     return 0.32; // Services
   };
 
+  const calcularCreditosPisCofins = (): number => {
+    let totalCreditos = 0;
+    
+    INSUMOS_CREDITAVEIS.forEach((insumo) => {
+      const valor = parseFloat(insumos[insumo.id]) || 0;
+      totalCreditos += valor * insumo.aliquota;
+    });
+
+    return totalCreditos;
+  };
+
   const calcularComparativo = (): RegimeResult => {
     const faturamento_mensal = parseFloat(formData.faturamento_mensal);
     const margem_lucro = parseFloat(formData.margem_lucro);
@@ -128,15 +198,22 @@ const ComparativoRegimes = () => {
     const presumido_iss_icms = faturamento_mensal * 0.05;
     const total_presumido = presumido_irpj + presumido_csll + presumido_pis + presumido_cofins + presumido_iss_icms;
 
-    // Lucro Real
+    // Lucro Real - Com créditos detalhados de PIS/COFINS
     const real_irpj = lucro_mensal * 0.15 + Math.max(0, lucro_mensal - 20000) * 0.10;
     const real_csll = lucro_mensal * 0.09;
     const real_pis = faturamento_mensal * 0.0165;
     const real_cofins = faturamento_mensal * 0.076;
     const real_iss_icms = faturamento_mensal * 0.05;
-    // Estimated credits (simplified)
-    const creditos_estimados = faturamento_mensal * 0.03;
-    const total_real = real_irpj + real_csll + real_pis + real_cofins + real_iss_icms - creditos_estimados;
+    
+    // Créditos de PIS/COFINS baseados nos insumos informados
+    const creditos_pis_cofins = calcularCreditosPisCofins();
+    
+    // Se não informou insumos, usa estimativa de 3% do faturamento
+    const creditos_finais = creditos_pis_cofins > 0 
+      ? creditos_pis_cofins 
+      : faturamento_mensal * 0.03;
+    
+    const total_real = real_irpj + real_csll + real_pis + real_cofins + real_iss_icms - creditos_finais;
 
     // Determine best option
     const opcoes = [
@@ -164,6 +241,7 @@ const ComparativoRegimes = () => {
       economia_mensal: Math.max(0, economia_mensal),
       economia_anual: Math.max(0, economia_anual),
       simples_elegivel,
+      creditos_pis_cofins: creditos_finais,
     };
   };
 
@@ -190,6 +268,15 @@ const ComparativoRegimes = () => {
     // Auto-save simulation
     if (user) {
       try {
+        // Preparar insumos para salvar
+        const insumosParaSalvar: Record<string, number> = {};
+        INSUMOS_CREDITAVEIS.forEach((insumo) => {
+          const valor = parseFloat(insumos[insumo.id]) || 0;
+          if (valor > 0) {
+            insumosParaSalvar[insumo.id] = valor;
+          }
+        });
+
         await supabase.from('simulations').insert([{
           user_id: user.id,
           calculator_slug: 'comparativo-regimes',
@@ -199,6 +286,7 @@ const ComparativoRegimes = () => {
             folha_pagamento: parseFloat(formData.folha_pagamento) || null,
             setor: formData.setor,
             regime_atual: formData.regime_atual,
+            insumos: insumosParaSalvar,
           } as any,
           outputs: calculatedResult as any,
         }]);
@@ -351,6 +439,98 @@ const ComparativoRegimes = () => {
               </div>
             </div>
 
+            {/* Seção de Insumos Creditáveis - PIS/COFINS */}
+            <Collapsible open={showInsumos} onOpenChange={setShowInsumos} className="mt-6">
+              <CollapsibleTrigger asChild>
+                <Button variant="outline" className="w-full justify-between group">
+                  <div className="flex items-center gap-2">
+                    <Package className="w-4 h-4 text-primary" />
+                    <span>Insumos para crédito de PIS/COFINS (Lucro Real)</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <span className="text-xs">{showInsumos ? 'Ocultar' : 'Expandir para cálculo mais preciso'}</span>
+                    <svg
+                      className={`w-4 h-4 transition-transform ${showInsumos ? 'rotate-180' : ''}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-4">
+                <Card className="border-primary/20 bg-primary/5">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Star className="w-4 h-4 text-primary" />
+                      Custos mensais com insumos
+                    </CardTitle>
+                    <CardDescription>
+                      Informe seus gastos mensais para calcular os créditos de PIS/COFINS no Lucro Real.
+                      Alíquota: 9,25% (PIS 1,65% + COFINS 7,6%)
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <TooltipProvider>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        {INSUMOS_CREDITAVEIS.map((insumo) => {
+                          const Icon = insumo.icon;
+                          const valorInsumo = parseFloat(insumos[insumo.id]) || 0;
+                          const creditoInsumo = valorInsumo * insumo.aliquota;
+                          
+                          return (
+                            <div key={insumo.id} className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <Icon className="w-4 h-4 text-primary" />
+                                <Label htmlFor={insumo.id} className="flex-1">{insumo.label}</Label>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                                  </TooltipTrigger>
+                                  <TooltipContent className="max-w-xs">
+                                    <p>{insumo.tooltip}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </div>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span>
+                                <Input
+                                  id={insumo.id}
+                                  value={formatInputCurrency(insumos[insumo.id])}
+                                  onChange={handleInsumoChange(insumo.id)}
+                                  placeholder="0"
+                                  className="h-10 pl-10 pr-24"
+                                />
+                                {valorInsumo > 0 && (
+                                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-secondary font-medium">
+                                    Crédito: {formatCurrency(creditoInsumo)}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </TooltipProvider>
+
+                    {/* Total de créditos calculados */}
+                    {calcularCreditosPisCofins() > 0 && (
+                      <div className="mt-4 pt-4 border-t border-primary/20 flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Total de créditos PIS/COFINS mensais:</span>
+                        <span className="text-lg font-bold text-secondary">{formatCurrency(calcularCreditosPisCofins())}</span>
+                      </div>
+                    )}
+
+                    <p className="text-xs text-muted-foreground mt-4">
+                      💡 Se não informar os insumos, usaremos uma estimativa de 3% do faturamento como crédito.
+                    </p>
+                  </CardContent>
+                </Card>
+              </CollapsibleContent>
+            </Collapsible>
+
             <Button 
               onClick={handleCalculate} 
               size="lg" 
@@ -444,8 +624,50 @@ const ComparativoRegimes = () => {
                       <Star className="w-3 h-3" /> MELHOR
                     </span>
                   )}
+                  {result.creditos_pis_cofins > 0 && (
+                    <p className="text-xs text-primary mt-2">
+                      Créditos PIS/COFINS: {formatCurrency(result.creditos_pis_cofins)}
+                    </p>
+                  )}
                 </div>
               </div>
+
+              {/* Detalhamento dos créditos - se informou insumos */}
+              {calcularCreditosPisCofins() > 0 && (
+                <div className="bg-primary/5 border border-primary/20 rounded-xl p-6">
+                  <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <Package className="w-5 h-5 text-primary" />
+                    Detalhamento dos Créditos de PIS/COFINS
+                  </h3>
+                  <div className="space-y-2">
+                    {INSUMOS_CREDITAVEIS.map((insumo) => {
+                      const valor = parseFloat(insumos[insumo.id]) || 0;
+                      if (valor === 0) return null;
+                      const credito = valor * insumo.aliquota;
+                      const Icon = insumo.icon;
+                      return (
+                        <div key={insumo.id} className="flex items-center justify-between text-sm">
+                          <div className="flex items-center gap-2">
+                            <Icon className="w-4 h-4 text-primary" />
+                            <span className="text-muted-foreground">{insumo.label}</span>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <span className="text-foreground">{formatCurrency(valor)}</span>
+                            <span className="text-secondary font-medium">→ {formatCurrency(credito)}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-primary/20 flex items-center justify-between">
+                    <span className="font-medium text-foreground">Total de créditos mensais</span>
+                    <span className="text-lg font-bold text-secondary">{formatCurrency(result.creditos_pis_cofins)}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-3">
+                    * Créditos calculados com base na alíquota combinada de 9,25% (PIS 1,65% + COFINS 7,6%) no regime não-cumulativo.
+                  </p>
+                </div>
+              )}
 
               {/* Savings */}
               {result.economia_anual > 0 && formData.regime_atual && (
