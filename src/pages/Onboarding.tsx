@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,10 @@ const FAIXAS_FATURAMENTO = [
 const Onboarding = () => {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const { user, profile, refreshProfile } = useAuth();
+  const navigate = useNavigate();
+
+  // Initialize form with existing profile data
   const [formData, setFormData] = useState({
     empresa: "",
     estado: "",
@@ -38,8 +42,20 @@ const Onboarding = () => {
     setor: "",
     cnae: "",
   });
-  const { user, refreshProfile } = useAuth();
-  const navigate = useNavigate();
+
+  // Pre-populate form when profile loads
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        empresa: profile.empresa || "",
+        estado: profile.estado || "",
+        faturamento_mensal: profile.faturamento_mensal?.toString() || "",
+        regime: profile.regime || "",
+        setor: profile.setor || "",
+        cnae: profile.cnae || "",
+      });
+    }
+  }, [profile]);
 
   const totalSteps = 4;
   const progress = (step / totalSteps) * 100;
