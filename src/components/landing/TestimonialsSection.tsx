@@ -8,15 +8,15 @@ const testimonials = [
     company: "Logística Norte",
   },
   {
-    quote: "Finalmente entendi quanto o Split Payment vai impactar meu caixa. Informação clara e direta.",
+    quote: "Finalmente entendi quanto o Split Payment vai impactar meu caixa. Números que ninguém tinha me mostrado.",
     author: "Fernanda Lima",
     role: "CFO",
     company: "TechSul",
   },
   {
-    quote: "Simples, direto e útil. Exatamente o que um empresário precisa para tomar decisões.",
+    quote: "O TribuBot respondeu em 10 segundos uma dúvida que eu ia pagar R$500 pra um consultor.",
     author: "Ricardo Alves",
-    role: "Diretor",
+    role: "Diretor Financeiro",
     company: "Indústria ABC",
   },
 ];
@@ -27,18 +27,15 @@ export function TestimonialsSection() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            O Que Quem Testou Está Dizendo
+            O que quem testou está dizendo
           </h2>
-          <p className="text-lg text-muted-foreground">
-            Resultados reais de empresas reais
-          </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {testimonials.map((testimonial, index) => (
             <div
               key={testimonial.author}
-              className="relative bg-card rounded-2xl p-8 border border-border/50 hover:border-primary/30 hover:shadow-lg transition-all duration-300 animate-fade-in-up"
+              className="relative bg-card rounded-xl p-8 border border-border/50 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300 animate-fade-in-up"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               {/* Quote Icon */}
@@ -61,7 +58,7 @@ export function TestimonialsSection() {
                   </span>
                 </div>
                 <div>
-                  <div className="font-semibold text-foreground">
+                  <div className="font-bold text-foreground">
                     {testimonial.author}
                   </div>
                   <div className="text-sm text-muted-foreground">

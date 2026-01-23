@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Calculator, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { CONFIG } from "@/config/site";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -15,30 +16,17 @@ export function Header() {
             <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
               <Calculator className="w-6 h-6 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold text-foreground">TribuTech</span>
+            <span className="text-xl font-bold text-primary">TribuTech</span>
           </Link>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
-            <a href="#funcionalidades" className="text-muted-foreground hover:text-foreground transition-colors">
-              Funcionalidades
-            </a>
-            <a href="#como-funciona" className="text-muted-foreground hover:text-foreground transition-colors">
-              Como Funciona
-            </a>
-            <a href="#preco" className="text-muted-foreground hover:text-foreground transition-colors">
-              Preço
-            </a>
-          </nav>
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
             <Link to="/login">
-              <Button variant="ghost">Entrar</Button>
+              <Button variant="outline">Entrar</Button>
             </Link>
-            <Link to="/cadastro">
-              <Button>Assinar Agora</Button>
-            </Link>
+            <a href={CONFIG.STRIPE_PAYMENT_LINK} target="_blank" rel="noopener noreferrer">
+              <Button>Assinar</Button>
+            </a>
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -57,37 +45,14 @@ export function Header() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-border/50 animate-fade-in">
-            <nav className="flex flex-col gap-4">
-              <a
-                href="#funcionalidades"
-                className="text-muted-foreground hover:text-foreground transition-colors py-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Funcionalidades
+            <div className="flex flex-col gap-2">
+              <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="outline" className="w-full">Entrar</Button>
+              </Link>
+              <a href={CONFIG.STRIPE_PAYMENT_LINK} target="_blank" rel="noopener noreferrer">
+                <Button className="w-full">Assinar</Button>
               </a>
-              <a
-                href="#como-funciona"
-                className="text-muted-foreground hover:text-foreground transition-colors py-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Como Funciona
-              </a>
-              <a
-                href="#preco"
-                className="text-muted-foreground hover:text-foreground transition-colors py-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Preço
-              </a>
-              <div className="flex flex-col gap-2 pt-4 border-t border-border/50">
-                <Link to="/login">
-                  <Button variant="outline" className="w-full">Entrar</Button>
-                </Link>
-                <Link to="/cadastro">
-                  <Button className="w-full">Assinar Agora</Button>
-                </Link>
-              </div>
-            </nav>
+            </div>
           </div>
         )}
       </div>

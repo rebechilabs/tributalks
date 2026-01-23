@@ -4,7 +4,7 @@ const stats = [
   {
     icon: TrendingUp,
     value: "+R$380M",
-    label: "em economia tributária gerada",
+    label: "economia gerada",
   },
   {
     icon: BookOpen,
@@ -14,12 +14,12 @@ const stats = [
   {
     icon: Users,
     value: "+270.000",
-    label: "seguidores nas redes",
+    label: "seguidores",
   },
   {
     icon: Building,
-    value: "+30",
-    label: "empresas em 14 estados",
+    value: "+30 empresas",
+    label: "em 14 estados",
   },
 ];
 
@@ -29,10 +29,10 @@ export function CredibilitySection() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Quem Está Por Trás
+            Quem está por trás
           </h2>
-          <p className="text-lg text-muted-foreground">
-            TribuTech é uma iniciativa da <span className="text-foreground font-medium">Rebechi & Silva Advogados</span>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            TribuTech é uma iniciativa da <span className="text-foreground font-medium">Rebechi & Silva Advogados</span>, escritório especializado em planejamento tributário para empresas do middle market brasileiro.
           </p>
         </div>
 
@@ -43,8 +43,8 @@ export function CredibilitySection() {
               className="text-center animate-fade-in-up"
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <stat.icon className="w-8 h-8 text-primary" />
+              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <stat.icon className="w-7 h-7 text-primary" />
               </div>
               <div className="text-2xl md:text-3xl font-bold text-foreground mb-1">
                 {stat.value}
