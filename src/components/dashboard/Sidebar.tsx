@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { 
   Home, Scale, Wallet, Bot, FileText, Users, Calendar, 
-  Clock, Settings, Lock, ChevronUp, Sparkles
+  Clock, Settings, Lock, ChevronUp, Sparkles, Newspaper
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import logoTributech from "@/assets/logo-tributech.png";
@@ -17,6 +17,7 @@ interface NavItem {
 
 const mainNavItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: Home },
+  { label: 'Notícias', href: '/noticias', icon: Newspaper, requiredPlan: 'BASICO' },
   { label: 'Comparativo de Regimes', href: '/calculadora/comparativo-regimes', icon: Scale },
   { label: 'Split Payment', href: '/calculadora/split-payment', icon: Wallet },
   { label: 'TribuBot', href: '/tribubot', icon: Bot, requiredPlan: 'BASICO', badge: 'IA' },

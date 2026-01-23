@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { 
   Menu, X, Home, Scale, Wallet, Bot, FileText, Users, Calendar, 
-  Clock, Settings, Lock, Sparkles
+  Clock, Settings, Lock, Sparkles, Newspaper
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -19,6 +19,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: Home },
+  { label: 'Notícias', href: '/noticias', icon: Newspaper, requiredPlan: 'BASICO' },
   { label: 'Comparativo de Regimes', href: '/calculadora/comparativo-regimes', icon: Scale },
   { label: 'Split Payment', href: '/calculadora/split-payment', icon: Wallet },
   { label: 'TribuBot', href: '/tribubot', icon: Bot, requiredPlan: 'BASICO' },
