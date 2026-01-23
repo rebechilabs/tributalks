@@ -5,18 +5,41 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wallet, Info, TrendingDown, Calendar, RefreshCw, FileDown, Loader2, CheckCircle, Calculator } from "lucide-react";
+import { Wallet, Info, TrendingDown, Calendar, RefreshCw, FileDown, Loader2, CheckCircle, Calculator, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { Badge } from "@/components/ui/badge";
+
 interface SplitPaymentResult {
   mensal_min: number;
   mensal_max: number;
   anual_min: number;
   anual_max: number;
   percentual_faturamento: number;
+  cbs_mensal: number;
+  ibs_mensal: number;
+  aliquota_total: number;
 }
+
+// Alíquotas oficiais conforme LC 214/2025 e Manual RTC (13/01/2026)
+const ALIQUOTAS = {
+  // 2026: Alíquotas-teste (fase piloto - compensadas com PIS/COFINS)
+  TESTE_2026: {
+    CBS: 0.009,  // 0,9%
+    IBS: 0.001,  // 0,1%
+    TOTAL: 0.01, // 1%
+    label: "2026 (Teste)",
+  },
+  // 2027+: Alíquotas de referência estimadas
+  PADRAO_2027: {
+    CBS: 0.093,   // 9,3%
+    IBS: 0.187,   // 18,7%
+    TOTAL: 0.28,  // 28%
+    label: "2027+ (Padrão)",
+  },
+};
 
 const PERCENTUAIS_PJ = [
   { value: '0.50', label: '50%' },
@@ -34,6 +57,7 @@ const SplitPayment = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [result, setResult] = useState<SplitPaymentResult | null>(null);
   const [saved, setSaved] = useState(false);
+  const [cenario, setCenario] = useState<'TESTE_2026' | 'PADRAO_2027'>('PADRAO_2027');
 
   const [formData, setFormData] = useState({
     empresa: profile?.empresa || "",
@@ -71,11 +95,15 @@ const SplitPayment = () => {
   };
 
   const calcularSplitPayment = (faturamento_mensal: number, percentual_vendas_pj: number): SplitPaymentResult => {
-    const ALIQUOTA_IVA = 0.28;
+    const aliquotas = ALIQUOTAS[cenario];
     const RANGE_VARIANCE = 0.15;
     
     const baseCalculo = faturamento_mensal * percentual_vendas_pj;
-    const retencaoBase = baseCalculo * ALIQUOTA_IVA;
+    
+    // Cálculo por tributo
+    const cbsMensal = baseCalculo * aliquotas.CBS;
+    const ibsMensal = baseCalculo * aliquotas.IBS;
+    const retencaoBase = cbsMensal + ibsMensal;
     
     const retencaoMin = retencaoBase * (1 - RANGE_VARIANCE);
     const retencaoMax = retencaoBase * (1 + RANGE_VARIANCE);
@@ -85,7 +113,10 @@ const SplitPayment = () => {
       mensal_max: retencaoMax,
       anual_min: retencaoMin * 12,
       anual_max: retencaoMax * 12,
-      percentual_faturamento: (retencaoBase / faturamento_mensal) * 100
+      percentual_faturamento: (retencaoBase / faturamento_mensal) * 100,
+      cbs_mensal: cbsMensal,
+      ibs_mensal: ibsMensal,
+      aliquota_total: aliquotas.TOTAL * 100,
     };
   };
 
@@ -124,6 +155,7 @@ const SplitPayment = () => {
             regime: formData.regime,
             setor: formData.setor,
             percentual_vendas_pj: percentual,
+            cenario: cenario,
           } as any,
           outputs: calculatedResult as any,
         }]);
@@ -188,9 +220,43 @@ const SplitPayment = () => {
             <h1 className="text-2xl font-bold text-foreground">Impacto do Split Payment</h1>
           </div>
           <p className="text-muted-foreground">
-            Descubra quanto vai ficar retido no seu caixa com o novo sistema de pagamento (2026+).
+            Calcule a retenção de caixa com base nas alíquotas oficiais da LC 214/2025 e Manual RTC.
           </p>
         </div>
+
+        {/* Cenário Selector */}
+        <Card className="mb-6 border-primary/20 bg-primary/5">
+          <CardContent className="py-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-primary" />
+                <span className="font-medium text-foreground">Cenário de Simulação</span>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant={cenario === 'TESTE_2026' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => { setCenario('TESTE_2026'); setResult(null); }}
+                >
+                  2026 (Teste: 1%)
+                </Button>
+                <Button
+                  variant={cenario === 'PADRAO_2027' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => { setCenario('PADRAO_2027'); setResult(null); }}
+                >
+                  2027+ (Padrão: 28%)
+                </Button>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              {cenario === 'TESTE_2026' 
+                ? "Em 2026, as alíquotas são simbólicas (CBS 0,9% + IBS 0,1%) e compensadas com PIS/COFINS."
+                : "A partir de 2027, entram as alíquotas de referência (CBS 9,3% + IBS 18,7% = 28%)."
+              }
+            </p>
+          </CardContent>
+        </Card>
 
         {/* Form */}
         <Card className="mb-8">
@@ -322,6 +388,31 @@ const SplitPayment = () => {
                 </div>
               </div>
 
+              {/* Tax Breakdown */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-muted/30 rounded-lg p-4 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">CBS (Federal)</p>
+                  <p className="text-lg font-semibold text-foreground">{formatCurrency(result.cbs_mensal)}</p>
+                  <Badge variant="outline" className="mt-1 text-xs">
+                    {cenario === 'TESTE_2026' ? '0,9%' : '9,3%'}
+                  </Badge>
+                </div>
+                <div className="bg-muted/30 rounded-lg p-4 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">IBS (Est/Mun)</p>
+                  <p className="text-lg font-semibold text-foreground">{formatCurrency(result.ibs_mensal)}</p>
+                  <Badge variant="outline" className="mt-1 text-xs">
+                    {cenario === 'TESTE_2026' ? '0,1%' : '18,7%'}
+                  </Badge>
+                </div>
+                <div className="bg-primary/10 rounded-lg p-4 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">TOTAL IVA</p>
+                  <p className="text-lg font-semibold text-primary">{result.aliquota_total.toFixed(0)}%</p>
+                  <Badge variant="default" className="mt-1 text-xs">
+                    LC 214/2025
+                  </Badge>
+                </div>
+              </div>
+
               {/* Explanation */}
               <div className="bg-accent/10 border border-accent/20 rounded-xl p-6">
                 <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
@@ -337,6 +428,12 @@ const SplitPayment = () => {
                   Em 12 meses, estamos falando de <strong>{formatCurrency(result.anual_min)}</strong> a <strong>{formatCurrency(result.anual_max)}</strong> de 
                   capital de giro comprometido.
                 </p>
+                {cenario === 'TESTE_2026' && (
+                  <p className="text-sm text-primary mt-3 flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4" />
+                    Em 2026, esses valores serão compensados com PIS/COFINS (impacto líquido zero).
+                  </p>
+                )}
               </div>
 
               {/* Next Steps */}
@@ -346,8 +443,9 @@ const SplitPayment = () => {
                   Próximos Passos Sugeridos
                 </h3>
                 <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
-                  <li>Revisar projeção de fluxo de caixa para 2026</li>
+                  <li>Revisar projeção de fluxo de caixa para 2026/2027</li>
                   <li>Avaliar necessidade de capital de giro adicional</li>
+                  <li>Adaptar sistemas ERP ao Portal RTC da Receita Federal</li>
                   <li>Considerar antecipação de recebíveis</li>
                 </ol>
               </div>
@@ -370,10 +468,10 @@ const SplitPayment = () => {
                   Quer validar esses números com um especialista?
                 </p>
                 <Button variant="default" asChild>
-                  <a href="https://calendly.com" target="_blank" rel="noopener noreferrer">
+                  <Link to="/consultorias">
                     <Calendar className="w-4 h-4 mr-2" />
-                    Agendar diagnóstico gratuito
-                  </a>
+                    Agendar consultoria
+                  </Link>
                 </Button>
               </div>
 
@@ -387,8 +485,8 @@ const SplitPayment = () => {
 
               {/* Disclaimer */}
               <p className="text-xs text-muted-foreground text-center">
-                * Valores são estimativas baseadas em médias de mercado. 
-                Não constituem parecer técnico ou promessa de resultado.
+                * Alíquotas conforme LC 214/2025 e Manual RTC (Receita Federal, 13/01/2026). 
+                Valores são estimativas e não constituem parecer técnico ou promessa de resultado.
               </p>
             </CardContent>
           </Card>
