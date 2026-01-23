@@ -1,14 +1,207 @@
-import { Link } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Bot, Lock, Sparkles, MessageSquare } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Bot, Lock, Sparkles, Send, Loader2, User, AlertCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { Link } from "react-router-dom";
+import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+}
+
+const SUGGESTIONS = [
+  "Como funciona o split payment?",
+  "Posso mudar de regime no meio do ano?",
+  "O que é uma holding familiar?",
+  "Qual a diferença entre Presumido e Real?",
+];
 
 const TribuBot = () => {
-  const { profile } = useAuth();
-  const currentPlan = profile?.plano || 'FREE';
-  const hasAccess = currentPlan !== 'FREE';
+  const { profile, user } = useAuth();
+  const currentPlan = profile?.plano || "FREE";
+  const hasAccess = currentPlan !== "FREE";
+  const isUnlimited = ["PROFISSIONAL", "PREMIUM"].includes(currentPlan);
+
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: "assistant",
+      content: `Olá! Sou o **TribuBot**, seu consultor tributário virtual. 🤖
+
+Posso ajudar com dúvidas sobre:
+- Regimes tributários (Simples, Presumido, Real)
+- Split Payment e reforma tributária
+- PIS, COFINS, IRPJ, CSLL
+- Planejamento tributário
+
+Como posso te ajudar hoje?`,
+    },
+  ]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [dailyCount, setDailyCount] = useState(0);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Fetch daily message count for BASICO plan
+  useEffect(() => {
+    const fetchDailyCount = async () => {
+      if (!user || isUnlimited) return;
+      
+      const today = new Date().toISOString().split("T")[0];
+      const { count } = await supabase
+        .from("tributbot_messages")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .gte("created_at", `${today}T00:00:00`);
+      
+      setDailyCount(count || 0);
+    };
+
+    fetchDailyCount();
+  }, [user, isUnlimited, messages]);
+
+  const handleSend = async (messageText?: string) => {
+    const textToSend = messageText || input.trim();
+    if (!textToSend || isLoading) return;
+
+    const userMessage: Message = { role: "user", content: textToSend };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setIsLoading(true);
+
+    let assistantContent = "";
+    
+    const updateAssistant = (chunk: string) => {
+      assistantContent += chunk;
+      setMessages((prev) => {
+        const last = prev[prev.length - 1];
+        if (last?.role === "assistant" && prev.length > 1 && prev[prev.length - 2].role === "user") {
+          return prev.map((m, i) => 
+            i === prev.length - 1 ? { ...m, content: assistantContent } : m
+          );
+        }
+        return [...prev, { role: "assistant", content: assistantContent }];
+      });
+    };
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tributbot-chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({
+          messages: [...messages.slice(1), userMessage].map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
+        }),
+      });
+
+      if (!resp.ok) {
+        const errorData = await resp.json();
+        throw new Error(errorData.error || "Erro ao processar mensagem");
+      }
+
+      if (!resp.body) throw new Error("No response body");
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let textBuffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        textBuffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (line.startsWith(":") || line.trim() === "") continue;
+          if (!line.startsWith("data: ")) continue;
+
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") break;
+
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) updateAssistant(content);
+          } catch {
+            textBuffer = line + "\n" + textBuffer;
+            break;
+          }
+        }
+      }
+
+      // Handle remaining buffer
+      if (textBuffer.trim()) {
+        for (let raw of textBuffer.split("\n")) {
+          if (!raw) continue;
+          if (raw.endsWith("\r")) raw = raw.slice(0, -1);
+          if (raw.startsWith(":") || raw.trim() === "") continue;
+          if (!raw.startsWith("data: ")) continue;
+          const jsonStr = raw.slice(6).trim();
+          if (jsonStr === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) updateAssistant(content);
+          } catch { /* ignore */ }
+        }
+      }
+
+      setDailyCount((prev) => prev + 1);
+    } catch (error) {
+      console.error("TribuBot error:", error);
+      toast({
+        title: "Erro",
+        description: error instanceof Error ? error.message : "Erro ao enviar mensagem",
+        variant: "destructive",
+      });
+      // Remove the user message if there was an error
+      setMessages((prev) => prev.slice(0, -1));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const renderMarkdown = (text: string) => {
+    // Simple markdown rendering for bold and lists
+    let html = text
+      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+      .replace(/^- (.*)$/gm, "<li>$1</li>")
+      .replace(/(<li>.*<\/li>\n?)+/g, "<ul class='list-disc list-inside space-y-1 my-2'>$&</ul>")
+      .replace(/\n/g, "<br/>");
+    
+    return <div dangerouslySetInnerHTML={{ __html: html }} />;
+  };
 
   if (!hasAccess) {
     return (
@@ -41,30 +234,111 @@ const TribuBot = () => {
 
   return (
     <DashboardLayout title="TribuBot">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-foreground mb-2 flex items-center gap-2">
-            <Bot className="w-6 h-6 text-primary" />
-            TribuBot — IA 24/7
-          </h1>
-          <p className="text-muted-foreground">
-            Tire dúvidas tributárias em linguagem simples.
-          </p>
+      <div className="flex flex-col h-[calc(100vh-4rem)] max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="px-4 sm:px-6 py-4 border-b border-border">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Bot className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="font-bold text-foreground">TribuBot</h1>
+              <p className="text-xs text-muted-foreground">Seu consultor tributário com IA</p>
+            </div>
+          </div>
         </div>
 
-        <Card className="min-h-[500px] flex flex-col">
-          <CardContent className="flex-1 flex items-center justify-center py-12">
-            <div className="text-center">
-              <MessageSquare className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
-              <h3 className="font-medium text-foreground mb-2">
-                Chat em desenvolvimento
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                O TribuBot estará disponível em breve. Fique ligado!
-              </p>
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-4">
+          {messages.map((msg, i) => (
+            <div
+              key={i}
+              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+            >
+              <div
+                className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+                  msg.role === "user"
+                    ? "bg-primary text-primary-foreground rounded-tr-sm"
+                    : "bg-muted/50 text-foreground rounded-tl-sm"
+                }`}
+              >
+                <div className="flex items-start gap-2">
+                  {msg.role === "assistant" && (
+                    <Bot className="w-4 h-4 mt-1 shrink-0 text-primary" />
+                  )}
+                  <div className="text-sm leading-relaxed">
+                    {msg.role === "assistant" ? renderMarkdown(msg.content) : msg.content}
+                  </div>
+                  {msg.role === "user" && (
+                    <User className="w-4 h-4 mt-1 shrink-0" />
+                  )}
+                </div>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          ))}
+          
+          {isLoading && messages[messages.length - 1]?.role === "user" && (
+            <div className="flex justify-start">
+              <div className="bg-muted/50 rounded-2xl rounded-tl-sm px-4 py-3">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="text-sm">Pensando...</span>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Suggestions */}
+        {messages.length === 1 && (
+          <div className="px-4 sm:px-6 py-3 border-t border-border">
+            <p className="text-xs text-muted-foreground mb-2">💡 Sugestões:</p>
+            <div className="flex flex-wrap gap-2">
+              {SUGGESTIONS.map((s, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleSend(s)}
+                  className="text-xs border border-border rounded-full px-3 py-1.5 text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Input */}
+        <div className="px-4 sm:px-6 py-4 border-t border-border">
+          <div className="flex gap-2">
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Digite sua pergunta..."
+              disabled={isLoading}
+              className="flex-1"
+            />
+            <Button onClick={() => handleSend()} disabled={isLoading || !input.trim()}>
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
+            </Button>
+          </div>
+          
+          {/* Rate limit info */}
+          {!isUnlimited && (
+            <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+              <span>Mensagens hoje: {dailyCount} de 10</span>
+              <Link to="/#planos" className="text-primary hover:underline">
+                Fazer upgrade
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
     </DashboardLayout>
   );
