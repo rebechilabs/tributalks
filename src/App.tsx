@@ -5,16 +5,28 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+
+// Páginas públicas
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 import RecuperarSenha from "./pages/RecuperarSenha";
 import RedefinirSenha from "./pages/RedefinirSenha";
+import NotFound from "./pages/NotFound";
+
+// Páginas protegidas
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
+import Perfil from "./pages/Perfil";
+import Historico from "./pages/Historico";
+import TribuBot from "./pages/TribuBot";
+import Comunidade from "./pages/Comunidade";
+import Consultorias from "./pages/Consultorias";
+import Configuracoes from "./pages/Configuracoes";
+
+// Calculadoras
 import SplitPayment from "./pages/calculadora/SplitPayment";
 import ComparativoRegimes from "./pages/calculadora/ComparativoRegimes";
-import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +62,56 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/perfil" 
+              element={
+                <ProtectedRoute>
+                  <Perfil />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/historico" 
+              element={
+                <ProtectedRoute>
+                  <Historico />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/tribubot" 
+              element={
+                <ProtectedRoute>
+                  <TribuBot />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/comunidade" 
+              element={
+                <ProtectedRoute>
+                  <Comunidade />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/consultorias" 
+              element={
+                <ProtectedRoute>
+                  <Consultorias />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/configuracoes" 
+              element={
+                <ProtectedRoute>
+                  <Configuracoes />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Calculadoras */}
             <Route 
               path="/calculadora/split-payment" 
               element={
