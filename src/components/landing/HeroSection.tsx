@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, TrendingUp, Shield, Clock } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
+import { CONFIG } from "@/config/site";
 
 export function HeroSection() {
   return (
@@ -14,54 +14,32 @@ export function HeroSection() {
 
       <div className="container mx-auto px-4 py-20 relative">
         <div className="max-w-4xl mx-auto text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-8 animate-fade-in-up">
-            <TrendingUp className="w-4 h-4" />
-            <span>Plataforma Premium da Newsletter TribuTalks</span>
-          </div>
-
           {/* Main Heading */}
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 animate-fade-in-up animation-delay-100">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 animate-fade-in-up">
             Inteligência Tributária para Empresas{" "}
             <span className="gradient-text">acima de R$1M/mês</span>
           </h1>
 
           {/* Subheading */}
-          <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto animate-fade-in-up animation-delay-200">
-            Calculadoras que mostram o impacto real das decisões tributárias no seu caixa.{" "}
+          <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto animate-fade-in-up animation-delay-100">
+            Calculadoras e IA que mostram o impacto real das decisões tributárias no seu caixa.{" "}
             <span className="text-foreground font-medium">Em minutos, não em semanas.</span>
           </p>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 animate-fade-in-up animation-delay-300">
-            <Link to="/cadastro">
+          {/* CTA Button */}
+          <div className="flex flex-col items-center gap-4 mb-6 animate-fade-in-up animation-delay-200">
+            <a href={CONFIG.STRIPE_PAYMENT_LINK} target="_blank" rel="noopener noreferrer">
               <Button variant="heroPrimary" size="xl" className="group">
                 Assinar por R$197/mês
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
-            </Link>
-            <a href="#como-funciona">
-              <Button variant="heroSecondary" size="xl">
-                Ver como funciona ↓
-              </Button>
             </a>
           </div>
 
-          {/* Trust Indicators */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto animate-fade-in-up animation-delay-400">
-            <div className="flex items-center justify-center gap-3 text-muted-foreground">
-              <Shield className="w-5 h-5 text-success" />
-              <span className="text-sm">+R$380M em economia gerada</span>
-            </div>
-            <div className="flex items-center justify-center gap-3 text-muted-foreground">
-              <Clock className="w-5 h-5 text-primary" />
-              <span className="text-sm">Resultados em minutos</span>
-            </div>
-            <div className="flex items-center justify-center gap-3 text-muted-foreground">
-              <TrendingUp className="w-5 h-5 text-accent" />
-              <span className="text-sm">+30 empresas atendidas</span>
-            </div>
-          </div>
+          {/* Guarantee Text */}
+          <p className="text-sm text-muted-foreground animate-fade-in-up animation-delay-300">
+            Cancele quando quiser. Sem fidelidade.
+          </p>
         </div>
       </div>
 

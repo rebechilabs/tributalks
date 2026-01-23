@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Calculator } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
+import { CONFIG } from "@/config/site";
 
 export function CTASection() {
   return (
@@ -14,35 +14,25 @@ export function CTASection() {
 
       <div className="container mx-auto px-4 relative">
         <div className="max-w-3xl mx-auto text-center">
-          {/* Icon */}
-          <div className="w-20 h-20 rounded-2xl bg-primary-foreground/10 backdrop-blur flex items-center justify-center mx-auto mb-8">
-            <Calculator className="w-10 h-10 text-primary-foreground" />
-          </div>
-
           {/* Heading */}
-          <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-10">
             Pronto para tomar decisões tributárias com confiança?
           </h2>
 
-          {/* Subheading */}
-          <p className="text-xl text-primary-foreground/80 mb-10">
-            Junte-se a empresários que já descobriram oportunidades de economia
-          </p>
-
           {/* CTA Button */}
-          <Link to="/cadastro">
+          <a href={CONFIG.STRIPE_PAYMENT_LINK} target="_blank" rel="noopener noreferrer">
             <Button 
               size="xl" 
               className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 shadow-xl group"
             >
-              Começar Agora — R$197/mês
+              Começar agora — R$197/mês
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Button>
-          </Link>
+          </a>
 
           {/* Guarantee Text */}
-          <p className="text-sm text-primary-foreground/60 mt-6">
-            Cancele a qualquer momento. Sem compromisso.
+          <p className="text-sm text-primary-foreground/70 mt-6">
+            Acesso imediato. Cancele quando quiser.
           </p>
         </div>
       </div>
