@@ -16,7 +16,7 @@ interface Profile {
   estado: string | null;
   cnae: string | null;
   percentual_vendas_pj: number | null;
-  plano: 'FREE' | 'PRO' | null;
+  plano: 'FREE' | 'BASICO' | 'PROFISSIONAL' | 'PREMIUM' | null;
   onboarding_complete: boolean | null;
   created_at: string;
   updated_at: string;

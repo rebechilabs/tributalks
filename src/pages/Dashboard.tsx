@@ -1,15 +1,19 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Calculator, Wallet, Scale, FileText, Building, Lock, ChevronDown, User, LogOut, Edit, Clock, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { 
+  Calculator, Wallet, Scale, FileText, Bot, Users, Calendar, 
+  Lock, ArrowRight, Clock, Sparkles 
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 
-interface Calculator {
+interface CalcItem {
   id: string;
   slug: string;
   nome: string;
@@ -31,14 +35,27 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Wallet: Wallet,
   Scale: Scale,
   FileText: FileText,
-  Building: Building,
+  Bot: Bot,
+  Users: Users,
+  Calendar: Calendar,
+};
+
+const PLAN_LIMITS = {
+  FREE: { simulations: 1, label: 'Grátis' },
+  BASICO: { simulations: -1, label: 'Básico' },
+  PROFISSIONAL: { simulations: -1, label: 'Profissional' },
+  PREMIUM: { simulations: -1, label: 'Premium' },
 };
 
 const Dashboard = () => {
-  const { user, profile, signOut } = useAuth();
-  const [calculators, setCalculators] = useState<Calculator[]>([]);
+  const { user, profile } = useAuth();
+  const [calculators, setCalculators] = useState<CalcItem[]>([]);
   const [simulations, setSimulations] = useState<Simulation[]>([]);
+  const [simulationsThisMonth, setSimulationsThisMonth] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  const currentPlan = (profile?.plano || 'FREE') as keyof typeof PLAN_LIMITS;
+  const planLimit = PLAN_LIMITS[currentPlan]?.simulations || 1;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -64,6 +81,19 @@ const Dashboard = () => {
         if (simsData) {
           setSimulations(simsData);
         }
+
+        // Count this month's simulations
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+
+        const { count } = await supabase
+          .from('simulations')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .gte('created_at', startOfMonth.toISOString());
+
+        setSimulationsThisMonth(count || 0);
       }
 
       setLoading(false);
@@ -71,10 +101,6 @@ const Dashboard = () => {
 
     fetchData();
   }, [user]);
-
-  const handleSignOut = async () => {
-    await signOut();
-  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -94,17 +120,6 @@ const Dashboard = () => {
     return regime ? labels[regime] || regime : 'Não informado';
   };
 
-  const getSetorLabel = (setor: string | null) => {
-    const labels: Record<string, string> = {
-      industria: 'Indústria',
-      comercio: 'Comércio',
-      servicos: 'Serviços',
-      tecnologia: 'Tecnologia',
-      outro: 'Outro',
-    };
-    return setor ? labels[setor] || setor : 'Não informado';
-  };
-
   const getSimulationSummary = (sim: Simulation) => {
     if (sim.calculator_slug === 'split-payment') {
       const outputs = sim.outputs as { mensal_min?: number; mensal_max?: number };
@@ -113,9 +128,10 @@ const Dashboard = () => {
       }
     }
     if (sim.calculator_slug === 'comparativo-regimes') {
-      const outputs = sim.outputs as { melhor_opcao?: string };
+      const outputs = sim.outputs as { melhor_opcao?: string; economia_anual?: number };
       if (outputs.melhor_opcao) {
-        return `Melhor: ${getRegimeLabel(outputs.melhor_opcao)}`;
+        const economia = outputs.economia_anual ? ` · Economia: ${formatCurrency(outputs.economia_anual)}/ano` : '';
+        return `Melhor: ${getRegimeLabel(outputs.melhor_opcao)}${economia}`;
       }
     }
     return 'Ver detalhes';
@@ -126,77 +142,70 @@ const Dashboard = () => {
     return calc?.nome || slug;
   };
 
+  const progressPercent = planLimit === -1 ? 0 : Math.min((simulationsThisMonth / planLimit) * 100, 100);
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <Calculator className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="text-lg font-bold text-foreground">TribuTech</span>
-            </div>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <User className="w-4 h-4 text-primary" />
-                  </div>
-                  <span className="hidden sm:inline">{profile?.nome || 'Usuário'}</span>
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem asChild>
-                  <Link to="/perfil" className="flex items-center gap-2">
-                    <Edit className="w-4 h-4" />
-                    Meu Perfil
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sair
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <DashboardLayout title="Dashboard">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-foreground mb-2">
             Olá, {profile?.nome?.split(' ')[0] || 'Usuário'} 👋
           </h1>
-          <div className="flex flex-wrap items-center gap-2 text-muted-foreground">
-            <span>Seu perfil:</span>
-            <span className="px-2 py-1 bg-muted rounded text-sm">{getSetorLabel(profile?.setor)}</span>
-            <span>·</span>
-            <span className="px-2 py-1 bg-muted rounded text-sm">{getRegimeLabel(profile?.regime)}</span>
-            <span>·</span>
-            <span className="px-2 py-1 bg-muted rounded text-sm">
-              {profile?.faturamento_mensal ? formatCurrency(profile.faturamento_mensal) + '/mês' : 'Faturamento não informado'}
-            </span>
-            <Link to="/perfil" className="text-primary hover:underline text-sm ml-2">
-              Editar perfil
-            </Link>
-          </div>
+          <p className="text-muted-foreground">
+            Bem-vindo ao seu painel de inteligência tributária.
+          </p>
         </div>
+
+        {/* Plan Status Card */}
+        <Card className="mb-8 border-primary/20">
+          <CardContent className="pt-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm text-muted-foreground">Seu plano:</span>
+                  <span className="text-sm font-semibold text-primary">
+                    {PLAN_LIMITS[currentPlan]?.label || 'Grátis'}
+                  </span>
+                </div>
+                
+                {planLimit !== -1 && (
+                  <>
+                    <div className="flex items-center justify-between text-sm mb-2">
+                      <span className="text-muted-foreground">Simulações este mês:</span>
+                      <span className="font-medium">{simulationsThisMonth} de {planLimit}</span>
+                    </div>
+                    <Progress value={progressPercent} className="h-2" />
+                  </>
+                )}
+
+                {planLimit === -1 && (
+                  <p className="text-sm text-muted-foreground">
+                    Simulações ilimitadas ✓
+                  </p>
+                )}
+              </div>
+
+              {currentPlan === 'FREE' && (
+                <Link to="/#planos">
+                  <Button className="gap-2">
+                    <Sparkles className="w-4 h-4" />
+                    Fazer upgrade
+                  </Button>
+                </Link>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Calculators Section */}
         <section className="mb-12">
           <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
             <Calculator className="w-5 h-5 text-primary" />
-            Calculadoras Disponíveis
+            Ferramentas Disponíveis
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {calculators.map((calc) => {
               const IconComponent = iconMap[calc.icone] || Calculator;
               const isDisabled = calc.status !== 'ATIVO';
@@ -263,10 +272,20 @@ const Dashboard = () => {
 
           {simulations.length === 0 ? (
             <Card>
-              <CardContent className="py-8 text-center text-muted-foreground">
+              <CardContent className="py-12 text-center">
                 <Calculator className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
-                <p>Você ainda não realizou nenhuma simulação.</p>
-                <p className="text-sm mt-1">Comece usando uma das calculadoras acima!</p>
+                <h3 className="font-medium text-foreground mb-2">
+                  Você ainda não fez nenhuma simulação
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Que tal começar pelo Comparativo de Regimes?
+                </p>
+                <Button asChild>
+                  <Link to="/calculadora/comparativo-regimes">
+                    Fazer minha primeira simulação
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Link>
+                </Button>
               </CardContent>
             </Card>
           ) : (
@@ -303,8 +322,8 @@ const Dashboard = () => {
             </Card>
           )}
         </section>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 };
 
