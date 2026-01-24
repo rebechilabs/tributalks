@@ -3,9 +3,11 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 import { 
   Calculator, Wallet, Scale, FileText, Bot, Users, Calendar, 
-  Lock, ArrowRight, Clock, Sparkles 
+  Lock, ArrowRight, Clock, Sparkles, Upload, Target, BarChart3,
+  Trophy, Lightbulb, Newspaper
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,14 +33,116 @@ interface Simulation {
   created_at: string;
 }
 
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  Wallet: Wallet,
-  Scale: Scale,
-  FileText: FileText,
-  Bot: Bot,
-  Users: Users,
-  Calendar: Calendar,
-};
+interface ToolItem {
+  name: string;
+  description: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badge?: string;
+  disabled?: boolean;
+  requiredPlan?: 'BASICO' | 'PROFISSIONAL' | 'PREMIUM';
+}
+
+interface ToolGroup {
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  items: ToolItem[];
+}
+
+const toolGroups: ToolGroup[] = [
+  {
+    title: 'Calculadoras',
+    icon: Calculator,
+    items: [
+      { 
+        name: 'Calculadora RTC', 
+        description: 'Calcule impostos da Reforma Tributária',
+        href: '/calculadora/rtc', 
+        icon: Calculator,
+        badge: 'API'
+      },
+      { 
+        name: 'Comparativo de Regimes', 
+        description: 'Compare Simples, Presumido e Real',
+        href: '/calculadora/comparativo-regimes', 
+        icon: Scale 
+      },
+      { 
+        name: 'Split Payment', 
+        description: 'Simule o impacto do split payment',
+        href: '/calculadora/split-payment', 
+        icon: Wallet 
+      },
+    ]
+  },
+  {
+    title: 'XMLs e Créditos',
+    icon: Target,
+    items: [
+      { 
+        name: 'Importar XMLs', 
+        description: 'Importe notas fiscais para análise',
+        href: '/dashboard/importar-xml', 
+        icon: Upload 
+      },
+      { 
+        name: 'Radar de Créditos', 
+        description: 'Identifique créditos recuperáveis',
+        href: '/dashboard/radar-creditos', 
+        icon: Target,
+        badge: 'Novo'
+      },
+    ]
+  },
+  {
+    title: 'Análise Financeira',
+    icon: BarChart3,
+    items: [
+      { 
+        name: 'DRE Inteligente', 
+        description: 'Análise de resultado econômico',
+        href: '/dashboard/dre', 
+        icon: BarChart3,
+        badge: 'Novo'
+      },
+      { 
+        name: 'Score Tributário', 
+        description: 'Avalie sua saúde fiscal',
+        href: '/dashboard/score-tributario', 
+        icon: Trophy,
+        badge: 'Novo'
+      },
+      { 
+        name: 'Oportunidades', 
+        description: 'Descubra economia tributária',
+        href: '/dashboard/oportunidades', 
+        icon: Lightbulb,
+        badge: 'Novo'
+      },
+    ]
+  },
+  {
+    title: 'Conteúdo e IA',
+    icon: Bot,
+    items: [
+      { 
+        name: 'Notícias Tributárias', 
+        description: 'Acompanhe a legislação',
+        href: '/noticias', 
+        icon: Newspaper,
+        requiredPlan: 'BASICO'
+      },
+      { 
+        name: 'TribuBot', 
+        description: 'Assistente de IA tributária',
+        href: '/tribubot', 
+        icon: Bot,
+        badge: 'IA',
+        requiredPlan: 'BASICO'
+      },
+    ]
+  },
+];
 
 const PLAN_LIMITS = {
   FREE: { simulations: 1, label: 'Grátis' },
@@ -47,9 +151,15 @@ const PLAN_LIMITS = {
   PREMIUM: { simulations: -1, label: 'Premium' },
 };
 
+const PLAN_HIERARCHY = {
+  'FREE': 0,
+  'BASICO': 1,
+  'PROFISSIONAL': 2,
+  'PREMIUM': 3,
+};
+
 const Dashboard = () => {
   const { user, profile } = useAuth();
-  const [calculators, setCalculators] = useState<CalcItem[]>([]);
   const [simulations, setSimulations] = useState<Simulation[]>([]);
   const [simulationsThisMonth, setSimulationsThisMonth] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -57,19 +167,15 @@ const Dashboard = () => {
   const currentPlan = (profile?.plano || 'FREE') as keyof typeof PLAN_LIMITS;
   const planLimit = PLAN_LIMITS[currentPlan]?.simulations || 1;
 
+  const hasAccess = (requiredPlan?: string) => {
+    if (!requiredPlan) return true;
+    const userLevel = PLAN_HIERARCHY[currentPlan as keyof typeof PLAN_HIERARCHY] || 0;
+    const requiredLevel = PLAN_HIERARCHY[requiredPlan as keyof typeof PLAN_HIERARCHY] || 0;
+    return userLevel >= requiredLevel;
+  };
+
   useEffect(() => {
     const fetchData = async () => {
-      // Fetch calculators
-      const { data: calcsData } = await supabase
-        .from('calculators')
-        .select('*')
-        .order('ordem');
-      
-      if (calcsData) {
-        setCalculators(calcsData);
-      }
-
-      // Fetch recent simulations
       if (user) {
         const { data: simsData } = await supabase
           .from('simulations')
@@ -137,11 +243,6 @@ const Dashboard = () => {
     return 'Ver detalhes';
   };
 
-  const getCalculatorName = (slug: string) => {
-    const calc = calculators.find(c => c.slug === slug);
-    return calc?.nome || slug;
-  };
-
   const progressPercent = planLimit === -1 ? 0 : Math.min((simulationsThisMonth / planLimit) * 100, 100);
 
   return (
@@ -198,66 +299,80 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Calculators Section */}
-        <section className="mb-12">
-          <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-            <Calculator className="w-5 h-5 text-primary" />
-            Ferramentas Disponíveis
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {calculators.map((calc) => {
-              const IconComponent = iconMap[calc.icone] || Calculator;
-              const isDisabled = calc.status !== 'ATIVO';
+        {/* Tool Groups */}
+        <div className="space-y-10">
+          {toolGroups.map((group, groupIndex) => {
+            const GroupIcon = group.icon;
+            return (
+              <section key={group.title}>
+                {groupIndex > 0 && <Separator className="mb-8" />}
+                <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <GroupIcon className="w-5 h-5 text-primary" />
+                  {group.title}
+                </h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {group.items.map((tool) => {
+                    const Icon = tool.icon;
+                    const canAccess = hasAccess(tool.requiredPlan);
+                    const isDisabled = tool.disabled || !canAccess;
 
-              return (
-                <Card 
-                  key={calc.id} 
-                  className={`transition-all ${isDisabled ? 'opacity-60' : 'hover:shadow-md hover:border-primary/30'}`}
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                        isDisabled ? 'bg-muted' : 'bg-primary/10'
-                      }`}>
-                        {isDisabled ? (
-                          <Lock className="w-6 h-6 text-muted-foreground" />
-                        ) : (
-                          <IconComponent className="w-6 h-6 text-primary" />
-                        )}
-                      </div>
-                      {isDisabled && (
-                        <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-                          Em breve
-                        </span>
-                      )}
-                    </div>
-                    <CardTitle className="text-lg mt-3">{calc.nome}</CardTitle>
-                    <CardDescription>{calc.descricao}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {isDisabled ? (
-                      <Button variant="outline" disabled className="w-full">
-                        <Lock className="w-4 h-4 mr-2" />
-                        Em breve
-                      </Button>
-                    ) : (
-                      <Button asChild className="w-full">
-                        <Link to={`/calculadora/${calc.slug}`}>
-                          Simular agora
-                          <ArrowRight className="w-4 h-4 ml-2" />
-                        </Link>
-                      </Button>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </section>
+                    return (
+                      <Card 
+                        key={tool.href} 
+                        className={`transition-all ${isDisabled ? 'opacity-60' : 'hover:shadow-md hover:border-primary/30'}`}
+                      >
+                        <CardHeader className="pb-3">
+                          <div className="flex items-start justify-between">
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                              isDisabled ? 'bg-muted' : 'bg-primary/10'
+                            }`}>
+                              {isDisabled ? (
+                                <Lock className="w-6 h-6 text-muted-foreground" />
+                              ) : (
+                                <Icon className="w-6 h-6 text-primary" />
+                              )}
+                            </div>
+                            {tool.badge && (
+                              <span className={`text-xs px-2 py-1 rounded ${
+                                isDisabled 
+                                  ? 'bg-muted text-muted-foreground' 
+                                  : 'bg-primary/10 text-primary'
+                              }`}>
+                                {tool.badge}
+                              </span>
+                            )}
+                          </div>
+                          <CardTitle className="text-lg mt-3">{tool.name}</CardTitle>
+                          <CardDescription>{tool.description}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          {isDisabled ? (
+                            <Button variant="outline" disabled className="w-full">
+                              <Lock className="w-4 h-4 mr-2" />
+                              {tool.requiredPlan ? `Plano ${tool.requiredPlan}` : 'Em breve'}
+                            </Button>
+                          ) : (
+                            <Button asChild className="w-full">
+                              <Link to={tool.href}>
+                                Acessar
+                                <ArrowRight className="w-4 h-4 ml-2" />
+                              </Link>
+                            </Button>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
+        </div>
 
         {/* Recent Simulations */}
-        <section>
+        <section className="mt-12">
+          <Separator className="mb-8" />
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
               <Clock className="w-5 h-5 text-primary" />
@@ -299,7 +414,7 @@ const Dashboard = () => {
                     >
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-foreground truncate">
-                          {getCalculatorName(sim.calculator_slug)}
+                          {sim.calculator_slug}
                         </p>
                         <p className="text-sm text-muted-foreground">
                           {getSimulationSummary(sim)}
