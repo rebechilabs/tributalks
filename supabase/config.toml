@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.process-dre]
 verify_jwt = false
+
+[functions.calculate-tax-score]
+verify_jwt = false
