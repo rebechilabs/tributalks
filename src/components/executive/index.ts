@@ -4,3 +4,4 @@ export { ExecutiveProjects } from './ExecutiveProjects';
 export { ExecutiveReformImpact } from './ExecutiveReformImpact';
 export { ExecutiveRisks } from './ExecutiveRisks';
 export { ExecutiveReportPreview } from './ExecutiveReportPreview';
+export { ExecutiveNcmCard } from './ExecutiveNcmCard';

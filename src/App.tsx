@@ -36,6 +36,7 @@ import DREResultados from "./pages/DREResultados";
 import ScoreTributario from "./pages/ScoreTributario";
 import PerfilEmpresa from "./pages/PerfilEmpresa";
 import Oportunidades from "./pages/Oportunidades";
+import CbsIbsNcm from "./pages/CbsIbsNcm";
 // Calculadoras
 import SplitPayment from "./pages/calculadora/SplitPayment";
 import ComparativoRegimes from "./pages/calculadora/ComparativoRegimes";
@@ -234,6 +235,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Oportunidades />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/cbs-ibs-ncm" 
+              element={
+                <ProtectedRoute>
+                  <CbsIbsNcm />
                 </ProtectedRoute>
               } 
             />

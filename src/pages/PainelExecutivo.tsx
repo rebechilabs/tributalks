@@ -7,7 +7,8 @@ import {
   ExecutiveThermometer, 
   ExecutiveProjects, 
   ExecutiveReformImpact, 
-  ExecutiveRisks 
+  ExecutiveRisks,
+  ExecutiveNcmCard
 } from "@/components/executive";
 import { ExecutiveReportPreview } from "@/components/executive/ExecutiveReportPreview";
 import { useExecutiveData } from "@/hooks/useExecutiveData";
@@ -137,6 +138,9 @@ export default function PainelExecutivo() {
             onGenerateReport={handleGenerateReport}
           />
         </div>
+
+        {/* Block 5 - NCM/CBS/IBS Card */}
+        <ExecutiveNcmCard userId={user?.id} loading={loading} />
       </div>
 
       {/* Report Preview Modal */}
