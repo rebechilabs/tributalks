@@ -64,13 +64,13 @@ export function ExecutiveThermometer({ data, loading }: ExecutiveThermometerProp
         <CardContent className="p-6">
           <div className="text-center py-8">
             <Gauge className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-            <h3 className="text-lg font-medium text-muted-foreground">Dados insuficientes</h3>
+            <h3 className="text-lg font-medium text-muted-foreground">Ainda não temos dados suficientes</h3>
             <p className="text-sm text-muted-foreground/70 mt-1 mb-4">
-              Complete o Score Tributário para ver seu termômetro
+              Complete seu Score Tributário para ver a saúde da sua empresa
             </p>
             <Button asChild variant="outline" size="sm">
               <Link to="/dashboard/score-tributario">
-                Completar Score
+                Avaliar saúde tributária
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </Button>
@@ -98,25 +98,25 @@ export function ExecutiveThermometer({ data, loading }: ExecutiveThermometerProp
             </div>
             <div>
               <h2 className="text-xl font-semibold text-foreground">
-                Olá, {data.userName}
+                Saúde Tributária da Empresa
               </h2>
               {data.hasScoreData ? (
                 <>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Sua nota tributária geral é <span className={cn("font-semibold", gradeStyle.text)}>{data.scoreGrade}</span>
+                    Nota geral: <span className={cn("font-semibold", gradeStyle.text)}>{data.scoreGrade}</span>
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Score: {data.scoreTotal} / 1000 pontos
+                    {data.scoreTotal} de 1000 pontos
                   </p>
                 </>
               ) : (
                 <div className="mt-2">
                   <p className="text-sm text-muted-foreground">
-                    Complete seu Score Tributário para ver sua nota geral.
+                    Avalie sua saúde tributária para ver a nota geral.
                   </p>
                   <Button asChild variant="link" size="sm" className="px-0 h-auto text-primary">
                     <Link to="/dashboard/score-tributario">
-                      Calcular Score →
+                      Avaliar agora →
                     </Link>
                   </Button>
                 </div>
@@ -132,19 +132,19 @@ export function ExecutiveThermometer({ data, loading }: ExecutiveThermometerProp
                 <TrendingUp className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">Carga Efetiva</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Impostos sobre Receita</p>
                 {data.cargaEfetivaPercent !== null ? (
                   <>
                     <p className="text-lg font-semibold text-foreground">
                       {data.cargaEfetivaPercent}%
                     </p>
-                    <p className="text-xs text-muted-foreground">da receita</p>
+                    <p className="text-xs text-muted-foreground">do faturamento</p>
                   </>
                 ) : (
                   <div>
                     <p className="text-sm text-muted-foreground">—</p>
                     <Button asChild variant="link" size="sm" className="px-0 h-auto text-xs text-primary">
-                      <Link to="/dashboard/dre">Preencher DRE</Link>
+                      <Link to="/dashboard/dre">Complete sua DRE</Link>
                     </Button>
                   </div>
                 )}
@@ -157,19 +157,19 @@ export function ExecutiveThermometer({ data, loading }: ExecutiveThermometerProp
                 <DollarSign className="w-5 h-5 text-emerald-600" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">Caixa Potencial</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Caixa em Jogo</p>
                 {data.caixaPotencialMin !== null && data.caixaPotencialMax !== null ? (
                   <>
                     <p className="text-lg font-semibold text-foreground">
                       {formatCurrency(data.caixaPotencialMin)} – {formatCurrency(data.caixaPotencialMax)}
                     </p>
-                    <p className="text-xs text-muted-foreground">em 12 meses</p>
+                    <p className="text-xs text-muted-foreground">nos próximos 12 meses</p>
                   </>
                 ) : (
                   <div>
                     <p className="text-sm text-muted-foreground">—</p>
                     <Button asChild variant="link" size="sm" className="px-0 h-auto text-xs text-primary">
-                      <Link to="/dashboard/importar-xml">Importar XMLs</Link>
+                      <Link to="/dashboard/importar-xml">Importe suas notas</Link>
                     </Button>
                   </div>
                 )}
@@ -190,21 +190,21 @@ export function ExecutiveThermometer({ data, loading }: ExecutiveThermometerProp
                 )} />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">Risco Atual</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Risco de Autuação</p>
                 {riscoInfo ? (
                   <>
                     <p className={cn("text-lg font-semibold", riscoInfo.color)}>
                       {riscoInfo.label}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {data.alertasCount} {data.alertasCount === 1 ? 'alerta' : 'alertas'} pendente{data.alertasCount !== 1 ? 's' : ''}
+                      {data.alertasCount} {data.alertasCount === 1 ? 'ponto' : 'pontos'} de atenção
                     </p>
                   </>
                 ) : (
                   <div>
                     <p className="text-sm text-muted-foreground">—</p>
                     <Button asChild variant="link" size="sm" className="px-0 h-auto text-xs text-primary">
-                      <Link to="/dashboard/score-tributario">Calcular Score</Link>
+                      <Link to="/dashboard/score-tributario">Avaliar risco</Link>
                     </Button>
                   </div>
                 )}

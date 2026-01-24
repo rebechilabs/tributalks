@@ -69,7 +69,7 @@ export function ExecutiveRisks({ risks, loading, onGenerateReport }: ExecutiveRi
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Shield className="w-5 h-5 text-primary" />
-            Riscos & Governança
+            Onde você pode ser autuado
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -79,10 +79,10 @@ export function ExecutiveRisks({ risks, loading, onGenerateReport }: ExecutiveRi
               Nenhum risco significativo identificado
             </p>
             <p className="text-xs text-muted-foreground mt-1 mb-4">
-              Complete o Score Tributário para uma análise completa de riscos.
+              Avalie sua saúde tributária para uma análise completa de riscos.
             </p>
             <Button asChild variant="outline" size="sm">
-              <Link to="/dashboard/score-tributario">Ver Score Completo</Link>
+              <Link to="/dashboard/score-tributario">Avaliar saúde tributária</Link>
             </Button>
           </div>
         </CardContent>
@@ -95,7 +95,7 @@ export function ExecutiveRisks({ risks, loading, onGenerateReport }: ExecutiveRi
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <Shield className="w-5 h-5 text-primary" />
-          Riscos & Governança
+          Onde você pode ser autuado
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -112,11 +112,9 @@ export function ExecutiveRisks({ risks, loading, onGenerateReport }: ExecutiveRi
                 <Icon className={cn("w-4 h-4", nivelStyle.text)} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground">
-                  {risk.categoria}
-                </p>
-                <p className="text-xs text-muted-foreground line-clamp-2">
-                  {risk.descricao}
+                <p className="text-sm text-foreground">
+                  <span className="font-medium">{risk.categoria}:</span>{" "}
+                  <span className="text-muted-foreground">{risk.descricao}</span>
                 </p>
               </div>
               <Badge 
@@ -137,7 +135,7 @@ export function ExecutiveRisks({ risks, loading, onGenerateReport }: ExecutiveRi
           onClick={handleGenerateReport}
         >
           <FileText className="w-4 h-4" />
-          Gerar relatório para diretoria
+          Gerar pauta para próxima reunião de diretoria
         </Button>
       </CardContent>
     </Card>

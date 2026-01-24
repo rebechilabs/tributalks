@@ -14,11 +14,12 @@ export function ExecutiveHeader({ lastUpdate, onRefresh, loading }: ExecutiveHea
     <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-1">
       <div className="flex-1">
         <h1 className="text-2xl font-bold text-foreground">Painel Executivo</h1>
-        {lastUpdate && (
-          <p className="text-sm text-muted-foreground mt-1">
-            Atualizado em {format(lastUpdate, "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
-          </p>
-        )}
+        <p className="text-sm text-muted-foreground mt-1">
+          {lastUpdate ? (
+            <>Atualizado em {format(lastUpdate, "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })} · </>
+          ) : null}
+          Pensado para decisões de diretoria em menos de 10 minutos
+        </p>
       </div>
       <Button 
         variant="outline" 
