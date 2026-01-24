@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
 import logoTributech from "@/assets/logo-tributech.png";
 import { cn } from "@/lib/utils";
@@ -19,35 +20,63 @@ interface NavItem {
   badge?: string;
 }
 
-const navItems: NavItem[] = [
-  { label: 'Dashboard', href: '/dashboard', icon: Home },
-  
-  // Calculadoras
-  { label: 'Calculadora RTC', href: '/calculadora/rtc', icon: Calculator, badge: 'API' },
-  { label: 'Comparativo de Regimes', href: '/calculadora/comparativo-regimes', icon: Scale },
-  { label: 'Split Payment', href: '/calculadora/split-payment', icon: Wallet },
-  
-  // XMLs e Créditos (agrupados)
-  { label: 'Importar XMLs', href: '/dashboard/importar-xml', icon: Upload },
-  { label: 'Radar de Créditos', href: '/dashboard/radar-creditos', icon: Target, badge: 'Novo' },
-  
-  // Análise Financeira
-  { label: 'DRE Inteligente', href: '/dashboard/dre', icon: BarChart3, badge: 'Novo' },
-  { label: 'Score Tributário', href: '/dashboard/score-tributario', icon: Trophy, badge: 'Novo' },
-  { label: 'Oportunidades', href: '/dashboard/oportunidades', icon: Lightbulb, badge: 'Novo' },
-  
-  // Conteúdo e IA
-  { label: 'Notícias', href: '/noticias', icon: Newspaper, requiredPlan: 'BASICO' },
-  { label: 'TribuBot', href: '/tribubot', icon: Bot, requiredPlan: 'BASICO', badge: 'IA' },
-  
-  // Premium
-  { label: 'Relatórios PDF', href: '/relatorios', icon: FileText, requiredPlan: 'PROFISSIONAL' },
-  { label: 'Comunidade', href: '/comunidade', icon: Users, requiredPlan: 'PROFISSIONAL' },
-  { label: 'Consultorias', href: '/consultorias', icon: Calendar, requiredPlan: 'PREMIUM' },
-  
-  // Secundários
-  { label: 'Histórico', href: '/historico', icon: Clock },
-  { label: 'Configurações', href: '/configuracoes', icon: Settings },
+interface NavGroup {
+  title: string;
+  items: NavItem[];
+}
+
+const navGroups: NavGroup[] = [
+  {
+    title: '',
+    items: [
+      { label: 'Dashboard', href: '/dashboard', icon: Home },
+    ]
+  },
+  {
+    title: 'Calculadoras',
+    items: [
+      { label: 'Calculadora RTC', href: '/calculadora/rtc', icon: Calculator, badge: 'API' },
+      { label: 'Comparativo de Regimes', href: '/calculadora/comparativo-regimes', icon: Scale },
+      { label: 'Split Payment', href: '/calculadora/split-payment', icon: Wallet },
+    ]
+  },
+  {
+    title: 'XMLs e Créditos',
+    items: [
+      { label: 'Importar XMLs', href: '/dashboard/importar-xml', icon: Upload },
+      { label: 'Radar de Créditos', href: '/dashboard/radar-creditos', icon: Target, badge: 'Novo' },
+    ]
+  },
+  {
+    title: 'Análise Financeira',
+    items: [
+      { label: 'DRE Inteligente', href: '/dashboard/dre', icon: BarChart3, badge: 'Novo' },
+      { label: 'Score Tributário', href: '/dashboard/score-tributario', icon: Trophy, badge: 'Novo' },
+      { label: 'Oportunidades', href: '/dashboard/oportunidades', icon: Lightbulb, badge: 'Novo' },
+    ]
+  },
+  {
+    title: 'Conteúdo e IA',
+    items: [
+      { label: 'Notícias', href: '/noticias', icon: Newspaper, requiredPlan: 'BASICO' },
+      { label: 'TribuBot', href: '/tribubot', icon: Bot, requiredPlan: 'BASICO', badge: 'IA' },
+    ]
+  },
+  {
+    title: 'Premium',
+    items: [
+      { label: 'Relatórios PDF', href: '/relatorios', icon: FileText, requiredPlan: 'PROFISSIONAL' },
+      { label: 'Comunidade', href: '/comunidade', icon: Users, requiredPlan: 'PROFISSIONAL' },
+      { label: 'Consultorias', href: '/consultorias', icon: Calendar, requiredPlan: 'PREMIUM' },
+    ]
+  },
+  {
+    title: 'Conta',
+    items: [
+      { label: 'Histórico', href: '/historico', icon: Clock },
+      { label: 'Configurações', href: '/configuracoes', icon: Settings },
+    ]
+  },
 ];
 
 const PLAN_HIERARCHY = {
@@ -70,6 +99,54 @@ export function MobileNav() {
     return userLevel >= requiredLevel;
   };
 
+  const renderNavItem = (item: NavItem) => {
+    const Icon = item.icon;
+    const isActive = location.pathname === item.href;
+    const canAccess = hasAccess(item.requiredPlan);
+
+    if (!canAccess) {
+      return (
+        <div
+          key={item.href}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground/50 cursor-not-allowed"
+        >
+          <Lock className="w-4 h-4" />
+          <span className="flex-1 text-sm">{item.label}</span>
+          {item.badge && (
+            <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+              {item.badge}
+            </span>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <Link
+        key={item.href}
+        to={item.href}
+        onClick={() => setOpen(false)}
+        className={cn(
+          "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
+          isActive
+            ? "bg-primary/10 text-primary"
+            : "text-muted-foreground hover:text-foreground hover:bg-muted"
+        )}
+      >
+        <Icon className="w-4 h-4" />
+        <span className="flex-1 text-sm font-medium">{item.label}</span>
+        {item.badge && (
+          <span className={cn(
+            "text-xs px-1.5 py-0.5 rounded",
+            isActive ? "bg-primary/20 text-primary" : "bg-primary/10 text-primary"
+          )}>
+            {item.badge}
+          </span>
+        )}
+      </Link>
+    );
+  };
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
@@ -88,54 +165,24 @@ export function MobileNav() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 py-4 px-3 space-y-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.href;
-            const canAccess = hasAccess(item.requiredPlan);
-
-            if (!canAccess) {
-              return (
-                <div
-                  key={item.href}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground/50 cursor-not-allowed"
-                >
-                  <Lock className="w-4 h-4" />
-                  <span className="flex-1 text-sm">{item.label}</span>
-                  {item.badge && (
-                    <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                      {item.badge}
-                    </span>
-                  )}
-                </div>
-              );
-            }
-
-            return (
-              <Link
-                key={item.href}
-                to={item.href}
-                onClick={() => setOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
-                  isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
-              >
-                <Icon className="w-4 h-4" />
-                <span className="flex-1 text-sm font-medium">{item.label}</span>
-                {item.badge && (
-                  <span className={cn(
-                    "text-xs px-1.5 py-0.5 rounded",
-                    isActive ? "bg-primary/20 text-primary" : "bg-primary/10 text-primary"
-                  )}>
-                    {item.badge}
+        <nav className="flex-1 py-4 px-3 overflow-y-auto max-h-[calc(100vh-8rem)]">
+          {navGroups.map((group, index) => (
+            <div key={group.title || 'home'} className="mb-2">
+              {/* Group Title */}
+              {group.title && (
+                <>
+                  {index > 0 && <Separator className="my-3" />}
+                  <span className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    {group.title}
                   </span>
-                )}
-              </Link>
-            );
-          })}
+                </>
+              )}
+              {/* Group Items */}
+              <div className="space-y-1">
+                {group.items.map(renderNavItem)}
+              </div>
+            </div>
+          ))}
         </nav>
 
         {/* Upgrade CTA */}
