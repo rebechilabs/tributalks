@@ -1,4 +1,4 @@
-import { Scale, TrendingUp, TrendingDown, ArrowRight, Info } from "lucide-react";
+import { Scale, TrendingUp, TrendingDown, ArrowRight, Info, Calculator } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,7 @@ export function ExecutiveReformImpact({ data, loading }: ExecutiveReformImpactPr
     );
   }
 
+  // No data or reform not calculated yet
   if (!data || !data.hasData) {
     return (
       <Card className="border-dashed">
@@ -53,12 +54,18 @@ export function ExecutiveReformImpact({ data, loading }: ExecutiveReformImpactPr
         </CardHeader>
         <CardContent>
           <div className="text-center py-4">
-            <Info className="w-8 h-8 mx-auto text-muted-foreground/50 mb-3" />
-            <p className="text-sm text-muted-foreground">
-              Preencha a DRE para simular o impacto da reforma
+            <Calculator className="w-8 h-8 mx-auto text-muted-foreground/50 mb-3" />
+            <p className="text-sm text-muted-foreground mb-1">
+              Simule o impacto da Reforma na sua empresa
             </p>
-            <Button asChild variant="outline" size="sm" className="mt-3">
-              <Link to="/dashboard/dre">Preencher DRE</Link>
+            <p className="text-xs text-muted-foreground/70 mb-4">
+              Faça uma simulação na Calculadora RTC para ver como CBS/IBS afetarão seus produtos e serviços.
+            </p>
+            <Button asChild size="sm" className="gap-2">
+              <Link to="/calculadora/rtc">
+                Simular Reforma
+                <ArrowRight className="w-4 h-4" />
+              </Link>
             </Button>
           </div>
         </CardContent>

@@ -1,4 +1,5 @@
-import { Wallet, Clock, ArrowRight, X } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Wallet, Clock, ArrowRight, X, Lightbulb } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -88,11 +89,22 @@ export function ExecutiveProjects({ projects, loading, onAction }: ExecutiveProj
         <Card className="border-dashed">
           <CardContent className="p-6">
             <div className="text-center py-4">
-              <Wallet className="w-10 h-10 mx-auto text-muted-foreground/50 mb-3" />
-              <h3 className="font-medium text-muted-foreground">Nenhum projeto identificado</h3>
-              <p className="text-sm text-muted-foreground/70 mt-1">
-                Complete seu Score Tributário para descobrir oportunidades
+              <Lightbulb className="w-10 h-10 mx-auto text-muted-foreground/50 mb-3" />
+              <h3 className="font-medium text-foreground">Nenhum projeto identificado ainda</h3>
+              <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
+                Complete o Score Tributário ou verifique as Oportunidades para descobrir projetos que podem gerar caixa para sua empresa.
               </p>
+              <div className="flex justify-center gap-3 mt-4">
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/dashboard/score-tributario">Calcular Score</Link>
+                </Button>
+                <Button asChild size="sm">
+                  <Link to="/dashboard/oportunidades">
+                    Ver Oportunidades
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </Link>
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -107,6 +119,7 @@ export function ExecutiveProjects({ projects, loading, onAction }: ExecutiveProj
         {projects.map((project) => {
           const prazoInfo = prazoLabels[project.prazo] || prazoLabels['medio'];
           const riscoInfo = riscoLabels[project.riscoNivel] || riscoLabels['baixo'];
+          const hasImpact = project.impactoMax > 0;
 
           return (
             <Card key={project.id} className="hover:shadow-md transition-shadow">
@@ -120,10 +133,21 @@ export function ExecutiveProjects({ projects, loading, onAction }: ExecutiveProj
                 <div className="flex items-center gap-2 text-sm">
                   <Wallet className="w-4 h-4 text-emerald-600" />
                   <span className="text-muted-foreground">Impacto:</span>
-                  <span className="font-semibold text-emerald-600">
-                    {formatCurrency(project.impactoMin)} – {formatCurrency(project.impactoMax)}
-                  </span>
+                  {hasImpact ? (
+                    <span className="font-semibold text-emerald-600">
+                      {formatCurrency(project.impactoMin)} – {formatCurrency(project.impactoMax)}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">A estimar</span>
+                  )}
                 </div>
+
+                {/* Description if available */}
+                {project.descricaoSimples && (
+                  <p className="text-xs text-muted-foreground line-clamp-2">
+                    {project.descricaoSimples}
+                  </p>
+                )}
 
                 {/* Badges */}
                 <div className="flex flex-wrap gap-2">
@@ -150,6 +174,7 @@ export function ExecutiveProjects({ projects, loading, onAction }: ExecutiveProj
                     size="sm" 
                     variant="outline"
                     onClick={() => handlePostpone(project.id)}
+                    title="Deixar para depois"
                   >
                     <X className="w-4 h-4" />
                   </Button>
