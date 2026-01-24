@@ -411,34 +411,62 @@ export type Database = {
       }
       company_profile: {
         Row: {
+          agricultura: boolean | null
           area_livre_comercio: boolean | null
           atividades_diferentes_tributacao: boolean | null
+          centro_distribuicao_incentivado: boolean | null
+          centro_distribuicao_zfm: boolean | null
+          clinica: boolean | null
           cnae_principal: string | null
           cnae_secundarios: string[] | null
           cnpj_principal: string | null
           cnpjs_grupo: string[] | null
+          comercializa_commodities: boolean | null
+          comercializa_medicamentos: boolean | null
+          compra_equipamento_solar: boolean | null
+          compra_equipamentos_medicos: boolean | null
+          compra_insumos_agricolas: boolean | null
           created_at: string | null
+          cursos_livres: boolean | null
           descricao_atividade: string | null
           email_ceo: string | null
           email_cfo: string | null
           email_contador: string | null
           email_socios: string[] | null
+          escola_regular: boolean | null
+          estado_beneficio_icms: string | null
           etapa_atual: number | null
           exporta_produtos: boolean | null
           exporta_servicos: boolean | null
+          faculdade: boolean | null
+          fator_r_acima_28: boolean | null
           faturamento_anual: number | null
           faturamento_mensal_medio: number | null
+          fins_lucrativos: boolean | null
+          folha_alta_construcao: boolean | null
           folha_mensal: number | null
           folha_percentual_faturamento: number | null
+          frete_exportacao: boolean | null
+          hospital: boolean | null
           id: string
+          importa_equipamento_solar: boolean | null
           importa_insumos: boolean | null
           importa_produtos: boolean | null
+          incorporacao_imobiliaria: boolean | null
           investe_em_inovacao: boolean | null
+          investe_frota: boolean | null
+          investe_maquinas_agricolas: boolean | null
+          investe_pd_saude: boolean | null
+          investe_tecnologia_educacional: boolean | null
+          laboratorio: boolean | null
           municipio_sede: string | null
           nome_fantasia: string | null
           num_funcionarios: number | null
           opera_outros_estados: boolean | null
           opera_todo_brasil: boolean | null
+          operacao_interestadual: boolean | null
+          patrimonio_afetacao: boolean | null
+          pecuaria: boolean | null
           percentual_exportacao: number | null
           percentual_governo: number | null
           percentual_importacao: number | null
@@ -448,27 +476,44 @@ export type Database = {
           percentual_servicos: number | null
           perfil_completo: boolean | null
           porte: string | null
+          potencia_solar_kw: number | null
+          prepara_alimentos: boolean | null
+          procedimentos_complexos: boolean | null
+          producao_rural: boolean | null
+          programa_mcmv: boolean | null
+          projeto_infraestrutura_energia: boolean | null
           qtd_cnpjs: number | null
           qtd_filiais: number | null
           razao_social: string | null
+          recebe_gorjetas: boolean | null
           regime_tributario: string | null
           regimes_no_grupo: string[] | null
           segmento: string | null
           setor: string | null
+          tem_area_preservacao: boolean | null
           tem_atividade_pd: boolean | null
           tem_atividades_mistas: boolean | null
+          tem_bar: boolean | null
           tem_ecommerce: boolean | null
           tem_filiais: boolean | null
+          tem_geracao_solar: boolean | null
           tem_holding: boolean | null
+          tem_internacao: boolean | null
+          tem_lanchonete: boolean | null
           tem_loja_fisica: boolean | null
           tem_marketplace: boolean | null
           tem_muitos_socios: boolean | null
           tem_patentes: boolean | null
           tem_produtos_monofasicos: boolean | null
+          tem_restaurante: boolean | null
+          tipo_cooperativa: boolean | null
           tipo_societario: string | null
+          transporte_cargas: boolean | null
+          transporte_passageiros: boolean | null
           uf_sede: string | null
           ufs_operacao: string[] | null
           updated_at: string | null
+          usa_plataformas_delivery: boolean | null
           user_id: string
           vende_automoveis: boolean | null
           vende_autopecas: boolean | null
@@ -489,34 +534,62 @@ export type Database = {
           zona_franca: boolean | null
         }
         Insert: {
+          agricultura?: boolean | null
           area_livre_comercio?: boolean | null
           atividades_diferentes_tributacao?: boolean | null
+          centro_distribuicao_incentivado?: boolean | null
+          centro_distribuicao_zfm?: boolean | null
+          clinica?: boolean | null
           cnae_principal?: string | null
           cnae_secundarios?: string[] | null
           cnpj_principal?: string | null
           cnpjs_grupo?: string[] | null
+          comercializa_commodities?: boolean | null
+          comercializa_medicamentos?: boolean | null
+          compra_equipamento_solar?: boolean | null
+          compra_equipamentos_medicos?: boolean | null
+          compra_insumos_agricolas?: boolean | null
           created_at?: string | null
+          cursos_livres?: boolean | null
           descricao_atividade?: string | null
           email_ceo?: string | null
           email_cfo?: string | null
           email_contador?: string | null
           email_socios?: string[] | null
+          escola_regular?: boolean | null
+          estado_beneficio_icms?: string | null
           etapa_atual?: number | null
           exporta_produtos?: boolean | null
           exporta_servicos?: boolean | null
+          faculdade?: boolean | null
+          fator_r_acima_28?: boolean | null
           faturamento_anual?: number | null
           faturamento_mensal_medio?: number | null
+          fins_lucrativos?: boolean | null
+          folha_alta_construcao?: boolean | null
           folha_mensal?: number | null
           folha_percentual_faturamento?: number | null
+          frete_exportacao?: boolean | null
+          hospital?: boolean | null
           id?: string
+          importa_equipamento_solar?: boolean | null
           importa_insumos?: boolean | null
           importa_produtos?: boolean | null
+          incorporacao_imobiliaria?: boolean | null
           investe_em_inovacao?: boolean | null
+          investe_frota?: boolean | null
+          investe_maquinas_agricolas?: boolean | null
+          investe_pd_saude?: boolean | null
+          investe_tecnologia_educacional?: boolean | null
+          laboratorio?: boolean | null
           municipio_sede?: string | null
           nome_fantasia?: string | null
           num_funcionarios?: number | null
           opera_outros_estados?: boolean | null
           opera_todo_brasil?: boolean | null
+          operacao_interestadual?: boolean | null
+          patrimonio_afetacao?: boolean | null
+          pecuaria?: boolean | null
           percentual_exportacao?: number | null
           percentual_governo?: number | null
           percentual_importacao?: number | null
@@ -526,27 +599,44 @@ export type Database = {
           percentual_servicos?: number | null
           perfil_completo?: boolean | null
           porte?: string | null
+          potencia_solar_kw?: number | null
+          prepara_alimentos?: boolean | null
+          procedimentos_complexos?: boolean | null
+          producao_rural?: boolean | null
+          programa_mcmv?: boolean | null
+          projeto_infraestrutura_energia?: boolean | null
           qtd_cnpjs?: number | null
           qtd_filiais?: number | null
           razao_social?: string | null
+          recebe_gorjetas?: boolean | null
           regime_tributario?: string | null
           regimes_no_grupo?: string[] | null
           segmento?: string | null
           setor?: string | null
+          tem_area_preservacao?: boolean | null
           tem_atividade_pd?: boolean | null
           tem_atividades_mistas?: boolean | null
+          tem_bar?: boolean | null
           tem_ecommerce?: boolean | null
           tem_filiais?: boolean | null
+          tem_geracao_solar?: boolean | null
           tem_holding?: boolean | null
+          tem_internacao?: boolean | null
+          tem_lanchonete?: boolean | null
           tem_loja_fisica?: boolean | null
           tem_marketplace?: boolean | null
           tem_muitos_socios?: boolean | null
           tem_patentes?: boolean | null
           tem_produtos_monofasicos?: boolean | null
+          tem_restaurante?: boolean | null
+          tipo_cooperativa?: boolean | null
           tipo_societario?: string | null
+          transporte_cargas?: boolean | null
+          transporte_passageiros?: boolean | null
           uf_sede?: string | null
           ufs_operacao?: string[] | null
           updated_at?: string | null
+          usa_plataformas_delivery?: boolean | null
           user_id: string
           vende_automoveis?: boolean | null
           vende_autopecas?: boolean | null
@@ -567,34 +657,62 @@ export type Database = {
           zona_franca?: boolean | null
         }
         Update: {
+          agricultura?: boolean | null
           area_livre_comercio?: boolean | null
           atividades_diferentes_tributacao?: boolean | null
+          centro_distribuicao_incentivado?: boolean | null
+          centro_distribuicao_zfm?: boolean | null
+          clinica?: boolean | null
           cnae_principal?: string | null
           cnae_secundarios?: string[] | null
           cnpj_principal?: string | null
           cnpjs_grupo?: string[] | null
+          comercializa_commodities?: boolean | null
+          comercializa_medicamentos?: boolean | null
+          compra_equipamento_solar?: boolean | null
+          compra_equipamentos_medicos?: boolean | null
+          compra_insumos_agricolas?: boolean | null
           created_at?: string | null
+          cursos_livres?: boolean | null
           descricao_atividade?: string | null
           email_ceo?: string | null
           email_cfo?: string | null
           email_contador?: string | null
           email_socios?: string[] | null
+          escola_regular?: boolean | null
+          estado_beneficio_icms?: string | null
           etapa_atual?: number | null
           exporta_produtos?: boolean | null
           exporta_servicos?: boolean | null
+          faculdade?: boolean | null
+          fator_r_acima_28?: boolean | null
           faturamento_anual?: number | null
           faturamento_mensal_medio?: number | null
+          fins_lucrativos?: boolean | null
+          folha_alta_construcao?: boolean | null
           folha_mensal?: number | null
           folha_percentual_faturamento?: number | null
+          frete_exportacao?: boolean | null
+          hospital?: boolean | null
           id?: string
+          importa_equipamento_solar?: boolean | null
           importa_insumos?: boolean | null
           importa_produtos?: boolean | null
+          incorporacao_imobiliaria?: boolean | null
           investe_em_inovacao?: boolean | null
+          investe_frota?: boolean | null
+          investe_maquinas_agricolas?: boolean | null
+          investe_pd_saude?: boolean | null
+          investe_tecnologia_educacional?: boolean | null
+          laboratorio?: boolean | null
           municipio_sede?: string | null
           nome_fantasia?: string | null
           num_funcionarios?: number | null
           opera_outros_estados?: boolean | null
           opera_todo_brasil?: boolean | null
+          operacao_interestadual?: boolean | null
+          patrimonio_afetacao?: boolean | null
+          pecuaria?: boolean | null
           percentual_exportacao?: number | null
           percentual_governo?: number | null
           percentual_importacao?: number | null
@@ -604,27 +722,44 @@ export type Database = {
           percentual_servicos?: number | null
           perfil_completo?: boolean | null
           porte?: string | null
+          potencia_solar_kw?: number | null
+          prepara_alimentos?: boolean | null
+          procedimentos_complexos?: boolean | null
+          producao_rural?: boolean | null
+          programa_mcmv?: boolean | null
+          projeto_infraestrutura_energia?: boolean | null
           qtd_cnpjs?: number | null
           qtd_filiais?: number | null
           razao_social?: string | null
+          recebe_gorjetas?: boolean | null
           regime_tributario?: string | null
           regimes_no_grupo?: string[] | null
           segmento?: string | null
           setor?: string | null
+          tem_area_preservacao?: boolean | null
           tem_atividade_pd?: boolean | null
           tem_atividades_mistas?: boolean | null
+          tem_bar?: boolean | null
           tem_ecommerce?: boolean | null
           tem_filiais?: boolean | null
+          tem_geracao_solar?: boolean | null
           tem_holding?: boolean | null
+          tem_internacao?: boolean | null
+          tem_lanchonete?: boolean | null
           tem_loja_fisica?: boolean | null
           tem_marketplace?: boolean | null
           tem_muitos_socios?: boolean | null
           tem_patentes?: boolean | null
           tem_produtos_monofasicos?: boolean | null
+          tem_restaurante?: boolean | null
+          tipo_cooperativa?: boolean | null
           tipo_societario?: string | null
+          transporte_cargas?: boolean | null
+          transporte_passageiros?: boolean | null
           uf_sede?: string | null
           ufs_operacao?: string[] | null
           updated_at?: string | null
+          usa_plataformas_delivery?: boolean | null
           user_id?: string
           vende_automoveis?: boolean | null
           vende_autopecas?: boolean | null
