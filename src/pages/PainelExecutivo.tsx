@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Crown, ArrowRight } from "lucide-react";
+import { Crown, ArrowRight, FileBarChart } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { 
   ExecutiveHeader,
@@ -8,6 +9,7 @@ import {
   ExecutiveReformImpact, 
   ExecutiveRisks 
 } from "@/components/executive";
+import { ExecutiveReportPreview } from "@/components/executive/ExecutiveReportPreview";
 import { useExecutiveData } from "@/hooks/useExecutiveData";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,6 +27,8 @@ export default function PainelExecutivo() {
   const currentPlan = profile?.plano || 'FREE';
   const userLevel = PLAN_HIERARCHY[currentPlan as keyof typeof PLAN_HIERARCHY] || 0;
   const hasPremiumAccess = userLevel >= PLAN_HIERARCHY['PREMIUM'];
+
+  const [reportOpen, setReportOpen] = useState(false);
 
   const {
     thermometerData,
@@ -91,15 +95,29 @@ export default function PainelExecutivo() {
     );
   }
 
+  const handleGenerateReport = () => {
+    setReportOpen(true);
+  };
+
   return (
     <DashboardLayout title="Painel Executivo">
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-        {/* Header with refresh */}
-        <ExecutiveHeader 
-          lastUpdate={lastUpdate} 
-          onRefresh={refresh} 
-          loading={loading}
-        />
+        {/* Header with refresh and report button */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <ExecutiveHeader 
+            lastUpdate={lastUpdate} 
+            onRefresh={refresh} 
+            loading={loading}
+          />
+          <Button 
+            variant="default" 
+            onClick={handleGenerateReport}
+            className="gap-2 shrink-0"
+          >
+            <FileBarChart className="w-4 h-4" />
+            Gerar relatório do mês
+          </Button>
+        </div>
 
         {/* Block 1 - Thermometer (full width) */}
         <ExecutiveThermometer data={thermometerData} loading={loading} />
@@ -113,9 +131,24 @@ export default function PainelExecutivo() {
           <ExecutiveReformImpact data={reformData} loading={loading} />
 
           {/* Block 4 - Risks */}
-          <ExecutiveRisks risks={risks} loading={loading} />
+          <ExecutiveRisks 
+            risks={risks} 
+            loading={loading} 
+            onGenerateReport={handleGenerateReport}
+          />
         </div>
       </div>
+
+      {/* Report Preview Modal */}
+      <ExecutiveReportPreview
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        thermometerData={thermometerData}
+        topProjects={topProjects}
+        reformData={reformData}
+        risks={risks}
+        companyName={profile?.empresa || undefined}
+      />
     </DashboardLayout>
   );
 }
