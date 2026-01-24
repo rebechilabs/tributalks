@@ -34,6 +34,8 @@ import RadarCreditos from "./pages/RadarCreditos";
 import DRE from "./pages/DRE";
 import DREResultados from "./pages/DREResultados";
 import ScoreTributario from "./pages/ScoreTributario";
+import PerfilEmpresa from "./pages/PerfilEmpresa";
+import Oportunidades from "./pages/Oportunidades";
 // Calculadoras
 import SplitPayment from "./pages/calculadora/SplitPayment";
 import ComparativoRegimes from "./pages/calculadora/ComparativoRegimes";
@@ -205,6 +207,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <ScoreTributario />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/perfil-empresa" 
+              element={
+                <ProtectedRoute>
+                  <PerfilEmpresa />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/oportunidades" 
+              element={
+                <ProtectedRoute>
+                  <Oportunidades />
                 </ProtectedRoute>
               } 
             />
