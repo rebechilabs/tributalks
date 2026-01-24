@@ -18,16 +18,26 @@ interface NavItem {
 
 const mainNavItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: Home },
-  { label: 'Notícias', href: '/noticias', icon: Newspaper, requiredPlan: 'BASICO' },
+  
+  // Calculadoras
   { label: 'Calculadora RTC', href: '/calculadora/rtc', icon: Calculator, badge: 'API' },
   { label: 'Comparativo de Regimes', href: '/calculadora/comparativo-regimes', icon: Scale },
   { label: 'Split Payment', href: '/calculadora/split-payment', icon: Wallet },
+  
+  // XMLs e Créditos (agrupados)
   { label: 'Importar XMLs', href: '/dashboard/importar-xml', icon: Upload },
   { label: 'Radar de Créditos', href: '/dashboard/radar-creditos', icon: Target, badge: 'Novo' },
+  
+  // Análise Financeira
   { label: 'DRE Inteligente', href: '/dashboard/dre', icon: BarChart3, badge: 'Novo' },
   { label: 'Score Tributário', href: '/dashboard/score-tributario', icon: Trophy, badge: 'Novo' },
   { label: 'Oportunidades', href: '/dashboard/oportunidades', icon: Lightbulb, badge: 'Novo' },
+  
+  // Conteúdo e IA
+  { label: 'Notícias', href: '/noticias', icon: Newspaper, requiredPlan: 'BASICO' },
   { label: 'TribuBot', href: '/tribubot', icon: Bot, requiredPlan: 'BASICO', badge: 'IA' },
+  
+  // Premium
   { label: 'Relatórios PDF', href: '/relatorios', icon: FileText, requiredPlan: 'PROFISSIONAL' },
   { label: 'Comunidade', href: '/comunidade', icon: Users, requiredPlan: 'PROFISSIONAL' },
   { label: 'Consultorias', href: '/consultorias', icon: Calendar, requiredPlan: 'PREMIUM' },
