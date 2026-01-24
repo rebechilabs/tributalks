@@ -54,7 +54,7 @@ export function RTCCalculatorSection() {
             <span className="text-primary">Reforma Tributária</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Integração direta com a API piloto da Receita Federal. Calcule CBS, IBS
+            Calcule CBS, IBS
             e Imposto Seletivo com precisão e confiança.
           </p>
         </div>
