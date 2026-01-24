@@ -452,6 +452,125 @@ export type Database = {
         }
         Relationships: []
       }
+      xml_analysis: {
+        Row: {
+          analysis_data: Json | null
+          created_at: string
+          current_tax_total: number | null
+          current_taxes: Json | null
+          difference_percent: number | null
+          difference_value: number | null
+          document_number: string | null
+          document_series: string | null
+          document_total: number | null
+          id: string
+          import_id: string | null
+          issue_date: string | null
+          issuer_cnpj: string | null
+          issuer_name: string | null
+          items_count: number | null
+          raw_data: Json | null
+          recipient_cnpj: string | null
+          recipient_name: string | null
+          reform_tax_total: number | null
+          reform_taxes: Json | null
+          user_id: string
+          xml_type: string
+        }
+        Insert: {
+          analysis_data?: Json | null
+          created_at?: string
+          current_tax_total?: number | null
+          current_taxes?: Json | null
+          difference_percent?: number | null
+          difference_value?: number | null
+          document_number?: string | null
+          document_series?: string | null
+          document_total?: number | null
+          id?: string
+          import_id?: string | null
+          issue_date?: string | null
+          issuer_cnpj?: string | null
+          issuer_name?: string | null
+          items_count?: number | null
+          raw_data?: Json | null
+          recipient_cnpj?: string | null
+          recipient_name?: string | null
+          reform_tax_total?: number | null
+          reform_taxes?: Json | null
+          user_id: string
+          xml_type: string
+        }
+        Update: {
+          analysis_data?: Json | null
+          created_at?: string
+          current_tax_total?: number | null
+          current_taxes?: Json | null
+          difference_percent?: number | null
+          difference_value?: number | null
+          document_number?: string | null
+          document_series?: string | null
+          document_total?: number | null
+          id?: string
+          import_id?: string | null
+          issue_date?: string | null
+          issuer_cnpj?: string | null
+          issuer_name?: string | null
+          items_count?: number | null
+          raw_data?: Json | null
+          recipient_cnpj?: string | null
+          recipient_name?: string | null
+          reform_tax_total?: number | null
+          reform_taxes?: Json | null
+          user_id?: string
+          xml_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "xml_analysis_import_id_fkey"
+            columns: ["import_id"]
+            isOneToOne: false
+            referencedRelation: "xml_imports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      xml_imports: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          id: string
+          processed_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          id?: string
+          processed_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          id?: string
+          processed_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

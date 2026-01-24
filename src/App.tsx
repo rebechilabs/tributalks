@@ -28,6 +28,8 @@ import Consultorias from "./pages/Consultorias";
 import Configuracoes from "./pages/Configuracoes";
 import Noticias from "./pages/Noticias";
 import AdminNoticias from "./pages/AdminNoticias";
+import ImportarXML from "./pages/ImportarXML";
+import XMLResultados from "./pages/XMLResultados";
 
 // Calculadoras
 import SplitPayment from "./pages/calculadora/SplitPayment";
@@ -150,6 +152,24 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <CalculadoraRTC />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* XML Import */}
+            <Route 
+              path="/dashboard/importar-xml" 
+              element={
+                <ProtectedRoute>
+                  <ImportarXML />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/xml-resultados" 
+              element={
+                <ProtectedRoute>
+                  <XMLResultados />
                 </ProtectedRoute>
               } 
             />
