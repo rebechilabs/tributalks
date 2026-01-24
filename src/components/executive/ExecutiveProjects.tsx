@@ -14,10 +14,10 @@ interface ExecutiveProjectsProps {
   onAction?: (projectId: string, action: 'advance' | 'postpone') => void;
 }
 
-const prazoLabels: Record<string, { label: string; color: string }> = {
-  'curto': { label: 'Curto prazo', color: 'bg-emerald-500/10 text-emerald-700' },
-  'medio': { label: 'Médio prazo', color: 'bg-yellow-500/10 text-yellow-700' },
-  'longo': { label: 'Longo prazo', color: 'bg-blue-500/10 text-blue-700' },
+const prazoLabels: Record<string, { label: string; color: string; meses: string }> = {
+  'curto': { label: 'até 12 meses', color: 'bg-emerald-500/10 text-emerald-700', meses: '12 meses' },
+  'medio': { label: 'até 24 meses', color: 'bg-yellow-500/10 text-yellow-700', meses: '24 meses' },
+  'longo': { label: 'até 36 meses', color: 'bg-blue-500/10 text-blue-700', meses: '36 meses' },
 };
 
 const riscoLabels: Record<string, { label: string; color: string }> = {
@@ -62,7 +62,7 @@ export function ExecutiveProjects({ projects, loading, onAction }: ExecutiveProj
   if (loading) {
     return (
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">Projetos de caixa prioritários</h2>
+        <h2 className="text-lg font-semibold text-foreground">Projetos que geram caixa em 12 meses</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
             <Card key={i}>
@@ -85,7 +85,7 @@ export function ExecutiveProjects({ projects, loading, onAction }: ExecutiveProj
   if (projects.length === 0) {
     return (
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">Projetos de caixa prioritários</h2>
+        <h2 className="text-lg font-semibold text-foreground">Projetos que geram caixa em 12 meses</h2>
         <Card className="border-dashed">
           <CardContent className="p-6">
             <div className="text-center py-4">
@@ -114,7 +114,7 @@ export function ExecutiveProjects({ projects, loading, onAction }: ExecutiveProj
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold text-foreground">Projetos de caixa prioritários</h2>
+      <h2 className="text-lg font-semibold text-foreground">Projetos que geram caixa em 12 meses</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {projects.map((project) => {
           const prazoInfo = prazoLabels[project.prazo] || prazoLabels['medio'];
@@ -130,16 +130,20 @@ export function ExecutiveProjects({ projects, loading, onAction }: ExecutiveProj
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Impact */}
-                <div className="flex items-center gap-2 text-sm">
-                  <Wallet className="w-4 h-4 text-emerald-600" />
-                  <span className="text-muted-foreground">Impacto:</span>
-                  {hasImpact ? (
-                    <span className="font-semibold text-emerald-600">
-                      {formatCurrency(project.impactoMin)} – {formatCurrency(project.impactoMax)}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">A estimar</span>
-                  )}
+                <div className="text-sm">
+                  <div className="flex items-center gap-2">
+                    <Wallet className="w-4 h-4 text-emerald-600" />
+                    {hasImpact ? (
+                      <span className="font-semibold text-emerald-600">
+                        Potencial de {formatCurrency(project.impactoMin)} – {formatCurrency(project.impactoMax)}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">Potencial a estimar</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    em {prazoInfo.meses}
+                  </p>
                 </div>
 
                 {/* Description if available */}
@@ -151,10 +155,6 @@ export function ExecutiveProjects({ projects, loading, onAction }: ExecutiveProj
 
                 {/* Badges */}
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary" className={cn("text-xs", prazoInfo.color)}>
-                    <Clock className="w-3 h-3 mr-1" />
-                    {prazoInfo.label}
-                  </Badge>
                   <Badge variant="secondary" className={cn("text-xs", riscoInfo.color)}>
                     {riscoInfo.label}
                   </Badge>
@@ -167,7 +167,7 @@ export function ExecutiveProjects({ projects, loading, onAction }: ExecutiveProj
                     className="flex-1 gap-1"
                     onClick={() => handleAdvance(project.id)}
                   >
-                    Avançar agora
+                    Tocar agora
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                   <Button 
