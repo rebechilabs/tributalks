@@ -80,6 +80,195 @@ export type Database = {
         }
         Relationships: []
       }
+      company_dre: {
+        Row: {
+          calc_custo_produtos_vendidos: number | null
+          calc_deducoes_receita: number | null
+          calc_despesas_operacionais_total: number | null
+          calc_ebitda: number | null
+          calc_ebitda_margin: number | null
+          calc_impostos_sobre_lucro: number | null
+          calc_lucro_bruto: number | null
+          calc_lucro_liquido: number | null
+          calc_margem_bruta: number | null
+          calc_margem_liquida: number | null
+          calc_margem_operacional: number | null
+          calc_ponto_equilibrio: number | null
+          calc_receita_bruta: number | null
+          calc_receita_liquida: number | null
+          calc_resultado_antes_ir: number | null
+          calc_resultado_financeiro: number | null
+          calc_resultado_operacional: number | null
+          created_at: string | null
+          diagnostics: Json | null
+          health_score: number | null
+          health_status: string | null
+          id: string
+          input_aluguel: number | null
+          input_calcular_impostos_auto: boolean | null
+          input_contador_juridico: number | null
+          input_custo_mao_obra_direta: number | null
+          input_custo_materiais: number | null
+          input_custo_mercadorias: number | null
+          input_custo_servicos_terceiros: number | null
+          input_descontos_concedidos: number | null
+          input_devolucoes: number | null
+          input_energia_agua_internet: number | null
+          input_frete_logistica: number | null
+          input_impostos_sobre_vendas: number | null
+          input_juros_pagos: number | null
+          input_juros_recebidos: number | null
+          input_manutencao_equipamentos: number | null
+          input_marketing_publicidade: number | null
+          input_multas_pagas: number | null
+          input_outras_despesas: number | null
+          input_outras_receitas: number | null
+          input_prolabore: number | null
+          input_regime_tributario: string | null
+          input_salarios_encargos: number | null
+          input_software_assinaturas: number | null
+          input_tarifas_bancarias: number | null
+          input_vendas_produtos: number | null
+          input_vendas_servicos: number | null
+          input_viagens_refeicoes: number | null
+          period_month: number | null
+          period_quarter: number | null
+          period_type: string
+          period_year: number
+          recommendations: Json | null
+          reforma_impacto_lucro: number | null
+          reforma_impacto_percentual: number | null
+          reforma_impostos_atuais: number | null
+          reforma_impostos_novos: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          calc_custo_produtos_vendidos?: number | null
+          calc_deducoes_receita?: number | null
+          calc_despesas_operacionais_total?: number | null
+          calc_ebitda?: number | null
+          calc_ebitda_margin?: number | null
+          calc_impostos_sobre_lucro?: number | null
+          calc_lucro_bruto?: number | null
+          calc_lucro_liquido?: number | null
+          calc_margem_bruta?: number | null
+          calc_margem_liquida?: number | null
+          calc_margem_operacional?: number | null
+          calc_ponto_equilibrio?: number | null
+          calc_receita_bruta?: number | null
+          calc_receita_liquida?: number | null
+          calc_resultado_antes_ir?: number | null
+          calc_resultado_financeiro?: number | null
+          calc_resultado_operacional?: number | null
+          created_at?: string | null
+          diagnostics?: Json | null
+          health_score?: number | null
+          health_status?: string | null
+          id?: string
+          input_aluguel?: number | null
+          input_calcular_impostos_auto?: boolean | null
+          input_contador_juridico?: number | null
+          input_custo_mao_obra_direta?: number | null
+          input_custo_materiais?: number | null
+          input_custo_mercadorias?: number | null
+          input_custo_servicos_terceiros?: number | null
+          input_descontos_concedidos?: number | null
+          input_devolucoes?: number | null
+          input_energia_agua_internet?: number | null
+          input_frete_logistica?: number | null
+          input_impostos_sobre_vendas?: number | null
+          input_juros_pagos?: number | null
+          input_juros_recebidos?: number | null
+          input_manutencao_equipamentos?: number | null
+          input_marketing_publicidade?: number | null
+          input_multas_pagas?: number | null
+          input_outras_despesas?: number | null
+          input_outras_receitas?: number | null
+          input_prolabore?: number | null
+          input_regime_tributario?: string | null
+          input_salarios_encargos?: number | null
+          input_software_assinaturas?: number | null
+          input_tarifas_bancarias?: number | null
+          input_vendas_produtos?: number | null
+          input_vendas_servicos?: number | null
+          input_viagens_refeicoes?: number | null
+          period_month?: number | null
+          period_quarter?: number | null
+          period_type?: string
+          period_year: number
+          recommendations?: Json | null
+          reforma_impacto_lucro?: number | null
+          reforma_impacto_percentual?: number | null
+          reforma_impostos_atuais?: number | null
+          reforma_impostos_novos?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          calc_custo_produtos_vendidos?: number | null
+          calc_deducoes_receita?: number | null
+          calc_despesas_operacionais_total?: number | null
+          calc_ebitda?: number | null
+          calc_ebitda_margin?: number | null
+          calc_impostos_sobre_lucro?: number | null
+          calc_lucro_bruto?: number | null
+          calc_lucro_liquido?: number | null
+          calc_margem_bruta?: number | null
+          calc_margem_liquida?: number | null
+          calc_margem_operacional?: number | null
+          calc_ponto_equilibrio?: number | null
+          calc_receita_bruta?: number | null
+          calc_receita_liquida?: number | null
+          calc_resultado_antes_ir?: number | null
+          calc_resultado_financeiro?: number | null
+          calc_resultado_operacional?: number | null
+          created_at?: string | null
+          diagnostics?: Json | null
+          health_score?: number | null
+          health_status?: string | null
+          id?: string
+          input_aluguel?: number | null
+          input_calcular_impostos_auto?: boolean | null
+          input_contador_juridico?: number | null
+          input_custo_mao_obra_direta?: number | null
+          input_custo_materiais?: number | null
+          input_custo_mercadorias?: number | null
+          input_custo_servicos_terceiros?: number | null
+          input_descontos_concedidos?: number | null
+          input_devolucoes?: number | null
+          input_energia_agua_internet?: number | null
+          input_frete_logistica?: number | null
+          input_impostos_sobre_vendas?: number | null
+          input_juros_pagos?: number | null
+          input_juros_recebidos?: number | null
+          input_manutencao_equipamentos?: number | null
+          input_marketing_publicidade?: number | null
+          input_multas_pagas?: number | null
+          input_outras_despesas?: number | null
+          input_outras_receitas?: number | null
+          input_prolabore?: number | null
+          input_regime_tributario?: string | null
+          input_salarios_encargos?: number | null
+          input_software_assinaturas?: number | null
+          input_tarifas_bancarias?: number | null
+          input_vendas_produtos?: number | null
+          input_vendas_servicos?: number | null
+          input_viagens_refeicoes?: number | null
+          period_month?: number | null
+          period_quarter?: number | null
+          period_type?: string
+          period_year?: number
+          recommendations?: Json | null
+          reforma_impacto_lucro?: number | null
+          reforma_impacto_percentual?: number | null
+          reforma_impostos_atuais?: number | null
+          reforma_impostos_novos?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       consultorias: {
         Row: {
           calendly_event_id: string | null
@@ -488,6 +677,57 @@ export type Database = {
           subscription_status?: string | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      sector_benchmarks: {
+        Row: {
+          avg_ebitda_margin: number | null
+          avg_margem_bruta: number | null
+          avg_margem_liquida: number | null
+          avg_margem_operacional: number | null
+          cnae_code: string
+          cnae_description: string | null
+          company_size: string | null
+          created_at: string | null
+          id: string
+          sector_name: string
+          source: string | null
+          typical_custo_aluguel_percent: number | null
+          typical_custo_folha_percent: number | null
+          year: number | null
+        }
+        Insert: {
+          avg_ebitda_margin?: number | null
+          avg_margem_bruta?: number | null
+          avg_margem_liquida?: number | null
+          avg_margem_operacional?: number | null
+          cnae_code: string
+          cnae_description?: string | null
+          company_size?: string | null
+          created_at?: string | null
+          id?: string
+          sector_name: string
+          source?: string | null
+          typical_custo_aluguel_percent?: number | null
+          typical_custo_folha_percent?: number | null
+          year?: number | null
+        }
+        Update: {
+          avg_ebitda_margin?: number | null
+          avg_margem_bruta?: number | null
+          avg_margem_liquida?: number | null
+          avg_margem_operacional?: number | null
+          cnae_code?: string
+          cnae_description?: string | null
+          company_size?: string | null
+          created_at?: string | null
+          id?: string
+          sector_name?: string
+          source?: string | null
+          typical_custo_aluguel_percent?: number | null
+          typical_custo_folha_percent?: number | null
+          year?: number | null
         }
         Relationships: []
       }

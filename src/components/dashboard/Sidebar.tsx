@@ -1,8 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
 import { 
   Home, Scale, Wallet, Bot, FileText, Users, Calendar, 
-  Clock, Settings, Lock, ChevronUp, Sparkles, Newspaper,
-  Upload, Calculator, Target
+  Clock, Settings, Lock, Sparkles, Newspaper,
+  Upload, Calculator, Target, BarChart3
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import logoTributech from "@/assets/logo-tributech.png";
@@ -24,6 +24,7 @@ const mainNavItems: NavItem[] = [
   { label: 'Split Payment', href: '/calculadora/split-payment', icon: Wallet },
   { label: 'Importar XMLs', href: '/dashboard/importar-xml', icon: Upload },
   { label: 'Radar de Créditos', href: '/dashboard/radar-creditos', icon: Target, badge: 'Novo' },
+  { label: 'DRE Inteligente', href: '/dashboard/dre', icon: BarChart3, badge: 'Novo' },
   { label: 'TribuBot', href: '/tribubot', icon: Bot, requiredPlan: 'BASICO', badge: 'IA' },
   { label: 'Relatórios PDF', href: '/relatorios', icon: FileText, requiredPlan: 'PROFISSIONAL' },
   { label: 'Comunidade', href: '/comunidade', icon: Users, requiredPlan: 'PROFISSIONAL' },
