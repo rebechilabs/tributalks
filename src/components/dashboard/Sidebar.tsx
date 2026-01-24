@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { 
   Home, Scale, Wallet, Bot, FileText, Users, Calendar, 
   Clock, Settings, Lock, Sparkles, Newspaper,
-  Upload, Calculator, Target, BarChart3, Trophy, Lightbulb
+  Upload, Calculator, Target, BarChart3, Trophy, Lightbulb, LayoutDashboard
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import logoTributech from "@/assets/logo-tributech.png";
@@ -27,6 +27,7 @@ const navGroups: NavGroup[] = [
     title: '',
     items: [
       { label: 'Dashboard', href: '/dashboard', icon: Home },
+      { label: 'Painel Executivo', href: '/dashboard/executivo', icon: LayoutDashboard, badge: 'Premium', requiredPlan: 'PREMIUM' },
     ]
   },
   {
