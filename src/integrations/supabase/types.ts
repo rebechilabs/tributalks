@@ -419,6 +419,10 @@ export type Database = {
           cnpjs_grupo: string[] | null
           created_at: string | null
           descricao_atividade: string | null
+          email_ceo: string | null
+          email_cfo: string | null
+          email_contador: string | null
+          email_socios: string[] | null
           etapa_atual: number | null
           exporta_produtos: boolean | null
           exporta_servicos: boolean | null
@@ -493,6 +497,10 @@ export type Database = {
           cnpjs_grupo?: string[] | null
           created_at?: string | null
           descricao_atividade?: string | null
+          email_ceo?: string | null
+          email_cfo?: string | null
+          email_contador?: string | null
+          email_socios?: string[] | null
           etapa_atual?: number | null
           exporta_produtos?: boolean | null
           exporta_servicos?: boolean | null
@@ -567,6 +575,10 @@ export type Database = {
           cnpjs_grupo?: string[] | null
           created_at?: string | null
           descricao_atividade?: string | null
+          email_ceo?: string | null
+          email_cfo?: string | null
+          email_contador?: string | null
+          email_socios?: string[] | null
           etapa_atual?: number | null
           exporta_produtos?: boolean | null
           exporta_servicos?: boolean | null
@@ -843,6 +855,45 @@ export type Database = {
           item_label?: string
           status?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      executive_report_logs: {
+        Row: {
+          company_name: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          reference_month: string
+          report_data: Json | null
+          sent_at: string | null
+          sent_to: string[]
+          status: string
+          user_id: string
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          reference_month: string
+          report_data?: Json | null
+          sent_at?: string | null
+          sent_to?: string[]
+          status?: string
+          user_id: string
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          reference_month?: string
+          report_data?: Json | null
+          sent_at?: string | null
+          sent_to?: string[]
+          status?: string
           user_id?: string
         }
         Relationships: []
