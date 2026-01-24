@@ -31,7 +31,8 @@ import AdminNoticias from "./pages/AdminNoticias";
 import ImportarXML from "./pages/ImportarXML";
 import XMLResultados from "./pages/XMLResultados";
 import RadarCreditos from "./pages/RadarCreditos";
-
+import DRE from "./pages/DRE";
+import DREResultados from "./pages/DREResultados";
 // Calculadoras
 import SplitPayment from "./pages/calculadora/SplitPayment";
 import ComparativoRegimes from "./pages/calculadora/ComparativoRegimes";
@@ -179,6 +180,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <RadarCreditos />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/dre" 
+              element={
+                <ProtectedRoute>
+                  <DRE />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/dre-resultados" 
+              element={
+                <ProtectedRoute>
+                  <DREResultados />
                 </ProtectedRoute>
               } 
             />
