@@ -44,8 +44,8 @@ const plans: Plan[] = [
   },
   {
     name: "BÁSICO",
-    priceMonthly: 99,
-    priceAnnual: 990,
+    priceMonthly: 199,
+    priceAnnual: 1990,
     features: [
       { text: "Simulações ilimitadas", included: true },
       { text: "Todas as calculadoras", included: true },
@@ -61,8 +61,8 @@ const plans: Plan[] = [
   },
   {
     name: "PROFISSIONAL",
-    priceMonthly: 197,
-    priceAnnual: 1970,
+    priceMonthly: 297,
+    priceAnnual: 2970,
     highlighted: true,
     popular: true,
     features: [
