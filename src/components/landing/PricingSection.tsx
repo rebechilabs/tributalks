@@ -32,7 +32,7 @@ const plans: Plan[] = [
     features: [
       { text: "1 simulação/mês", included: true },
       { text: "Só Comparativo de Regimes", included: true },
-      { text: "Calculadora RTC (Reforma Tributária)", included: true },
+      { text: "Calculadora Oficial da Reforma Tributária", included: true },
       { text: "TribuBot", included: false },
       { text: "Notícias Tributárias", included: false },
       { text: "Relatório PDF", included: false },
@@ -49,7 +49,7 @@ const plans: Plan[] = [
     features: [
       { text: "Simulações ilimitadas", included: true },
       { text: "Todas as calculadoras", included: true },
-      { text: "Calculadora RTC (Reforma Tributária)", included: true },
+      { text: "Calculadora Oficial da Reforma Tributária", included: true },
       { text: "TribuBot 10 msgs/dia", included: true },
       { text: "Notícias Tributárias", included: true },
       { text: "Relatório PDF", included: false },
@@ -68,7 +68,7 @@ const plans: Plan[] = [
     features: [
       { text: "Simulações ilimitadas", included: true },
       { text: "Todas as calculadoras", included: true },
-      { text: "Calculadora RTC (Reforma Tributária)", included: true },
+      { text: "Calculadora Oficial da Reforma Tributária", included: true },
       { text: "TribuBot ilimitado", included: true },
       { text: "Notícias Tributárias", included: true },
       { text: "Relatório PDF", included: true },
@@ -84,7 +84,7 @@ const plans: Plan[] = [
     priceAnnual: 19970,
     features: [
       { text: "Tudo do Profissional", included: true },
-      { text: "Calculadora RTC (Reforma Tributária)", included: true },
+      { text: "Calculadora Oficial da Reforma Tributária", included: true },
       { text: "Filtros e Alertas de Notícias", included: true },
       { text: "2 consultorias/mês com especialista", included: true },
       { text: "Prioridade em novos recursos", included: true },
