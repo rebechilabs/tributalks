@@ -4,11 +4,11 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { OpportunityCard } from "@/components/opportunities/OpportunityCard";
+import { OpportunityDetailCard } from "@/components/opportunities/OpportunityDetailCard";
+import { OpportunitySummary } from "@/components/opportunities/OpportunitySummary";
 import { 
   Loader2, 
   Target,
@@ -16,16 +16,21 @@ import {
   Zap,
   TrendingUp,
   RefreshCw,
-  Filter,
   UserCog,
-  AlertCircle
+  AlertCircle,
+  Download,
+  Mail,
+  Phone,
+  Pencil
 } from "lucide-react";
 
 interface Opportunity {
   id: string;
   code: string;
   name: string;
+  name_simples?: string;
   description?: string;
+  description_ceo?: string;
   category: string;
   match_score: number;
   match_reasons: string[];
@@ -40,6 +45,12 @@ interface Opportunity {
   tributos_afetados: string[];
 }
 
+interface CategorySummary {
+  count: number;
+  economia_min: number;
+  economia_max: number;
+}
+
 interface MatchResult {
   success: boolean;
   total_opportunities: number;
@@ -48,7 +59,40 @@ interface MatchResult {
   economia_anual_min: number;
   economia_anual_max: number;
   opportunities: Opportunity[];
+  por_categoria?: Record<string, CategorySummary>;
+  por_tributo?: Record<string, CategorySummary>;
+  profile_summary?: {
+    setor?: string;
+    porte?: string;
+    regime?: string;
+    qtd_cnpjs?: number;
+  };
 }
+
+const SETOR_LABELS: Record<string, string> = {
+  comercio: 'Comércio',
+  industria: 'Indústria',
+  servicos: 'Serviços',
+  tecnologia: 'Tecnologia',
+  saude: 'Saúde',
+  educacao: 'Educação',
+  agronegocio: 'Agronegócio',
+  construcao: 'Construção',
+};
+
+const PORTE_LABELS: Record<string, string> = {
+  mei: 'MEI',
+  micro: 'Microempresa',
+  pequena: 'Pequena empresa',
+  media: 'Média empresa',
+  grande: 'Grande empresa',
+};
+
+const REGIME_LABELS: Record<string, string> = {
+  simples: 'Simples Nacional',
+  presumido: 'Lucro Presumido',
+  real: 'Lucro Real',
+};
 
 export default function Oportunidades() {
   const navigate = useNavigate();
@@ -59,7 +103,6 @@ export default function Oportunidades() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
   const [result, setResult] = useState<MatchResult | null>(null);
-  const [activeTab, setActiveTab] = useState("todas");
 
   const loadOpportunities = async (refresh = false) => {
     if (!user?.id) return;
@@ -71,7 +114,6 @@ export default function Oportunidades() {
     }
 
     try {
-      // Check if profile exists
       const { data: profile } = await supabase
         .from('company_profile')
         .select('perfil_completo')
@@ -87,7 +129,6 @@ export default function Oportunidades() {
 
       setHasProfile(true);
 
-      // Call match function
       const { data, error } = await supabase.functions.invoke('match-opportunities', {
         body: { user_id: user.id }
       });
@@ -114,26 +155,38 @@ export default function Oportunidades() {
   }, [user?.id]);
 
   const formatCurrency = (value: number) => {
-    if (value >= 1000000) {
-      return `R$ ${(value / 1000000).toFixed(1)}M`;
-    } else if (value >= 1000) {
-      return `R$ ${(value / 1000).toFixed(0)}K`;
-    }
-    return `R$ ${value.toLocaleString('pt-BR')}`;
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
   };
 
-  const filteredOpportunities = () => {
-    if (!result?.opportunities) return [];
-    
-    switch (activeTab) {
-      case "quick":
-        return result.opportunities.filter(o => o.quick_win);
-      case "impacto":
-        return result.opportunities.filter(o => o.alto_impacto);
-      case "todas":
-      default:
-        return result.opportunities;
-    }
+  const quickWins = result?.opportunities?.filter(o => o.quick_win) || [];
+  const altoImpacto = result?.opportunities?.filter(o => o.alto_impacto && !o.quick_win) || [];
+  const outras = result?.opportunities?.filter(o => !o.quick_win && !o.alto_impacto) || [];
+
+  const handleViewDetails = (id: string) => {
+    toast({
+      title: "Em desenvolvimento",
+      description: "Página de detalhes em breve.",
+    });
+  };
+
+  const handleImplement = (id: string) => {
+    navigate('/consultorias');
+  };
+
+  const getProfileSummary = () => {
+    if (!result?.profile_summary) return '';
+    const { setor, porte, qtd_cnpjs, regime } = result.profile_summary;
+    const parts = [];
+    if (setor) parts.push(SETOR_LABELS[setor] || setor);
+    if (porte) parts.push(PORTE_LABELS[porte] || porte);
+    if (qtd_cnpjs && qtd_cnpjs > 1) parts.push(`${qtd_cnpjs} CNPJs`);
+    if (regime) parts.push(REGIME_LABELS[regime] || regime);
+    return parts.join(' • ');
   };
 
   if (isLoading) {
@@ -146,7 +199,6 @@ export default function Oportunidades() {
     );
   }
 
-  // No profile - show CTA to complete profile
   if (!hasProfile) {
     return (
       <DashboardLayout>
@@ -190,7 +242,6 @@ export default function Oportunidades() {
     );
   }
 
-  // No opportunities found
   if (!result?.opportunities?.length) {
     return (
       <DashboardLayout>
@@ -224,156 +275,207 @@ export default function Oportunidades() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Target className="h-6 w-6 text-primary" />
-              Oportunidades Tributárias
-            </h1>
-            <p className="text-muted-foreground">
-              Identificamos {result.total_opportunities} oportunidades para sua empresa
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => navigate('/dashboard/perfil-empresa')}
-            >
-              <UserCog className="h-4 w-4 mr-2" />
-              Editar Perfil
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => loadOpportunities(true)}
-              disabled={isRefreshing}
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-              Atualizar
-            </Button>
-          </div>
-        </div>
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-primary/5 border-primary/20">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Economia Potencial</p>
-                  <p className="text-lg font-bold text-primary">
-                    {formatCurrency(result.economia_anual_min)} - {formatCurrency(result.economia_anual_max)}
-                    <span className="text-sm font-normal">/ano</span>
-                  </p>
-                </div>
+      <div className="space-y-8">
+        {/* ============ HEADER COM IMPACTO TOTAL ============ */}
+        <Card className="bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 border-primary/20">
+          <CardContent className="p-6 md:p-8">
+            <div className="text-center space-y-4">
+              <div className="flex items-center justify-center gap-2 text-primary">
+                <Sparkles className="h-6 w-6" />
+                <h1 className="text-2xl md:text-3xl font-bold">Oportunidades Tributárias</h1>
               </div>
-            </CardContent>
-          </Card>
+              
+              <p className="text-muted-foreground">
+                Identificamos oportunidades de economia para sua empresa:
+              </p>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-muted rounded-lg">
-                  <Target className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Identificadas</p>
-                  <p className="text-lg font-bold">{result.total_opportunities}</p>
-                </div>
+              {/* Big number card */}
+              <div className="max-w-xl mx-auto bg-card border-2 border-primary/30 rounded-xl p-6 shadow-lg">
+                <p className="text-sm text-muted-foreground mb-1">ECONOMIA POTENCIAL:</p>
+                <p className="text-3xl md:text-4xl font-bold text-primary">
+                  {formatCurrency(result.economia_anual_min)} a {formatCurrency(result.economia_anual_max)}
+                  <span className="text-lg font-normal text-muted-foreground">/ano</span>
+                </p>
+                <p className="text-muted-foreground mt-2">
+                  {result.total_opportunities} oportunidades encontradas
+                </p>
               </div>
-            </CardContent>
-          </Card>
 
-          <Card className="bg-green-50 border-green-200">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <Zap className="h-5 w-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Quick Wins</p>
-                  <p className="text-lg font-bold text-green-700">{result.quick_wins}</p>
-                </div>
+              {/* Profile summary */}
+              {getProfileSummary() && (
+                <p className="text-sm text-muted-foreground">
+                  Seu perfil: <span className="font-medium text-foreground">{getProfileSummary()}</span>
+                </p>
+              )}
+
+              {/* Actions */}
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => navigate('/dashboard/perfil-empresa')}
+                >
+                  <Pencil className="h-4 w-4" />
+                  Atualizar Perfil
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => toast({ title: "Em breve", description: "Exportação de relatório em desenvolvimento." })}
+                >
+                  <Download className="h-4 w-4" />
+                  Exportar Relatório
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => loadOpportunities(true)}
+                  disabled={isRefreshing}
+                >
+                  <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card className="bg-amber-50 border-amber-200">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-amber-100 rounded-lg">
-                  <TrendingUp className="h-5 w-5 text-amber-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Alto Impacto</p>
-                  <p className="text-lg font-bold text-amber-700">{result.high_impact}</p>
-                </div>
+        {/* ============ QUICK WINS ============ */}
+        {quickWins.length > 0 && (
+          <section className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Zap className="h-5 w-5 text-green-600" />
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <div>
+                <h2 className="text-xl font-semibold">Quick Wins - Implementação Rápida</h2>
+                <p className="text-sm text-muted-foreground">
+                  Comece por estas: fáceis de implementar, retorno imediato
+                </p>
+              </div>
+              <Badge variant="secondary" className="ml-auto">
+                {quickWins.length} {quickWins.length === 1 ? 'oportunidade' : 'oportunidades'}
+              </Badge>
+            </div>
 
-        {/* Tabs and Grid */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="todas" className="gap-2">
-              <Filter className="h-4 w-4" />
-              Todas ({result.total_opportunities})
-            </TabsTrigger>
-            <TabsTrigger value="quick" className="gap-2">
-              <Zap className="h-4 w-4" />
-              Quick Wins ({result.quick_wins})
-            </TabsTrigger>
-            <TabsTrigger value="impacto" className="gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Alto Impacto ({result.high_impact})
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value={activeTab} className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredOpportunities().map((opportunity) => (
-                <OpportunityCard 
-                  key={opportunity.id} 
-                  opportunity={opportunity}
-                  onSelect={(id) => {
-                    toast({
-                      title: "Em breve!",
-                      description: "Detalhes da oportunidade em desenvolvimento.",
-                    });
-                  }}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {quickWins.map((opp) => (
+                <OpportunityDetailCard
+                  key={opp.id}
+                  opportunity={opp}
+                  onViewDetails={handleViewDetails}
+                  onImplement={handleImplement}
                 />
               ))}
             </div>
+          </section>
+        )}
 
-            {filteredOpportunities().length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">
-                  Nenhuma oportunidade nesta categoria.
+        {/* ============ ALTO IMPACTO ============ */}
+        {altoImpacto.length > 0 && (
+          <section className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <TrendingUp className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold">Alto Impacto - Maior Economia</h2>
+                <p className="text-sm text-muted-foreground">
+                  Exigem mais trabalho, mas o retorno compensa
                 </p>
               </div>
-            )}
-          </TabsContent>
-        </Tabs>
-
-        {/* CTA */}
-        <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
-          <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-            <div>
-              <h3 className="font-semibold text-lg">Precisa de ajuda para implementar?</h3>
-              <p className="text-muted-foreground">
-                Nossos especialistas podem auxiliar na implementação das oportunidades identificadas.
-              </p>
+              <Badge variant="secondary" className="ml-auto">
+                {altoImpacto.length} {altoImpacto.length === 1 ? 'oportunidade' : 'oportunidades'}
+              </Badge>
             </div>
-            <Button onClick={() => navigate('/consultorias')}>
-              Agendar Consultoria
-            </Button>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {altoImpacto.map((opp) => (
+                <OpportunityDetailCard
+                  key={opp.id}
+                  opportunity={opp}
+                  onViewDetails={handleViewDetails}
+                  onImplement={handleImplement}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* ============ OUTRAS OPORTUNIDADES ============ */}
+        {outras.length > 0 && (
+          <section className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-muted rounded-lg">
+                <Target className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold">Outras Oportunidades</h2>
+                <p className="text-sm text-muted-foreground">
+                  Mais opções para análise
+                </p>
+              </div>
+              <Badge variant="secondary" className="ml-auto">
+                {outras.length} {outras.length === 1 ? 'oportunidade' : 'oportunidades'}
+              </Badge>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {outras.map((opp) => (
+                <OpportunityDetailCard
+                  key={opp.id}
+                  opportunity={opp}
+                  onViewDetails={handleViewDetails}
+                  onImplement={handleImplement}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* ============ RESUMO POR CATEGORIA ============ */}
+        {(result.por_categoria || result.por_tributo) && (
+          <OpportunitySummary
+            byCategory={result.por_categoria || {}}
+            byTributo={result.por_tributo || {}}
+            totalMax={result.economia_anual_max}
+          />
+        )}
+
+        {/* ============ FOOTER CTA ============ */}
+        <Card className="border-2">
+          <CardContent className="p-6">
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="flex flex-wrap justify-center gap-3">
+                <Button 
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => toast({ title: "Em breve", description: "Download do relatório em desenvolvimento." })}
+                >
+                  <Download className="h-4 w-4" />
+                  Baixar Relatório Completo
+                </Button>
+              </div>
+              
+              <div className="flex flex-wrap justify-center gap-3">
+                <Button 
+                  variant="ghost"
+                  className="gap-2"
+                  onClick={() => toast({ title: "Em breve", description: "Funcionalidade em desenvolvimento." })}
+                >
+                  <Mail className="h-4 w-4" />
+                  Enviar para meu Contador
+                </Button>
+                <Button 
+                  className="gap-2"
+                  onClick={() => navigate('/consultorias')}
+                >
+                  <Phone className="h-4 w-4" />
+                  Falar com Especialista
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
