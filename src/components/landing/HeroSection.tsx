@@ -26,7 +26,7 @@ export function HeroSection() {
           <div className="flex justify-center mb-6 animate-fade-in-up">
             <Badge variant="outline" className="px-4 py-2 text-sm border-primary/50">
               <Zap className="w-4 h-4 mr-2 text-primary" />
-              Novo: Score Tributário + DRE Inteligente + Radar de Créditos
+              Novo: Oportunidades Fiscais Inteligentes + Score Tributário
             </Badge>
           </div>
 
@@ -40,7 +40,7 @@ export function HeroSection() {
 
           {/* Subheading */}
           <p className="text-lg md:text-xl text-muted-foreground mb-6 max-w-2xl mx-auto animate-fade-in-up animation-delay-100">
-            11 ferramentas que mostram o impacto real das decisões
+            12 ferramentas que mostram o impacto real das decisões
             tributárias no seu caixa.{" "}
             <span className="text-foreground font-medium">Em minutos, não em semanas.</span>
           </p>
@@ -48,10 +48,10 @@ export function HeroSection() {
           {/* Feature Pills */}
           <div className="flex flex-wrap items-center justify-center gap-2 mb-10 animate-fade-in-up animation-delay-150">
             {[
-              "Calculadora RTC com API Oficial",
-              "Comparativo de Regimes",
-              "Radar de Créditos",
+              "Oportunidades Fiscais",
               "Score Tributário",
+              "Radar de Créditos",
+              "Calculadora RTC",
             ].map((feature) => (
               <span 
                 key={feature}

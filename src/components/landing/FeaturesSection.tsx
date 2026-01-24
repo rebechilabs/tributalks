@@ -1,6 +1,6 @@
 import { 
   Scale, Wallet, Bot, FileText, Users, 
-  Calculator, Upload, Target, BarChart3, Trophy, Newspaper 
+  Calculator, Upload, Target, BarChart3, Trophy, Newspaper, Lightbulb 
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -12,6 +12,14 @@ const features = [
       "Calcule CBS, IBS e IS com a API oficial da Receita Federal. Alíquotas reais por NCM.",
     badge: "API Oficial",
     badgeVariant: "default" as const,
+  },
+  {
+    icon: Lightbulb,
+    title: "Oportunidades Fiscais",
+    description:
+      "Identifique automaticamente oportunidades de economia com match inteligente ao seu perfil.",
+    badge: "Novo",
+    badgeVariant: "secondary" as const,
   },
   {
     icon: Scale,
@@ -89,7 +97,7 @@ export function FeaturesSection() {
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className="text-center mb-16">
           <Badge variant="outline" className="mb-4 text-primary border-primary">
-            11 ferramentas disponíveis
+            12 ferramentas disponíveis
           </Badge>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Tudo que você precisa para
