@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ARQUIVO DE TESTE - NÃO USAR EM PRODUÇÃO
+  Cenário: Compra de mercadorias para revenda (entrada)
+  CNPJ Destinatário: 12.345.678/0001-90 (empresa teste)
+  Regras esperadas: PIS_COFINS_INSUMOS, ICMS_COMPRA_REVENDA
+-->
+<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">
+  <NFe xmlns="http://www.portalfiscal.inf.br/nfe">
+    <infNFe versao="4.00" Id="NFe35250112345678000190550010000001011234567890">
+      <ide>
+        <cUF>35</cUF>
+        <cNF>12345678</cNF>
+        <natOp>VENDA DE MERCADORIA</natOp>
+        <mod>55</mod>
+        <serie>1</serie>
+        <nNF>101</nNF>
+        <dhEmi>2025-01-15T10:30:00-03:00</dhEmi>
+        <tpNF>0</tpNF>
+        <idDest>1</idDest>
+        <cMunFG>3550308</cMunFG>
+        <tpImp>1</tpImp>
+        <tpEmis>1</tpEmis>
+        <cDV>0</cDV>
+        <tpAmb>2</tpAmb>
+        <finNFe>1</finNFe>
+        <indFinal>0</indFinal>
+        <indPres>1</indPres>
+        <procEmi>0</procEmi>
+        <verProc>1.0</verProc>
+      </ide>
+      <emit>
+        <CNPJ>98765432000199</CNPJ>
+        <xNome>FORNECEDOR ATACADISTA LTDA</xNome>
+        <xFant>ATACADAO TESTE</xFant>
+        <enderEmit>
+          <xLgr>Rua das Industrias</xLgr>
+          <nro>500</nro>
+          <xBairro>Distrito Industrial</xBairro>
+          <cMun>3550308</cMun>
+          <xMun>Sao Paulo</xMun>
+          <UF>SP</UF>
+          <CEP>01310100</CEP>
+          <cPais>1058</cPais>
+          <xPais>Brasil</xPais>
+          <fone>1133334444</fone>
+        </enderEmit>
+        <IE>123456789012</IE>
+        <CRT>3</CRT>
+      </emit>
+      <dest>
+        <CNPJ>12345678000190</CNPJ>
+        <xNome>COMERCIO VAREJISTA TESTE LTDA</xNome>
+        <enderDest>
+          <xLgr>Avenida Paulista</xLgr>
+          <nro>1000</nro>
+          <xBairro>Bela Vista</xBairro>
+          <cMun>3550308</cMun>
+          <xMun>Sao Paulo</xMun>
+          <UF>SP</UF>
+          <CEP>01310200</CEP>
+          <cPais>1058</cPais>
+          <xPais>Brasil</xPais>
+          <fone>1144445555</fone>
+        </enderDest>
+        <indIEDest>1</indIEDest>
+        <IE>987654321098</IE>
+      </dest>
+      <det nItem="1">
+        <prod>
+          <cProd>PROD001</cProd>
+          <cEAN>7891234567890</cEAN>
+          <xProd>ELETRODOMESTICO LINHA BRANCA - GELADEIRA</xProd>
+          <NCM>84181000</NCM>
+          <CFOP>1102</CFOP>
+          <uCom>UN</uCom>
+          <qCom>10.0000</qCom>
+          <vUnCom>1500.0000</vUnCom>
+          <vProd>15000.00</vProd>
+          <cEANTrib>7891234567890</cEANTrib>
+          <uTrib>UN</uTrib>
+          <qTrib>10.0000</qTrib>
+          <vUnTrib>1500.0000</vUnTrib>
+          <indTot>1</indTot>
+        </prod>
+        <imposto>
+          <ICMS>
+            <ICMS00>
+              <orig>0</orig>
+              <CST>00</CST>
+              <modBC>3</modBC>
+              <vBC>15000.00</vBC>
+              <pICMS>18.00</pICMS>
+              <vICMS>2700.00</vICMS>
+            </ICMS00>
+          </ICMS>
+          <PIS>
+            <PISAliq>
+              <CST>01</CST>
+              <vBC>15000.00</vBC>
+              <pPIS>1.65</pPIS>
+              <vPIS>247.50</vPIS>
+            </PISAliq>
+          </PIS>
+          <COFINS>
+            <COFINSAliq>
+              <CST>01</CST>
+              <vBC>15000.00</vBC>
+              <pCOFINS>7.60</pCOFINS>
+              <vCOFINS>1140.00</vCOFINS>
+            </COFINSAliq>
+          </COFINS>
+        </imposto>
+      </det>
+      <det nItem="2">
+        <prod>
+          <cProd>PROD002</cProd>
+          <cEAN>7891234567891</cEAN>
+          <xProd>ELETRODOMESTICO LINHA BRANCA - FOGAO</xProd>
+          <NCM>84181000</NCM>
+          <CFOP>1102</CFOP>
+          <uCom>UN</uCom>
+          <qCom>15.0000</qCom>
+          <vUnCom>800.0000</vUnCom>
+          <vProd>12000.00</vProd>
+          <cEANTrib>7891234567891</cEANTrib>
+          <uTrib>UN</uTrib>
+          <qTrib>15.0000</qTrib>
+          <vUnTrib>800.0000</vUnTrib>
+          <indTot>1</indTot>
+        </prod>
+        <imposto>
+          <ICMS>
+            <ICMS00>
+              <orig>0</orig>
+              <CST>00</CST>
+              <modBC>3</modBC>
+              <vBC>12000.00</vBC>
+              <pICMS>18.00</pICMS>
+              <vICMS>2160.00</vICMS>
+            </ICMS00>
+          </ICMS>
+          <PIS>
+            <PISAliq>
+              <CST>01</CST>
+              <vBC>12000.00</vBC>
+              <pPIS>1.65</pPIS>
+              <vPIS>198.00</vPIS>
+            </PISAliq>
+          </PIS>
+          <COFINS>
+            <COFINSAliq>
+              <CST>01</CST>
+              <vBC>12000.00</vBC>
+              <pCOFINS>7.60</pCOFINS>
+              <vCOFINS>912.00</vCOFINS>
+            </COFINSAliq>
+          </COFINS>
+        </imposto>
+      </det>
+      <total>
+        <ICMSTot>
+          <vBC>27000.00</vBC>
+          <vICMS>4860.00</vICMS>
+          <vICMSDeson>0.00</vICMSDeson>
+          <vFCP>0.00</vFCP>
+          <vBCST>0.00</vBCST>
+          <vST>0.00</vST>
+          <vFCPST>0.00</vFCPST>
+          <vFCPSTRet>0.00</vFCPSTRet>
+          <vProd>27000.00</vProd>
+          <vFrete>0.00</vFrete>
+          <vSeg>0.00</vSeg>
+          <vDesc>0.00</vDesc>
+          <vII>0.00</vII>
+          <vIPI>0.00</vIPI>
+          <vIPIDevol>0.00</vIPIDevol>
+          <vPIS>445.50</vPIS>
+          <vCOFINS>2052.00</vCOFINS>
+          <vOutro>0.00</vOutro>
+          <vNF>27000.00</vNF>
+        </ICMSTot>
+      </total>
+      <transp>
+        <modFrete>0</modFrete>
+      </transp>
+      <pag>
+        <detPag>
+          <tPag>01</tPag>
+          <vPag>27000.00</vPag>
+        </detPag>
+      </pag>
+    </infNFe>
+  </NFe>
+  <protNFe versao="4.00">
+    <infProt>
+      <tpAmb>2</tpAmb>
+      <verAplic>SP_NFE_PL_008i2</verAplic>
+      <chNFe>35250112345678000190550010000001011234567890</chNFe>
+      <dhRecbto>2025-01-15T10:31:00-03:00</dhRecbto>
+      <nProt>135250000000001</nProt>
+      <digVal>abcdefghijklmnopqrstuvwxyz123456789012345=</digVal>
+      <cStat>100</cStat>
+      <xMotivo>Autorizado o uso da NF-e</xMotivo>
+    </infProt>
+  </protNFe>
+</nfeProc>
