@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Check } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowRight, Check, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export function HeroSection() {
@@ -21,6 +22,14 @@ export function HeroSection() {
 
       <div className="container mx-auto px-4 md:px-6 lg:px-8 py-20 relative">
         <div className="max-w-4xl mx-auto text-center">
+          {/* Announcement Badge */}
+          <div className="flex justify-center mb-6 animate-fade-in-up">
+            <Badge variant="outline" className="px-4 py-2 text-sm border-primary/50">
+              <Zap className="w-4 h-4 mr-2 text-primary" />
+              Novo: Score Tributário + DRE Inteligente + Radar de Créditos
+            </Badge>
+          </div>
+
           {/* Main Heading */}
           <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold text-foreground mb-6 animate-fade-in-up leading-tight">
             Inteligência Tributária para
@@ -30,11 +39,28 @@ export function HeroSection() {
           </h1>
 
           {/* Subheading */}
-          <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto animate-fade-in-up animation-delay-100">
-            Calculadoras, IA e especialistas que mostram o impacto real das decisões
+          <p className="text-lg md:text-xl text-muted-foreground mb-6 max-w-2xl mx-auto animate-fade-in-up animation-delay-100">
+            11 ferramentas que mostram o impacto real das decisões
             tributárias no seu caixa.{" "}
             <span className="text-foreground font-medium">Em minutos, não em semanas.</span>
           </p>
+
+          {/* Feature Pills */}
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-10 animate-fade-in-up animation-delay-150">
+            {[
+              "Calculadora RTC com API Oficial",
+              "Comparativo de Regimes",
+              "Radar de Créditos",
+              "Score Tributário",
+            ].map((feature) => (
+              <span 
+                key={feature}
+                className="px-3 py-1 bg-primary/10 text-primary text-sm rounded-full"
+              >
+                {feature}
+              </span>
+            ))}
+          </div>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8 animate-fade-in-up animation-delay-200">
@@ -69,7 +95,7 @@ export function HeroSection() {
             </div>
             <div className="flex items-center gap-2">
               <Check className="w-4 h-4 text-primary" />
-              <span>Suporte humano</span>
+              <span>API oficial da Receita</span>
             </div>
           </div>
         </div>
