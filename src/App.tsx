@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import Termos from "./pages/Termos";
 import Privacidade from "./pages/Privacidade";
 import Contato from "./pages/Contato";
+import DocumentoComercial from "./pages/DocumentoComercial";
 
 // Páginas protegidas
 import Onboarding from "./pages/Onboarding";
@@ -64,6 +65,7 @@ const App = () => (
             <Route path="/termos" element={<Termos />} />
             <Route path="/privacidade" element={<Privacidade />} />
             <Route path="/contato" element={<Contato />} />
+            <Route path="/documento-comercial" element={<DocumentoComercial />} />
             
             {/* Protegidas */}
             <Route 
