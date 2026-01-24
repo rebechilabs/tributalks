@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Heart, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, 
   AlertOctagon, Download, RefreshCw, ChevronRight, Target,
-  Users, CreditCard, Home, Star, BarChart3
+  Users, CreditCard, Home, Star, BarChart3, Zap, Calculator
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,6 +41,8 @@ interface DREData {
   reforma_impostos_novos: number;
   reforma_impacto_lucro: number;
   reforma_impacto_percentual: number;
+  reforma_source?: 'estimativa' | 'api_oficial';
+  reforma_calculated_at?: string;
 }
 
 interface Diagnostic {
@@ -93,7 +95,8 @@ export function DREDashboard({ dreId }: DREDashboardProps) {
         setDre({
           ...data,
           diagnostics: (data.diagnostics as unknown as Diagnostic[]) || [],
-          recommendations: (data.recommendations as unknown as Recommendation[]) || []
+          recommendations: (data.recommendations as unknown as Recommendation[]) || [],
+          reforma_source: (data.reforma_source as 'estimativa' | 'api_oficial') || 'estimativa'
         });
       }
     } catch (error) {
@@ -412,6 +415,16 @@ export function DREDashboard({ dreId }: DREDashboardProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               📊 Simulação Reforma 2027
+              {dre.reforma_source === 'api_oficial' ? (
+                <Badge className="bg-green-600 hover:bg-green-600 text-xs">
+                  <Calculator className="h-3 w-3 mr-1" />
+                  API Oficial
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-xs">
+                  Estimativa
+                </Badge>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -445,6 +458,38 @@ export function DREDashboard({ dreId }: DREDashboardProps) {
                   </span>
                 </div>
               </div>
+
+              {/* CTA para Simulação Precisa */}
+              {dre.reforma_source !== 'api_oficial' && (
+                <div className="p-4 bg-background/80 rounded-lg border border-dashed border-primary/30 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-primary/10 rounded-full">
+                      <Zap className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-sm">Quer uma simulação mais precisa?</h4>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Sua estimativa atual usa alíquotas médias. Podemos calcular com a 
+                        <strong> API Oficial da RFB</strong> baseado nos seus produtos específicos (NCMs).
+                      </p>
+                    </div>
+                  </div>
+                  <Button 
+                    className="w-full"
+                    onClick={() => navigate(`/calculadora/rtc?from_dre=${dre.id}&receita=${dre.calc_receita_bruta}`)}
+                  >
+                    <Zap className="h-4 w-4 mr-2" />
+                    Simular com API Oficial
+                    <Badge variant="secondary" className="ml-2 text-xs">Mais preciso</Badge>
+                  </Button>
+                </div>
+              )}
+
+              {dre.reforma_source === 'api_oficial' && dre.reforma_calculated_at && (
+                <p className="text-xs text-center text-muted-foreground">
+                  Calculado em {new Date(dre.reforma_calculated_at).toLocaleDateString('pt-BR')} via API RFB
+                </p>
+              )}
 
               <Button 
                 variant="outline" 

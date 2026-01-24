@@ -136,10 +136,12 @@ export type Database = {
           period_type: string
           period_year: number
           recommendations: Json | null
+          reforma_calculated_at: string | null
           reforma_impacto_lucro: number | null
           reforma_impacto_percentual: number | null
           reforma_impostos_atuais: number | null
           reforma_impostos_novos: number | null
+          reforma_source: string | null
           updated_at: string | null
           user_id: string
         }
@@ -198,10 +200,12 @@ export type Database = {
           period_type?: string
           period_year: number
           recommendations?: Json | null
+          reforma_calculated_at?: string | null
           reforma_impacto_lucro?: number | null
           reforma_impacto_percentual?: number | null
           reforma_impostos_atuais?: number | null
           reforma_impostos_novos?: number | null
+          reforma_source?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -260,10 +264,12 @@ export type Database = {
           period_type?: string
           period_year?: number
           recommendations?: Json | null
+          reforma_calculated_at?: string | null
           reforma_impacto_lucro?: number | null
           reforma_impacto_percentual?: number | null
           reforma_impostos_atuais?: number | null
           reforma_impostos_novos?: number | null
+          reforma_source?: string | null
           updated_at?: string | null
           user_id?: string
         }
