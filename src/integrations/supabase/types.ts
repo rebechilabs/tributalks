@@ -275,6 +275,45 @@ export type Database = {
         }
         Relationships: []
       }
+      company_ncm_analysis: {
+        Row: {
+          created_at: string
+          id: string
+          ncm_code: string
+          product_name: string
+          reason: string | null
+          revenue_percentage: number | null
+          status: string
+          suggested_action: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ncm_code: string
+          product_name: string
+          reason?: string | null
+          revenue_percentage?: number | null
+          status?: string
+          suggested_action?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ncm_code?: string
+          product_name?: string
+          reason?: string | null
+          revenue_percentage?: number | null
+          status?: string
+          suggested_action?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       company_opportunities: {
         Row: {
           alto_impacto: boolean | null
@@ -763,6 +802,36 @@ export type Database = {
           rule_name?: string
           tax_type?: string
           trigger_conditions?: Json
+        }
+        Relationships: []
+      }
+      erp_checklist: {
+        Row: {
+          id: string
+          item_description: string | null
+          item_key: string
+          item_label: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          item_description?: string | null
+          item_key: string
+          item_label: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          item_description?: string | null
+          item_key?: string
+          item_label?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
