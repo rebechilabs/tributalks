@@ -3,3 +3,4 @@ export { ExecutiveThermometer } from './ExecutiveThermometer';
 export { ExecutiveProjects } from './ExecutiveProjects';
 export { ExecutiveReformImpact } from './ExecutiveReformImpact';
 export { ExecutiveRisks } from './ExecutiveRisks';
+export { ExecutiveReportPreview } from './ExecutiveReportPreview';
