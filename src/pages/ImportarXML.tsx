@@ -17,9 +17,17 @@ import {
   Trash2,
   Play,
   FileUp,
-  BarChart3
+  BarChart3,
+  FlaskConical
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
+// XMLs de teste do ciclo comercial
+import xmlCompra from "../../test-xml/ciclo-comercial/01-compra-mercadoria.xml?raw";
+import xmlVendaPJ from "../../test-xml/ciclo-comercial/02-venda-mercadoria.xml?raw";
+import xmlVendaPF from "../../test-xml/ciclo-comercial/03-venda-consumidor-final.xml?raw";
+import xmlDevolucaoCliente from "../../test-xml/ciclo-comercial/04-devolucao-cliente.xml?raw";
+import xmlDevolucaoFornecedor from "../../test-xml/ciclo-comercial/05-devolucao-fornecedor.xml?raw";
 
 interface FileItem {
   id: string;
@@ -30,6 +38,14 @@ interface FileItem {
   importId?: string;
 }
 
+const TEST_XML_FILES = [
+  { name: "01-compra-mercadoria.xml", content: xmlCompra },
+  { name: "02-venda-mercadoria.xml", content: xmlVendaPJ },
+  { name: "03-venda-consumidor-final.xml", content: xmlVendaPF },
+  { name: "04-devolucao-cliente.xml", content: xmlDevolucaoCliente },
+  { name: "05-devolucao-fornecedor.xml", content: xmlDevolucaoFornecedor },
+];
+
 export default function ImportarXML() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -37,6 +53,7 @@ export default function ImportarXML() {
   const [files, setFiles] = useState<FileItem[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isLoadingTestFiles, setIsLoadingTestFiles] = useState(false);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -85,6 +102,33 @@ export default function ImportarXML() {
 
   const clearQueue = () => {
     setFiles([]);
+  };
+
+  const loadTestFiles = async () => {
+    setIsLoadingTestFiles(true);
+    
+    try {
+      const testFiles: File[] = TEST_XML_FILES.map(({ name, content }) => {
+        const blob = new Blob([content], { type: 'application/xml' });
+        return new File([blob], name, { type: 'application/xml' });
+      });
+      
+      addFiles(testFiles);
+      
+      toast({
+        title: "XMLs de teste carregados",
+        description: `${testFiles.length} arquivos do ciclo comercial adicionados à fila`,
+      });
+    } catch (error) {
+      console.error('Error loading test files:', error);
+      toast({
+        title: "Erro ao carregar",
+        description: "Não foi possível carregar os XMLs de teste",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingTestFiles(false);
+    }
   };
 
   const uploadAndProcess = async () => {
@@ -293,9 +337,27 @@ export default function ImportarXML() {
                   <p className="text-lg font-medium">
                     Arraste seus XMLs aqui ou clique para selecionar
                   </p>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="text-sm text-muted-foreground mt-1 mb-4">
                     Suporta NFe, NFSe, CTe • Até 100 arquivos por vez • Aceita .xml e .zip
                   </p>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      loadTestFiles();
+                    }}
+                    disabled={isLoadingTestFiles}
+                    className="mt-2"
+                  >
+                    {isLoadingTestFiles ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <FlaskConical className="mr-2 h-4 w-4" />
+                    )}
+                    Carregar XMLs de Teste (5 arquivos)
+                  </Button>
                 </div>
               </div>
             </div>
