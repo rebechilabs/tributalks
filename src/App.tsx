@@ -30,6 +30,7 @@ import Noticias from "./pages/Noticias";
 import AdminNoticias from "./pages/AdminNoticias";
 import ImportarXML from "./pages/ImportarXML";
 import XMLResultados from "./pages/XMLResultados";
+import RadarCreditos from "./pages/RadarCreditos";
 
 // Calculadoras
 import SplitPayment from "./pages/calculadora/SplitPayment";
@@ -170,6 +171,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <XMLResultados />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/radar-creditos" 
+              element={
+                <ProtectedRoute>
+                  <RadarCreditos />
                 </ProtectedRoute>
               } 
             />

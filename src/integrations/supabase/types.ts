@@ -161,6 +161,201 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_analysis_summary: {
+        Row: {
+          analysis_date: string | null
+          created_at: string | null
+          credits_found_count: number | null
+          high_confidence_total: number | null
+          icms_potential: number | null
+          icms_st_potential: number | null
+          id: string
+          ipi_potential: number | null
+          low_confidence_total: number | null
+          medium_confidence_total: number | null
+          period_end: string | null
+          period_start: string | null
+          pis_cofins_potential: number | null
+          total_potential: number | null
+          total_xmls_analyzed: number | null
+          user_id: string
+        }
+        Insert: {
+          analysis_date?: string | null
+          created_at?: string | null
+          credits_found_count?: number | null
+          high_confidence_total?: number | null
+          icms_potential?: number | null
+          icms_st_potential?: number | null
+          id?: string
+          ipi_potential?: number | null
+          low_confidence_total?: number | null
+          medium_confidence_total?: number | null
+          period_end?: string | null
+          period_start?: string | null
+          pis_cofins_potential?: number | null
+          total_potential?: number | null
+          total_xmls_analyzed?: number | null
+          user_id: string
+        }
+        Update: {
+          analysis_date?: string | null
+          created_at?: string | null
+          credits_found_count?: number | null
+          high_confidence_total?: number | null
+          icms_potential?: number | null
+          icms_st_potential?: number | null
+          id?: string
+          ipi_potential?: number | null
+          low_confidence_total?: number | null
+          medium_confidence_total?: number | null
+          period_end?: string | null
+          period_start?: string | null
+          pis_cofins_potential?: number | null
+          total_potential?: number | null
+          total_xmls_analyzed?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      credit_rules: {
+        Row: {
+          calculation_formula: string | null
+          confidence_level: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          legal_basis: string | null
+          recovery_window_years: number | null
+          rule_code: string
+          rule_name: string
+          tax_type: string
+          trigger_conditions: Json
+        }
+        Insert: {
+          calculation_formula?: string | null
+          confidence_level?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          legal_basis?: string | null
+          recovery_window_years?: number | null
+          rule_code: string
+          rule_name: string
+          tax_type: string
+          trigger_conditions: Json
+        }
+        Update: {
+          calculation_formula?: string | null
+          confidence_level?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          legal_basis?: string | null
+          recovery_window_years?: number | null
+          rule_code?: string
+          rule_name?: string
+          tax_type?: string
+          trigger_conditions?: Json
+        }
+        Relationships: []
+      }
+      identified_credits: {
+        Row: {
+          accountant_notes: string | null
+          cfop: string | null
+          confidence_level: string | null
+          confidence_score: number | null
+          created_at: string | null
+          credit_not_used: number | null
+          cst: string | null
+          id: string
+          ncm_code: string | null
+          nfe_date: string | null
+          nfe_key: string | null
+          nfe_number: string | null
+          original_tax_value: number | null
+          potential_recovery: number | null
+          product_description: string | null
+          rule_id: string | null
+          status: string | null
+          supplier_cnpj: string | null
+          supplier_name: string | null
+          user_id: string
+          validated_at: string | null
+          validated_by: string | null
+          xml_import_id: string | null
+        }
+        Insert: {
+          accountant_notes?: string | null
+          cfop?: string | null
+          confidence_level?: string | null
+          confidence_score?: number | null
+          created_at?: string | null
+          credit_not_used?: number | null
+          cst?: string | null
+          id?: string
+          ncm_code?: string | null
+          nfe_date?: string | null
+          nfe_key?: string | null
+          nfe_number?: string | null
+          original_tax_value?: number | null
+          potential_recovery?: number | null
+          product_description?: string | null
+          rule_id?: string | null
+          status?: string | null
+          supplier_cnpj?: string | null
+          supplier_name?: string | null
+          user_id: string
+          validated_at?: string | null
+          validated_by?: string | null
+          xml_import_id?: string | null
+        }
+        Update: {
+          accountant_notes?: string | null
+          cfop?: string | null
+          confidence_level?: string | null
+          confidence_score?: number | null
+          created_at?: string | null
+          credit_not_used?: number | null
+          cst?: string | null
+          id?: string
+          ncm_code?: string | null
+          nfe_date?: string | null
+          nfe_key?: string | null
+          nfe_number?: string | null
+          original_tax_value?: number | null
+          potential_recovery?: number | null
+          product_description?: string | null
+          rule_id?: string | null
+          status?: string | null
+          supplier_cnpj?: string | null
+          supplier_name?: string | null
+          user_id?: string
+          validated_at?: string | null
+          validated_by?: string | null
+          xml_import_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "identified_credits_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "credit_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "identified_credits_xml_import_id_fkey"
+            columns: ["xml_import_id"]
+            isOneToOne: false
+            referencedRelation: "xml_imports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       noticias_tributarias: {
         Row: {
           acao_recomendada: string | null
