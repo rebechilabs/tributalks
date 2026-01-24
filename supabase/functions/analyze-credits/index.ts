@@ -61,6 +61,50 @@ interface IdentifiedCredit {
   supplier_name?: string
 }
 
+// Helper to check if CFOP is an entry operation (purchases)
+function isEntryOperation(cfop: string): boolean {
+  return cfop.startsWith('1') || cfop.startsWith('2') || cfop.startsWith('3');
+}
+
+// Helper to check if CFOP is an exit operation (sales)
+function isExitOperation(cfop: string): boolean {
+  return cfop.startsWith('5') || cfop.startsWith('6') || cfop.startsWith('7');
+}
+
+// Helper to check if CFOP is a return operation
+function isReturnOperation(cfop: string): boolean {
+  const returnCfops = ['1411', '1412', '2411', '2412', '5411', '5412', '6411', '6412'];
+  return returnCfops.includes(cfop) || cfop.includes('411') || cfop.includes('412');
+}
+
+// Helper to check if CFOP is a purchase for resale
+function isPurchaseForResale(cfop: string): boolean {
+  return ['1102', '2102', '1403', '2403'].includes(cfop);
+}
+
+// Helper to check if CFOP is a purchase of inputs
+function isPurchaseOfInputs(cfop: string): boolean {
+  return ['1101', '2101', '1111', '2111', '1116', '2116', '1117', '2117'].includes(cfop);
+}
+
+// Helper to check if CFOP is energy/telecommunications
+function isEnergyOrTelecom(cfop: string): boolean {
+  return ['1253', '2253', '1254', '2254', '1255', '2255'].includes(cfop);
+}
+
+// Helper to check if NCM is monophasic (fuels, pharma, cosmetics, beverages)
+function isMonophasicNCM(ncm: string): boolean {
+  // Fuels
+  if (ncm.startsWith('2710') || ncm.startsWith('2207')) return true;
+  // Pharmaceuticals
+  if (ncm.startsWith('3004') || ncm.startsWith('3003')) return true;
+  // Cosmetics
+  if (ncm.startsWith('3303') || ncm.startsWith('3304') || ncm.startsWith('3305')) return true;
+  // Beverages
+  if (ncm.startsWith('2201') || ncm.startsWith('2202') || ncm.startsWith('2203') || ncm.startsWith('2204')) return true;
+  return false;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -87,16 +131,16 @@ serve(async (req) => {
     )
 
     const token = authHeader.replace('Bearer ', '')
-    const { data: claimsData, error: claimsError } = await supabaseUser.auth.getClaims(token)
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token)
     
-    if (claimsError || !claimsData?.claims) {
+    if (userError || !user) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    const userId = claimsData.claims.sub as string
+    const userId = user.id
     const { xml_import_id, parsed_xmls } = await req.json()
 
     if (!parsed_xmls || !Array.isArray(parsed_xmls)) {
@@ -106,7 +150,7 @@ serve(async (req) => {
       )
     }
 
-    // 1. Buscar regras ativas
+    // 1. Fetch active rules
     const { data: rules, error: rulesError } = await supabaseAdmin
       .from('credit_rules')
       .select('*')
@@ -122,7 +166,7 @@ serve(async (req) => {
 
     const identifiedCredits: IdentifiedCredit[] = []
 
-    // 2. Analisar cada XML contra cada regra
+    // 2. Analyze each XML against each rule
     for (const xml of parsed_xmls as ParsedXml[]) {
       const items = xml.itens || []
       
@@ -144,7 +188,7 @@ serve(async (req) => {
       }
     }
 
-    // 3. Salvar créditos identificados
+    // 3. Save identified credits
     if (identifiedCredits.length > 0) {
       const creditsToInsert = identifiedCredits.map(c => ({
         user_id: userId,
@@ -175,7 +219,29 @@ serve(async (req) => {
       }
     }
 
-    // 4. Calcular resumo por tributo
+    // 4. Calculate summary by tax type
+    const byTaxType = {
+      pis_cofins: 0,
+      icms: 0,
+      icms_st: 0,
+      ipi: 0,
+      iss: 0
+    }
+
+    for (const credit of identifiedCredits) {
+      const cfop = credit.cfop || ''
+      const cst = credit.cst || ''
+      
+      // Categorize by the rule that matched or by item characteristics
+      if (cst.startsWith('5') || cst.startsWith('7') || cst.startsWith('0')) {
+        byTaxType.pis_cofins += credit.potential_recovery
+      } else if (cfop.startsWith('2')) {
+        byTaxType.icms += credit.potential_recovery
+      } else if (cfop.startsWith('1')) {
+        byTaxType.icms += credit.potential_recovery
+      }
+    }
+
     const summary = {
       total_potential: identifiedCredits.reduce((sum, c) => sum + c.potential_recovery, 0),
       high_confidence: identifiedCredits
@@ -188,20 +254,10 @@ serve(async (req) => {
         .filter(c => c.confidence_level === 'low')
         .reduce((sum, c) => sum + c.potential_recovery, 0),
       credits_count: identifiedCredits.length,
-      by_tax_type: {
-        pis_cofins: identifiedCredits
-          .filter(c => c.cst?.startsWith('5') || c.cst?.startsWith('7'))
-          .reduce((sum, c) => sum + c.potential_recovery, 0),
-        icms: identifiedCredits
-          .filter(c => c.cfop?.startsWith('2'))
-          .reduce((sum, c) => sum + c.potential_recovery, 0),
-        ipi: identifiedCredits
-          .filter(c => ['1101', '2101'].includes(c.cfop || ''))
-          .reduce((sum, c) => sum + c.potential_recovery, 0),
-      }
+      by_tax_type: byTaxType
     }
 
-    // 5. Salvar resumo
+    // 5. Save summary
     const { error: summaryError } = await supabaseAdmin
       .from('credit_analysis_summary')
       .insert({
@@ -209,9 +265,10 @@ serve(async (req) => {
         analysis_date: new Date().toISOString().split('T')[0],
         period_start: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         period_end: new Date().toISOString().split('T')[0],
-        pis_cofins_potential: summary.by_tax_type.pis_cofins,
-        icms_potential: summary.by_tax_type.icms,
-        ipi_potential: summary.by_tax_type.ipi,
+        pis_cofins_potential: byTaxType.pis_cofins,
+        icms_potential: byTaxType.icms,
+        icms_st_potential: byTaxType.icms_st,
+        ipi_potential: byTaxType.ipi,
         high_confidence_total: summary.high_confidence,
         medium_confidence_total: summary.medium_confidence,
         low_confidence_total: summary.low_confidence,
@@ -244,21 +301,31 @@ serve(async (req) => {
 })
 
 function evaluateRule(rule: CreditRule, xml: ParsedXml, item: XmlItem): IdentifiedCredit | null {
-  // PIS/COFINS - CST com direito a crédito mas não usado
+  const cfop = item.cfop || ''
+  const ncm = item.ncm || ''
+  const cstPis = item.cst_pis || ''
+  const cstIcms = item.cst_icms || ''
+  const valorPis = item.valor_pis || 0
+  const valorCofins = item.valor_cofins || 0
+  const valorIcms = item.valor_icms || 0
+  const valorIpi = item.valor_ipi || 0
+  const valorIcmsSt = item.valor_icms_st || 0
+  const creditoPis = item.credito_pis || 0
+  const creditoIcms = item.credito_icms || 0
+  const valorItem = item.valor_item || 0
+
+  // ==== PIS/COFINS RULES ====
+  
+  // PIS_COFINS_001: CST with credit right but not used
   if (rule.rule_code === 'PIS_COFINS_001') {
     const cstWithCredit = ['50', '51', '52', '53', '54', '55', '56']
-    const cstPis = item.cst_pis || ''
-    const valorPis = item.valor_pis || 0
-    const valorCofins = item.valor_cofins || 0
-    const creditoPis = item.credito_pis || 0
-    
     if (cstWithCredit.includes(cstPis) && creditoPis === 0 && valorPis > 0) {
       return {
         rule_id: rule.id,
         original_tax_value: valorPis + valorCofins,
         potential_recovery: (valorPis + valorCofins) * 0.9,
-        ncm_code: item.ncm || '',
-        cfop: item.cfop || '',
+        ncm_code: ncm,
+        cfop: cfop,
         cst: cstPis,
         confidence_level: 'high',
         confidence_score: 85
@@ -266,103 +333,212 @@ function evaluateRule(rule: CreditRule, xml: ParsedXml, item: XmlItem): Identifi
     }
   }
 
-  // PIS/COFINS - Insumo sem crédito
+  // PIS_COFINS_002: Input without credit (purchase CFOPs)
   if (rule.rule_code === 'PIS_COFINS_002') {
-    const cfopInsumo = ['1101', '1102', '2101', '2102']
-    const cstInsumo = ['70', '71', '72', '73']
-    const cfop = item.cfop || ''
-    const cstPis = item.cst_pis || ''
-    const valorPis = item.valor_pis || 0
-    const valorCofins = item.valor_cofins || 0
-    
-    if (cfopInsumo.includes(cfop) && cstInsumo.includes(cstPis) && valorPis > 0) {
-      return {
-        rule_id: rule.id,
-        original_tax_value: valorPis + valorCofins,
-        potential_recovery: (valorPis + valorCofins) * 0.75,
-        ncm_code: item.ncm || '',
-        cfop: cfop,
-        cst: cstPis,
-        confidence_level: 'medium',
-        confidence_score: 70
+    if (isPurchaseOfInputs(cfop) || isPurchaseForResale(cfop)) {
+      // CST 70-73 indicates non-cumulative with no credit taken
+      const cstNoCredit = ['70', '71', '72', '73']
+      if (cstNoCredit.includes(cstPis) && valorPis > 0) {
+        return {
+          rule_id: rule.id,
+          original_tax_value: valorPis + valorCofins,
+          potential_recovery: (valorPis + valorCofins) * 0.75,
+          ncm_code: ncm,
+          cfop: cfop,
+          cst: cstPis,
+          confidence_level: 'medium',
+          confidence_score: 70
+        }
+      }
+      // Also check if CST 01 (taxable) with no credit claimed on entry
+      if (cstPis === '01' && valorPis > 0 && isEntryOperation(cfop)) {
+        return {
+          rule_id: rule.id,
+          original_tax_value: valorPis + valorCofins,
+          potential_recovery: (valorPis + valorCofins) * 0.8,
+          ncm_code: ncm,
+          cfop: cfop,
+          cst: cstPis,
+          confidence_level: 'medium',
+          confidence_score: 68
+        }
       }
     }
   }
 
-  // PIS/COFINS - Energia elétrica industrial
+  // PIS_COFINS_003: Industrial energy
   if (rule.rule_code === 'PIS_COFINS_003') {
-    const cfopEnergia = ['1253', '2253']
-    const cfop = item.cfop || ''
-    const valorPis = item.valor_pis || 0
-    const valorCofins = item.valor_cofins || 0
-    
-    if (cfopEnergia.includes(cfop) && valorPis > 0) {
+    if (isEnergyOrTelecom(cfop) && valorPis > 0) {
       return {
         rule_id: rule.id,
         original_tax_value: valorPis + valorCofins,
         potential_recovery: (valorPis + valorCofins) * 0.85,
-        ncm_code: item.ncm || '',
+        ncm_code: ncm,
         cfop: cfop,
-        cst: item.cst_pis || '',
+        cst: cstPis,
         confidence_level: 'high',
         confidence_score: 88
       }
     }
   }
 
-  // ICMS - Compra interestadual sem crédito
+  // PIS_COFINS_007: Monophasic products (fuels)
+  if (rule.rule_code === 'PIS_COFINS_007') {
+    if (isMonophasicNCM(ncm) && isEntryOperation(cfop)) {
+      return {
+        rule_id: rule.id,
+        original_tax_value: valorPis + valorCofins,
+        potential_recovery: (valorPis + valorCofins) * 0.6,
+        ncm_code: ncm,
+        cfop: cfop,
+        cst: cstPis,
+        confidence_level: 'high',
+        confidence_score: 82
+      }
+    }
+  }
+
+  // PIS_COFINS_008: Pharma monophasic
+  if (rule.rule_code === 'PIS_COFINS_008') {
+    if (ncm.startsWith('3004') && isExitOperation(cfop)) {
+      // Pharma sales - check if PIS/COFINS was charged when it shouldn't be
+      if (valorPis > 0) {
+        return {
+          rule_id: rule.id,
+          original_tax_value: valorPis + valorCofins,
+          potential_recovery: (valorPis + valorCofins) * 0.95,
+          ncm_code: ncm,
+          cfop: cfop,
+          cst: cstPis,
+          confidence_level: 'high',
+          confidence_score: 90
+        }
+      }
+    }
+  }
+
+  // ==== ICMS RULES ====
+
+  // ICMS_001: Interstate purchase without credit
   if (rule.rule_code === 'ICMS_001') {
-    const cfop = item.cfop || ''
-    const valorIcms = item.valor_icms || 0
-    const creditoIcms = item.credito_icms || 0
-    
     if (cfop.startsWith('2') && valorIcms > 0 && creditoIcms === 0) {
       return {
         rule_id: rule.id,
         original_tax_value: valorIcms,
         potential_recovery: valorIcms * 0.85,
-        ncm_code: item.ncm || '',
+        ncm_code: ncm,
         cfop: cfop,
-        cst: item.cst_icms || '',
+        cst: cstIcms,
         confidence_level: 'high',
         confidence_score: 80
       }
     }
   }
 
-  // ICMS-ST com MVA superior
+  // ICMS_002: Energy for industrialization
+  if (rule.rule_code === 'ICMS_002') {
+    if (isEnergyOrTelecom(cfop) && valorIcms > 0) {
+      return {
+        rule_id: rule.id,
+        original_tax_value: valorIcms,
+        potential_recovery: valorIcms * 0.8,
+        ncm_code: ncm,
+        cfop: cfop,
+        cst: cstIcms,
+        confidence_level: 'high',
+        confidence_score: 85
+      }
+    }
+  }
+
+  // ICMS_005: DIFAL on fixed assets
+  if (rule.rule_code === 'ICMS_005') {
+    // CFOP 2551 = purchase of fixed asset interstate
+    if (cfop === '2551' || cfop === '1551') {
+      if (valorIcms > 0) {
+        return {
+          rule_id: rule.id,
+          original_tax_value: valorIcms,
+          potential_recovery: valorIcms * 0.5, // CIAP recovery over 48 months
+          ncm_code: ncm,
+          cfop: cfop,
+          cst: cstIcms,
+          confidence_level: 'high',
+          confidence_score: 78
+        }
+      }
+    }
+  }
+
+  // ==== ICMS-ST RULES ====
+
+  // ICMS_ST_001: ST with MVA above real price
   if (rule.rule_code === 'ICMS_ST_001') {
-    const valorIcmsSt = item.valor_icms_st || 0
-    
     if (valorIcmsSt > 0) {
       return {
         rule_id: rule.id,
         original_tax_value: valorIcmsSt,
         potential_recovery: valorIcmsSt * 0.15,
-        ncm_code: item.ncm || '',
-        cfop: item.cfop || '',
-        cst: item.cst_icms || '',
+        ncm_code: ncm,
+        cfop: cfop,
+        cst: cstIcms,
         confidence_level: 'low',
         confidence_score: 45
       }
     }
   }
 
-  // IPI em insumo industrial
+  // ICMS_ST_002: ST refund on interstate operations
+  if (rule.rule_code === 'ICMS_ST_002') {
+    const refundCfops = ['6403', '6404', '6102']
+    if (refundCfops.includes(cfop) && valorIcmsSt > 0) {
+      return {
+        rule_id: rule.id,
+        original_tax_value: valorIcmsSt,
+        potential_recovery: valorIcmsSt * 0.7,
+        ncm_code: ncm,
+        cfop: cfop,
+        cst: cstIcms,
+        confidence_level: 'high',
+        confidence_score: 75
+      }
+    }
+  }
+
+  // ==== IPI RULES ====
+
+  // IPI_001: IPI credit on industrial inputs
   if (rule.rule_code === 'IPI_001') {
-    const cfop = item.cfop || ''
-    const valorIpi = item.valor_ipi || 0
-    
-    if (valorIpi > 0 && ['1101', '2101'].includes(cfop)) {
+    if (valorIpi > 0 && isPurchaseOfInputs(cfop)) {
       return {
         rule_id: rule.id,
         original_tax_value: valorIpi,
         potential_recovery: valorIpi * 0.95,
-        ncm_code: item.ncm || '',
+        ncm_code: ncm,
         cfop: cfop,
         cst: '',
         confidence_level: 'high',
         confidence_score: 90
+      }
+    }
+  }
+
+  // ==== RETURN OPERATIONS ====
+  // Check for returns that may generate credit recovery
+
+  if (isReturnOperation(cfop)) {
+    // Entry returns (1411, 2411) = receiving returned goods = debit reversal
+    if (isEntryOperation(cfop) && (valorPis > 0 || valorCofins > 0)) {
+      // This is a potential debit reversal opportunity
+      return {
+        rule_id: rule.id,
+        original_tax_value: valorPis + valorCofins,
+        potential_recovery: (valorPis + valorCofins) * 0.9,
+        ncm_code: ncm,
+        cfop: cfop,
+        cst: cstPis,
+        confidence_level: 'medium',
+        confidence_score: 65
       }
     }
   }

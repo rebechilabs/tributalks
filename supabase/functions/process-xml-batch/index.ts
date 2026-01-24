@@ -9,35 +9,75 @@ const corsHeaders = {
 interface NFeProduto {
   numero: number;
   ncm: string;
+  cfop: string;
+  cst_icms: string;
+  cst_pis: string;
+  cst_cofins: string;
   descricao: string;
   quantidade: number;
   unidade: string;
   valorUnitario: number;
   valorTotal: number;
-  icms?: number;
-  pis?: number;
-  cofins?: number;
-  ipi?: number;
+  icms: number;
+  pis: number;
+  cofins: number;
+  ipi: number;
+  icms_st: number;
+  credito_icms: number;
+  credito_pis: number;
+  credito_cofins: number;
 }
 
 interface NFeData {
   tipo: 'NFe' | 'NFSe' | 'CTe';
   numero: string;
   serie: string;
+  chaveNfe: string;
   dataEmissao: string;
+  naturezaOperacao: string;
+  tipoOperacao: string;
+  finalidadeNfe: string;
   emitenteNome: string;
   emitenteCnpj: string;
   emitenteUf: string;
   emitenteMunicipio: string;
   destinatarioNome: string;
   destinatarioCnpj: string;
+  destinatarioUf: string;
   produtos: NFeProduto[];
   totalProdutos: number;
   totalIcms: number;
   totalPis: number;
   totalCofins: number;
   totalIpi: number;
+  totalIcmsSt: number;
+  totalFrete: number;
   totalNota: number;
+}
+
+interface ParsedXmlForCredits {
+  chave_nfe: string;
+  numero: string;
+  data_emissao: string;
+  cnpj_emitente: string;
+  nome_emitente: string;
+  itens: {
+    ncm: string;
+    cfop: string;
+    cst_pis: string;
+    cst_cofins: string;
+    cst_icms: string;
+    valor_pis: number;
+    valor_cofins: number;
+    valor_icms: number;
+    valor_ipi: number;
+    valor_icms_st: number;
+    credito_pis: number;
+    credito_cofins: number;
+    credito_icms: number;
+    valor_item: number;
+    descricao: string;
+  }[];
 }
 
 function parseNFeXML(xmlContent: string): NFeData | null {
@@ -47,23 +87,10 @@ function parseNFeXML(xmlContent: string): NFeData | null {
                  xmlContent.includes('<NFS') ? 'NFSe' : 
                  xmlContent.includes('<CTe') ? 'CTe' : 'NFe';
 
-    // Extract basic info
-    const getTag = (tag: string): string => {
-      const regex = new RegExp(`<${tag}[^>]*>([^<]*)</${tag}>`, 'i');
-      const match = xmlContent.match(regex);
-      return match ? match[1].trim() : '';
-    };
-
-    const getNestedTag = (parent: string, tag: string): string => {
-      const parentRegex = new RegExp(`<${parent}[^>]*>([\\s\\S]*?)</${parent}>`, 'i');
-      const parentMatch = xmlContent.match(parentRegex);
-      if (parentMatch) {
-        const regex = new RegExp(`<${tag}[^>]*>([^<]*)</${tag}>`, 'i');
-        const match = parentMatch[1].match(regex);
-        return match ? match[1].trim() : '';
-      }
-      return '';
-    };
+    // Extract chave NFe
+    const chaveMatch = xmlContent.match(/Id="NFe(\d{44})"/i) ||
+                       xmlContent.match(/<chNFe>(\d{44})<\/chNFe>/i);
+    const chaveNfe = chaveMatch ? chaveMatch[1] : '';
 
     // Parse emitente
     const emitenteMatch = xmlContent.match(/<emit>([\s\S]*?)<\/emit>/i);
@@ -71,8 +98,10 @@ function parseNFeXML(xmlContent: string): NFeData | null {
     
     const emitenteNome = emitenteBlock.match(/<xNome>([^<]*)<\/xNome>/i)?.[1] || '';
     const emitenteCnpj = emitenteBlock.match(/<CNPJ>([^<]*)<\/CNPJ>/i)?.[1] || '';
-    const emitenteUf = emitenteBlock.match(/<UF>([^<]*)<\/UF>/i)?.[1] || '';
-    const emitenteMunicipio = emitenteBlock.match(/<xMun>([^<]*)<\/xMun>/i)?.[1] || '';
+    const emitenteEnderMatch = emitenteBlock.match(/<enderEmit>([\s\S]*?)<\/enderEmit>/i);
+    const emitenteEnderBlock = emitenteEnderMatch ? emitenteEnderMatch[1] : '';
+    const emitenteUf = emitenteEnderBlock.match(/<UF>([^<]*)<\/UF>/i)?.[1] || '';
+    const emitenteMunicipio = emitenteEnderBlock.match(/<xMun>([^<]*)<\/xMun>/i)?.[1] || '';
 
     // Parse destinatario
     const destMatch = xmlContent.match(/<dest>([\s\S]*?)<\/dest>/i);
@@ -81,6 +110,19 @@ function parseNFeXML(xmlContent: string): NFeData | null {
     const destinatarioNome = destBlock.match(/<xNome>([^<]*)<\/xNome>/i)?.[1] || '';
     const destinatarioCnpj = destBlock.match(/<CNPJ>([^<]*)<\/CNPJ>/i)?.[1] || 
                             destBlock.match(/<CPF>([^<]*)<\/CPF>/i)?.[1] || '';
+    const destEnderMatch = destBlock.match(/<enderDest>([\s\S]*?)<\/enderDest>/i);
+    const destEnderBlock = destEnderMatch ? destEnderMatch[1] : '';
+    const destinatarioUf = destEnderBlock.match(/<UF>([^<]*)<\/UF>/i)?.[1] || '';
+
+    // Parse identificação
+    const ideBlock = xmlContent.match(/<ide>([\s\S]*?)<\/ide>/i)?.[1] || '';
+    const numeroNota = ideBlock.match(/<nNF>([^<]*)<\/nNF>/i)?.[1] || '';
+    const serie = ideBlock.match(/<serie>([^<]*)<\/serie>/i)?.[1] || '';
+    const dataEmissao = ideBlock.match(/<dhEmi>([^<]*)<\/dhEmi>/i)?.[1] || 
+                       ideBlock.match(/<dEmi>([^<]*)<\/dEmi>/i)?.[1] || '';
+    const naturezaOperacao = ideBlock.match(/<natOp>([^<]*)<\/natOp>/i)?.[1] || '';
+    const tipoOperacao = ideBlock.match(/<tpNF>([^<]*)<\/tpNF>/i)?.[1] || ''; // 0=entrada, 1=saida
+    const finalidadeNfe = ideBlock.match(/<finNFe>([^<]*)<\/finNFe>/i)?.[1] || ''; // 1=normal, 4=devolucao
 
     // Parse produtos
     const produtosMatches = xmlContent.matchAll(/<det[^>]*>([\s\S]*?)<\/det>/gi);
@@ -94,6 +136,7 @@ function parseNFeXML(xmlContent: string): NFeData | null {
       const prodBlock = detBlock.match(/<prod>([\s\S]*?)<\/prod>/i)?.[1] || '';
       
       const ncm = prodBlock.match(/<NCM>([^<]*)<\/NCM>/i)?.[1] || '00000000';
+      const cfop = prodBlock.match(/<CFOP>([^<]*)<\/CFOP>/i)?.[1] || '';
       const descricao = prodBlock.match(/<xProd>([^<]*)<\/xProd>/i)?.[1] || '';
       const quantidade = parseFloat(prodBlock.match(/<qCom>([^<]*)<\/qCom>/i)?.[1] || '0');
       const unidade = prodBlock.match(/<uCom>([^<]*)<\/uCom>/i)?.[1] || 'UN';
@@ -103,21 +146,48 @@ function parseNFeXML(xmlContent: string): NFeData | null {
       // Parse impostos
       const impostoBlock = detBlock.match(/<imposto>([\s\S]*?)<\/imposto>/i)?.[1] || '';
       
-      const icmsBlock = impostoBlock.match(/<ICMS[^>]*>([\s\S]*?)<\/ICMS[^>]*>/i)?.[1] || '';
-      const icms = parseFloat(icmsBlock.match(/<vICMS>([^<]*)<\/vICMS>/i)?.[1] || '0');
+      // ICMS - parse all variants (ICMS00, ICMS10, ICMS20, etc)
+      const icmsBlock = impostoBlock.match(/<ICMS>([\s\S]*?)<\/ICMS>/i)?.[1] || '';
+      const icmsInnerBlock = icmsBlock.match(/<ICMS\d{2}>([\s\S]*?)<\/ICMS\d{2}>/i)?.[1] || 
+                             icmsBlock.match(/<ICMSSN\d{3}>([\s\S]*?)<\/ICMSSN\d{3}>/i)?.[1] || '';
+      const icms = parseFloat(icmsInnerBlock.match(/<vICMS>([^<]*)<\/vICMS>/i)?.[1] || '0');
+      const cst_icms = icmsInnerBlock.match(/<CST>([^<]*)<\/CST>/i)?.[1] || 
+                       icmsInnerBlock.match(/<CSOSN>([^<]*)<\/CSOSN>/i)?.[1] || '';
+      const icms_st = parseFloat(icmsInnerBlock.match(/<vICMSST>([^<]*)<\/vICMSST>/i)?.[1] || '0');
+      
+      // For credit analysis, check if there's a credit field or assume based on CST
+      const credito_icms = 0; // Will be determined by business rules
 
-      const pisBlock = impostoBlock.match(/<PIS[^>]*>([\s\S]*?)<\/PIS[^>]*>/i)?.[1] || '';
-      const pis = parseFloat(pisBlock.match(/<vPIS>([^<]*)<\/vPIS>/i)?.[1] || '0');
+      // PIS
+      const pisBlock = impostoBlock.match(/<PIS>([\s\S]*?)<\/PIS>/i)?.[1] || '';
+      const pisInnerBlock = pisBlock.match(/<PISAliq>([\s\S]*?)<\/PISAliq>/i)?.[1] || 
+                           pisBlock.match(/<PISNT>([\s\S]*?)<\/PISNT>/i)?.[1] ||
+                           pisBlock.match(/<PISOutr>([\s\S]*?)<\/PISOutr>/i)?.[1] || '';
+      const pis = parseFloat(pisInnerBlock.match(/<vPIS>([^<]*)<\/vPIS>/i)?.[1] || '0');
+      const cst_pis = pisInnerBlock.match(/<CST>([^<]*)<\/CST>/i)?.[1] || '';
+      const credito_pis = 0; // Will be determined by business rules
 
-      const cofinsBlock = impostoBlock.match(/<COFINS[^>]*>([\s\S]*?)<\/COFINS[^>]*>/i)?.[1] || '';
-      const cofins = parseFloat(cofinsBlock.match(/<vCOFINS>([^<]*)<\/vCOFINS>/i)?.[1] || '0');
+      // COFINS
+      const cofinsBlock = impostoBlock.match(/<COFINS>([\s\S]*?)<\/COFINS>/i)?.[1] || '';
+      const cofinsInnerBlock = cofinsBlock.match(/<COFINSAliq>([\s\S]*?)<\/COFINSAliq>/i)?.[1] || 
+                               cofinsBlock.match(/<COFINSNT>([\s\S]*?)<\/COFINSNT>/i)?.[1] ||
+                               cofinsBlock.match(/<COFINSOutr>([\s\S]*?)<\/COFINSOutr>/i)?.[1] || '';
+      const cofins = parseFloat(cofinsInnerBlock.match(/<vCOFINS>([^<]*)<\/vCOFINS>/i)?.[1] || '0');
+      const cst_cofins = cofinsInnerBlock.match(/<CST>([^<]*)<\/CST>/i)?.[1] || '';
+      const credito_cofins = 0; // Will be determined by business rules
 
-      const ipiBlock = impostoBlock.match(/<IPI[^>]*>([\s\S]*?)<\/IPI[^>]*>/i)?.[1] || '';
-      const ipi = parseFloat(ipiBlock.match(/<vIPI>([^<]*)<\/vIPI>/i)?.[1] || '0');
+      // IPI
+      const ipiBlock = impostoBlock.match(/<IPI>([\s\S]*?)<\/IPI>/i)?.[1] || '';
+      const ipiTribBlock = ipiBlock.match(/<IPITrib>([\s\S]*?)<\/IPITrib>/i)?.[1] || '';
+      const ipi = parseFloat(ipiTribBlock.match(/<vIPI>([^<]*)<\/vIPI>/i)?.[1] || '0');
 
       produtos.push({
         numero,
         ncm,
+        cfop,
+        cst_icms,
+        cst_pis,
+        cst_cofins,
         descricao,
         quantidade,
         unidade,
@@ -126,7 +196,11 @@ function parseNFeXML(xmlContent: string): NFeData | null {
         icms,
         pis,
         cofins,
-        ipi
+        ipi,
+        icms_st,
+        credito_icms,
+        credito_pis,
+        credito_cofins
       });
     }
 
@@ -139,38 +213,67 @@ function parseNFeXML(xmlContent: string): NFeData | null {
     const totalPis = parseFloat(icmsTotBlock.match(/<vPIS>([^<]*)<\/vPIS>/i)?.[1] || '0');
     const totalCofins = parseFloat(icmsTotBlock.match(/<vCOFINS>([^<]*)<\/vCOFINS>/i)?.[1] || '0');
     const totalIpi = parseFloat(icmsTotBlock.match(/<vIPI>([^<]*)<\/vIPI>/i)?.[1] || '0');
+    const totalIcmsSt = parseFloat(icmsTotBlock.match(/<vST>([^<]*)<\/vST>/i)?.[1] || '0');
+    const totalFrete = parseFloat(icmsTotBlock.match(/<vFrete>([^<]*)<\/vFrete>/i)?.[1] || '0');
     const totalNota = parseFloat(icmsTotBlock.match(/<vNF>([^<]*)<\/vNF>/i)?.[1] || '0');
-
-    // Parse identificação
-    const ideBlock = xmlContent.match(/<ide>([\s\S]*?)<\/ide>/i)?.[1] || '';
-    const numeroNota = ideBlock.match(/<nNF>([^<]*)<\/nNF>/i)?.[1] || '';
-    const serie = ideBlock.match(/<serie>([^<]*)<\/serie>/i)?.[1] || '';
-    const dataEmissao = ideBlock.match(/<dhEmi>([^<]*)<\/dhEmi>/i)?.[1] || 
-                       ideBlock.match(/<dEmi>([^<]*)<\/dEmi>/i)?.[1] || '';
 
     return {
       tipo,
       numero: numeroNota,
       serie,
+      chaveNfe,
       dataEmissao,
+      naturezaOperacao,
+      tipoOperacao,
+      finalidadeNfe,
       emitenteNome,
       emitenteCnpj,
       emitenteUf,
       emitenteMunicipio,
       destinatarioNome,
       destinatarioCnpj,
+      destinatarioUf,
       produtos,
       totalProdutos,
       totalIcms,
       totalPis,
       totalCofins,
       totalIpi,
+      totalIcmsSt,
+      totalFrete,
       totalNota
     };
   } catch (error) {
     console.error('Error parsing XML:', error);
     return null;
   }
+}
+
+function convertToCreditsFormat(nfeData: NFeData): ParsedXmlForCredits {
+  return {
+    chave_nfe: nfeData.chaveNfe,
+    numero: nfeData.numero,
+    data_emissao: nfeData.dataEmissao,
+    cnpj_emitente: nfeData.emitenteCnpj,
+    nome_emitente: nfeData.emitenteNome,
+    itens: nfeData.produtos.map(prod => ({
+      ncm: prod.ncm,
+      cfop: prod.cfop,
+      cst_pis: prod.cst_pis,
+      cst_cofins: prod.cst_cofins,
+      cst_icms: prod.cst_icms,
+      valor_pis: prod.pis,
+      valor_cofins: prod.cofins,
+      valor_icms: prod.icms,
+      valor_ipi: prod.ipi,
+      valor_icms_st: prod.icms_st,
+      credito_pis: prod.credito_pis,
+      credito_cofins: prod.credito_cofins,
+      credito_icms: prod.credito_icms,
+      valor_item: prod.valorTotal,
+      descricao: prod.descricao
+    }))
+  };
 }
 
 async function calculateReformTaxes(nfeData: NFeData, supabaseUrl: string, supabaseKey: string): Promise<any> {
@@ -237,6 +340,37 @@ async function calculateReformTaxes(nfeData: NFeData, supabaseUrl: string, supab
   }
 }
 
+async function triggerCreditAnalysis(
+  parsedXmls: ParsedXmlForCredits[], 
+  supabaseUrl: string, 
+  authToken: string,
+  xmlImportId?: string
+): Promise<any> {
+  try {
+    const response = await fetch(`${supabaseUrl}/functions/v1/analyze-credits`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({ 
+        xml_import_id: xmlImportId,
+        parsed_xmls: parsedXmls 
+      })
+    });
+
+    if (response.ok) {
+      return await response.json();
+    }
+    
+    console.error('Credit analysis failed:', await response.text());
+    return null;
+  } catch (error) {
+    console.error('Error triggering credit analysis:', error);
+    return null;
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -278,6 +412,7 @@ serve(async (req) => {
 
     const results = [];
     const errors = [];
+    const parsedXmlsForCredits: ParsedXmlForCredits[] = [];
 
     for (const importId of importIds) {
       try {
@@ -321,6 +456,10 @@ serve(async (req) => {
           continue;
         }
 
+        // Convert to credits format for later analysis
+        const creditsFormat = convertToCreditsFormat(nfeData);
+        parsedXmlsForCredits.push(creditsFormat);
+
         // Calculate current taxes total
         const currentTaxTotal = nfeData.totalIcms + nfeData.totalPis + nfeData.totalCofins + nfeData.totalIpi;
 
@@ -360,6 +499,8 @@ serve(async (req) => {
               pis: nfeData.totalPis,
               cofins: nfeData.totalCofins,
               ipi: nfeData.totalIpi,
+              icms_st: nfeData.totalIcmsSt,
+              frete: nfeData.totalFrete,
               total: currentTaxTotal
             },
             reform_taxes: {
@@ -397,7 +538,8 @@ serve(async (req) => {
           reformTaxTotal,
           differenceValue,
           differencePercent,
-          isBeneficial: differenceValue < 0
+          isBeneficial: differenceValue < 0,
+          itemsCount: nfeData.produtos.length
         });
 
       } catch (error) {
@@ -410,13 +552,30 @@ serve(async (req) => {
       }
     }
 
+    // After processing all XMLs, trigger credit analysis
+    let creditAnalysisResult = null;
+    if (parsedXmlsForCredits.length > 0) {
+      console.log(`Triggering credit analysis for ${parsedXmlsForCredits.length} XMLs...`);
+      creditAnalysisResult = await triggerCreditAnalysis(
+        parsedXmlsForCredits, 
+        supabaseUrl, 
+        authHeader,
+        importIds.length === 1 ? importIds[0] : undefined
+      );
+      console.log('Credit analysis result:', creditAnalysisResult);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         processed: results.length,
         errors: errors.length,
         results,
-        errorDetails: errors
+        errorDetails: errors,
+        creditAnalysis: creditAnalysisResult ? {
+          creditsFound: creditAnalysisResult.credits_count || 0,
+          totalPotential: creditAnalysisResult.summary?.total_potential || 0
+        } : null
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
