@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.calculate-tax-score]
 verify_jwt = false
+
+[functions.match-opportunities]
+verify_jwt = false

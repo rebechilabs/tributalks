@@ -275,6 +275,314 @@ export type Database = {
         }
         Relationships: []
       }
+      company_opportunities: {
+        Row: {
+          alto_impacto: boolean | null
+          created_at: string | null
+          data_conclusao: string | null
+          data_inicio_implementacao: string | null
+          economia_anual_max: number | null
+          economia_anual_min: number | null
+          economia_mensal_max: number | null
+          economia_mensal_min: number | null
+          economia_real_mensal: number | null
+          id: string
+          match_reasons: string[] | null
+          match_score: number | null
+          missing_criteria: string[] | null
+          motivo_descarte: string | null
+          notas_contador: string | null
+          notas_usuario: string | null
+          opportunity_id: string
+          prioridade: number | null
+          quick_win: boolean | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          alto_impacto?: boolean | null
+          created_at?: string | null
+          data_conclusao?: string | null
+          data_inicio_implementacao?: string | null
+          economia_anual_max?: number | null
+          economia_anual_min?: number | null
+          economia_mensal_max?: number | null
+          economia_mensal_min?: number | null
+          economia_real_mensal?: number | null
+          id?: string
+          match_reasons?: string[] | null
+          match_score?: number | null
+          missing_criteria?: string[] | null
+          motivo_descarte?: string | null
+          notas_contador?: string | null
+          notas_usuario?: string | null
+          opportunity_id: string
+          prioridade?: number | null
+          quick_win?: boolean | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          alto_impacto?: boolean | null
+          created_at?: string | null
+          data_conclusao?: string | null
+          data_inicio_implementacao?: string | null
+          economia_anual_max?: number | null
+          economia_anual_min?: number | null
+          economia_mensal_max?: number | null
+          economia_mensal_min?: number | null
+          economia_real_mensal?: number | null
+          id?: string
+          match_reasons?: string[] | null
+          match_score?: number | null
+          missing_criteria?: string[] | null
+          motivo_descarte?: string | null
+          notas_contador?: string | null
+          notas_usuario?: string | null
+          opportunity_id?: string
+          prioridade?: number | null
+          quick_win?: boolean | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_opportunities_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "tax_opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_profile: {
+        Row: {
+          area_livre_comercio: boolean | null
+          atividades_diferentes_tributacao: boolean | null
+          cnae_principal: string | null
+          cnae_secundarios: string[] | null
+          cnpj_principal: string | null
+          cnpjs_grupo: string[] | null
+          created_at: string | null
+          descricao_atividade: string | null
+          etapa_atual: number | null
+          exporta_produtos: boolean | null
+          exporta_servicos: boolean | null
+          faturamento_anual: number | null
+          faturamento_mensal_medio: number | null
+          folha_mensal: number | null
+          folha_percentual_faturamento: number | null
+          id: string
+          importa_insumos: boolean | null
+          importa_produtos: boolean | null
+          investe_em_inovacao: boolean | null
+          municipio_sede: string | null
+          nome_fantasia: string | null
+          num_funcionarios: number | null
+          opera_outros_estados: boolean | null
+          opera_todo_brasil: boolean | null
+          percentual_exportacao: number | null
+          percentual_governo: number | null
+          percentual_importacao: number | null
+          percentual_pf: number | null
+          percentual_pj: number | null
+          percentual_produtos: number | null
+          percentual_servicos: number | null
+          perfil_completo: boolean | null
+          porte: string | null
+          qtd_cnpjs: number | null
+          qtd_filiais: number | null
+          razao_social: string | null
+          regime_tributario: string | null
+          regimes_no_grupo: string[] | null
+          segmento: string | null
+          setor: string | null
+          tem_atividade_pd: boolean | null
+          tem_atividades_mistas: boolean | null
+          tem_ecommerce: boolean | null
+          tem_filiais: boolean | null
+          tem_holding: boolean | null
+          tem_loja_fisica: boolean | null
+          tem_marketplace: boolean | null
+          tem_muitos_socios: boolean | null
+          tem_patentes: boolean | null
+          tem_produtos_monofasicos: boolean | null
+          tipo_societario: string | null
+          uf_sede: string | null
+          ufs_operacao: string[] | null
+          updated_at: string | null
+          user_id: string
+          vende_automoveis: boolean | null
+          vende_autopecas: boolean | null
+          vende_bebidas: boolean | null
+          vende_cigarros: boolean | null
+          vende_combustiveis: boolean | null
+          vende_cosmeticos: boolean | null
+          vende_eletronicos: boolean | null
+          vende_farmacos: boolean | null
+          vende_governo: boolean | null
+          vende_pf: boolean | null
+          vende_pj: boolean | null
+          vende_pneus: boolean | null
+          vende_produtos: boolean | null
+          vende_servicos: boolean | null
+          vende_whatsapp_social: boolean | null
+          zona_especial: string | null
+          zona_franca: boolean | null
+        }
+        Insert: {
+          area_livre_comercio?: boolean | null
+          atividades_diferentes_tributacao?: boolean | null
+          cnae_principal?: string | null
+          cnae_secundarios?: string[] | null
+          cnpj_principal?: string | null
+          cnpjs_grupo?: string[] | null
+          created_at?: string | null
+          descricao_atividade?: string | null
+          etapa_atual?: number | null
+          exporta_produtos?: boolean | null
+          exporta_servicos?: boolean | null
+          faturamento_anual?: number | null
+          faturamento_mensal_medio?: number | null
+          folha_mensal?: number | null
+          folha_percentual_faturamento?: number | null
+          id?: string
+          importa_insumos?: boolean | null
+          importa_produtos?: boolean | null
+          investe_em_inovacao?: boolean | null
+          municipio_sede?: string | null
+          nome_fantasia?: string | null
+          num_funcionarios?: number | null
+          opera_outros_estados?: boolean | null
+          opera_todo_brasil?: boolean | null
+          percentual_exportacao?: number | null
+          percentual_governo?: number | null
+          percentual_importacao?: number | null
+          percentual_pf?: number | null
+          percentual_pj?: number | null
+          percentual_produtos?: number | null
+          percentual_servicos?: number | null
+          perfil_completo?: boolean | null
+          porte?: string | null
+          qtd_cnpjs?: number | null
+          qtd_filiais?: number | null
+          razao_social?: string | null
+          regime_tributario?: string | null
+          regimes_no_grupo?: string[] | null
+          segmento?: string | null
+          setor?: string | null
+          tem_atividade_pd?: boolean | null
+          tem_atividades_mistas?: boolean | null
+          tem_ecommerce?: boolean | null
+          tem_filiais?: boolean | null
+          tem_holding?: boolean | null
+          tem_loja_fisica?: boolean | null
+          tem_marketplace?: boolean | null
+          tem_muitos_socios?: boolean | null
+          tem_patentes?: boolean | null
+          tem_produtos_monofasicos?: boolean | null
+          tipo_societario?: string | null
+          uf_sede?: string | null
+          ufs_operacao?: string[] | null
+          updated_at?: string | null
+          user_id: string
+          vende_automoveis?: boolean | null
+          vende_autopecas?: boolean | null
+          vende_bebidas?: boolean | null
+          vende_cigarros?: boolean | null
+          vende_combustiveis?: boolean | null
+          vende_cosmeticos?: boolean | null
+          vende_eletronicos?: boolean | null
+          vende_farmacos?: boolean | null
+          vende_governo?: boolean | null
+          vende_pf?: boolean | null
+          vende_pj?: boolean | null
+          vende_pneus?: boolean | null
+          vende_produtos?: boolean | null
+          vende_servicos?: boolean | null
+          vende_whatsapp_social?: boolean | null
+          zona_especial?: string | null
+          zona_franca?: boolean | null
+        }
+        Update: {
+          area_livre_comercio?: boolean | null
+          atividades_diferentes_tributacao?: boolean | null
+          cnae_principal?: string | null
+          cnae_secundarios?: string[] | null
+          cnpj_principal?: string | null
+          cnpjs_grupo?: string[] | null
+          created_at?: string | null
+          descricao_atividade?: string | null
+          etapa_atual?: number | null
+          exporta_produtos?: boolean | null
+          exporta_servicos?: boolean | null
+          faturamento_anual?: number | null
+          faturamento_mensal_medio?: number | null
+          folha_mensal?: number | null
+          folha_percentual_faturamento?: number | null
+          id?: string
+          importa_insumos?: boolean | null
+          importa_produtos?: boolean | null
+          investe_em_inovacao?: boolean | null
+          municipio_sede?: string | null
+          nome_fantasia?: string | null
+          num_funcionarios?: number | null
+          opera_outros_estados?: boolean | null
+          opera_todo_brasil?: boolean | null
+          percentual_exportacao?: number | null
+          percentual_governo?: number | null
+          percentual_importacao?: number | null
+          percentual_pf?: number | null
+          percentual_pj?: number | null
+          percentual_produtos?: number | null
+          percentual_servicos?: number | null
+          perfil_completo?: boolean | null
+          porte?: string | null
+          qtd_cnpjs?: number | null
+          qtd_filiais?: number | null
+          razao_social?: string | null
+          regime_tributario?: string | null
+          regimes_no_grupo?: string[] | null
+          segmento?: string | null
+          setor?: string | null
+          tem_atividade_pd?: boolean | null
+          tem_atividades_mistas?: boolean | null
+          tem_ecommerce?: boolean | null
+          tem_filiais?: boolean | null
+          tem_holding?: boolean | null
+          tem_loja_fisica?: boolean | null
+          tem_marketplace?: boolean | null
+          tem_muitos_socios?: boolean | null
+          tem_patentes?: boolean | null
+          tem_produtos_monofasicos?: boolean | null
+          tipo_societario?: string | null
+          uf_sede?: string | null
+          ufs_operacao?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+          vende_automoveis?: boolean | null
+          vende_autopecas?: boolean | null
+          vende_bebidas?: boolean | null
+          vende_cigarros?: boolean | null
+          vende_combustiveis?: boolean | null
+          vende_cosmeticos?: boolean | null
+          vende_eletronicos?: boolean | null
+          vende_farmacos?: boolean | null
+          vende_governo?: boolean | null
+          vende_pf?: boolean | null
+          vende_pj?: boolean | null
+          vende_pneus?: boolean | null
+          vende_produtos?: boolean | null
+          vende_servicos?: boolean | null
+          vende_whatsapp_social?: boolean | null
+          zona_especial?: string | null
+          zona_franca?: boolean | null
+        }
+        Relationships: []
+      }
       consultorias: {
         Row: {
           calendly_event_id: string | null
@@ -890,6 +1198,132 @@ export type Database = {
           total_is?: number | null
           uf?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      tax_opportunities: {
+        Row: {
+          base_legal: string | null
+          base_legal_resumo: string | null
+          casos_sucesso: Json | null
+          category: string | null
+          code: string
+          complexidade: string | null
+          created_at: string | null
+          criterios: Json
+          criterios_obrigatorios: Json | null
+          criterios_pontuacao: Json | null
+          description: string | null
+          description_ceo: string | null
+          destaque: boolean | null
+          economia_base: string | null
+          economia_descricao_simples: string | null
+          economia_percentual_max: number | null
+          economia_percentual_min: number | null
+          economia_tipo: string | null
+          exemplo_pratico: string | null
+          faq: Json | null
+          id: string
+          is_active: boolean | null
+          link_legislacao: string | null
+          name: string
+          name_simples: string
+          novo: boolean | null
+          requer_advogado: boolean | null
+          requer_certificacao: boolean | null
+          requer_contador: boolean | null
+          requer_sistema: boolean | null
+          risco_descricao: string | null
+          risco_fiscal: string | null
+          subcategory: string | null
+          tempo_implementacao: string | null
+          tempo_retorno: string | null
+          tipo_tributo: string | null
+          tributos_afetados: string[] | null
+          updated_at: string | null
+          validade_ate: string | null
+        }
+        Insert: {
+          base_legal?: string | null
+          base_legal_resumo?: string | null
+          casos_sucesso?: Json | null
+          category?: string | null
+          code: string
+          complexidade?: string | null
+          created_at?: string | null
+          criterios?: Json
+          criterios_obrigatorios?: Json | null
+          criterios_pontuacao?: Json | null
+          description?: string | null
+          description_ceo?: string | null
+          destaque?: boolean | null
+          economia_base?: string | null
+          economia_descricao_simples?: string | null
+          economia_percentual_max?: number | null
+          economia_percentual_min?: number | null
+          economia_tipo?: string | null
+          exemplo_pratico?: string | null
+          faq?: Json | null
+          id?: string
+          is_active?: boolean | null
+          link_legislacao?: string | null
+          name: string
+          name_simples: string
+          novo?: boolean | null
+          requer_advogado?: boolean | null
+          requer_certificacao?: boolean | null
+          requer_contador?: boolean | null
+          requer_sistema?: boolean | null
+          risco_descricao?: string | null
+          risco_fiscal?: string | null
+          subcategory?: string | null
+          tempo_implementacao?: string | null
+          tempo_retorno?: string | null
+          tipo_tributo?: string | null
+          tributos_afetados?: string[] | null
+          updated_at?: string | null
+          validade_ate?: string | null
+        }
+        Update: {
+          base_legal?: string | null
+          base_legal_resumo?: string | null
+          casos_sucesso?: Json | null
+          category?: string | null
+          code?: string
+          complexidade?: string | null
+          created_at?: string | null
+          criterios?: Json
+          criterios_obrigatorios?: Json | null
+          criterios_pontuacao?: Json | null
+          description?: string | null
+          description_ceo?: string | null
+          destaque?: boolean | null
+          economia_base?: string | null
+          economia_descricao_simples?: string | null
+          economia_percentual_max?: number | null
+          economia_percentual_min?: number | null
+          economia_tipo?: string | null
+          exemplo_pratico?: string | null
+          faq?: Json | null
+          id?: string
+          is_active?: boolean | null
+          link_legislacao?: string | null
+          name?: string
+          name_simples?: string
+          novo?: boolean | null
+          requer_advogado?: boolean | null
+          requer_certificacao?: boolean | null
+          requer_contador?: boolean | null
+          requer_sistema?: boolean | null
+          risco_descricao?: string | null
+          risco_fiscal?: string | null
+          subcategory?: string | null
+          tempo_implementacao?: string | null
+          tempo_retorno?: string | null
+          tipo_tributo?: string | null
+          tributos_afetados?: string[] | null
+          updated_at?: string | null
+          validade_ate?: string | null
         }
         Relationships: []
       }
