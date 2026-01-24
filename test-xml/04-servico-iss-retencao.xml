@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ============================================================
+  ARQUIVO DE TESTE - NÃO USAR EM PRODUÇÃO
+  Cenário: NF de serviço com ISS retido na fonte
+  Regras esperadas: ISS_RETIDO_DUPLICIDADE, ISS_LOCAL_PRESTACAO
+  Nota: Este é um XML simplificado de NFS-e para teste
+  ============================================================
+-->
+<nfeProc versao="4.00" xmlns="http://www.portalfiscal.inf.br/nfe">
+  <NFe xmlns="http://www.portalfiscal.inf.br/nfe">
+    <infNFe versao="4.00" Id="NFe35260177889900000166550010000000041000000041">
+      <ide>
+        <cUF>35</cUF>
+        <cNF>00000004</cNF>
+        <natOp>PRESTACAO DE SERVICO DE CONSULTORIA</natOp>
+        <mod>55</mod>
+        <serie>1</serie>
+        <nNF>4</nNF>
+        <dhEmi>2026-01-22T09:00:00-03:00</dhEmi>
+        <tpNF>1</tpNF>
+        <idDest>1</idDest>
+        <cMunFG>3550308</cMunFG>
+        <tpImp>1</tpImp>
+        <tpEmis>1</tpEmis>
+        <cDV>1</cDV>
+        <tpAmb>2</tpAmb>
+        <finNFe>1</finNFe>
+        <indFinal>0</indFinal>
+        <indPres>0</indPres>
+        <procEmi>0</procEmi>
+        <verProc>1.0.0</verProc>
+      </ide>
+      
+      <emit>
+        <CNPJ>77889900000166</CNPJ>
+        <xNome>CONSULTORIA EMPRESARIAL TESTE LTDA</xNome>
+        <xFant>CONSUL TESTE</xFant>
+        <enderEmit>
+          <xLgr>RUA DOS CONSULTORES</xLgr>
+          <nro>300</nro>
+          <xBairro>ITAIM BIBI</xBairro>
+          <cMun>3550308</cMun>
+          <xMun>SAO PAULO</xMun>
+          <UF>SP</UF>
+          <CEP>04538000</CEP>
+          <cPais>1058</cPais>
+          <xPais>BRASIL</xPais>
+          <fone>1133336666</fone>
+        </enderEmit>
+        <IE>ISENTO</IE>
+        <IM>12345678</IM>
+        <CRT>3</CRT>
+      </emit>
+      
+      <dest>
+        <CNPJ>98765432000198</CNPJ>
+        <xNome>EMPRESA TOMADORA SERVICOS LTDA - TESTE</xNome>
+        <enderDest>
+          <xLgr>AVENIDA PAULISTA</xLgr>
+          <nro>1500</nro>
+          <xCpl>ANDAR 10</xCpl>
+          <xBairro>BELA VISTA</xBairro>
+          <cMun>3550308</cMun>
+          <xMun>SAO PAULO</xMun>
+          <UF>SP</UF>
+          <CEP>01310100</CEP>
+          <cPais>1058</cPais>
+          <xPais>BRASIL</xPais>
+          <fone>1144447777</fone>
+        </enderDest>
+        <indIEDest>9</indIEDest>
+      </dest>
+      
+      <det nItem="1">
+        <prod>
+          <cProd>SERV001</cProd>
+          <cEAN>SEM GTIN</cEAN>
+          <xProd>CONSULTORIA TRIBUTARIA - REVISAO FISCAL COMPLETA</xProd>
+          <NCM>00000000</NCM>
+          <CFOP>5933</CFOP>
+          <uCom>SV</uCom>
+          <qCom>1.0000</qCom>
+          <vUnCom>35000.0000</vUnCom>
+          <vProd>35000.00</vProd>
+          <cEANTrib>SEM GTIN</cEANTrib>
+          <uTrib>SV</uTrib>
+          <qTrib>1.0000</qTrib>
+          <vUnTrib>35000.0000</vUnTrib>
+          <indTot>1</indTot>
+        </prod>
+        <imposto>
+          <ICMS>
+            <ICMS00>
+              <orig>0</orig>
+              <CST>41</CST>
+              <modBC>0</modBC>
+              <vBC>0.00</vBC>
+              <pICMS>0.00</pICMS>
+              <vICMS>0.00</vICMS>
+            </ICMS00>
+          </ICMS>
+          <PIS>
+            <PISAliq>
+              <CST>01</CST>
+              <vBC>35000.00</vBC>
+              <pPIS>0.65</pPIS>
+              <vPIS>227.50</vPIS>
+            </PISAliq>
+          </PIS>
+          <COFINS>
+            <COFINSAliq>
+              <CST>01</CST>
+              <vBC>35000.00</vBC>
+              <pCOFINS>3.00</pCOFINS>
+              <vCOFINS>1050.00</vCOFINS>
+            </COFINSAliq>
+          </COFINS>
+          <ISSQN>
+            <vBC>35000.00</vBC>
+            <vAliq>5.00</vAliq>
+            <vISSQN>1750.00</vISSQN>
+            <cMunFG>3550308</cMunFG>
+            <cListServ>17.01</cListServ>
+            <vDeducao>0.00</vDeducao>
+            <vOutro>0.00</vOutro>
+            <vDescIncond>0.00</vDescIncond>
+            <vDescCond>0.00</vDescCond>
+            <vISSRet>1750.00</vISSRet>
+            <indISS>1</indISS>
+            <cServico>1701</cServico>
+            <cMun>3550308</cMun>
+            <cPais>1058</cPais>
+            <nProcesso></nProcesso>
+            <indIncentivo>2</indIncentivo>
+          </ISSQN>
+        </imposto>
+        <infAdProd>SERVICO DE CONSULTORIA TRIBUTARIA COM ISS RETIDO NA FONTE PELO TOMADOR. CODIGO DO SERVICO: 17.01 - ASSESSORIA OU CONSULTORIA.</infAdProd>
+      </det>
+      
+      <det nItem="2">
+        <prod>
+          <cProd>SERV002</cProd>
+          <cEAN>SEM GTIN</cEAN>
+          <xProd>CONSULTORIA TRIBUTARIA - ANALISE DE CREDITOS</xProd>
+          <NCM>00000000</NCM>
+          <CFOP>5933</CFOP>
+          <uCom>SV</uCom>
+          <qCom>1.0000</qCom>
+          <vUnCom>15000.0000</vUnCom>
+          <vProd>15000.00</vProd>
+          <cEANTrib>SEM GTIN</cEANTrib>
+          <uTrib>SV</uTrib>
+          <qTrib>1.0000</qTrib>
+          <vUnTrib>15000.0000</vUnTrib>
+          <indTot>1</indTot>
+        </prod>
+        <imposto>
+          <ICMS>
+            <ICMS00>
+              <orig>0</orig>
+              <CST>41</CST>
+              <modBC>0</modBC>
+              <vBC>0.00</vBC>
+              <pICMS>0.00</pICMS>
+              <vICMS>0.00</vICMS>
+            </ICMS00>
+          </ICMS>
+          <PIS>
+            <PISAliq>
+              <CST>01</CST>
+              <vBC>15000.00</vBC>
+              <pPIS>0.65</pPIS>
+              <vPIS>97.50</vPIS>
+            </PISAliq>
+          </PIS>
+          <COFINS>
+            <COFINSAliq>
+              <CST>01</CST>
+              <vBC>15000.00</vBC>
+              <pCOFINS>3.00</pCOFINS>
+              <vCOFINS>450.00</vCOFINS>
+            </COFINSAliq>
+          </COFINS>
+          <ISSQN>
+            <vBC>15000.00</vBC>
+            <vAliq>5.00</vAliq>
+            <vISSQN>750.00</vISSQN>
+            <cMunFG>3550308</cMunFG>
+            <cListServ>17.01</cListServ>
+            <vDeducao>0.00</vDeducao>
+            <vOutro>0.00</vOutro>
+            <vDescIncond>0.00</vDescIncond>
+            <vDescCond>0.00</vDescCond>
+            <vISSRet>750.00</vISSRet>
+            <indISS>1</indISS>
+            <cServico>1701</cServico>
+            <cMun>3550308</cMun>
+            <cPais>1058</cPais>
+            <nProcesso></nProcesso>
+            <indIncentivo>2</indIncentivo>
+          </ISSQN>
+        </imposto>
+        <infAdProd>SERVICO DE ANALISE DE CREDITOS TRIBUTARIOS COM ISS RETIDO NA FONTE</infAdProd>
+      </det>
+      
+      <total>
+        <ICMSTot>
+          <vBC>0.00</vBC>
+          <vICMS>0.00</vICMS>
+          <vICMSDeson>0.00</vICMSDeson>
+          <vFCP>0.00</vFCP>
+          <vBCST>0.00</vBCST>
+          <vST>0.00</vST>
+          <vFCPST>0.00</vFCPST>
+          <vFCPSTRet>0.00</vFCPSTRet>
+          <vProd>50000.00</vProd>
+          <vFrete>0.00</vFrete>
+          <vSeg>0.00</vSeg>
+          <vDesc>0.00</vDesc>
+          <vII>0.00</vII>
+          <vIPI>0.00</vIPI>
+          <vIPIDevol>0.00</vIPIDevol>
+          <vPIS>325.00</vPIS>
+          <vCOFINS>1500.00</vCOFINS>
+          <vOutro>0.00</vOutro>
+          <vNF>50000.00</vNF>
+        </ICMSTot>
+        <ISSQNtot>
+          <vServ>50000.00</vServ>
+          <vBC>50000.00</vBC>
+          <vISS>2500.00</vISS>
+          <vPIS>325.00</vPIS>
+          <vCOFINS>1500.00</vCOFINS>
+          <dCompet>2026-01-22</dCompet>
+          <vDeducao>0.00</vDeducao>
+          <vOutro>0.00</vOutro>
+          <vDescIncond>0.00</vDescIncond>
+          <vDescCond>0.00</vDescCond>
+          <vISSRet>2500.00</vISSRet>
+          <cRegTrib>6</cRegTrib>
+        </ISSQNtot>
+        <retTrib>
+          <vRetPIS>0.00</vRetPIS>
+          <vRetCOFINS>0.00</vRetCOFINS>
+          <vRetCSLL>0.00</vRetCSLL>
+          <vBCIRRF>0.00</vBCIRRF>
+          <vIRRF>0.00</vIRRF>
+          <vBCRetPrev>0.00</vBCRetPrev>
+          <vRetPrev>0.00</vRetPrev>
+        </retTrib>
+      </total>
+      
+      <transp>
+        <modFrete>9</modFrete>
+      </transp>
+      
+      <cobr>
+        <fat>
+          <nFat>SERV000004</nFat>
+          <vOrig>50000.00</vOrig>
+          <vDesc>0.00</vDesc>
+          <vLiq>47500.00</vLiq>
+        </fat>
+        <dup>
+          <nDup>001</nDup>
+          <dVenc>2026-02-22</dVenc>
+          <vDup>47500.00</vDup>
+        </dup>
+      </cobr>
+      
+      <pag>
+        <detPag>
+          <tPag>15</tPag>
+          <vPag>47500.00</vPag>
+        </detPag>
+      </pag>
+      
+      <infAdic>
+        <infCpl>NOTA FISCAL DE SERVICO - TESTE. ISS RETIDO NA FONTE PELO TOMADOR (R$ 2.500,00). VERIFICAR SE O PRESTADOR NAO ESTA RECOLHENDO O ISS EM DUPLICIDADE (TANTO NA GUIA PROPRIA QUANTO POR RETENCAO).</infCpl>
+      </infAdic>
+    </infNFe>
+  </NFe>
+  
+  <protNFe versao="4.00">
+    <infProt>
+      <tpAmb>2</tpAmb>
+      <verAplic>TESTE1.0</verAplic>
+      <chNFe>35260177889900000166550010000000041000000041</chNFe>
+      <dhRecbto>2026-01-22T09:01:00-03:00</dhRecbto>
+      <nProt>135260000000004</nProt>
+      <digVal>TESTE_DIGEST_VALUE_BASE64==</digVal>
+      <cStat>100</cStat>
+      <xMotivo>Autorizado o uso da NF-e</xMotivo>
+    </infProt>
+  </protNFe>
+</nfeProc>

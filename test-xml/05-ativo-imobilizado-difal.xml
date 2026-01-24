@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ============================================================
+  ARQUIVO DE TESTE - NÃO USAR EM PRODUÇÃO
+  Cenário: Ativo imobilizado interestadual com DIFAL destacado
+  Regras esperadas: ICMS_DIFAL_ATIVO, ICMS_CIAP_48, PIS_COFINS_ATIVO
+  ============================================================
+-->
+<nfeProc versao="4.00" xmlns="http://www.portalfiscal.inf.br/nfe">
+  <NFe xmlns="http://www.portalfiscal.inf.br/nfe">
+    <infNFe versao="4.00" Id="NFe31260199887766000177550010000000051000000051">
+      <ide>
+        <cUF>31</cUF>
+        <cNF>00000005</cNF>
+        <natOp>VENDA DE ATIVO IMOBILIZADO</natOp>
+        <mod>55</mod>
+        <serie>1</serie>
+        <nNF>5</nNF>
+        <dhEmi>2026-01-10T08:00:00-03:00</dhEmi>
+        <dhSaiEnt>2026-01-10T10:00:00-03:00</dhSaiEnt>
+        <tpNF>1</tpNF>
+        <idDest>2</idDest>
+        <cMunFG>3106200</cMunFG>
+        <tpImp>1</tpImp>
+        <tpEmis>1</tpEmis>
+        <cDV>1</cDV>
+        <tpAmb>2</tpAmb>
+        <finNFe>1</finNFe>
+        <indFinal>0</indFinal>
+        <indPres>0</indPres>
+        <procEmi>0</procEmi>
+        <verProc>1.0.0</verProc>
+      </ide>
+      
+      <emit>
+        <CNPJ>99887766000177</CNPJ>
+        <xNome>INDUSTRIA DE MAQUINAS TESTE S.A.</xNome>
+        <xFant>MAQUINAS TESTE</xFant>
+        <enderEmit>
+          <xLgr>AVENIDA INDUSTRIAL</xLgr>
+          <nro>5000</nro>
+          <xBairro>CIDADE INDUSTRIAL</xBairro>
+          <cMun>3106200</cMun>
+          <xMun>BELO HORIZONTE</xMun>
+          <UF>MG</UF>
+          <CEP>30510000</CEP>
+          <cPais>1058</cPais>
+          <xPais>BRASIL</xPais>
+          <fone>3133337777</fone>
+        </enderEmit>
+        <IE>998877665544</IE>
+        <CRT>3</CRT>
+      </emit>
+      
+      <dest>
+        <CNPJ>98765432000198</CNPJ>
+        <xNome>INDUSTRIA PAULISTA TESTE LTDA</xNome>
+        <enderDest>
+          <xLgr>AVENIDA INDUSTRIAL</xLgr>
+          <nro>500</nro>
+          <xBairro>DISTRITO INDUSTRIAL</xBairro>
+          <cMun>3550308</cMun>
+          <xMun>SAO PAULO</xMun>
+          <UF>SP</UF>
+          <CEP>04543000</CEP>
+          <cPais>1058</cPais>
+          <xPais>BRASIL</xPais>
+          <fone>1144445555</fone>
+        </enderDest>
+        <indIEDest>1</indIEDest>
+        <IE>987654321098</IE>
+      </dest>
+      
+      <det nItem="1">
+        <prod>
+          <cProd>MAQ001</cProd>
+          <cEAN>SEM GTIN</cEAN>
+          <xProd>TORNO CNC INDUSTRIAL - MODELO TX-500 - ATIVO IMOBILIZADO</xProd>
+          <NCM>84589900</NCM>
+          <CFOP>6102</CFOP>
+          <uCom>UN</uCom>
+          <qCom>1.0000</qCom>
+          <vUnCom>250000.0000</vUnCom>
+          <vProd>250000.00</vProd>
+          <cEANTrib>SEM GTIN</cEANTrib>
+          <uTrib>UN</uTrib>
+          <qTrib>1.0000</qTrib>
+          <vUnTrib>250000.0000</vUnTrib>
+          <vFrete>5000.00</vFrete>
+          <indTot>1</indTot>
+        </prod>
+        <imposto>
+          <ICMS>
+            <ICMS00>
+              <orig>0</orig>
+              <CST>00</CST>
+              <modBC>0</modBC>
+              <vBC>255000.00</vBC>
+              <pICMS>12.00</pICMS>
+              <vICMS>30600.00</vICMS>
+              <pFCP>0.00</pFCP>
+              <vFCP>0.00</vFCP>
+            </ICMS00>
+          </ICMS>
+          <ICMSUFDest>
+            <vBCUFDest>255000.00</vBCUFDest>
+            <vBCFCPUFDest>0.00</vBCFCPUFDest>
+            <pFCPUFDest>0.00</pFCPUFDest>
+            <pICMSUFDest>18.00</pICMSUFDest>
+            <pICMSInter>12.00</pICMSInter>
+            <pICMSInterPart>100.00</pICMSInterPart>
+            <vFCPUFDest>0.00</vFCPUFDest>
+            <vICMSUFDest>15300.00</vICMSUFDest>
+            <vICMSUFRemet>0.00</vICMSUFRemet>
+          </ICMSUFDest>
+          <IPI>
+            <cEnq>999</cEnq>
+            <IPINT>
+              <CST>53</CST>
+            </IPINT>
+          </IPI>
+          <PIS>
+            <PISAliq>
+              <CST>01</CST>
+              <vBC>255000.00</vBC>
+              <pPIS>1.65</pPIS>
+              <vPIS>4207.50</vPIS>
+            </PISAliq>
+          </PIS>
+          <COFINS>
+            <COFINSAliq>
+              <CST>01</CST>
+              <vBC>255000.00</vBC>
+              <pCOFINS>7.60</pCOFINS>
+              <vCOFINS>19380.00</vCOFINS>
+            </COFINSAliq>
+          </COFINS>
+        </imposto>
+        <infAdProd>ATIVO IMOBILIZADO - OPERACAO INTERESTADUAL MG->SP. DIFAL DEVIDO AO ESTADO DE DESTINO (SP). ICMS ORIGEM: 12% (MG). ICMS DESTINO: 18% (SP). DIFERENCIAL: 6%. CREDITO DE ICMS FRACIONADO EM 48 MESES CONFORME CIAP.</infAdProd>
+      </det>
+      
+      <det nItem="2">
+        <prod>
+          <cProd>MAQ002</cProd>
+          <cEAN>SEM GTIN</cEAN>
+          <xProd>FRESADORA CNC - MODELO FR-200 - ATIVO IMOBILIZADO</xProd>
+          <NCM>84591000</NCM>
+          <CFOP>6102</CFOP>
+          <uCom>UN</uCom>
+          <qCom>1.0000</qCom>
+          <vUnCom>180000.0000</vUnCom>
+          <vProd>180000.00</vProd>
+          <cEANTrib>SEM GTIN</cEANTrib>
+          <uTrib>UN</uTrib>
+          <qTrib>1.0000</qTrib>
+          <vUnTrib>180000.0000</vUnTrib>
+          <vFrete>3500.00</vFrete>
+          <indTot>1</indTot>
+        </prod>
+        <imposto>
+          <ICMS>
+            <ICMS00>
+              <orig>0</orig>
+              <CST>00</CST>
+              <modBC>0</modBC>
+              <vBC>183500.00</vBC>
+              <pICMS>12.00</pICMS>
+              <vICMS>22020.00</vICMS>
+              <pFCP>0.00</pFCP>
+              <vFCP>0.00</vFCP>
+            </ICMS00>
+          </ICMS>
+          <ICMSUFDest>
+            <vBCUFDest>183500.00</vBCUFDest>
+            <vBCFCPUFDest>0.00</vBCFCPUFDest>
+            <pFCPUFDest>0.00</pFCPUFDest>
+            <pICMSUFDest>18.00</pICMSUFDest>
+            <pICMSInter>12.00</pICMSInter>
+            <pICMSInterPart>100.00</pICMSInterPart>
+            <vFCPUFDest>0.00</vFCPUFDest>
+            <vICMSUFDest>11010.00</vICMSUFDest>
+            <vICMSUFRemet>0.00</vICMSUFRemet>
+          </ICMSUFDest>
+          <IPI>
+            <cEnq>999</cEnq>
+            <IPINT>
+              <CST>53</CST>
+            </IPINT>
+          </IPI>
+          <PIS>
+            <PISAliq>
+              <CST>01</CST>
+              <vBC>183500.00</vBC>
+              <pPIS>1.65</pPIS>
+              <vPIS>3027.75</vPIS>
+            </PISAliq>
+          </PIS>
+          <COFINS>
+            <COFINSAliq>
+              <CST>01</CST>
+              <vBC>183500.00</vBC>
+              <pCOFINS>7.60</pCOFINS>
+              <vCOFINS>13946.00</vCOFINS>
+            </COFINSAliq>
+          </COFINS>
+        </imposto>
+        <infAdProd>ATIVO IMOBILIZADO - FRESADORA CNC. OPERACAO INTERESTADUAL COM DIFAL. CREDITO FRACIONADO EM 48 MESES.</infAdProd>
+      </det>
+      
+      <total>
+        <ICMSTot>
+          <vBC>438500.00</vBC>
+          <vICMS>52620.00</vICMS>
+          <vICMSDeson>0.00</vICMSDeson>
+          <vFCPUFDest>0.00</vFCPUFDest>
+          <vICMSUFDest>26310.00</vICMSUFDest>
+          <vICMSUFRemet>0.00</vICMSUFRemet>
+          <vFCP>0.00</vFCP>
+          <vBCST>0.00</vBCST>
+          <vST>0.00</vST>
+          <vFCPST>0.00</vFCPST>
+          <vFCPSTRet>0.00</vFCPSTRet>
+          <vProd>430000.00</vProd>
+          <vFrete>8500.00</vFrete>
+          <vSeg>0.00</vSeg>
+          <vDesc>0.00</vDesc>
+          <vII>0.00</vII>
+          <vIPI>0.00</vIPI>
+          <vIPIDevol>0.00</vIPIDevol>
+          <vPIS>7235.25</vPIS>
+          <vCOFINS>33326.00</vCOFINS>
+          <vOutro>0.00</vOutro>
+          <vNF>438500.00</vNF>
+        </ICMSTot>
+      </total>
+      
+      <transp>
+        <modFrete>0</modFrete>
+        <transporta>
+          <CNPJ>11222333000144</CNPJ>
+          <xNome>TRANSPORTADORA CARGAS PESADAS TESTE</xNome>
+          <IE>111222333444</IE>
+          <xEnder>RODOVIA BR-381, KM 100</xEnder>
+          <xMun>BETIM</xMun>
+          <UF>MG</UF>
+        </transporta>
+        <vol>
+          <qVol>2</qVol>
+          <esp>MAQUINA</esp>
+          <marca>TESTE</marca>
+          <pesoL>5500.000</pesoL>
+          <pesoB>6000.000</pesoB>
+        </vol>
+      </transp>
+      
+      <cobr>
+        <fat>
+          <nFat>000005</nFat>
+          <vOrig>438500.00</vOrig>
+          <vDesc>0.00</vDesc>
+          <vLiq>438500.00</vLiq>
+        </fat>
+        <dup>
+          <nDup>001</nDup>
+          <dVenc>2026-02-10</dVenc>
+          <vDup>146166.67</vDup>
+        </dup>
+        <dup>
+          <nDup>002</nDup>
+          <dVenc>2026-03-10</dVenc>
+          <vDup>146166.67</vDup>
+        </dup>
+        <dup>
+          <nDup>003</nDup>
+          <dVenc>2026-04-10</dVenc>
+          <vDup>146166.66</vDup>
+        </dup>
+      </cobr>
+      
+      <pag>
+        <detPag>
+          <tPag>15</tPag>
+          <vPag>438500.00</vPag>
+        </detPag>
+      </pag>
+      
+      <infAdic>
+        <infCpl>NOTA FISCAL DE TESTE - ATIVO IMOBILIZADO. OPERACAO INTERESTADUAL DE MINAS GERAIS PARA SAO PAULO. DIFAL DESTACADO CONFORME EC 87/2015. CREDITO DE ICMS SOBRE ATIVO IMOBILIZADO DEVE SER APROPRIADO EM 48 PARCELAS MENSAIS (CIAP). PIS/COFINS SOBRE ATIVO TAMBEM PERMITE CREDITO.</infCpl>
+      </infAdic>
+    </infNFe>
+  </NFe>
+  
+  <protNFe versao="4.00">
+    <infProt>
+      <tpAmb>2</tpAmb>
+      <verAplic>TESTE1.0</verAplic>
+      <chNFe>31260199887766000177550010000000051000000051</chNFe>
+      <dhRecbto>2026-01-10T08:01:00-03:00</dhRecbto>
+      <nProt>131260000000005</nProt>
+      <digVal>TESTE_DIGEST_VALUE_BASE64==</digVal>
+      <cStat>100</cStat>
+      <xMotivo>Autorizado o uso da NF-e</xMotivo>
+    </infProt>
+  </protNFe>
+</nfeProc>
