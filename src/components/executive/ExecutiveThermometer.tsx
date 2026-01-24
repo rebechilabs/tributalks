@@ -1,6 +1,8 @@
-import { Gauge, TrendingUp, AlertTriangle, DollarSign } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Gauge, TrendingUp, AlertTriangle, DollarSign, ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { ThermometerData } from "@/hooks/useExecutiveData";
 
@@ -55,6 +57,7 @@ export function ExecutiveThermometer({ data, loading }: ExecutiveThermometerProp
     );
   }
 
+  // No data at all
   if (!data) {
     return (
       <Card className="border-2 border-dashed border-muted-foreground/30">
@@ -62,17 +65,23 @@ export function ExecutiveThermometer({ data, loading }: ExecutiveThermometerProp
           <div className="text-center py-8">
             <Gauge className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
             <h3 className="text-lg font-medium text-muted-foreground">Dados insuficientes</h3>
-            <p className="text-sm text-muted-foreground/70 mt-1">
+            <p className="text-sm text-muted-foreground/70 mt-1 mb-4">
               Complete o Score Tributário para ver seu termômetro
             </p>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/dashboard/score-tributario">
+                Completar Score
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Link>
+            </Button>
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  const gradeStyle = gradeColors[data.scoreGrade] || gradeColors['E'];
-  const riscoInfo = riscoLabels[data.riscoNivel] || riscoLabels['medio'];
+  const gradeStyle = data.scoreGrade ? (gradeColors[data.scoreGrade] || gradeColors['E']) : { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border' };
+  const riscoInfo = data.riscoNivel ? (riscoLabels[data.riscoNivel] || riscoLabels['medio']) : null;
 
   return (
     <Card className={cn("border-2", gradeStyle.border)}>
@@ -85,18 +94,33 @@ export function ExecutiveThermometer({ data, loading }: ExecutiveThermometerProp
               gradeStyle.bg,
               gradeStyle.text
             )}>
-              {data.scoreGrade}
+              {data.scoreGrade || '?'}
             </div>
             <div>
               <h2 className="text-xl font-semibold text-foreground">
                 Olá, {data.userName}
               </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Sua nota tributária geral é <span className={cn("font-semibold", gradeStyle.text)}>{data.scoreGrade}</span>
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Score: {data.scoreTotal} / 1000 pontos
-              </p>
+              {data.hasScoreData ? (
+                <>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Sua nota tributária geral é <span className={cn("font-semibold", gradeStyle.text)}>{data.scoreGrade}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Score: {data.scoreTotal} / 1000 pontos
+                  </p>
+                </>
+              ) : (
+                <div className="mt-2">
+                  <p className="text-sm text-muted-foreground">
+                    Complete seu Score Tributário para ver sua nota geral.
+                  </p>
+                  <Button asChild variant="link" size="sm" className="px-0 h-auto text-primary">
+                    <Link to="/dashboard/score-tributario">
+                      Calcular Score →
+                    </Link>
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -109,10 +133,21 @@ export function ExecutiveThermometer({ data, loading }: ExecutiveThermometerProp
               </div>
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">Carga Efetiva</p>
-                <p className="text-lg font-semibold text-foreground">
-                  {data.cargaEfetivaPercent > 0 ? `${data.cargaEfetivaPercent}%` : '—'}
-                </p>
-                <p className="text-xs text-muted-foreground">da receita</p>
+                {data.cargaEfetivaPercent !== null ? (
+                  <>
+                    <p className="text-lg font-semibold text-foreground">
+                      {data.cargaEfetivaPercent}%
+                    </p>
+                    <p className="text-xs text-muted-foreground">da receita</p>
+                  </>
+                ) : (
+                  <div>
+                    <p className="text-sm text-muted-foreground">—</p>
+                    <Button asChild variant="link" size="sm" className="px-0 h-auto text-xs text-primary">
+                      <Link to="/dashboard/dre">Preencher DRE</Link>
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -123,13 +158,21 @@ export function ExecutiveThermometer({ data, loading }: ExecutiveThermometerProp
               </div>
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">Caixa Potencial</p>
-                <p className="text-lg font-semibold text-foreground">
-                  {data.caixaPotencialMax > 0 
-                    ? `${formatCurrency(data.caixaPotencialMin)} – ${formatCurrency(data.caixaPotencialMax)}`
-                    : '—'
-                  }
-                </p>
-                <p className="text-xs text-muted-foreground">em 12 meses</p>
+                {data.caixaPotencialMin !== null && data.caixaPotencialMax !== null ? (
+                  <>
+                    <p className="text-lg font-semibold text-foreground">
+                      {formatCurrency(data.caixaPotencialMin)} – {formatCurrency(data.caixaPotencialMax)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">em 12 meses</p>
+                  </>
+                ) : (
+                  <div>
+                    <p className="text-sm text-muted-foreground">—</p>
+                    <Button asChild variant="link" size="sm" className="px-0 h-auto text-xs text-primary">
+                      <Link to="/dashboard/importar-xml">Importar XMLs</Link>
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -148,12 +191,23 @@ export function ExecutiveThermometer({ data, loading }: ExecutiveThermometerProp
               </div>
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">Risco Atual</p>
-                <p className={cn("text-lg font-semibold", riscoInfo.color)}>
-                  {riscoInfo.label}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {data.alertasCount} {data.alertasCount === 1 ? 'alerta' : 'alertas'} este mês
-                </p>
+                {riscoInfo ? (
+                  <>
+                    <p className={cn("text-lg font-semibold", riscoInfo.color)}>
+                      {riscoInfo.label}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {data.alertasCount} {data.alertasCount === 1 ? 'alerta' : 'alertas'} pendente{data.alertasCount !== 1 ? 's' : ''}
+                    </p>
+                  </>
+                ) : (
+                  <div>
+                    <p className="text-sm text-muted-foreground">—</p>
+                    <Button asChild variant="link" size="sm" className="px-0 h-auto text-xs text-primary">
+                      <Link to="/dashboard/score-tributario">Calcular Score</Link>
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </div>

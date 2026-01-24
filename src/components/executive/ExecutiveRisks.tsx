@@ -1,4 +1,5 @@
-import { Shield, AlertTriangle, FileText } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Shield, AlertTriangle, FileText, CheckCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -61,6 +62,34 @@ export function ExecutiveRisks({ risks, loading, onGenerateReport }: ExecutiveRi
     );
   }
 
+  // No risks data - prompt user to calculate score
+  if (risks.length === 0) {
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Shield className="w-5 h-5 text-primary" />
+            Riscos & Governança
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-4">
+            <CheckCircle className="w-8 h-8 mx-auto text-emerald-500 mb-2" />
+            <p className="text-sm font-medium text-foreground">
+              Nenhum risco significativo identificado
+            </p>
+            <p className="text-xs text-muted-foreground mt-1 mb-4">
+              Complete o Score Tributário para uma análise completa de riscos.
+            </p>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/dashboard/score-tributario">Ver Score Completo</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -70,46 +99,35 @@ export function ExecutiveRisks({ risks, loading, onGenerateReport }: ExecutiveRi
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {risks.length === 0 ? (
-          <div className="text-center py-4">
-            <Shield className="w-8 h-8 mx-auto text-emerald-500 mb-2" />
-            <p className="text-sm text-muted-foreground">
-              Nenhum risco significativo identificado
-            </p>
-          </div>
-        ) : (
-          <>
-            {risks.map((risk, index) => {
-              const nivelStyle = nivelStyles[risk.nivel] || nivelStyles['medio'];
-              const Icon = categoriaIcons[risk.categoria] || Shield;
+        {risks.map((risk, index) => {
+          const nivelStyle = nivelStyles[risk.nivel] || nivelStyles['medio'];
+          const Icon = categoriaIcons[risk.categoria] || Shield;
 
-              return (
-                <div 
-                  key={`${risk.categoria}-${index}`}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <div className={cn("p-1.5 rounded", nivelStyle.bg)}>
-                    <Icon className={cn("w-4 h-4", nivelStyle.text)} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {risk.categoria}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {risk.descricao}
-                    </p>
-                  </div>
-                  <Badge 
-                    variant="secondary" 
-                    className={cn("text-xs shrink-0", nivelStyle.bg, nivelStyle.text)}
-                  >
-                    {nivelStyle.label}
-                  </Badge>
-                </div>
-              );
-            })}
-          </>
-        )}
+          return (
+            <div 
+              key={`${risk.categoria}-${index}`}
+              className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+            >
+              <div className={cn("p-1.5 rounded shrink-0", nivelStyle.bg)}>
+                <Icon className={cn("w-4 h-4", nivelStyle.text)} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground">
+                  {risk.categoria}
+                </p>
+                <p className="text-xs text-muted-foreground line-clamp-2">
+                  {risk.descricao}
+                </p>
+              </div>
+              <Badge 
+                variant="secondary" 
+                className={cn("text-xs shrink-0", nivelStyle.bg, nivelStyle.text)}
+              >
+                {nivelStyle.label}
+              </Badge>
+            </div>
+          );
+        })}
 
         {/* Generate Report CTA */}
         <Button 
