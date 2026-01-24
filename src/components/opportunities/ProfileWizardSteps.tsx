@@ -1,13 +1,32 @@
-import { Monitor, Factory, ShoppingBag, Wrench, HeartPulse, Wheat } from "lucide-react";
+import { 
+  Monitor, 
+  Factory, 
+  ShoppingBag, 
+  Wrench, 
+  HeartPulse, 
+  Wheat,
+  Sun,
+  HardHat,
+  Truck,
+  UtensilsCrossed,
+  GraduationCap,
+  Store
+} from "lucide-react";
 
-// Step 1: Setor options
+// Step 1: Setor options - expanded with new sectors
 export const SETOR_OPTIONS = [
-  { value: 'tecnologia', label: 'Tecnologia', icon: Monitor, description: 'Software, Apps, TI' },
-  { value: 'industria', label: 'Indústria', icon: Factory, description: 'Fábrica, Produção' },
-  { value: 'comercio', label: 'Comércio', icon: ShoppingBag, description: 'Loja, Revenda' },
-  { value: 'servicos', label: 'Serviços', icon: Wrench, description: 'Consultoria, Profissional' },
-  { value: 'saude', label: 'Saúde', icon: HeartPulse, description: 'Clínica, Hospital' },
-  { value: 'agro', label: 'Agro', icon: Wheat, description: 'Fazenda, Agrícola' },
+  { value: 'comercio', label: 'Comércio', icon: ShoppingBag, description: 'Loja, varejo, atacado' },
+  { value: 'servicos', label: 'Serviços', icon: Wrench, description: 'Consultoria, profissional' },
+  { value: 'industria', label: 'Indústria', icon: Factory, description: 'Fábrica, produção' },
+  { value: 'tecnologia', label: 'Tecnologia', icon: Monitor, description: 'Software, TI, apps' },
+  { value: 'saude', label: 'Saúde', icon: HeartPulse, description: 'Clínica, hospital, lab' },
+  { value: 'agro', label: 'Agronegócio', icon: Wheat, description: 'Fazenda, agrícola, pecuária' },
+  { value: 'alimentacao', label: 'Alimentação', icon: UtensilsCrossed, description: 'Restaurante, bar, lanchonete' },
+  { value: 'construcao', label: 'Construção', icon: HardHat, description: 'Construtora, incorporadora' },
+  { value: 'transporte', label: 'Transporte', icon: Truck, description: 'Logística, frete, entregas' },
+  { value: 'educacao', label: 'Educação', icon: GraduationCap, description: 'Escola, curso, treinamento' },
+  { value: 'energia', label: 'Energia Solar', icon: Sun, description: 'Geração, instalação solar' },
+  { value: 'ecommerce', label: 'E-commerce', icon: Store, description: 'Loja online, marketplace' },
 ];
 
 // Step 2: Porte/Faturamento options
@@ -19,7 +38,7 @@ export const FATURAMENTO_OPTIONS = [
   { value: 'grande', label: 'Acima de R$ 78 milhões/ano', tag: 'Grande', faturamentoAnual: 100000000 },
 ];
 
-// Step 3: Produtos específicos
+// Step 3: Produtos específicos - expanded for new sectors
 export const PRODUTOS_ESPECIFICOS = [
   { field: 'vende_combustiveis', label: 'Combustíveis (posto, distribuidora)' },
   { field: 'vende_bebidas', label: 'Bebidas (cervejas, refrigerantes, águas)' },
@@ -27,7 +46,62 @@ export const PRODUTOS_ESPECIFICOS = [
   { field: 'vende_cosmeticos', label: 'Cosméticos / Perfumaria / Higiene pessoal' },
   { field: 'vende_autopecas', label: 'Autopeças / Pneus' },
   { field: 'vende_eletronicos', label: 'Eletrônicos / Informática' },
+  { field: 'vende_automoveis', label: 'Veículos / Automóveis' },
 ];
+
+// Sector-specific characteristics
+export const SECTOR_CHARACTERISTICS: Record<string, { field: string; label: string; description?: string }[]> = {
+  agro: [
+    { field: 'tem_area_preservacao', label: 'Tenho área de preservação (APP/Reserva Legal)', description: 'Reduz ITR' },
+    { field: 'comercializa_commodities', label: 'Comercializo commodities (soja, milho, café)', description: 'Diferimento ICMS' },
+    { field: 'compra_insumos', label: 'Compro insumos agrícolas (sementes, fertilizantes)', description: 'Isenção ICMS' },
+    { field: 'investe_maquinas', label: 'Invisto em máquinas e tratores', description: 'Depreciação acelerada' },
+    { field: 'tipo_cooperativa', label: 'Sou cooperativa agrícola', description: 'Regime especial' },
+  ],
+  energia: [
+    { field: 'tem_geracao_solar', label: 'Tenho sistema de geração solar instalado', description: 'Isenção ICMS' },
+    { field: 'compra_equipamento_solar', label: 'Compro/vendo painéis e equipamentos solares', description: 'Isenção IPI' },
+    { field: 'importa_equipamento_solar', label: 'Importo equipamentos de energia solar', description: 'PIS/COFINS zero' },
+    { field: 'projeto_infraestrutura', label: 'Tenho projetos de infraestrutura energética', description: 'REIDI' },
+  ],
+  saude: [
+    { field: 'tem_internacao_ou_procedimento_complexo', label: 'Tenho internação ou procedimentos complexos', description: 'Equiparação hospitalar' },
+    { field: 'comercializa_medicamentos', label: 'Comercializo medicamentos', description: 'PIS/COFINS reduzido' },
+    { field: 'compra_equipamentos_medicos', label: 'Compro órteses, próteses ou equipamentos médicos', description: 'Isenção ICMS' },
+    { field: 'investe_pd_saude', label: 'Invisto em pesquisa e desenvolvimento na área de saúde', description: 'Lei do Bem' },
+  ],
+  construcao: [
+    { field: 'incorporacao_imobiliaria', label: 'Faço incorporação imobiliária', description: 'RET 4%' },
+    { field: 'programa_mcmv', label: 'Participo do Minha Casa Minha Vida', description: 'Tributação 1%' },
+    { field: 'folha_alta_construcao', label: 'Tenho muitos funcionários em obra', description: 'Desoneração da folha' },
+  ],
+  transporte: [
+    { field: 'transporte_cargas', label: 'Transporte de cargas / Frete', description: 'Crédito presumido ICMS' },
+    { field: 'transporte_passageiros', label: 'Transporte de passageiros', description: 'Fator R Simples' },
+    { field: 'operacao_interestadual', label: 'Opero entre estados', description: 'Redução BC ICMS' },
+    { field: 'investe_frota', label: 'Invisto em renovação de frota', description: 'Subvenção' },
+    { field: 'frete_exportacao', label: 'Faço frete de mercadorias para exportação', description: 'Isenção PIS/COFINS' },
+  ],
+  alimentacao: [
+    { field: 'prepara_alimentos', label: 'Preparo alimentos no local', description: 'Redução 40% IBS/CBS' },
+    { field: 'recebe_gorjetas', label: 'Recebo gorjetas', description: 'Exclusão da base tributária' },
+    { field: 'usa_plataformas_delivery', label: 'Vendo via iFood, Rappi ou similar', description: 'Exclusão taxas' },
+    { field: 'tem_bar', label: 'Tenho bar/bebidas alcoólicas', description: 'Regime especial' },
+  ],
+  ecommerce: [
+    { field: 'tem_ecommerce', label: 'Tenho loja virtual própria' },
+    { field: 'tem_marketplace', label: 'Vendo em marketplaces (Mercado Livre, Amazon, etc.)' },
+    { field: 'centro_distribuicao_incentivado', label: 'CD em estado com incentivo fiscal (SC, ES, GO)', description: 'TTD/Compete' },
+    { field: 'centro_distribuicao_zfm', label: 'Tenho operação na Zona Franca de Manaus', description: 'Isenções ZFM' },
+    { field: 'vende_produtos_monofasicos', label: 'Vendo cosméticos, bebidas, autopeças online', description: 'Monofásico' },
+  ],
+  educacao: [
+    { field: 'escola_regular', label: 'Escola de educação básica ou superior' },
+    { field: 'cursos_livres', label: 'Cursos livres / Treinamentos' },
+    { field: 'fins_lucrativos', label: 'Instituição COM fins lucrativos', description: 'Se não marcar, pode ser imune' },
+    { field: 'investe_tecnologia_educacional', label: 'Invisto em tecnologia educacional', description: 'Dedução IR' },
+  ],
+};
 
 // Step 5: Regime tributário options
 export const REGIME_OPTIONS = [
@@ -74,6 +148,7 @@ export interface ProfileFormData {
   vende_autopecas: boolean;
   vende_pneus: boolean;
   vende_eletronicos: boolean;
+  vende_automoveis: boolean;
   tem_produtos_monofasicos: boolean;
   tem_atividades_mistas: boolean;
   
@@ -93,11 +168,62 @@ export interface ProfileFormData {
   tem_filiais: boolean;
   regime_tributario: string;
   
-  // Step 6
+  // Step 6 - General
   tem_atividade_pd: boolean;
   tem_patentes: boolean;
   zona_franca: boolean;
   folha_percentual_faturamento: number;
+  
+  // Step 6 - Sector specific
+  // Agro
+  tem_area_preservacao: boolean;
+  comercializa_commodities: boolean;
+  compra_insumos: boolean;
+  investe_maquinas: boolean;
+  tipo_cooperativa: boolean;
+  
+  // Energia
+  tem_geracao_solar: boolean;
+  compra_equipamento_solar: boolean;
+  importa_equipamento_solar: boolean;
+  projeto_infraestrutura: boolean;
+  
+  // Saúde
+  tem_internacao_ou_procedimento_complexo: boolean;
+  comercializa_medicamentos: boolean;
+  compra_equipamentos_medicos: boolean;
+  investe_pd_saude: boolean;
+  
+  // Construção
+  incorporacao_imobiliaria: boolean;
+  programa_mcmv: boolean;
+  folha_alta_construcao: boolean;
+  
+  // Transporte
+  transporte_cargas: boolean;
+  transporte_passageiros: boolean;
+  operacao_interestadual: boolean;
+  investe_frota: boolean;
+  frete_exportacao: boolean;
+  
+  // Alimentação
+  prepara_alimentos: boolean;
+  recebe_gorjetas: boolean;
+  usa_plataformas_delivery: boolean;
+  tem_bar: boolean;
+  
+  // E-commerce
+  tem_ecommerce: boolean;
+  tem_marketplace: boolean;
+  centro_distribuicao_incentivado: boolean;
+  centro_distribuicao_zfm: boolean;
+  vende_produtos_monofasicos: boolean;
+  
+  // Educação
+  escola_regular: boolean;
+  cursos_livres: boolean;
+  fins_lucrativos: boolean;
+  investe_tecnologia_educacional: boolean;
 }
 
 export const INITIAL_PROFILE_DATA: ProfileFormData = {
@@ -113,6 +239,7 @@ export const INITIAL_PROFILE_DATA: ProfileFormData = {
   vende_autopecas: false,
   vende_pneus: false,
   vende_eletronicos: false,
+  vende_automoveis: false,
   tem_produtos_monofasicos: false,
   tem_atividades_mistas: false,
   vende_pf: false,
@@ -131,4 +258,46 @@ export const INITIAL_PROFILE_DATA: ProfileFormData = {
   tem_patentes: false,
   zona_franca: false,
   folha_percentual_faturamento: 0,
+  // Agro
+  tem_area_preservacao: false,
+  comercializa_commodities: false,
+  compra_insumos: false,
+  investe_maquinas: false,
+  tipo_cooperativa: false,
+  // Energia
+  tem_geracao_solar: false,
+  compra_equipamento_solar: false,
+  importa_equipamento_solar: false,
+  projeto_infraestrutura: false,
+  // Saúde
+  tem_internacao_ou_procedimento_complexo: false,
+  comercializa_medicamentos: false,
+  compra_equipamentos_medicos: false,
+  investe_pd_saude: false,
+  // Construção
+  incorporacao_imobiliaria: false,
+  programa_mcmv: false,
+  folha_alta_construcao: false,
+  // Transporte
+  transporte_cargas: false,
+  transporte_passageiros: false,
+  operacao_interestadual: false,
+  investe_frota: false,
+  frete_exportacao: false,
+  // Alimentação
+  prepara_alimentos: false,
+  recebe_gorjetas: false,
+  usa_plataformas_delivery: false,
+  tem_bar: false,
+  // E-commerce
+  tem_ecommerce: false,
+  tem_marketplace: false,
+  centro_distribuicao_incentivado: false,
+  centro_distribuicao_zfm: false,
+  vende_produtos_monofasicos: false,
+  // Educação
+  escola_regular: false,
+  cursos_livres: false,
+  fins_lucrativos: true, // Default true (most are for-profit)
+  investe_tecnologia_educacional: false,
 };
