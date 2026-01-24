@@ -46,16 +46,15 @@ export function ExecutiveNcmCard({ userId, loading: externalLoading }: Executive
   // Cálculos
   const totalProducts = ncmAnalysis?.length || 0;
   const criticalProducts = ncmAnalysis?.filter(p => p.status !== 'ok').length || 0;
-  const criticalPercentage = totalProducts > 0 ? (criticalProducts / totalProducts) * 100 : 0;
   const criticalRevenuePercentage = ncmAnalysis
     ?.filter(p => p.status !== 'ok')
     .reduce((acc, p) => acc + (p.revenue_percentage || 0), 0) || 0;
 
-  // Determinar status geral
+  // Determinar status geral baseado em % de faturamento crítico
   const getOverallStatus = (): 'ok' | 'atencao' | 'critico' | 'sem_dados' => {
     if (totalProducts === 0) return 'sem_dados';
     if (criticalProducts === 0) return 'ok';
-    if (criticalPercentage < 20) return 'atencao';
+    if (criticalRevenuePercentage <= 20) return 'atencao';
     return 'critico';
   };
 

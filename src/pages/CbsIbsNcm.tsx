@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,10 +18,18 @@ import {
   Loader2,
   ClipboardList,
   TrendingUp,
-  ArrowRight,
-  Info
+  Info,
+  RefreshCw,
+  Filter
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Tipos
 interface NcmAnalysis {
@@ -30,7 +37,7 @@ interface NcmAnalysis {
   user_id: string;
   product_name: string;
   ncm_code: string;
-  status: 'ok' | 'revisar_ncm' | 'revisar_tributacao' | 'incompleto' | 'pendente';
+  status: 'ok' | 'revisar_ncm' | 'revisar_tributacao' | 'incompleto' | 'regime_especial' | 'pendente';
   reason: string | null;
   suggested_action: string | null;
   revenue_percentage: number | null;
@@ -81,65 +88,14 @@ const DEFAULT_CHECKLIST_ITEMS = [
   },
 ];
 
-// Mock de dados para demonstração inicial
-const MOCK_NCM_DATA: Omit<NcmAnalysis, 'id' | 'user_id' | 'created_at'>[] = [
-  {
-    product_name: 'Smartphone XYZ',
-    ncm_code: '8517.12.31',
-    status: 'revisar_tributacao',
-    reason: 'Produto eletrônico sujeito a Imposto Seletivo',
-    suggested_action: 'Verificar alíquota de IS e parametrizar no ERP',
-    revenue_percentage: 15,
-  },
-  {
-    product_name: 'Refrigerante Cola 2L',
-    ncm_code: '2202.10.00',
-    status: 'revisar_tributacao',
-    reason: 'Bebida açucarada - possível incidência de Imposto Seletivo',
-    suggested_action: 'Mapear alíquota de IS para bebidas açucaradas',
-    revenue_percentage: 8,
-  },
-  {
-    product_name: 'Notebook Profissional',
-    ncm_code: '8471.30.12',
-    status: 'ok',
-    reason: null,
-    suggested_action: null,
-    revenue_percentage: 22,
-  },
-  {
-    product_name: 'Medicamento Genérico A',
-    ncm_code: '3004.90.99',
-    status: 'revisar_ncm',
-    reason: 'NCM pode estar desatualizado - verificar TIPI 2024',
-    suggested_action: 'Consultar tabela TIPI atualizada e corrigir se necessário',
-    revenue_percentage: 5,
-  },
-  {
-    product_name: 'Cesta Básica Item',
-    ncm_code: '1902.19.00',
-    status: 'revisar_tributacao',
-    reason: 'Produto da cesta básica - alíquota reduzida de CBS/IBS',
-    suggested_action: 'Parametrizar alíquota reduzida conforme LC 214/2025',
-    revenue_percentage: 3,
-  },
-  {
-    product_name: 'Peça Automotiva',
-    ncm_code: '8708.99.90',
-    status: 'incompleto',
-    reason: 'Falta informação de origem e destinação',
-    suggested_action: 'Completar cadastro com dados de origem e uso',
-    revenue_percentage: 12,
-  },
-];
-
 export default function CbsIbsNcm() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [statusFilter, setStatusFilter] = useState<string>('all_critical');
 
   // Query para buscar análises de NCM
-  const { data: ncmAnalysis, isLoading: loadingNcm } = useQuery({
+  const { data: ncmAnalysis, isLoading: loadingNcm, refetch: refetchNcm } = useQuery({
     queryKey: ['ncm-analysis', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
@@ -151,6 +107,22 @@ export default function CbsIbsNcm() {
       
       if (error) throw error;
       return data as NcmAnalysis[];
+    },
+    enabled: !!user?.id,
+  });
+
+  // Query para verificar se existem XMLs importados
+  const { data: xmlCount } = useQuery({
+    queryKey: ['xml-count', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return 0;
+      const { count, error } = await supabase
+        .from('xml_analysis')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+      return count || 0;
     },
     enabled: !!user?.id,
   });
@@ -169,6 +141,47 @@ export default function CbsIbsNcm() {
       return data as ErpChecklistItem[];
     },
     enabled: !!user?.id,
+  });
+
+  // Mutation para rodar análise de NCM a partir dos XMLs
+  const analyzeNcm = useMutation({
+    mutationFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Usuário não autenticado');
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-ncm-from-xmls`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao analisar NCMs');
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['ncm-analysis', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['ncm-analysis-summary', user?.id] });
+      toast({ 
+        title: 'Análise de NCM concluída!',
+        description: data.message,
+      });
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: 'Erro ao analisar NCMs', 
+        description: error.message,
+        variant: 'destructive' 
+      });
+    },
   });
 
   // Mutation para inicializar checklist
@@ -221,33 +234,12 @@ export default function CbsIbsNcm() {
     },
   });
 
-  // Mutation para carregar dados mock (para demonstração)
-  const loadMockData = useMutation({
-    mutationFn: async () => {
-      if (!user?.id) throw new Error('Usuário não autenticado');
-      
-      const items = MOCK_NCM_DATA.map(item => ({
-        ...item,
-        user_id: user.id,
-      }));
-
-      const { error } = await supabase
-        .from('company_ncm_analysis')
-        .insert(items);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ncm-analysis', user?.id] });
-      toast({ title: 'Dados de exemplo carregados!' });
-    },
-    onError: () => {
-      toast({ 
-        title: 'Erro ao carregar dados de exemplo', 
-        variant: 'destructive' 
-      });
-    },
-  });
+  // Filtrar NCMs com base no filtro selecionado
+  const filteredNcmAnalysis = ncmAnalysis?.filter(item => {
+    if (statusFilter === 'all') return true;
+    if (statusFilter === 'all_critical') return item.status !== 'ok';
+    return item.status === statusFilter;
+  }) || [];
 
   // Cálculos de KPIs
   const totalProducts = ncmAnalysis?.length || 0;
@@ -262,11 +254,12 @@ export default function CbsIbsNcm() {
 
   const getStatusBadge = (status: NcmAnalysis['status']) => {
     const config = {
-      ok: { label: 'OK', variant: 'default' as const, className: 'bg-green-500/10 text-green-600 border-green-200' },
-      revisar_ncm: { label: 'Revisar NCM', variant: 'outline' as const, className: 'bg-amber-500/10 text-amber-600 border-amber-200' },
-      revisar_tributacao: { label: 'Revisar Tributação', variant: 'outline' as const, className: 'bg-orange-500/10 text-orange-600 border-orange-200' },
-      incompleto: { label: 'Incompleto', variant: 'outline' as const, className: 'bg-red-500/10 text-red-600 border-red-200' },
-      pendente: { label: 'Pendente', variant: 'outline' as const, className: 'bg-muted text-muted-foreground' },
+      ok: { label: 'OK', className: 'bg-green-500/10 text-green-600 border-green-200' },
+      revisar_ncm: { label: 'Revisar NCM', className: 'bg-amber-500/10 text-amber-600 border-amber-200' },
+      revisar_tributacao: { label: 'Revisar Tributação', className: 'bg-orange-500/10 text-orange-600 border-orange-200' },
+      incompleto: { label: 'Incompleto', className: 'bg-red-500/10 text-red-600 border-red-200' },
+      regime_especial: { label: 'Regime Especial', className: 'bg-purple-500/10 text-purple-600 border-purple-200' },
+      pendente: { label: 'Pendente', className: 'bg-muted text-muted-foreground' },
     };
     const { label, className } = config[status];
     return <Badge className={className}>{label}</Badge>;
@@ -293,17 +286,34 @@ export default function CbsIbsNcm() {
   };
 
   const hasData = totalProducts > 0;
+  const hasXmls = (xmlCount || 0) > 0;
   const hasChecklist = (erpChecklist?.length || 0) > 0;
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold">Adequação CBS/IBS & NCM</h1>
-          <p className="text-muted-foreground">
-            Prepare seu cadastro de produtos e ERP para a Reforma Tributária
-          </p>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">Adequação CBS/IBS & NCM</h1>
+            <p className="text-muted-foreground">
+              Prepare seu cadastro de produtos e ERP para a Reforma Tributária
+            </p>
+          </div>
+          {hasXmls && (
+            <Button 
+              onClick={() => analyzeNcm.mutate()} 
+              disabled={analyzeNcm.isPending}
+              className="shrink-0"
+            >
+              {analyzeNcm.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-2" />
+              )}
+              {analyzeNcm.isPending ? 'Analisando...' : 'Rodar Análise de NCM'}
+            </Button>
+          )}
         </div>
 
         {/* KPIs */}
@@ -316,7 +326,7 @@ export default function CbsIbsNcm() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{totalProducts}</p>
-                  <p className="text-sm text-muted-foreground">Produtos analisados</p>
+                  <p className="text-sm text-muted-foreground">NCMs analisados</p>
                 </div>
               </div>
             </CardContent>
@@ -330,7 +340,7 @@ export default function CbsIbsNcm() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{criticalProducts}</p>
-                  <p className="text-sm text-muted-foreground">Produtos para revisão</p>
+                  <p className="text-sm text-muted-foreground">NCMs para revisão</p>
                 </div>
               </div>
             </CardContent>
@@ -363,25 +373,23 @@ export default function CbsIbsNcm() {
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-amber-900 dark:text-amber-100">
-                    Ainda não analisamos seus NCMs para a Reforma
+                    {hasXmls ? 'Clique em "Rodar Análise de NCM" para iniciar' : 'Ainda não analisamos seus NCMs para a Reforma'}
                   </h3>
                   <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                    Suba suas notas fiscais em "Importar XMLs" para que possamos identificar 
-                    automaticamente os NCMs mais frequentes e verificar sua adequação à CBS/IBS.
+                    {hasXmls 
+                      ? `Você tem ${xmlCount} XMLs importados. Clique no botão acima para analisar os NCMs e identificar produtos que precisam de atenção para CBS/IBS.`
+                      : 'Suba suas notas fiscais em "Importar XMLs" para que possamos identificar automaticamente os NCMs mais frequentes e verificar sua adequação à CBS/IBS.'
+                    }
                   </p>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => loadMockData.mutate()} disabled={loadMockData.isPending}>
-                    {loadMockData.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                    Carregar dados de exemplo
-                  </Button>
+                {!hasXmls && (
                   <Button asChild>
                     <Link to="/dashboard/importar-xml">
                       <Upload className="h-4 w-4 mr-2" />
                       Importar XMLs
                     </Link>
                   </Button>
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -391,13 +399,33 @@ export default function CbsIbsNcm() {
         {hasData && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                NCMs que precisam de atenção
-              </CardTitle>
-              <CardDescription>
-                Lista de produtos com NCM potencialmente incorreto ou que requerem parametrização especial para CBS/IBS
-              </CardDescription>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    NCMs que precisam de atenção
+                  </CardTitle>
+                  <CardDescription>
+                    Lista de NCMs com regime especial ou que requerem parametrização para CBS/IBS
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Filtrar por status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="all_critical">Todos críticos</SelectItem>
+                      <SelectItem value="revisar_tributacao">Revisar Tributação</SelectItem>
+                      <SelectItem value="revisar_ncm">Revisar NCM</SelectItem>
+                      <SelectItem value="incompleto">Incompleto</SelectItem>
+                      <SelectItem value="ok">OK</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
@@ -406,32 +434,41 @@ export default function CbsIbsNcm() {
                     <tr className="border-b">
                       <th className="text-left py-3 px-2 font-medium text-muted-foreground">Produto</th>
                       <th className="text-left py-3 px-2 font-medium text-muted-foreground">NCM</th>
+                      <th className="text-left py-3 px-2 font-medium text-muted-foreground">% Fat.</th>
                       <th className="text-left py-3 px-2 font-medium text-muted-foreground">Status</th>
                       <th className="text-left py-3 px-2 font-medium text-muted-foreground">Motivo</th>
                       <th className="text-left py-3 px-2 font-medium text-muted-foreground">Ação Sugerida</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {ncmAnalysis?.map((item) => (
-                      <tr key={item.id} className="border-b last:border-0 hover:bg-muted/50">
-                        <td className="py-3 px-2">
-                          <span className="font-medium">{item.product_name}</span>
-                          {item.revenue_percentage && item.revenue_percentage > 0 && (
-                            <span className="text-xs text-muted-foreground ml-2">
-                              ({item.revenue_percentage}% fat.)
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-3 px-2 font-mono text-sm">{item.ncm_code}</td>
-                        <td className="py-3 px-2">{getStatusBadge(item.status)}</td>
-                        <td className="py-3 px-2 text-sm text-muted-foreground max-w-xs">
-                          {item.reason || '—'}
-                        </td>
-                        <td className="py-3 px-2 text-sm max-w-xs">
-                          {item.suggested_action || '—'}
+                    {filteredNcmAnalysis.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                          Nenhum NCM encontrado com o filtro selecionado.
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      filteredNcmAnalysis.map((item) => (
+                        <tr key={item.id} className="border-b last:border-0 hover:bg-muted/50">
+                          <td className="py-3 px-2">
+                            <span className="font-medium line-clamp-1">{item.product_name}</span>
+                          </td>
+                          <td className="py-3 px-2 font-mono text-sm">{item.ncm_code || '—'}</td>
+                          <td className="py-3 px-2 text-sm">
+                            {item.revenue_percentage && item.revenue_percentage > 0 
+                              ? `${item.revenue_percentage.toFixed(1)}%` 
+                              : '—'}
+                          </td>
+                          <td className="py-3 px-2">{getStatusBadge(item.status)}</td>
+                          <td className="py-3 px-2 text-sm text-muted-foreground max-w-xs">
+                            <span className="line-clamp-2">{item.reason || '—'}</span>
+                          </td>
+                          <td className="py-3 px-2 text-sm max-w-xs">
+                            <span className="line-clamp-2">{item.suggested_action || '—'}</span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -504,12 +541,11 @@ export default function CbsIbsNcm() {
           </CardContent>
         </Card>
 
-        {/* Nota sobre integração futura */}
+        {/* Nota sobre integração */}
         <Card className="border-dashed">
           <CardContent className="p-4">
             <p className="text-sm text-muted-foreground">
-              <strong>Em breve:</strong> Esta análise será integrada automaticamente com seus XMLs importados, 
-              identificando NCMs mais frequentes e cruzando com as regras da Reforma Tributária (CBS/IBS/IS).
+              <strong>Como funciona:</strong> Esta análise extrai os NCMs dos seus XMLs importados e cruza com as regras da Reforma Tributária (CBS/IBS/IS) para identificar produtos que precisam de atenção especial. A lista de regras é atualizada conforme a legislação evolui.
             </p>
           </CardContent>
         </Card>
