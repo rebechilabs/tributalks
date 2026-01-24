@@ -18,7 +18,8 @@ import {
   Sparkles,
   Clock,
   DollarSign,
-  Check
+  Check,
+  Info
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -29,6 +30,7 @@ import {
   FOLHA_OPTIONS,
   WIZARD_STEPS,
   INITIAL_PROFILE_DATA,
+  SECTOR_CHARACTERISTICS,
   type ProfileFormData
 } from "@/components/opportunities/ProfileWizardSteps";
 
@@ -59,6 +61,7 @@ export default function PerfilEmpresa() {
         if (data && !error) {
           setExistingProfile(true);
           setFormData({
+            ...INITIAL_PROFILE_DATA,
             setor: data.setor || '',
             porte: data.porte || '',
             faturamento_anual: data.faturamento_anual || 0,
@@ -71,6 +74,7 @@ export default function PerfilEmpresa() {
             vende_autopecas: data.vende_autopecas || false,
             vende_pneus: data.vende_pneus || false,
             vende_eletronicos: data.vende_eletronicos || false,
+            vende_automoveis: data.vende_automoveis || false,
             tem_produtos_monofasicos: data.tem_produtos_monofasicos || false,
             tem_atividades_mistas: data.tem_atividades_mistas || false,
             vende_pf: data.vende_pf || false,
@@ -89,6 +93,9 @@ export default function PerfilEmpresa() {
             tem_patentes: data.tem_patentes || false,
             zona_franca: data.zona_franca || false,
             folha_percentual_faturamento: data.folha_percentual_faturamento || 0,
+            // E-commerce fields
+            tem_ecommerce: data.tem_ecommerce || false,
+            tem_marketplace: data.tem_marketplace || false,
           });
           if (data.etapa_atual && data.etapa_atual > 1) {
             setCurrentStep(data.etapa_atual);
@@ -455,7 +462,7 @@ export default function PerfilEmpresa() {
                           ))}
                         </div>
                       </div>
-                      <p className="text-sm text-muted-foreground bg-blue-50 p-3 rounded-lg">
+                      <p className="text-sm text-muted-foreground bg-accent/50 p-3 rounded-lg">
                         💡 Esses produtos têm regras especiais de tributação que podem te beneficiar
                       </p>
                     </>
@@ -651,6 +658,33 @@ export default function PerfilEmpresa() {
                 </div>
 
                 <div className="space-y-4">
+                  {/* Sector-specific characteristics */}
+                  {formData.setor && SECTOR_CHARACTERISTICS[formData.setor] && (
+                    <div className="border rounded-lg p-4 bg-primary/5">
+                      <p className="font-medium mb-3 text-primary uppercase text-sm flex items-center gap-2">
+                        <Info className="h-4 w-4" />
+                        Específico do seu setor
+                      </p>
+                      <div className="space-y-2">
+                        {SECTOR_CHARACTERISTICS[formData.setor].map((item) => (
+                          <div key={item.field} className="flex items-start space-x-3 p-2 rounded-lg hover:bg-background/50">
+                            <Checkbox 
+                              id={item.field}
+                              checked={formData[item.field as keyof ProfileFormData] as boolean || false}
+                              onCheckedChange={(checked) => updateFormData(item.field as keyof ProfileFormData, !!checked)}
+                            />
+                            <label htmlFor={item.field} className="cursor-pointer flex-1">
+                              <span className="font-medium">{item.label}</span>
+                              {item.description && (
+                                <p className="text-sm text-muted-foreground">{item.description}</p>
+                              )}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div>
                     <p className="font-medium mb-3 text-muted-foreground uppercase text-sm">Inovação</p>
                     <div className="space-y-2">
@@ -707,7 +741,7 @@ export default function PerfilEmpresa() {
                         >
                           <span>{opt.label}</span>
                           {opt.highlight && (
-                            <Badge className="bg-green-100 text-green-800">
+                            <Badge variant="secondary" className="bg-accent text-accent-foreground">
                               💡 Pode te beneficiar!
                             </Badge>
                           )}
