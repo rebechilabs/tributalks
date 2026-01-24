@@ -1,25 +1,29 @@
-import { UserPlus, ClipboardCheck, BotMessageSquare, Target } from "lucide-react";
+import { UserPlus, Upload, Trophy, TrendingUp } from "lucide-react";
 
 const steps = [
   {
     number: "1",
     icon: UserPlus,
     title: "Crie sua conta gratuita",
+    description: "Em menos de 1 minuto",
   },
   {
     number: "2",
-    icon: ClipboardCheck,
-    title: "Complete seu perfil em 2min",
+    icon: Upload,
+    title: "Importe seus XMLs",
+    description: "Upload das notas fiscais",
   },
   {
     number: "3",
-    icon: BotMessageSquare,
-    title: "Simule e tire dúvidas com IA",
+    icon: Trophy,
+    title: "Receba seu Score",
+    description: "Diagnóstico fiscal completo",
   },
   {
     number: "4",
-    icon: Target,
-    title: "Tome decisões com confiança",
+    icon: TrendingUp,
+    title: "Economize com clareza",
+    description: "Ações claras de economia",
   },
 ];
 
@@ -28,9 +32,12 @@ export function HowItWorksSection() {
     <section id="como-funciona" className="py-24 bg-background">
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Como funciona
           </h2>
+          <p className="text-muted-foreground max-w-xl mx-auto">
+            Do cadastro ao diagnóstico completo em menos de 10 minutos
+          </p>
         </div>
 
         <div className="max-w-5xl mx-auto">
@@ -52,7 +59,8 @@ export function HowItWorksSection() {
                 </div>
 
                 {/* Step Title */}
-                <p className="text-foreground font-medium">{step.title}</p>
+                <p className="text-foreground font-semibold mb-1">{step.title}</p>
+                <p className="text-sm text-muted-foreground">{step.description}</p>
 
                 {/* Arrow for mobile */}
                 {index < steps.length - 1 && (

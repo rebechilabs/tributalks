@@ -1,31 +1,31 @@
-import { BarChart3, BookOpen, TrendingUp, Bell, Activity } from "lucide-react";
-
-import { Calculator } from "lucide-react";
+import { Zap, LineChart, Globe, Smartphone, BrainCircuit } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const upcomingFeatures = [
   {
-    icon: Calculator,
-    label: "Todas as calculadoras",
+    icon: Zap,
+    label: "Integração Contábil",
+    description: "Sincronize com seu ERP",
   },
   {
-    icon: BarChart3,
-    label: "Reforma Tributária",
+    icon: LineChart,
+    label: "Dashboard Analytics",
+    description: "KPIs e gráficos avançados",
   },
   {
-    icon: BookOpen,
-    label: "Biblioteca de Perguntas",
+    icon: Globe,
+    label: "Multi-empresa",
+    description: "Gerencie várias empresas",
   },
   {
-    icon: TrendingUp,
-    label: "Análise de Cenários",
+    icon: Smartphone,
+    label: "App Mobile",
+    description: "iOS e Android nativo",
   },
   {
-    icon: Bell,
-    label: "Radar Legislativo",
-  },
-  {
-    icon: Activity,
-    label: "Score Tributário",
+    icon: BrainCircuit,
+    label: "IA Preditiva",
+    description: "Previsões de carga tributária",
   },
 ];
 
@@ -34,23 +34,27 @@ export function ComingSoonSection() {
     <section className="py-16 bg-secondary border-y border-border">
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className="text-center mb-10">
+          <Badge variant="outline" className="mb-3">
+            Roadmap 2026
+          </Badge>
           <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
             E tem mais chegando...
           </h2>
           <p className="text-muted-foreground">
-            Sua assinatura profissional em diante inclui todas as atualizações:
+            Sua assinatura inclui todas as atualizações futuras:
           </p>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-3 max-w-4xl mx-auto">
+        <div className="flex flex-wrap justify-center gap-4 max-w-4xl mx-auto">
           {upcomingFeatures.map((feature, index) => (
             <div
               key={feature.label}
-              className="inline-flex items-center gap-2 px-4 py-3 bg-card rounded-full text-sm font-medium text-foreground border border-border animate-fade-in-up hover:border-primary/50 transition-colors"
+              className="flex flex-col items-center gap-1 px-6 py-4 bg-card rounded-xl text-center border border-border animate-fade-in-up hover:border-primary/50 transition-colors min-w-[140px]"
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <feature.icon className="w-4 h-4 text-primary" />
-              {feature.label}
+              <feature.icon className="w-6 h-6 text-primary mb-1" />
+              <span className="font-medium text-foreground text-sm">{feature.label}</span>
+              <span className="text-xs text-muted-foreground">{feature.description}</span>
             </div>
           ))}
         </div>
