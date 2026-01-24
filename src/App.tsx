@@ -32,6 +32,7 @@ import AdminNoticias from "./pages/AdminNoticias";
 // Calculadoras
 import SplitPayment from "./pages/calculadora/SplitPayment";
 import ComparativoRegimes from "./pages/calculadora/ComparativoRegimes";
+import CalculadoraRTC from "./pages/calculadora/CalculadoraRTC";
 
 const queryClient = new QueryClient();
 
@@ -141,6 +142,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <ComparativoRegimes />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/calculadora/rtc" 
+              element={
+                <ProtectedRoute>
+                  <CalculadoraRTC />
                 </ProtectedRoute>
               } 
             />
