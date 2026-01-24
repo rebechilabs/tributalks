@@ -17,6 +17,7 @@ import Termos from "./pages/Termos";
 import Privacidade from "./pages/Privacidade";
 import Contato from "./pages/Contato";
 import DocumentoComercial from "./pages/DocumentoComercial";
+import DocumentoOportunidades from "./pages/DocumentoOportunidades";
 
 // Páginas protegidas
 import Onboarding from "./pages/Onboarding";
@@ -66,6 +67,7 @@ const App = () => (
             <Route path="/privacidade" element={<Privacidade />} />
             <Route path="/contato" element={<Contato />} />
             <Route path="/documento-comercial" element={<DocumentoComercial />} />
+            <Route path="/documento-oportunidades" element={<DocumentoOportunidades />} />
             
             {/* Protegidas */}
             <Route 
