@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { 
   Menu, X, Home, Scale, Wallet, Bot, FileText, Users, Calendar, 
-  Clock, Settings, Lock, Sparkles, Newspaper
+  Clock, Settings, Lock, Sparkles, Newspaper, Upload, Calculator,
+  Target, BarChart3, Trophy, Lightbulb
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -15,17 +16,36 @@ interface NavItem {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   requiredPlan?: 'BASICO' | 'PROFISSIONAL' | 'PREMIUM';
+  badge?: string;
 }
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: Home },
-  { label: 'Notícias', href: '/noticias', icon: Newspaper, requiredPlan: 'BASICO' },
+  
+  // Calculadoras
+  { label: 'Calculadora RTC', href: '/calculadora/rtc', icon: Calculator, badge: 'API' },
   { label: 'Comparativo de Regimes', href: '/calculadora/comparativo-regimes', icon: Scale },
   { label: 'Split Payment', href: '/calculadora/split-payment', icon: Wallet },
-  { label: 'TribuBot', href: '/tribubot', icon: Bot, requiredPlan: 'BASICO' },
+  
+  // XMLs e Créditos (agrupados)
+  { label: 'Importar XMLs', href: '/dashboard/importar-xml', icon: Upload },
+  { label: 'Radar de Créditos', href: '/dashboard/radar-creditos', icon: Target, badge: 'Novo' },
+  
+  // Análise Financeira
+  { label: 'DRE Inteligente', href: '/dashboard/dre', icon: BarChart3, badge: 'Novo' },
+  { label: 'Score Tributário', href: '/dashboard/score-tributario', icon: Trophy, badge: 'Novo' },
+  { label: 'Oportunidades', href: '/dashboard/oportunidades', icon: Lightbulb, badge: 'Novo' },
+  
+  // Conteúdo e IA
+  { label: 'Notícias', href: '/noticias', icon: Newspaper, requiredPlan: 'BASICO' },
+  { label: 'TribuBot', href: '/tribubot', icon: Bot, requiredPlan: 'BASICO', badge: 'IA' },
+  
+  // Premium
   { label: 'Relatórios PDF', href: '/relatorios', icon: FileText, requiredPlan: 'PROFISSIONAL' },
   { label: 'Comunidade', href: '/comunidade', icon: Users, requiredPlan: 'PROFISSIONAL' },
   { label: 'Consultorias', href: '/consultorias', icon: Calendar, requiredPlan: 'PREMIUM' },
+  
+  // Secundários
   { label: 'Histórico', href: '/historico', icon: Clock },
   { label: 'Configurações', href: '/configuracoes', icon: Settings },
 ];
@@ -81,7 +101,12 @@ export function MobileNav() {
                   className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground/50 cursor-not-allowed"
                 >
                   <Lock className="w-4 h-4" />
-                  <span className="text-sm">{item.label}</span>
+                  <span className="flex-1 text-sm">{item.label}</span>
+                  {item.badge && (
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                      {item.badge}
+                    </span>
+                  )}
                 </div>
               );
             }
@@ -99,7 +124,15 @@ export function MobileNav() {
                 )}
               >
                 <Icon className="w-4 h-4" />
-                <span className="text-sm font-medium">{item.label}</span>
+                <span className="flex-1 text-sm font-medium">{item.label}</span>
+                {item.badge && (
+                  <span className={cn(
+                    "text-xs px-1.5 py-0.5 rounded",
+                    isActive ? "bg-primary/20 text-primary" : "bg-primary/10 text-primary"
+                  )}>
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             );
           })}
