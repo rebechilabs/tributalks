@@ -277,38 +277,50 @@ export type Database = {
       }
       company_ncm_analysis: {
         Row: {
+          alerta_cfop: string | null
+          cfops_frequentes: string[] | null
           created_at: string
           id: string
           ncm_code: string
           product_name: string
+          qtd_operacoes: number | null
           reason: string | null
           revenue_percentage: number | null
           status: string
           suggested_action: string | null
+          tipo_operacao: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          alerta_cfop?: string | null
+          cfops_frequentes?: string[] | null
           created_at?: string
           id?: string
           ncm_code: string
           product_name: string
+          qtd_operacoes?: number | null
           reason?: string | null
           revenue_percentage?: number | null
           status?: string
           suggested_action?: string | null
+          tipo_operacao?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          alerta_cfop?: string | null
+          cfops_frequentes?: string[] | null
           created_at?: string
           id?: string
           ncm_code?: string
           product_name?: string
+          qtd_operacoes?: number | null
           reason?: string | null
           revenue_percentage?: number | null
           status?: string
           suggested_action?: string | null
+          tipo_operacao?: string | null
           updated_at?: string
           user_id?: string
         }

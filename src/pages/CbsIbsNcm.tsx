@@ -20,7 +20,13 @@ import {
   TrendingUp,
   Info,
   RefreshCw,
-  Filter
+  Filter,
+  ArrowRightLeft,
+  ArrowDownLeft,
+  ArrowUpRight,
+  Repeat,
+  Plane,
+  Ship
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
@@ -41,6 +47,10 @@ interface NcmAnalysis {
   reason: string | null;
   suggested_action: string | null;
   revenue_percentage: number | null;
+  cfops_frequentes: string[] | null;
+  tipo_operacao: string | null;
+  qtd_operacoes: number | null;
+  alerta_cfop: string | null;
   created_at: string;
 }
 
@@ -285,6 +295,45 @@ export default function CbsIbsNcm() {
     return cycle[current];
   };
 
+  const getTipoOperacaoIcon = (tipo: string | null) => {
+    switch (tipo) {
+      case 'entrada':
+      case 'entrada_credito':
+        return <ArrowDownLeft className="h-4 w-4 text-emerald-600" />;
+      case 'saida':
+      case 'saida_tributada':
+        return <ArrowUpRight className="h-4 w-4 text-blue-600" />;
+      case 'devolucao':
+        return <Repeat className="h-4 w-4 text-amber-600" />;
+      case 'transferencia':
+        return <ArrowRightLeft className="h-4 w-4 text-purple-600" />;
+      case 'exportacao':
+        return <Plane className="h-4 w-4 text-sky-600" />;
+      case 'importacao':
+        return <Ship className="h-4 w-4 text-indigo-600" />;
+      default:
+        return <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />;
+    }
+  };
+
+  const getTipoOperacaoLabel = (tipo: string | null) => {
+    const labels: Record<string, string> = {
+      'entrada': 'Entrada',
+      'entrada_credito': 'Entrada',
+      'saida': 'Saída',
+      'saida_tributada': 'Saída',
+      'consumidor_final': 'Cons. Final',
+      'devolucao': 'Devolução',
+      'transferencia': 'Transferência',
+      'exportacao': 'Exportação',
+      'importacao': 'Importação',
+      'misto': 'Misto',
+      'indefinido': 'Indefinido',
+      'outro': 'Outro',
+    };
+    return labels[tipo || 'indefinido'] || 'Misto';
+  };
+
   const hasData = totalProducts > 0;
   const hasXmls = (xmlCount || 0) > 0;
   const hasChecklist = (erpChecklist?.length || 0) > 0;
@@ -434,16 +483,17 @@ export default function CbsIbsNcm() {
                     <tr className="border-b">
                       <th className="text-left py-3 px-2 font-medium text-muted-foreground">Produto</th>
                       <th className="text-left py-3 px-2 font-medium text-muted-foreground">NCM</th>
+                      <th className="text-left py-3 px-2 font-medium text-muted-foreground">Operação</th>
+                      <th className="text-left py-3 px-2 font-medium text-muted-foreground">CFOPs</th>
                       <th className="text-left py-3 px-2 font-medium text-muted-foreground">% Fat.</th>
                       <th className="text-left py-3 px-2 font-medium text-muted-foreground">Status</th>
-                      <th className="text-left py-3 px-2 font-medium text-muted-foreground">Motivo</th>
-                      <th className="text-left py-3 px-2 font-medium text-muted-foreground">Ação Sugerida</th>
+                      <th className="text-left py-3 px-2 font-medium text-muted-foreground">Alerta CFOP/NCM</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredNcmAnalysis.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                        <td colSpan={7} className="py-8 text-center text-muted-foreground">
                           Nenhum NCM encontrado com o filtro selecionado.
                         </td>
                       </tr>
@@ -451,20 +501,53 @@ export default function CbsIbsNcm() {
                       filteredNcmAnalysis.map((item) => (
                         <tr key={item.id} className="border-b last:border-0 hover:bg-muted/50">
                           <td className="py-3 px-2">
-                            <span className="font-medium line-clamp-1">{item.product_name}</span>
+                            <div className="flex flex-col">
+                              <span className="font-medium line-clamp-1">{item.product_name}</span>
+                              {item.qtd_operacoes && item.qtd_operacoes > 1 && (
+                                <span className="text-xs text-muted-foreground">{item.qtd_operacoes} operações</span>
+                              )}
+                            </div>
                           </td>
                           <td className="py-3 px-2 font-mono text-sm">{item.ncm_code || '—'}</td>
+                          <td className="py-3 px-2">
+                            <div className="flex items-center gap-1.5">
+                              {getTipoOperacaoIcon(item.tipo_operacao)}
+                              <span className="text-sm">{getTipoOperacaoLabel(item.tipo_operacao)}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-2">
+                            <div className="flex flex-wrap gap-1">
+                              {item.cfops_frequentes && item.cfops_frequentes.length > 0 ? (
+                                item.cfops_frequentes.slice(0, 3).map((cfop, idx) => (
+                                  <Badge key={idx} variant="outline" className="font-mono text-xs">
+                                    {cfop}
+                                  </Badge>
+                                ))
+                              ) : (
+                                <span className="text-muted-foreground text-sm">—</span>
+                              )}
+                              {item.cfops_frequentes && item.cfops_frequentes.length > 3 && (
+                                <Badge variant="secondary" className="text-xs">
+                                  +{item.cfops_frequentes.length - 3}
+                                </Badge>
+                              )}
+                            </div>
+                          </td>
                           <td className="py-3 px-2 text-sm">
                             {item.revenue_percentage && item.revenue_percentage > 0 
                               ? `${item.revenue_percentage.toFixed(1)}%` 
                               : '—'}
                           </td>
                           <td className="py-3 px-2">{getStatusBadge(item.status)}</td>
-                          <td className="py-3 px-2 text-sm text-muted-foreground max-w-xs">
-                            <span className="line-clamp-2">{item.reason || '—'}</span>
-                          </td>
                           <td className="py-3 px-2 text-sm max-w-xs">
-                            <span className="line-clamp-2">{item.suggested_action || '—'}</span>
+                            <div className="space-y-1">
+                              {item.alerta_cfop && (
+                                <p className="text-amber-600 dark:text-amber-400 text-xs line-clamp-2">
+                                  ⚠️ {item.alerta_cfop.split(' | ')[0]}
+                                </p>
+                              )}
+                              <p className="text-muted-foreground line-clamp-2">{item.reason || '—'}</p>
+                            </div>
                           </td>
                         </tr>
                       ))
