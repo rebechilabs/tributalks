@@ -686,6 +686,48 @@ export type Database = {
         }
         Relationships: []
       }
+      score_actions: {
+        Row: {
+          action_code: string
+          action_description: string | null
+          action_title: string
+          created_at: string | null
+          economia_estimada: number | null
+          id: string
+          link_to: string | null
+          points_gain: number | null
+          priority: number | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          action_code: string
+          action_description?: string | null
+          action_title: string
+          created_at?: string | null
+          economia_estimada?: number | null
+          id?: string
+          link_to?: string | null
+          points_gain?: number | null
+          priority?: number | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          action_code?: string
+          action_description?: string | null
+          action_title?: string
+          created_at?: string | null
+          economia_estimada?: number | null
+          id?: string
+          link_to?: string | null
+          points_gain?: number | null
+          priority?: number | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       sector_benchmarks: {
         Row: {
           avg_ebitda_margin: number | null
@@ -847,6 +889,141 @@ export type Database = {
           total_ibs_uf?: number | null
           total_is?: number | null
           uf?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tax_score: {
+        Row: {
+          auto_comparativo_realizado: boolean | null
+          auto_creditos_identificados: number | null
+          auto_dre_preenchido: boolean | null
+          auto_regime_tributario: string | null
+          auto_xmls_importados: number | null
+          auto_xmls_periodo_fim: string | null
+          auto_xmls_periodo_inicio: string | null
+          calculated_at: string | null
+          cards_completos: number | null
+          cards_total: number | null
+          created_at: string | null
+          creditos_nao_aproveitados: number | null
+          economia_potencial: number | null
+          id: string
+          resp_certidoes: string | null
+          resp_controles: string | null
+          resp_obrigacoes: string | null
+          resp_situacao_fiscal: string | null
+          risco_autuacao: number | null
+          score_conformidade: number | null
+          score_documentacao: number | null
+          score_eficiencia: number | null
+          score_gestao: number | null
+          score_grade: string | null
+          score_risco: number | null
+          score_status: string | null
+          score_total: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          auto_comparativo_realizado?: boolean | null
+          auto_creditos_identificados?: number | null
+          auto_dre_preenchido?: boolean | null
+          auto_regime_tributario?: string | null
+          auto_xmls_importados?: number | null
+          auto_xmls_periodo_fim?: string | null
+          auto_xmls_periodo_inicio?: string | null
+          calculated_at?: string | null
+          cards_completos?: number | null
+          cards_total?: number | null
+          created_at?: string | null
+          creditos_nao_aproveitados?: number | null
+          economia_potencial?: number | null
+          id?: string
+          resp_certidoes?: string | null
+          resp_controles?: string | null
+          resp_obrigacoes?: string | null
+          resp_situacao_fiscal?: string | null
+          risco_autuacao?: number | null
+          score_conformidade?: number | null
+          score_documentacao?: number | null
+          score_eficiencia?: number | null
+          score_gestao?: number | null
+          score_grade?: string | null
+          score_risco?: number | null
+          score_status?: string | null
+          score_total?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          auto_comparativo_realizado?: boolean | null
+          auto_creditos_identificados?: number | null
+          auto_dre_preenchido?: boolean | null
+          auto_regime_tributario?: string | null
+          auto_xmls_importados?: number | null
+          auto_xmls_periodo_fim?: string | null
+          auto_xmls_periodo_inicio?: string | null
+          calculated_at?: string | null
+          cards_completos?: number | null
+          cards_total?: number | null
+          created_at?: string | null
+          creditos_nao_aproveitados?: number | null
+          economia_potencial?: number | null
+          id?: string
+          resp_certidoes?: string | null
+          resp_controles?: string | null
+          resp_obrigacoes?: string | null
+          resp_situacao_fiscal?: string | null
+          risco_autuacao?: number | null
+          score_conformidade?: number | null
+          score_documentacao?: number | null
+          score_eficiencia?: number | null
+          score_gestao?: number | null
+          score_grade?: string | null
+          score_risco?: number | null
+          score_status?: string | null
+          score_total?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tax_score_history: {
+        Row: {
+          calculated_at: string | null
+          id: string
+          score_conformidade: number | null
+          score_documentacao: number | null
+          score_eficiencia: number | null
+          score_gestao: number | null
+          score_grade: string
+          score_risco: number | null
+          score_total: number
+          user_id: string
+        }
+        Insert: {
+          calculated_at?: string | null
+          id?: string
+          score_conformidade?: number | null
+          score_documentacao?: number | null
+          score_eficiencia?: number | null
+          score_gestao?: number | null
+          score_grade: string
+          score_risco?: number | null
+          score_total: number
+          user_id: string
+        }
+        Update: {
+          calculated_at?: string | null
+          id?: string
+          score_conformidade?: number | null
+          score_documentacao?: number | null
+          score_eficiencia?: number | null
+          score_gestao?: number | null
+          score_grade?: string
+          score_risco?: number | null
+          score_total?: number
           user_id?: string
         }
         Relationships: []

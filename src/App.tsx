@@ -33,6 +33,7 @@ import XMLResultados from "./pages/XMLResultados";
 import RadarCreditos from "./pages/RadarCreditos";
 import DRE from "./pages/DRE";
 import DREResultados from "./pages/DREResultados";
+import ScoreTributario from "./pages/ScoreTributario";
 // Calculadoras
 import SplitPayment from "./pages/calculadora/SplitPayment";
 import ComparativoRegimes from "./pages/calculadora/ComparativoRegimes";
@@ -195,7 +196,15 @@ const App = () => (
               path="/dashboard/dre-resultados" 
               element={
                 <ProtectedRoute>
-                  <DREResultados />
+              <DREResultados />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/score-tributario" 
+              element={
+                <ProtectedRoute>
+                  <ScoreTributario />
                 </ProtectedRoute>
               } 
             />
