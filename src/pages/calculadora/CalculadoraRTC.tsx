@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
@@ -13,14 +16,20 @@ import { TaxResultsDisplay } from "@/components/rtc/TaxResultsDisplay";
 import { CalculationHistory } from "@/components/rtc/CalculationHistory";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Calculator, HelpCircle, ExternalLink } from "lucide-react";
+import { Calculator, HelpCircle, ExternalLink, FileText, ArrowLeft, Zap } from "lucide-react";
 
 export default function CalculadoraRTC() {
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("form");
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
   const [formData, setFormData] = useState<TaxFormData | null>(null);
+
+  // DRE Integration params
+  const fromDreId = searchParams.get('from_dre');
+  const dreReceita = searchParams.get('receita');
 
   const handleCalculate = async (data: TaxFormData, municipioNome: string) => {
     setIsLoading(true);
@@ -67,9 +76,16 @@ export default function CalculadoraRTC() {
       setFormData(data);
       setActiveTab("results");
 
+      // Se veio do DRE, atualiza o registro com os dados oficiais
+      if (fromDreId && response.data?.totals) {
+        await updateDREWithOfficialData(fromDreId, response.data.totals);
+      }
+
       toast({
         title: "Cálculo realizado!",
-        description: "Os tributos foram calculados com sucesso.",
+        description: fromDreId 
+          ? "Os tributos foram calculados e seu DRE foi atualizado com dados oficiais."
+          : "Os tributos foram calculados com sucesso.",
       });
     } catch (error: any) {
       console.error("Erro no cálculo:", error);
@@ -96,6 +112,30 @@ export default function CalculadoraRTC() {
       title: "Dados carregados",
       description: "Os dados do cálculo foram carregados no formulário.",
     });
+  };
+
+  const updateDREWithOfficialData = async (dreId: string, totals: any) => {
+    try {
+      const totalReforma = (totals.total_cbs || 0) + (totals.total_ibs_uf || 0) + 
+                          (totals.total_ibs_mun || 0) + (totals.total_is || 0);
+      
+      await supabase
+        .from('company_dre')
+        .update({
+          reforma_impostos_novos: totalReforma,
+          reforma_source: 'api_oficial',
+          reforma_calculated_at: new Date().toISOString(),
+        })
+        .eq('id', dreId);
+    } catch (error) {
+      console.error('Erro ao atualizar DRE:', error);
+    }
+  };
+
+  const handleBackToDRE = () => {
+    if (fromDreId) {
+      navigate(`/dashboard/dre-resultados?id=${fromDreId}`);
+    }
   };
 
   return (
@@ -129,6 +169,30 @@ export default function CalculadoraRTC() {
             <ExternalLink className="h-4 w-4" />
           </a>
         </div>
+
+        {/* DRE Context Banner */}
+        {fromDreId && (
+          <Alert className="bg-primary/5 border-primary/20">
+            <FileText className="h-4 w-4" />
+            <AlertDescription className="flex items-center justify-between">
+              <div>
+                <span className="font-medium">Simulação vinculada ao seu DRE</span>
+                {dreReceita && (
+                  <span className="text-muted-foreground ml-2">
+                    (Receita: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(dreReceita))})
+                  </span>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">
+                  Adicione seus produtos (NCMs) para calcular o impacto real da Reforma Tributária no seu DRE.
+                </p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={handleBackToDRE}>
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Voltar ao DRE
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
