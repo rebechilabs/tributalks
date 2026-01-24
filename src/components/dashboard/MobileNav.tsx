@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { 
   Menu, X, Home, Scale, Wallet, Bot, FileText, Users, Calendar, 
   Clock, Settings, Lock, Sparkles, Newspaper, Upload, Calculator,
-  Target, BarChart3, Trophy, Lightbulb
+  Target, BarChart3, Trophy, Lightbulb, LayoutDashboard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -30,6 +30,7 @@ const navGroups: NavGroup[] = [
     title: '',
     items: [
       { label: 'Dashboard', href: '/dashboard', icon: Home },
+      { label: 'Painel Executivo', href: '/dashboard/executivo', icon: LayoutDashboard, badge: 'Premium', requiredPlan: 'PREMIUM' },
     ]
   },
   {

@@ -41,6 +41,9 @@ import SplitPayment from "./pages/calculadora/SplitPayment";
 import ComparativoRegimes from "./pages/calculadora/ComparativoRegimes";
 import CalculadoraRTC from "./pages/calculadora/CalculadoraRTC";
 
+// Painel Executivo
+import PainelExecutivo from "./pages/PainelExecutivo";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -75,6 +78,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/executivo" 
+              element={
+                <ProtectedRoute>
+                  <PainelExecutivo />
                 </ProtectedRoute>
               } 
             />
