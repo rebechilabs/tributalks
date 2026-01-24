@@ -9,14 +9,22 @@ const corsHeaders = {
 interface CompanyProfile {
   user_id: string;
   setor?: string;
+  segmento?: string;
   porte?: string;
   faturamento_anual?: number;
   faturamento_mensal_medio?: number;
   regime_tributario?: string;
   qtd_cnpjs?: number;
   tem_holding?: boolean;
+  tem_filiais?: boolean;
+  qtd_filiais?: number;
   vende_produtos?: boolean;
   vende_servicos?: boolean;
+  percentual_produtos?: number;
+  percentual_servicos?: number;
+  vende_pf?: boolean;
+  vende_pj?: boolean;
+  vende_governo?: boolean;
   tem_atividades_mistas?: boolean;
   tem_produtos_monofasicos?: boolean;
   vende_combustiveis?: boolean;
@@ -26,11 +34,34 @@ interface CompanyProfile {
   vende_autopecas?: boolean;
   vende_pneus?: boolean;
   vende_eletronicos?: boolean;
+  vende_automoveis?: boolean;
+  vende_cigarros?: boolean;
   exporta_produtos?: boolean;
   exporta_servicos?: boolean;
+  importa_produtos?: boolean;
+  importa_insumos?: boolean;
+  percentual_exportacao?: number;
+  percentual_importacao?: number;
   tem_atividade_pd?: boolean;
+  investe_em_inovacao?: boolean;
+  tem_patentes?: boolean;
   uf_sede?: string;
+  ufs_operacao?: string[];
+  opera_outros_estados?: boolean;
+  opera_todo_brasil?: boolean;
+  folha_mensal?: number;
   folha_percentual_faturamento?: number;
+  num_funcionarios?: number;
+  zona_franca?: boolean;
+  area_livre_comercio?: boolean;
+  zona_especial?: string;
+  tem_loja_fisica?: boolean;
+  tem_ecommerce?: boolean;
+  tem_marketplace?: boolean;
+  cnae_principal?: string;
+  cnae_secundarios?: string[];
+  tipo_societario?: string;
+  atividades_diferentes_tributacao?: boolean;
 }
 
 interface TaxOpportunity {
@@ -38,92 +69,393 @@ interface TaxOpportunity {
   code: string;
   name: string;
   name_simples: string;
+  description?: string;
   description_ceo?: string;
-  category: string;
-  tipo_tributo: string;
-  tributos_afetados: string[];
+  category?: string;
+  subcategory?: string;
+  tipo_tributo?: string;
+  tributos_afetados?: string[];
   criterios: Record<string, unknown>;
-  economia_tipo: string;
+  criterios_obrigatorios?: Record<string, unknown>;
+  criterios_pontuacao?: Record<string, unknown>;
+  economia_tipo?: string;
   economia_percentual_min?: number;
   economia_percentual_max?: number;
   economia_base?: string;
   economia_descricao_simples?: string;
-  complexidade: string;
+  complexidade?: string;
   tempo_implementacao?: string;
+  tempo_retorno?: string;
   risco_fiscal?: string;
+  risco_descricao?: string;
+  base_legal?: string;
   base_legal_resumo?: string;
+  requer_contador?: boolean;
+  requer_advogado?: boolean;
+  requer_sistema?: boolean;
+  requer_certificacao?: boolean;
+}
+
+// Labels for better reason messages
+const FIELD_LABELS: Record<string, string> = {
+  setor: 'Setor',
+  segmento: 'Segmento',
+  porte: 'Porte',
+  regime_tributario: 'Regime tributário',
+  atividade: 'Atividade',
+  estado: 'Estado',
+  uf_sede: 'UF sede',
+  canal: 'Canal de venda',
+  tipo_empresa: 'Tipo de empresa',
+  programa: 'Programa',
+  vende_produtos: 'Vende produtos',
+  vende_servicos: 'Vende serviços',
+  vende_combustiveis: 'Vende combustíveis',
+  vende_bebidas: 'Vende bebidas',
+  vende_cosmeticos: 'Vende cosméticos',
+  vende_farmacos: 'Vende fármacos/medicamentos',
+  vende_autopecas: 'Vende autopeças',
+  vende_pneus: 'Vende pneus',
+  vende_eletronicos: 'Vende eletrônicos',
+  vende_automoveis: 'Vende automóveis',
+  tem_atividades_mistas: 'Tem atividades mistas',
+  tem_produtos_monofasicos: 'Tem produtos monofásicos',
+  exporta_produtos: 'Exporta produtos',
+  exporta_servicos: 'Exporta serviços',
+  importa_produtos: 'Importa produtos',
+  importa_insumos: 'Importa insumos',
+  tem_atividade_pd: 'Tem atividade de P&D',
+  investe_em_inovacao: 'Investe em inovação',
+  tem_patentes: 'Tem patentes',
+  tem_holding: 'Tem holding',
+  tem_filiais: 'Tem filiais',
+  tem_ecommerce: 'Tem e-commerce',
+  tem_marketplace: 'Vende em marketplace',
+  tem_loja_fisica: 'Tem loja física',
+  zona_franca: 'Zona Franca',
+  area_livre_comercio: 'Área de livre comércio',
+  fator_r_acima_28: 'Folha > 28% do faturamento',
+  lucro_real: 'Lucro Real',
+  lucro_presumido: 'Lucro Presumido',
+  simples_nacional: 'Simples Nacional',
+  folha_alta: 'Folha de pagamento alta',
+  operacao_interestadual: 'Opera entre estados',
+  prepara_alimentos: 'Prepara alimentos',
+  recebe_gorjetas: 'Recebe gorjetas',
+  usa_plataformas_delivery: 'Usa plataformas de delivery',
+  centro_distribuicao_zfm: 'CD na Zona Franca de Manaus',
+  vende_produtos_monofasicos: 'Vende produtos monofásicos',
+  fins_lucrativos: 'Fins lucrativos',
+  investe_tecnologia: 'Investe em tecnologia',
+  projeto_infraestrutura: 'Projeto de infraestrutura',
+  compra_insumos: 'Compra insumos',
+  investe_maquinas: 'Investe em máquinas',
+  tem_area_preservacao: 'Tem área de preservação',
+  comercializa_commodities: 'Comercializa commodities',
+  comercializa_medicamentos: 'Comercializa medicamentos',
+  compra_equipamentos_medicos: 'Compra equipamentos médicos',
+  tem_internacao_ou_procedimento_complexo: 'Tem internação ou procedimento complexo',
+  investe_pd: 'Investe em P&D',
+  investe_frota: 'Investe em frota',
+  tem_geracao_solar: 'Tem geração solar',
+  compra_equipamento_solar: 'Compra equipamento solar',
+  importa_equipamento_solar: 'Importa equipamento solar',
+};
+
+function getFieldLabel(field: string): string {
+  return FIELD_LABELS[field] || field.replace(/_/g, ' ');
+}
+
+// Map profile fields to derived values for matching
+function getDerivedValues(profile: CompanyProfile): Record<string, unknown> {
+  const derived: Record<string, unknown> = { ...profile };
+  
+  // Calculate fator_r
+  const folhaPercent = profile.folha_percentual_faturamento || 0;
+  derived.fator_r_acima_28 = folhaPercent >= 28;
+  derived.folha_alta = folhaPercent >= 25;
+  
+  // Regime shortcuts
+  derived.lucro_real = profile.regime_tributario === 'lucro_real';
+  derived.lucro_presumido = profile.regime_tributario === 'lucro_presumido';
+  derived.simples_nacional = profile.regime_tributario === 'simples';
+  
+  // Derived activity flags
+  derived.operacao_interestadual = profile.opera_outros_estados || profile.opera_todo_brasil;
+  derived.prepara_alimentos = profile.setor === 'alimentacao';
+  derived.recebe_gorjetas = profile.setor === 'alimentacao';
+  derived.usa_plataformas_delivery = profile.setor === 'alimentacao' && profile.tem_ecommerce;
+  derived.centro_distribuicao_zfm = profile.zona_franca;
+  derived.vende_produtos_monofasicos = profile.tem_produtos_monofasicos || 
+    profile.vende_combustiveis || profile.vende_bebidas || 
+    profile.vende_cosmeticos || profile.vende_farmacos ||
+    profile.vende_autopecas || profile.vende_pneus;
+  
+  // Determine atividade based on setor
+  const atividadeMap: Record<string, string[]> = {
+    'agro': ['producao_rural', 'pecuaria', 'agricultura'],
+    'saude': ['clinica', 'hospital', 'laboratorio', 'farmacia'],
+    'construcao': ['incorporacao_imobiliaria', 'construtora', 'empreiteira'],
+    'transporte': ['transporte_cargas', 'transporte_passageiros', 'logistica'],
+    'alimentacao': ['restaurante', 'bar', 'lanchonete', 'padaria'],
+    'comercio': ['varejo', 'atacado', 'distribuidor'],
+    'educacao': ['escola', 'faculdade', 'curso', 'treinamento'],
+    'servicos': ['consultoria', 'tecnologia', 'software'],
+    'industria': ['fabricacao', 'manufatura', 'transformacao'],
+    'energia': ['geracao_solar', 'geracao_energia'],
+  };
+  derived.atividades = atividadeMap[profile.setor || ''] || [];
+  
+  // Add canal
+  if (profile.tem_ecommerce) {
+    derived.canal = 'ecommerce';
+  } else if (profile.tem_loja_fisica) {
+    derived.canal = 'loja_fisica';
+  } else if (profile.tem_marketplace) {
+    derived.canal = 'marketplace';
+  }
+  
+  // Estado from UF
+  derived.estado = profile.uf_sede;
+  derived.estados = profile.ufs_operacao || (profile.uf_sede ? [profile.uf_sede] : []);
+  
+  // Tipo empresa
+  if (profile.tem_holding) {
+    derived.tipo_empresa = 'holding';
+  } else if (profile.tipo_societario === 'cooperativa') {
+    derived.tipo_empresa = 'cooperativa';
+  }
+  
+  // Setor aliases
+  const setorAliases: Record<string, string[]> = {
+    'agro': ['agro', 'agronegocio', 'agricultura', 'pecuaria'],
+    'saude': ['saude', 'farmacia', 'hospital', 'clinica'],
+    'alimentacao': ['alimentacao', 'restaurante', 'food_service'],
+    'comercio': ['comercio', 'varejo', 'atacado'],
+    'servicos': ['servicos', 'prestacao_servicos'],
+    'industria': ['industria', 'fabricacao', 'manufatura'],
+    'construcao': ['construcao', 'imobiliario', 'incorporacao'],
+    'transporte': ['transporte', 'logistica', 'frete'],
+    'educacao': ['educacao', 'ensino', 'treinamento'],
+    'energia': ['energia', 'energia_solar', 'geracao'],
+    'tecnologia': ['tecnologia', 'ti', 'software'],
+  };
+  derived.setores = setorAliases[profile.setor || ''] || [profile.setor];
+  
+  return derived;
 }
 
 function evaluateOpportunity(
   profile: CompanyProfile, 
   opportunity: TaxOpportunity
 ): { eligible: boolean; score: number; reasons: string[]; missing: string[] } {
-  const criterios = opportunity.criterios;
+  const criterios = opportunity.criterios || {};
+  const criteriosObrigatorios = opportunity.criterios_obrigatorios || {};
+  const criteriosPontuacao = opportunity.criterios_pontuacao || {};
+  
   const reasons: string[] = [];
   const missing: string[] = [];
   let score = 0;
   let requiredMet = true;
+  
+  // Get derived values for matching
+  const derived = getDerivedValues(profile);
 
-  // Evaluate each criteria
-  for (const [key, value] of Object.entries(criterios)) {
-    // Handle special operators
+  // Helper to get value from profile or derived
+  const getValue = (field: string): unknown => {
+    return derived[field] ?? profile[field as keyof CompanyProfile];
+  };
+
+  // Helper to check array inclusion
+  const checkArrayInclusion = (criteriaValues: unknown[], profileValue: unknown): boolean => {
+    if (Array.isArray(profileValue)) {
+      // If profile value is array, check if any match
+      return profileValue.some(pv => criteriaValues.includes(pv));
+    }
+    return criteriaValues.includes(profileValue);
+  };
+
+  // Evaluate a single criterion
+  const evaluateCriterion = (key: string, value: unknown, isRequired: boolean, pointValue: number = 20): boolean => {
+    // Handle _in suffix (array inclusion)
     if (key.endsWith('_in')) {
       const field = key.replace('_in', '');
-      const profileValue = profile[field as keyof CompanyProfile];
-      if (Array.isArray(value) && value.includes(profileValue)) {
-        score += 20;
-        reasons.push(`${field} compatível`);
-      } else if (Array.isArray(value)) {
-        missing.push(`${field} não está na lista de elegíveis`);
+      const profileValue = getValue(field);
+      const arrayField = field + 's'; // Try plural form (setor -> setores)
+      const profileArrayValue = getValue(arrayField);
+      
+      if (Array.isArray(value)) {
+        // Check both singular and plural forms
+        const matches = checkArrayInclusion(value, profileValue) || 
+                       checkArrayInclusion(value, profileArrayValue);
+        
+        if (matches) {
+          score += pointValue;
+          reasons.push(`${getFieldLabel(field)} compatível`);
+          return true;
+        } else if (isRequired) {
+          missing.push(`${getFieldLabel(field)} não está na lista elegível`);
+          requiredMet = false;
+        }
       }
-      continue;
+      return false;
     }
 
+    // Handle _min suffix (minimum value)
     if (key.endsWith('_min')) {
       const field = key.replace('_min', '');
-      const profileValue = profile[field as keyof CompanyProfile] as number;
-      if (profileValue && profileValue >= (value as number)) {
-        score += 15;
-        reasons.push(`${field} acima do mínimo`);
-      } else {
-        missing.push(`${field} abaixo do mínimo requerido`);
+      const profileValue = getValue(field) as number;
+      if (profileValue !== undefined && profileValue >= (value as number)) {
+        score += pointValue;
+        reasons.push(`${getFieldLabel(field)} acima do mínimo`);
+        return true;
+      } else if (isRequired) {
+        missing.push(`${getFieldLabel(field)} abaixo do mínimo`);
         requiredMet = false;
       }
-      continue;
+      return false;
     }
 
-    // Direct boolean match
+    // Handle _max suffix (maximum value)
+    if (key.endsWith('_max')) {
+      const field = key.replace('_max', '');
+      const profileValue = getValue(field) as number;
+      if (profileValue !== undefined && profileValue <= (value as number)) {
+        score += pointValue;
+        reasons.push(`${getFieldLabel(field)} dentro do limite`);
+        return true;
+      } else if (isRequired) {
+        missing.push(`${getFieldLabel(field)} acima do máximo`);
+        requiredMet = false;
+      }
+      return false;
+    }
+
+    // Handle _ou suffix (OR condition with multiple fields)
+    if (key.endsWith('_ou')) {
+      const fields = key.replace('_ou', '').split('_');
+      const anyMatch = fields.some(field => {
+        const profileValue = getValue(field);
+        return profileValue === true || profileValue === value;
+      });
+      
+      if (anyMatch) {
+        score += pointValue;
+        reasons.push(`${fields.map(getFieldLabel).join(' ou ')}`);
+        return true;
+      } else if (isRequired) {
+        missing.push(`Requer: ${fields.map(getFieldLabel).join(' ou ')}`);
+        requiredMet = false;
+      }
+      return false;
+    }
+
+    // Handle setor_ou_atividade special case
+    if (key === 'setor_ou_atividade') {
+      const setorMatches = getValue('setor') === value || 
+                          (Array.isArray(getValue('setores')) && (getValue('setores') as string[]).includes(value as string));
+      const atividadeMatches = Array.isArray(getValue('atividades')) && 
+                              (getValue('atividades') as string[]).includes(value as string);
+      
+      if (setorMatches || atividadeMatches) {
+        score += pointValue;
+        reasons.push(`Setor/atividade compatível`);
+        return true;
+      } else if (isRequired) {
+        missing.push(`Setor ou atividade: ${value}`);
+        requiredMet = false;
+      }
+      return false;
+    }
+
+    // Handle boolean match
     if (typeof value === 'boolean') {
-      const profileValue = profile[key as keyof CompanyProfile];
+      const profileValue = getValue(key);
       if (profileValue === value) {
-        score += 25;
-        reasons.push(`${key.replace(/_/g, ' ')}`);
-      } else if (value === true) {
-        // If required true but profile is false/undefined
-        missing.push(`Requer: ${key.replace(/_/g, ' ')}`);
+        score += pointValue;
+        if (value === true) {
+          reasons.push(getFieldLabel(key));
+        }
+        return true;
+      } else if (isRequired && value === true) {
+        missing.push(`Requer: ${getFieldLabel(key)}`);
         requiredMet = false;
       }
-      continue;
+      return false;
     }
 
-    // String match
-    if (typeof value === 'string') {
-      const profileValue = profile[key as keyof CompanyProfile];
+    // Handle string/number direct match
+    if (typeof value === 'string' || typeof value === 'number') {
+      const profileValue = getValue(key);
       if (profileValue === value) {
-        score += 20;
-        reasons.push(`${key}: ${value}`);
-      } else {
-        missing.push(`Requer ${key}: ${value}`);
+        score += pointValue;
+        reasons.push(`${getFieldLabel(key)}: ${value}`);
+        return true;
+      } else if (isRequired) {
+        missing.push(`Requer ${getFieldLabel(key)}: ${value}`);
         requiredMet = false;
       }
+      return false;
     }
+
+    // Handle array value (profile value must be in array)
+    if (Array.isArray(value)) {
+      const profileValue = getValue(key);
+      if (checkArrayInclusion(value, profileValue)) {
+        score += pointValue;
+        reasons.push(`${getFieldLabel(key)} compatível`);
+        return true;
+      } else if (isRequired) {
+        missing.push(`${getFieldLabel(key)} não compatível`);
+        requiredMet = false;
+      }
+      return false;
+    }
+
+    return false;
+  };
+
+  // First evaluate required criteria (criterios_obrigatorios)
+  for (const [key, value] of Object.entries(criteriosObrigatorios)) {
+    evaluateCriterion(key, value, true, 15);
+  }
+
+  // Then evaluate main criteria (all treated as somewhat required for basic eligibility)
+  for (const [key, value] of Object.entries(criterios)) {
+    // Skip special fields
+    if (key === 'vigencia_apos' || key === 'vigencia_ate') continue;
+    
+    evaluateCriterion(key, value, true, 20);
+  }
+
+  // Finally evaluate scoring criteria (optional, just add points)
+  for (const [key, value] of Object.entries(criteriosPontuacao)) {
+    evaluateCriterion(key, value, false, 10);
+  }
+
+  // Check date validity
+  const vigenciaApos = criterios.vigencia_apos as string | undefined;
+  const vigenciaAte = criterios.vigencia_ate as string | undefined;
+  const now = new Date();
+  
+  if (vigenciaApos && new Date(vigenciaApos) > now) {
+    missing.push(`Vigente a partir de ${vigenciaApos}`);
+    // Still eligible but note it's future
+  }
+  
+  if (vigenciaAte && new Date(vigenciaAte) < now) {
+    missing.push(`Vigência expirada em ${vigenciaAte}`);
+    requiredMet = false;
   }
 
   // Cap score at 100
   score = Math.min(score, 100);
 
+  // Require at least one reason to be eligible
+  const eligible = requiredMet && reasons.length > 0 && score >= 15;
+
   return {
-    eligible: requiredMet && score >= 20,
+    eligible,
     score,
     reasons,
     missing
@@ -138,46 +470,71 @@ function calculateEconomia(
   const fatAnual = profile.faturamento_anual || fatMensal * 12;
 
   if (!opportunity.economia_percentual_min) {
-    // Variable or case-by-case
-    return {
-      mensal_min: 0,
-      mensal_max: 0,
-      anual_min: 0,
-      anual_max: 0
-    };
+    return { mensal_min: 0, mensal_max: 0, anual_min: 0, anual_max: 0 };
   }
 
   // Determine base for calculation
   let base = fatMensal;
   const economiaBase = opportunity.economia_base || 'faturamento_total';
+  const category = opportunity.category || '';
 
-  // Estimate specific revenue based on profile
-  if (economiaBase.includes('combustiveis') && profile.vende_combustiveis) {
-    base = fatMensal * 0.7; // Assume 70% is fuel revenue
-  } else if (economiaBase.includes('bebidas') && profile.vende_bebidas) {
-    base = fatMensal * 0.4;
-  } else if (economiaBase.includes('cosmeticos') && profile.vende_cosmeticos) {
-    base = fatMensal * 0.5;
-  } else if (economiaBase.includes('farmacos') && profile.vende_farmacos) {
-    base = fatMensal * 0.6;
-  } else if (economiaBase.includes('autopecas') && profile.vende_autopecas) {
-    base = fatMensal * 0.5;
-  } else if (economiaBase.includes('pneus') && profile.vende_pneus) {
-    base = fatMensal * 0.3;
+  // Estimate specific revenue based on profile and opportunity type
+  if (economiaBase.includes('combustiveis') || category.includes('combustiveis')) {
+    base = profile.vende_combustiveis ? fatMensal * 0.7 : 0;
+  } else if (economiaBase.includes('bebidas') || category.includes('bebidas')) {
+    base = profile.vende_bebidas ? fatMensal * 0.4 : 0;
+  } else if (economiaBase.includes('cosmeticos') || category.includes('cosmeticos')) {
+    base = profile.vende_cosmeticos ? fatMensal * 0.5 : 0;
+  } else if (economiaBase.includes('farmacos') || economiaBase.includes('medicamentos')) {
+    base = profile.vende_farmacos ? fatMensal * 0.6 : 0;
+  } else if (economiaBase.includes('autopecas')) {
+    base = profile.vende_autopecas ? fatMensal * 0.5 : 0;
+  } else if (economiaBase.includes('pneus')) {
+    base = profile.vende_pneus ? fatMensal * 0.3 : 0;
   } else if (economiaBase.includes('servicos') && profile.vende_servicos) {
-    base = fatMensal * (profile.vende_produtos ? 0.5 : 0.9);
-  } else if (economiaBase.includes('exportacao') && (profile.exporta_produtos || profile.exporta_servicos)) {
-    base = fatMensal * 0.3;
-  } else if (economiaBase.includes('das')) {
+    const percServicos = (profile.percentual_servicos || 50) / 100;
+    base = fatMensal * percServicos;
+  } else if (economiaBase.includes('produtos') && profile.vende_produtos) {
+    const percProdutos = (profile.percentual_produtos || 50) / 100;
+    base = fatMensal * percProdutos;
+  } else if (economiaBase.includes('exportacao')) {
+    const percExport = (profile.percentual_exportacao || 20) / 100;
+    base = fatMensal * percExport;
+  } else if (economiaBase.includes('importacao')) {
+    const percImport = (profile.percentual_importacao || 10) / 100;
+    base = fatMensal * percImport;
+  } else if (economiaBase.includes('folha')) {
+    base = profile.folha_mensal || (fatMensal * ((profile.folha_percentual_faturamento || 20) / 100));
+  } else if (economiaBase.includes('das') || economiaBase.includes('simples')) {
     // DAS is roughly 6-15% of revenue for Simples
     base = fatMensal * 0.10;
-  } else if (economiaBase.includes('irpj_csll')) {
+  } else if (economiaBase.includes('irpj_csll') || economiaBase.includes('ir_csll')) {
     // IRPJ/CSLL is roughly 3-8% of revenue
     base = fatMensal * 0.05;
+  } else if (economiaBase.includes('icms')) {
+    // ICMS varies by state and product, estimate 12-18%
+    base = fatMensal * 0.15;
+  } else if (economiaBase.includes('pis_cofins')) {
+    // PIS/COFINS is 3.65% (cumulativo) or 9.25% (não cumulativo)
+    base = fatMensal * 0.06;
+  } else if (economiaBase.includes('inss') || economiaBase.includes('previdencia')) {
+    base = profile.folha_mensal || (fatMensal * 0.20);
   }
 
-  const mensalMin = base * (opportunity.economia_percentual_min / 100);
-  const mensalMax = base * (opportunity.economia_percentual_max || opportunity.economia_percentual_min) / 100;
+  // Apply sector-specific adjustments
+  if (profile.setor === 'agro') {
+    // Agro typically has lower margins
+    base = base * 0.8;
+  } else if (profile.setor === 'saude') {
+    // Healthcare can have good margins on these savings
+    base = base * 1.1;
+  }
+
+  const percMin = opportunity.economia_percentual_min / 100;
+  const percMax = (opportunity.economia_percentual_max || opportunity.economia_percentual_min) / 100;
+
+  const mensalMin = base * percMin;
+  const mensalMax = base * percMax;
 
   return {
     mensal_min: Math.round(mensalMin),
@@ -191,11 +548,11 @@ function calculatePrioridade(
   opportunity: TaxOpportunity, 
   economia: { anual_max: number }
 ): number {
-  // 1 = highest priority
   let prioridade = 3;
 
   // Quick wins get priority
-  if (opportunity.complexidade === 'muito_baixa' || opportunity.complexidade === 'baixa') {
+  const complexidade = opportunity.complexidade || '';
+  if (complexidade === 'muito_baixa' || complexidade === 'baixa') {
     prioridade--;
   }
 
@@ -205,11 +562,12 @@ function calculatePrioridade(
   }
 
   // Low risk gets priority
-  if (opportunity.risco_fiscal === 'nenhum') {
+  const risco = opportunity.risco_fiscal || '';
+  if (risco === 'nenhum' || risco === 'muito_baixo') {
     prioridade--;
   }
 
-  return Math.max(1, prioridade);
+  return Math.max(1, Math.min(3, prioridade));
 }
 
 serve(async (req) => {
@@ -262,6 +620,9 @@ serve(async (req) => {
       throw new Error('Failed to fetch opportunities')
     }
 
+    console.log(`Evaluating ${opportunities.length} opportunities for user ${user_id}`)
+    console.log(`Profile: setor=${profile.setor}, regime=${profile.regime_tributario}, faturamento=${profile.faturamento_mensal_medio}`)
+
     // 3. MATCH OPPORTUNITIES
     const matches = []
 
@@ -271,6 +632,8 @@ serve(async (req) => {
       if (result.eligible) {
         const economia = calculateEconomia(profile as CompanyProfile, opp as TaxOpportunity)
         const prioridade = calculatePrioridade(opp as TaxOpportunity, economia)
+        
+        console.log(`Match: ${opp.code} - score=${result.score}, economia=${economia.anual_max}`)
         
         matches.push({
           opportunity_id: opp.id,
@@ -299,7 +662,7 @@ serve(async (req) => {
     })
 
     // 5. UPSERT COMPANY OPPORTUNITIES
-    // First delete old matches
+    // First delete old matches that are still 'nova'
     await supabase
       .from('company_opportunities')
       .delete()
@@ -335,6 +698,19 @@ serve(async (req) => {
     const quickWins = matches.filter(m => m.quick_win).length
     const highImpact = matches.filter(m => m.alto_impacto).length
 
+    // Group by category
+    const byCategory: Record<string, { count: number; economia: number }> = {}
+    for (const m of matches) {
+      const cat = m.opportunity.category || 'outros'
+      if (!byCategory[cat]) {
+        byCategory[cat] = { count: 0, economia: 0 }
+      }
+      byCategory[cat].count++
+      byCategory[cat].economia += m.economia_anual_max
+    }
+
+    console.log(`Found ${matches.length} matches, economia=${totalEconomiaMin}-${totalEconomiaMax}`)
+
     return new Response(JSON.stringify({
       success: true,
       total_opportunities: matches.length,
@@ -342,23 +718,34 @@ serve(async (req) => {
       high_impact: highImpact,
       economia_anual_min: totalEconomiaMin,
       economia_anual_max: totalEconomiaMax,
+      by_category: byCategory,
       opportunities: matches.map(m => ({
         id: m.opportunity_id,
         code: m.opportunity.code,
         name: m.opportunity.name_simples,
         description: m.opportunity.description_ceo,
         category: m.opportunity.category,
+        subcategory: m.opportunity.subcategory,
         match_score: m.match_score,
         match_reasons: m.match_reasons,
+        missing_criteria: m.missing_criteria,
+        economia_mensal_min: m.economia_mensal_min,
+        economia_mensal_max: m.economia_mensal_max,
         economia_anual_min: m.economia_anual_min,
         economia_anual_max: m.economia_anual_max,
         complexidade: m.opportunity.complexidade,
         tempo_implementacao: m.opportunity.tempo_implementacao,
+        tempo_retorno: m.opportunity.tempo_retorno,
         risco_fiscal: m.opportunity.risco_fiscal,
+        risco_descricao: m.opportunity.risco_descricao,
         quick_win: m.quick_win,
         alto_impacto: m.alto_impacto,
         prioridade: m.prioridade,
-        tributos_afetados: m.opportunity.tributos_afetados
+        tributos_afetados: m.opportunity.tributos_afetados,
+        base_legal: m.opportunity.base_legal,
+        base_legal_resumo: m.opportunity.base_legal_resumo,
+        requer_contador: m.opportunity.requer_contador,
+        requer_advogado: m.opportunity.requer_advogado
       }))
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
