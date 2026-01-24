@@ -152,6 +152,7 @@ export default function PainelExecutivo() {
         reformData={reformData}
         risks={risks}
         companyName={profile?.empresa || undefined}
+        userId={user?.id}
       />
     </DashboardLayout>
   );

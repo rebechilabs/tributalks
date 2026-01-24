@@ -32,3 +32,9 @@ verify_jwt = false
 
 [functions.analyze-ncm-from-xmls]
 verify_jwt = false
+
+[functions.send-executive-report]
+verify_jwt = false
+
+[functions.send-batch-executive-reports]
+verify_jwt = false

@@ -1,12 +1,14 @@
+import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { FileText, Download, Mail, X, TrendingUp, TrendingDown, AlertTriangle, Wallet, Shield } from "lucide-react";
+import { FileText, Download, Mail, X, TrendingUp, TrendingDown, AlertTriangle, Wallet, Shield, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import logoTributech from "@/assets/logo-tributech.png";
 import type { ThermometerData, ProjetoTributario, ReformImpactData, RiskItem } from "@/hooks/useExecutiveData";
 
@@ -18,6 +20,7 @@ interface ExecutiveReportPreviewProps {
   reformData: ReformImpactData | null;
   risks: RiskItem[];
   companyName?: string;
+  userId?: string;
 }
 
 function formatCurrency(value: number): string {
@@ -82,7 +85,9 @@ export function ExecutiveReportPreview({
   reformData,
   risks,
   companyName,
+  userId,
 }: ExecutiveReportPreviewProps) {
+  const [isSending, setIsSending] = useState(false);
   const currentMonth = format(new Date(), "MMMM 'de' yyyy", { locale: ptBR });
   const currentDate = format(new Date(), "dd/MM/yyyy");
 
@@ -94,21 +99,76 @@ export function ExecutiveReportPreview({
     });
   };
 
-  const handleSendEmail = () => {
-    // Log data for future email integration
-    console.log('Report data for email:', {
-      month: currentMonth,
-      thermometerData,
-      topProjects,
-      reformData,
-      risks,
-      companyName,
-    });
+  const handleSendEmail = async () => {
+    if (!userId) {
+      toast({
+        title: "Erro",
+        description: "Usuário não identificado. Por favor, faça login novamente.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSending(true);
     
-    toast({
-      title: "Em desenvolvimento",
-      description: "O envio por email estará disponível em breve.",
-    });
+    try {
+      // Get current month in YYYY-MM format
+      const now = new Date();
+      const referenceMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      
+      const { data, error } = await supabase.functions.invoke('send-executive-report', {
+        body: {
+          userId,
+          referenceMonth,
+          reportData: {
+            thermometerData,
+            topProjects,
+            reformData,
+            risks,
+            companyName,
+          }
+        }
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data?.error) {
+        // Check if it's a configuration error
+        if (data.error.includes('not configured') || data.error.includes('RESEND_API_KEY')) {
+          toast({
+            title: "Configuração pendente",
+            description: "O serviço de email ainda não foi configurado. Entre em contato com o suporte.",
+            variant: "destructive",
+          });
+        } else if (data.error.includes('No recipients')) {
+          toast({
+            title: "Destinatários não configurados",
+            description: "Configure os emails de CEO, CFO ou contador no perfil da empresa.",
+            variant: "destructive",
+          });
+        } else {
+          throw new Error(data.error);
+        }
+        return;
+      }
+      
+      toast({
+        title: "Relatório enviado!",
+        description: `Enviado para ${data.recipients?.join(', ') || 'os destinatários configurados'}.`,
+      });
+      
+    } catch (error) {
+      console.error('Error sending report:', error);
+      toast({
+        title: "Erro ao enviar",
+        description: error instanceof Error ? error.message : "Não foi possível enviar o relatório. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const gradeColors: Record<string, string> = {
@@ -309,9 +369,17 @@ export function ExecutiveReportPreview({
             <X className="w-4 h-4 mr-2" />
             Fechar
           </Button>
-          <Button variant="outline" onClick={handleSendEmail}>
-            <Mail className="w-4 h-4 mr-2" />
-            Enviar por email
+          <Button 
+            variant="outline" 
+            onClick={handleSendEmail}
+            disabled={isSending}
+          >
+            {isSending ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Mail className="w-4 h-4 mr-2" />
+            )}
+            {isSending ? 'Enviando...' : 'Enviar por email'}
           </Button>
           <Button onClick={handleDownloadPdf} disabled>
             <Download className="w-4 h-4 mr-2" />
