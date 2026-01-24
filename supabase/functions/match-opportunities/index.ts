@@ -62,6 +62,54 @@ interface CompanyProfile {
   cnae_secundarios?: string[];
   tipo_societario?: string;
   atividades_diferentes_tributacao?: boolean;
+  
+  // Agro-specific fields
+  tem_area_preservacao?: boolean;
+  comercializa_commodities?: boolean;
+  compra_insumos?: boolean;
+  investe_maquinas?: boolean;
+  tipo_cooperativa?: boolean;
+  
+  // Energia-specific fields
+  tem_geracao_solar?: boolean;
+  compra_equipamento_solar?: boolean;
+  importa_equipamento_solar?: boolean;
+  projeto_infraestrutura?: boolean;
+  
+  // Saúde-specific fields
+  tem_internacao_ou_procedimento_complexo?: boolean;
+  comercializa_medicamentos?: boolean;
+  compra_equipamentos_medicos?: boolean;
+  investe_pd_saude?: boolean;
+  
+  // Construção-specific fields
+  incorporacao_imobiliaria?: boolean;
+  programa_mcmv?: boolean;
+  folha_alta_construcao?: boolean;
+  
+  // Transporte-specific fields
+  transporte_cargas?: boolean;
+  transporte_passageiros?: boolean;
+  operacao_interestadual?: boolean;
+  investe_frota?: boolean;
+  frete_exportacao?: boolean;
+  
+  // Alimentação-specific fields
+  prepara_alimentos?: boolean;
+  recebe_gorjetas?: boolean;
+  usa_plataformas_delivery?: boolean;
+  tem_bar?: boolean;
+  
+  // E-commerce-specific fields
+  centro_distribuicao_incentivado?: boolean;
+  centro_distribuicao_zfm?: boolean;
+  vende_produtos_monofasicos?: boolean;
+  
+  // Educação-specific fields
+  escola_regular?: boolean;
+  cursos_livres?: boolean;
+  fins_lucrativos?: boolean;
+  investe_tecnologia_educacional?: boolean;
 }
 
 interface TaxOpportunity {
@@ -140,26 +188,53 @@ const FIELD_LABELS: Record<string, string> = {
   simples_nacional: 'Simples Nacional',
   folha_alta: 'Folha de pagamento alta',
   operacao_interestadual: 'Opera entre estados',
-  prepara_alimentos: 'Prepara alimentos',
-  recebe_gorjetas: 'Recebe gorjetas',
-  usa_plataformas_delivery: 'Usa plataformas de delivery',
-  centro_distribuicao_zfm: 'CD na Zona Franca de Manaus',
-  vende_produtos_monofasicos: 'Vende produtos monofásicos',
-  fins_lucrativos: 'Fins lucrativos',
-  investe_tecnologia: 'Investe em tecnologia',
-  projeto_infraestrutura: 'Projeto de infraestrutura',
-  compra_insumos: 'Compra insumos',
-  investe_maquinas: 'Investe em máquinas',
+  
+  // Agro fields
   tem_area_preservacao: 'Tem área de preservação',
   comercializa_commodities: 'Comercializa commodities',
-  comercializa_medicamentos: 'Comercializa medicamentos',
-  compra_equipamentos_medicos: 'Compra equipamentos médicos',
-  tem_internacao_ou_procedimento_complexo: 'Tem internação ou procedimento complexo',
-  investe_pd: 'Investe em P&D',
-  investe_frota: 'Investe em frota',
+  compra_insumos: 'Compra insumos agrícolas',
+  investe_maquinas: 'Investe em máquinas/tratores',
+  tipo_cooperativa: 'É cooperativa',
+  
+  // Energia fields
   tem_geracao_solar: 'Tem geração solar',
   compra_equipamento_solar: 'Compra equipamento solar',
   importa_equipamento_solar: 'Importa equipamento solar',
+  projeto_infraestrutura: 'Projeto de infraestrutura energética',
+  
+  // Saúde fields
+  tem_internacao_ou_procedimento_complexo: 'Tem internação/procedimento complexo',
+  comercializa_medicamentos: 'Comercializa medicamentos',
+  compra_equipamentos_medicos: 'Compra equipamentos médicos',
+  investe_pd_saude: 'Investe em P&D na saúde',
+  
+  // Construção fields
+  incorporacao_imobiliaria: 'Incorporação imobiliária',
+  programa_mcmv: 'Programa Minha Casa Minha Vida',
+  folha_alta_construcao: 'Folha alta em construção',
+  
+  // Transporte fields
+  transporte_cargas: 'Transporte de cargas',
+  transporte_passageiros: 'Transporte de passageiros',
+  investe_frota: 'Investe em frota',
+  frete_exportacao: 'Frete de exportação',
+  
+  // Alimentação fields
+  prepara_alimentos: 'Prepara alimentos',
+  recebe_gorjetas: 'Recebe gorjetas',
+  usa_plataformas_delivery: 'Usa plataformas de delivery',
+  tem_bar: 'Tem bar/bebidas alcoólicas',
+  
+  // E-commerce fields
+  centro_distribuicao_incentivado: 'CD em estado com incentivo',
+  centro_distribuicao_zfm: 'CD na Zona Franca de Manaus',
+  vende_produtos_monofasicos: 'Vende produtos monofásicos',
+  
+  // Educação fields
+  escola_regular: 'Escola de educação básica/superior',
+  cursos_livres: 'Cursos livres/treinamentos',
+  fins_lucrativos: 'Instituição com fins lucrativos',
+  investe_tecnologia_educacional: 'Investe em tecnologia educacional',
 };
 
 function getFieldLabel(field: string): string {
@@ -176,22 +251,88 @@ function getDerivedValues(profile: CompanyProfile): Record<string, unknown> {
   derived.folha_alta = folhaPercent >= 25;
   
   // Regime shortcuts
-  derived.lucro_real = profile.regime_tributario === 'lucro_real';
-  derived.lucro_presumido = profile.regime_tributario === 'lucro_presumido';
+  derived.lucro_real = profile.regime_tributario === 'lucro_real' || profile.regime_tributario === 'real';
+  derived.lucro_presumido = profile.regime_tributario === 'lucro_presumido' || profile.regime_tributario === 'presumido';
   derived.simples_nacional = profile.regime_tributario === 'simples';
   
-  // Derived activity flags
-  derived.operacao_interestadual = profile.opera_outros_estados || profile.opera_todo_brasil;
-  derived.prepara_alimentos = profile.setor === 'alimentacao';
-  derived.recebe_gorjetas = profile.setor === 'alimentacao';
-  derived.usa_plataformas_delivery = profile.setor === 'alimentacao' && profile.tem_ecommerce;
-  derived.centro_distribuicao_zfm = profile.zona_franca;
+  // Derived activity flags - general
+  derived.operacao_interestadual = profile.opera_outros_estados || profile.opera_todo_brasil || profile.operacao_interestadual;
+  derived.centro_distribuicao_zfm = profile.zona_franca || profile.centro_distribuicao_zfm;
   derived.vende_produtos_monofasicos = profile.tem_produtos_monofasicos || 
     profile.vende_combustiveis || profile.vende_bebidas || 
     profile.vende_cosmeticos || profile.vende_farmacos ||
-    profile.vende_autopecas || profile.vende_pneus;
+    profile.vende_autopecas || profile.vende_pneus ||
+    profile.vende_produtos_monofasicos;
   
-  // Determine atividade based on setor
+  // Sector-specific derived flags
+  // Agro
+  if (profile.setor === 'agro') {
+    derived.compra_insumos = profile.compra_insumos;
+    derived.investe_maquinas = profile.investe_maquinas;
+    derived.tipo_cooperativa = profile.tipo_cooperativa;
+    derived.comercializa_commodities = profile.comercializa_commodities;
+  }
+  
+  // Energia
+  if (profile.setor === 'energia') {
+    derived.tem_geracao_solar = profile.tem_geracao_solar;
+    derived.compra_equipamento_solar = profile.compra_equipamento_solar;
+    derived.importa_equipamento_solar = profile.importa_equipamento_solar;
+    derived.projeto_infraestrutura = profile.projeto_infraestrutura;
+  }
+  
+  // Saúde
+  if (profile.setor === 'saude') {
+    derived.tem_internacao_ou_procedimento_complexo = profile.tem_internacao_ou_procedimento_complexo;
+    derived.comercializa_medicamentos = profile.comercializa_medicamentos || profile.vende_farmacos;
+    derived.compra_equipamentos_medicos = profile.compra_equipamentos_medicos;
+    derived.investe_pd = profile.investe_pd_saude || profile.tem_atividade_pd;
+  }
+  
+  // Construção
+  if (profile.setor === 'construcao') {
+    derived.incorporacao_imobiliaria = profile.incorporacao_imobiliaria;
+    derived.programa_mcmv = profile.programa_mcmv;
+    derived.folha_alta = profile.folha_alta_construcao || folhaPercent >= 25;
+  }
+  
+  // Transporte
+  if (profile.setor === 'transporte') {
+    derived.transporte_cargas = profile.transporte_cargas;
+    derived.transporte_passageiros = profile.transporte_passageiros;
+    derived.investe_frota = profile.investe_frota;
+    derived.frete_exportacao = profile.frete_exportacao;
+  }
+  
+  // Alimentação
+  if (profile.setor === 'alimentacao') {
+    derived.prepara_alimentos = profile.prepara_alimentos !== false; // Default true for food sector
+    derived.recebe_gorjetas = profile.recebe_gorjetas;
+    derived.usa_plataformas_delivery = profile.usa_plataformas_delivery || profile.tem_ecommerce;
+    derived.tem_bar = profile.tem_bar;
+  }
+  
+  // E-commerce
+  if (profile.setor === 'ecommerce' || profile.tem_ecommerce) {
+    derived.tem_ecommerce = true;
+    derived.centro_distribuicao_incentivado = profile.centro_distribuicao_incentivado;
+  }
+  
+  // Educação
+  if (profile.setor === 'educacao') {
+    derived.escola_regular = profile.escola_regular;
+    derived.cursos_livres = profile.cursos_livres;
+    derived.fins_lucrativos = profile.fins_lucrativos !== false; // Default true
+    derived.investe_tecnologia = profile.investe_tecnologia_educacional;
+    // Non-profit education institutions may be tax-exempt
+    derived.imunidade_educacional = profile.fins_lucrativos === false;
+  }
+  
+  // Cross-sector derived values
+  derived.investe_pd = profile.tem_atividade_pd || profile.investe_em_inovacao || profile.investe_pd_saude;
+  derived.investe_tecnologia = profile.investe_tecnologia_educacional || profile.tem_atividade_pd;
+  
+  // Determine atividade based on setor and specific flags
   const atividadeMap: Record<string, string[]> = {
     'agro': ['producao_rural', 'pecuaria', 'agricultura'],
     'saude': ['clinica', 'hospital', 'laboratorio', 'farmacia'],
@@ -203,11 +344,23 @@ function getDerivedValues(profile: CompanyProfile): Record<string, unknown> {
     'servicos': ['consultoria', 'tecnologia', 'software'],
     'industria': ['fabricacao', 'manufatura', 'transformacao'],
     'energia': ['geracao_solar', 'geracao_energia'],
+    'ecommerce': ['loja_virtual', 'marketplace', 'varejo_online'],
   };
-  derived.atividades = atividadeMap[profile.setor || ''] || [];
+  
+  const atividades = [...(atividadeMap[profile.setor || ''] || [])];
+  
+  // Add specific activities based on sector flags
+  if (profile.incorporacao_imobiliaria) atividades.push('incorporacao_imobiliaria');
+  if (profile.transporte_cargas) atividades.push('transporte_cargas');
+  if (profile.transporte_passageiros) atividades.push('transporte_passageiros');
+  if (profile.escola_regular) atividades.push('escola');
+  if (profile.cursos_livres) atividades.push('cursos_livres');
+  if (profile.tipo_cooperativa) atividades.push('cooperativa');
+  
+  derived.atividades = atividades;
   
   // Add canal
-  if (profile.tem_ecommerce) {
+  if (profile.tem_ecommerce || profile.setor === 'ecommerce') {
     derived.canal = 'ecommerce';
   } else if (profile.tem_loja_fisica) {
     derived.canal = 'loja_fisica';
@@ -222,7 +375,7 @@ function getDerivedValues(profile: CompanyProfile): Record<string, unknown> {
   // Tipo empresa
   if (profile.tem_holding) {
     derived.tipo_empresa = 'holding';
-  } else if (profile.tipo_societario === 'cooperativa') {
+  } else if (profile.tipo_societario === 'cooperativa' || profile.tipo_cooperativa) {
     derived.tipo_empresa = 'cooperativa';
   }
   
@@ -239,6 +392,7 @@ function getDerivedValues(profile: CompanyProfile): Record<string, unknown> {
     'educacao': ['educacao', 'ensino', 'treinamento'],
     'energia': ['energia', 'energia_solar', 'geracao'],
     'tecnologia': ['tecnologia', 'ti', 'software'],
+    'ecommerce': ['ecommerce', 'comercio_eletronico', 'loja_virtual'],
   };
   derived.setores = setorAliases[profile.setor || ''] || [profile.setor];
   
