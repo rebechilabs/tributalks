@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { OpportunityDetailCard } from "@/components/opportunities/OpportunityDetailCard";
 import { OpportunitySummary } from "@/components/opportunities/OpportunitySummary";
+import { OpportunityDetailModal } from "@/components/opportunities/OpportunityDetailModal";
 import { 
   Loader2, 
   Target,
@@ -36,13 +37,24 @@ interface Opportunity {
   match_reasons: string[];
   economia_anual_min: number;
   economia_anual_max: number;
+  economia_mensal_min?: number;
+  economia_mensal_max?: number;
   complexidade: string;
   tempo_implementacao?: string;
   risco_fiscal?: string;
+  risco_descricao?: string;
   quick_win: boolean;
   alto_impacto: boolean;
   prioridade: number;
   tributos_afetados: string[];
+  base_legal?: string;
+  base_legal_resumo?: string;
+  link_legislacao?: string;
+  exemplo_pratico?: string;
+  faq?: Array<{ pergunta: string; resposta: string }>;
+  passos_implementacao?: string[];
+  requer_contador?: boolean;
+  requer_advogado?: boolean;
 }
 
 interface CategorySummary {
@@ -66,6 +78,8 @@ interface MatchResult {
     porte?: string;
     regime?: string;
     qtd_cnpjs?: number;
+    faturamento_mensal?: number;
+    percentual_produtos?: number;
   };
 }
 
@@ -103,10 +117,11 @@ export default function Oportunidades() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
   const [result, setResult] = useState<MatchResult | null>(null);
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const loadOpportunities = async (refresh = false) => {
     if (!user?.id) return;
-    
     if (refresh) {
       setIsRefreshing(true);
     } else {
@@ -168,14 +183,36 @@ export default function Oportunidades() {
   const outras = result?.opportunities?.filter(o => !o.quick_win && !o.alto_impacto) || [];
 
   const handleViewDetails = (id: string) => {
-    toast({
-      title: "Em desenvolvimento",
-      description: "Página de detalhes em breve.",
-    });
+    const opp = result?.opportunities?.find(o => o.id === id);
+    if (opp) {
+      setSelectedOpportunity(opp);
+      setIsModalOpen(true);
+    }
   };
 
   const handleImplement = (id: string) => {
-    navigate('/consultorias');
+    const opp = result?.opportunities?.find(o => o.id === id);
+    if (opp) {
+      setSelectedOpportunity(opp);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleStatusChange = async (id: string, status: string) => {
+    if (!user?.id) return;
+    
+    try {
+      await supabase
+        .from('company_opportunities')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('opportunity_id', id)
+        .eq('user_id', user.id);
+      
+      // Refresh the list
+      loadOpportunities(true);
+    } catch (error) {
+      console.error('Error updating status:', error);
+    }
   };
 
   const getProfileSummary = () => {
@@ -345,8 +382,8 @@ export default function Oportunidades() {
         {quickWins.length > 0 && (
           <section className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Zap className="h-5 w-5 text-green-600" />
+              <div className="p-2 bg-accent rounded-lg">
+                <Zap className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <h2 className="text-xl font-semibold">Quick Wins - Implementação Rápida</h2>
@@ -376,8 +413,8 @@ export default function Oportunidades() {
         {altoImpacto.length > 0 && (
           <section className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-100 rounded-lg">
-                <TrendingUp className="h-5 w-5 text-amber-600" />
+              <div className="p-2 bg-secondary rounded-lg">
+                <TrendingUp className="h-5 w-5 text-secondary-foreground" />
               </div>
               <div>
                 <h2 className="text-xl font-semibold">Alto Impacto - Maior Economia</h2>
@@ -478,6 +515,18 @@ export default function Oportunidades() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Modal de Detalhes */}
+        <OpportunityDetailModal
+          opportunity={selectedOpportunity}
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}
+          profileData={{
+            faturamento_mensal: result?.profile_summary?.faturamento_mensal,
+            percentual_produtos: result?.profile_summary?.percentual_produtos,
+          }}
+          onStatusChange={handleStatusChange}
+        />
       </div>
     </DashboardLayout>
   );
