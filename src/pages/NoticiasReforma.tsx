@@ -2,9 +2,12 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { useAuth } from "@/hooks/useAuth";
+import { usePlanAccess } from "@/hooks/useFeatureAccess";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { 
   Select, 
   SelectContent, 
@@ -32,7 +35,10 @@ import {
   Bot,
   Bell,
   Filter,
-  RefreshCw
+  RefreshCw,
+  Lightbulb,
+  Calendar,
+  ArrowRight
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -53,19 +59,27 @@ interface Noticia {
   data_publicacao: string;
 }
 
+interface Pilula {
+  id: string;
+  titulo: string;
+  conteudo: string;
+  tipo: string;
+}
+
+interface Prazo {
+  id: string;
+  titulo: string;
+  descricao: string | null;
+  data_prazo: string;
+  tipo: string;
+}
+
 interface AlertConfig {
   ativo: boolean;
   setores_filtro: string[];
   regimes_filtro: string[];
   relevancia_minima: string;
 }
-
-const PLAN_HIERARCHY = {
-  'FREE': 0,
-  'BASICO': 1,
-  'PROFISSIONAL': 2,
-  'PREMIUM': 3,
-};
 
 const SETORES = ['Serviços', 'Comércio', 'Indústria', 'Tecnologia', 'Saúde', 'Educação'];
 const REGIMES = ['SIMPLES', 'PRESUMIDO', 'REAL'];
@@ -94,25 +108,33 @@ const getRelevanciaConfig = (relevancia: string) => {
   return relevanciaConfig[relevancia as RelevanciaKey] || relevanciaConfig.MEDIA;
 };
 
+const PILULA_TIPOS: Record<string, { icon: typeof Lightbulb; color: string }> = {
+  fato: { icon: Info, color: 'text-blue-400' },
+  conceito: { icon: Lightbulb, color: 'text-purple-400' },
+  prazo: { icon: Calendar, color: 'text-orange-400' },
+  dica: { icon: Sparkles, color: 'text-green-400' },
+  alerta: { icon: AlertTriangle, color: 'text-red-400' },
+};
+
 export default function Noticias() {
   const { profile, user } = useAuth();
-  const currentPlan = profile?.plano || 'FREE';
-  const userLevel = PLAN_HIERARCHY[currentPlan as keyof typeof PLAN_HIERARCHY] || 0;
+  const { isNavigator, isProfessional } = usePlanAccess();
   
-  const hasAccess = userLevel >= PLAN_HIERARCHY.BASICO;
-  const isPremium = userLevel >= PLAN_HIERARCHY.PREMIUM;
+  const hasAccess = isNavigator;
 
   const [noticias, setNoticias] = useState<Noticia[]>([]);
+  const [pilulaDoDia, setPilulaDoDia] = useState<Pilula | null>(null);
+  const [proximoPrazo, setProximoPrazo] = useState<Prazo | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedNoticia, setSelectedNoticia] = useState<Noticia | null>(null);
   const [lastUpdate, setLastUpdate] = useState<string>('');
 
-  // Filtros (só Premium)
+  // Filtros (só Professional+)
   const [filtroSetor, setFiltroSetor] = useState<string>('todos');
   const [filtroRegime, setFiltroRegime] = useState<string>('todos');
   const [filtroRelevancia, setFiltroRelevancia] = useState<string>('todas');
   
-  // Alertas (só Premium)
+  // Alertas (só Professional+)
   const [alertConfig, setAlertConfig] = useState<AlertConfig>({
     ativo: false,
     setores_filtro: [],
@@ -122,93 +144,121 @@ export default function Noticias() {
 
   useEffect(() => {
     if (hasAccess) {
-      fetchNoticias();
-      if (isPremium) {
+      fetchData();
+      if (isProfessional) {
         fetchAlertConfig();
       }
     }
-  }, [hasAccess, isPremium]);
+  }, [hasAccess, isProfessional]);
+
+  const fetchData = async () => {
+    setLoading(true);
+    
+    // Buscar pílula do dia (rotação ou agendada)
+    const today = new Date().toISOString().split('T')[0];
+    const { data: pilulas } = await supabase
+      .from('pilulas_reforma')
+      .select('*')
+      .eq('ativo', true)
+      .or(`data_exibicao.eq.${today},data_exibicao.is.null`)
+      .limit(1);
+    
+    if (pilulas && pilulas.length > 0) {
+      setPilulaDoDia(pilulas[0]);
+    } else {
+      // Fallback: pegar qualquer pílula ativa
+      const { data: anyPilula } = await supabase
+        .from('pilulas_reforma')
+        .select('*')
+        .eq('ativo', true)
+        .limit(1);
+      if (anyPilula && anyPilula.length > 0) {
+        setPilulaDoDia(anyPilula[0]);
+      }
+    }
+
+    // Buscar próximo prazo
+    const { data: prazos } = await supabase
+      .from('prazos_reforma')
+      .select('*')
+      .eq('ativo', true)
+      .gte('data_prazo', today)
+      .order('data_prazo', { ascending: true })
+      .limit(1);
+    
+    if (prazos && prazos.length > 0) {
+      setProximoPrazo(prazos[0]);
+    }
+
+    // Buscar notícias
+    await fetchNoticias();
+    setLoading(false);
+  };
 
   const fetchNoticias = async () => {
-    setLoading(true);
-    try {
-      let query = supabase
-        .from('noticias_tributarias')
-        .select('*')
-        .eq('publicado', true)
-        .order('data_publicacao', { ascending: false })
-        .limit(20);
+    let query = supabase
+      .from('noticias_tributarias')
+      .select('*')
+      .eq('publicado', true)
+      .order('data_publicacao', { ascending: false })
+      .limit(20);
 
-      // Aplicar filtros apenas para Premium
-      if (isPremium) {
-        if (filtroSetor !== 'todos') {
-          query = query.contains('setores_afetados', [filtroSetor]);
-        }
-        if (filtroRegime !== 'todos') {
-          query = query.contains('regimes_afetados', [filtroRegime]);
-        }
-        if (filtroRelevancia !== 'todas') {
-          query = query.eq('relevancia', filtroRelevancia);
-        }
+    // Aplicar filtros apenas para Professional+
+    if (isProfessional) {
+      if (filtroSetor !== 'todos') {
+        query = query.contains('setores_afetados', [filtroSetor]);
       }
+      if (filtroRegime !== 'todos') {
+        query = query.contains('regimes_afetados', [filtroRegime]);
+      }
+      if (filtroRelevancia !== 'todas') {
+        query = query.eq('relevancia', filtroRelevancia);
+      }
+    }
 
-      const { data, error } = await query;
+    const { data, error } = await query;
 
-      if (error) throw error;
+    if (!error) {
       setNoticias(data || []);
       setLastUpdate(new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
-    } catch (error) {
-      console.error('Erro ao buscar notícias:', error);
-      toast.error('Erro ao carregar notícias');
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchAlertConfig = async () => {
     if (!user) return;
     
-    try {
-      const { data, error } = await supabase
-        .from('alertas_configuracao')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
+    const { data } = await supabase
+      .from('alertas_configuracao')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
 
-      if (data) {
-        setAlertConfig({
-          ativo: data.ativo,
-          setores_filtro: data.setores_filtro || [],
-          regimes_filtro: data.regimes_filtro || [],
-          relevancia_minima: data.relevancia_minima || 'MEDIA'
-        });
-      }
-    } catch (error) {
-      // Ignora erro se não existir configuração
+    if (data) {
+      setAlertConfig({
+        ativo: data.ativo,
+        setores_filtro: data.setores_filtro || [],
+        regimes_filtro: data.regimes_filtro || [],
+        relevancia_minima: data.relevancia_minima || 'MEDIA'
+      });
     }
   };
 
   const handleAlertToggle = async (ativo: boolean) => {
     if (!user) return;
 
-    try {
-      const { error } = await supabase
-        .from('alertas_configuracao')
-        .upsert({
-          user_id: user.id,
-          ativo,
-          setores_filtro: alertConfig.setores_filtro,
-          regimes_filtro: alertConfig.regimes_filtro,
-          relevancia_minima: alertConfig.relevancia_minima
-        });
+    const { error } = await supabase
+      .from('alertas_configuracao')
+      .upsert({
+        user_id: user.id,
+        ativo,
+        setores_filtro: alertConfig.setores_filtro,
+        regimes_filtro: alertConfig.regimes_filtro,
+        relevancia_minima: alertConfig.relevancia_minima
+      });
 
-      if (error) throw error;
-      
+    if (!error) {
       setAlertConfig(prev => ({ ...prev, ativo }));
       toast.success(ativo ? 'Alertas ativados!' : 'Alertas desativados');
-    } catch (error) {
-      console.error('Erro ao salvar configuração:', error);
-      toast.error('Erro ao salvar configuração');
     }
   };
 
@@ -228,42 +278,45 @@ export default function Noticias() {
     });
   };
 
+  const getDaysUntil = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    return Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  };
+
   // Tela bloqueada para FREE
   if (!hasAccess) {
     return (
-      <DashboardLayout title="Notícias Tributárias">
+      <DashboardLayout title="Notícias da Reforma">
         <div className="flex items-center justify-center min-h-[60vh] p-6">
           <div className="max-w-md text-center">
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-6">
               <Lock className="w-8 h-8 text-muted-foreground" />
             </div>
             <h2 className="text-2xl font-bold text-foreground mb-4">
-              Acompanhe as mudanças que afetam sua empresa
+              Acompanhe a Reforma Tributária
             </h2>
             <p className="text-muted-foreground mb-6">
-              Notícias tributárias atualizadas 3x ao dia, filtradas e resumidas por IA.
+              Feed de notícias atualizado 3x ao dia, pílulas diárias de conhecimento e calendário de prazos 2026-2033.
             </p>
             <ul className="text-left text-muted-foreground space-y-3 mb-8">
               <li className="flex items-start gap-3">
+                <Lightbulb className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                <span>Pílula do dia: conceitos da reforma explicados</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Calendar className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                <span>Calendário: prazos que afetam sua empresa</span>
+              </li>
+              <li className="flex items-start gap-3">
                 <Newspaper className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <span>DOU, Receita Federal, PGFN, Confaz</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Briefcase className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <span>Jota, ConJur, Valor Econômico</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Info className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <span>Resumo executivo + ação recomendada</span>
+                <span>Notícias filtradas e resumidas por IA</span>
               </li>
             </ul>
-            <p className="text-sm text-muted-foreground mb-4">
-              Disponível a partir do plano Básico.
-            </p>
             <Link to="/#planos">
               <Button className="w-full">
                 <Sparkles className="w-4 h-4 mr-2" />
-                Fazer upgrade — R$99/mês
+                Upgrade para Navigator — R$ 697/mês
               </Button>
             </Link>
           </div>
@@ -273,13 +326,83 @@ export default function Noticias() {
   }
 
   return (
-    <DashboardLayout title="Notícias Tributárias">
+    <DashboardLayout title="Notícias da Reforma">
       <div className="p-6 max-w-4xl mx-auto">
+        {/* Pílula do Dia */}
+        {pilulaDoDia && (
+          <Card className="mb-6 border-primary/30 bg-primary/5">
+            <CardContent className="py-5">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                  {(() => {
+                    const config = PILULA_TIPOS[pilulaDoDia.tipo] || PILULA_TIPOS.dica;
+                    const Icon = config.icon;
+                    return <Icon className={cn("w-5 h-5", config.color)} />;
+                  })()}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-medium text-primary uppercase tracking-wide">
+                      💡 Pílula do Dia
+                    </span>
+                    <Badge variant="secondary" className="text-xs capitalize">
+                      {pilulaDoDia.tipo}
+                    </Badge>
+                  </div>
+                  <h3 className="font-semibold text-foreground">{pilulaDoDia.titulo}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">{pilulaDoDia.conteudo}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Próximo Prazo */}
+        {proximoPrazo && (
+          <Card className="mb-6 border-orange-500/30 bg-orange-500/5">
+            <CardContent className="py-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center flex-shrink-0">
+                    <Clock className="w-5 h-5 text-orange-400" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-medium text-orange-400 uppercase tracking-wide">
+                        ⏰ Próximo Prazo
+                      </span>
+                    </div>
+                    <h3 className="font-semibold text-foreground">{proximoPrazo.titulo}</h3>
+                    {proximoPrazo.descricao && (
+                      <p className="text-sm text-muted-foreground mt-1">{proximoPrazo.descricao}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-orange-400">
+                    {getDaysUntil(proximoPrazo.data_prazo)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">dias restantes</p>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-border flex justify-end">
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/dashboard/timeline-reforma">
+                    Ver calendário completo
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
+            <h2 className="text-lg font-semibold text-foreground">📰 Notícias Recentes</h2>
             <p className="text-muted-foreground text-sm">
-              Atualizadas 3x ao dia · Última atualização: {lastUpdate || '--:--'}
+              Atualizado: {lastUpdate || '--:--'}
             </p>
           </div>
           <Button 
@@ -293,77 +416,79 @@ export default function Noticias() {
           </Button>
         </div>
 
-        {/* Filtros Premium */}
-        {isPremium && (
-          <div className="bg-card border border-border rounded-xl p-5 mb-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Filter className="w-4 h-4 text-primary" />
-              <span className="font-medium text-foreground">Filtros</span>
-              <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">Premium</span>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div>
-                <label className="text-sm text-muted-foreground mb-2 block">Setor</label>
-                <Select value={filtroSetor} onValueChange={(v) => { setFiltroSetor(v); fetchNoticias(); }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos</SelectItem>
-                    {SETORES.map(s => (
-                      <SelectItem key={s} value={s}>{s}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+        {/* Filtros Professional+ */}
+        {isProfessional && (
+          <Card className="mb-6">
+            <CardContent className="pt-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Filter className="w-4 h-4 text-primary" />
+                <span className="font-medium text-foreground">Filtros</span>
+                <Badge className="bg-purple-500/20 text-purple-400 text-xs">Professional</Badge>
               </div>
               
-              <div>
-                <label className="text-sm text-muted-foreground mb-2 block">Regime</label>
-                <Select value={filtroRegime} onValueChange={(v) => { setFiltroRegime(v); fetchNoticias(); }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos</SelectItem>
-                    <SelectItem value="SIMPLES">Simples Nacional</SelectItem>
-                    <SelectItem value="PRESUMIDO">Lucro Presumido</SelectItem>
-                    <SelectItem value="REAL">Lucro Real</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <label className="text-sm text-muted-foreground mb-2 block">Relevância</label>
-                <Select value={filtroRelevancia} onValueChange={(v) => { setFiltroRelevancia(v); fetchNoticias(); }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todas" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todas">Todas</SelectItem>
-                    <SelectItem value="ALTA">Alta</SelectItem>
-                    <SelectItem value="MEDIA">Média</SelectItem>
-                    <SelectItem value="BAIXA">Baixa</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Toggle de Alertas */}
-            <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-              <div className="flex items-center gap-3">
-                <Bell className="w-5 h-5 text-primary" />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
-                  <p className="font-medium text-foreground">Alertas por e-mail</p>
-                  <p className="text-sm text-muted-foreground">Receber notícias filtradas por e-mail</p>
+                  <label className="text-sm text-muted-foreground mb-2 block">Setor</label>
+                  <Select value={filtroSetor} onValueChange={(v) => { setFiltroSetor(v); fetchNoticias(); }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todos">Todos</SelectItem>
+                      {SETORES.map(s => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block">Regime</label>
+                  <Select value={filtroRegime} onValueChange={(v) => { setFiltroRegime(v); fetchNoticias(); }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todos">Todos</SelectItem>
+                      <SelectItem value="SIMPLES">Simples Nacional</SelectItem>
+                      <SelectItem value="PRESUMIDO">Lucro Presumido</SelectItem>
+                      <SelectItem value="REAL">Lucro Real</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block">Relevância</label>
+                  <Select value={filtroRelevancia} onValueChange={(v) => { setFiltroRelevancia(v); fetchNoticias(); }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Todas" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todas">Todas</SelectItem>
+                      <SelectItem value="ALTA">Alta</SelectItem>
+                      <SelectItem value="MEDIA">Média</SelectItem>
+                      <SelectItem value="BAIXA">Baixa</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-              <Switch 
-                checked={alertConfig.ativo} 
-                onCheckedChange={handleAlertToggle}
-              />
-            </div>
-          </div>
+
+              {/* Toggle de Alertas */}
+              <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Bell className="w-5 h-5 text-primary" />
+                  <div>
+                    <p className="font-medium text-foreground">Alertas por e-mail</p>
+                    <p className="text-sm text-muted-foreground">Receber notícias filtradas por e-mail</p>
+                  </div>
+                </div>
+                <Switch 
+                  checked={alertConfig.ativo} 
+                  onCheckedChange={handleAlertToggle}
+                />
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Lista de Notícias */}
@@ -380,7 +505,7 @@ export default function Noticias() {
         ) : noticias.length === 0 ? (
           <div className="text-center py-12">
             <Newspaper className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">Nenhuma notícia encontrada com os filtros selecionados.</p>
+            <p className="text-muted-foreground">Nenhuma notícia encontrada.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -419,11 +544,6 @@ export default function Noticias() {
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Briefcase className="w-4 h-4" />
                     <span>{noticia.setores_afetados?.join(', ') || 'Todos os setores'}</span>
-                    <span className="text-border">·</span>
-                    <span>{noticia.regimes_afetados?.map(r => {
-                      const labels: Record<string, string> = { SIMPLES: 'Simples', PRESUMIDO: 'Presumido', REAL: 'Real' };
-                      return labels[r] || r;
-                    }).join(', ') || 'Todos os regimes'}</span>
                   </div>
                 </div>
               );
@@ -431,24 +551,26 @@ export default function Noticias() {
           </div>
         )}
 
-        {/* CTA Upgrade para não-Premium */}
-        {!isPremium && (
-          <div className="mt-8 bg-card border border-primary/30 rounded-xl p-6 text-center">
-            <Bell className="w-8 h-8 text-primary mx-auto mb-3" />
-            <h3 className="font-semibold text-foreground mb-2">
-              Quer receber alertas personalizados por e-mail?
-            </h3>
-            <p className="text-muted-foreground text-sm mb-4">
-              No plano Premium você configura filtros por setor e regime,
-              e nunca perde uma notícia importante.
-            </p>
-            <Link to="/#planos">
-              <Button>
-                <Sparkles className="w-4 h-4 mr-2" />
-                Upgrade para Premium — R$500/mês
-              </Button>
-            </Link>
-          </div>
+        {/* CTA Upgrade para não-Professional */}
+        {!isProfessional && (
+          <Card className="mt-8 border-primary/30">
+            <CardContent className="py-6 text-center">
+              <Bell className="w-8 h-8 text-primary mx-auto mb-3" />
+              <h3 className="font-semibold text-foreground mb-2">
+                Quer filtros avançados e alertas por e-mail?
+              </h3>
+              <p className="text-muted-foreground text-sm mb-4">
+                No plano Professional você configura filtros por setor e regime,
+                e nunca perde uma notícia importante.
+              </p>
+              <Link to="/#planos">
+                <Button>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Upgrade para Professional — R$ 2.497/mês
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
         )}
       </div>
 

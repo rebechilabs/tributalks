@@ -28,7 +28,7 @@ import TribuBot from "./pages/TribuBot";
 import Comunidade from "./pages/Comunidade";
 import Consultorias from "./pages/Consultorias";
 import Configuracoes from "./pages/Configuracoes";
-import Noticias from "./pages/Noticias";
+import NoticiasReforma from "./pages/NoticiasReforma";
 import AdminNoticias from "./pages/AdminNoticias";
 import ImportarXML from "./pages/ImportarXML";
 import XMLResultados from "./pages/XMLResultados";
@@ -39,6 +39,8 @@ import ScoreTributario from "./pages/ScoreTributario";
 import PerfilEmpresa from "./pages/PerfilEmpresa";
 import Oportunidades from "./pages/Oportunidades";
 import CbsIbsNcm from "./pages/CbsIbsNcm";
+import TimelineReforma from "./pages/TimelineReforma";
+
 // Calculadoras
 import SplitPayment from "./pages/calculadora/SplitPayment";
 import ComparativoRegimes from "./pages/calculadora/ComparativoRegimes";
@@ -46,6 +48,12 @@ import CalculadoraRTC from "./pages/calculadora/CalculadoraRTC";
 
 // Painel Executivo
 import PainelExecutivo from "./pages/PainelExecutivo";
+
+// Admin
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminPilulas from "./pages/admin/AdminPilulas";
+import AdminPrazos from "./pages/admin/AdminPrazos";
+import AdminUsuarios from "./pages/admin/AdminUsuarios";
 
 const queryClient = new QueryClient();
 
@@ -98,7 +106,15 @@ const App = () => (
               path="/noticias" 
               element={
                 <ProtectedRoute>
-                  <Noticias />
+                  <NoticiasReforma />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/timeline-reforma" 
+              element={
+                <ProtectedRoute>
+                  <TimelineReforma />
                 </ProtectedRoute>
               } 
             />
@@ -252,6 +268,38 @@ const App = () => (
             />
 
             {/* Admin */}
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/pilulas" 
+              element={
+                <ProtectedRoute>
+                  <AdminPilulas />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/prazos" 
+              element={
+                <ProtectedRoute>
+                  <AdminPrazos />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/usuarios" 
+              element={
+                <ProtectedRoute>
+                  <AdminUsuarios />
+                </ProtectedRoute>
+              } 
+            />
             <Route 
               path="/admin/noticias" 
               element={
