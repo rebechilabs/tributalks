@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Check, Zap } from "lucide-react";
+import { ArrowRight, Check, Navigation, MapPin, Route } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export function HeroSection() {
@@ -25,33 +25,34 @@ export function HeroSection() {
           {/* Announcement Badge */}
           <div className="flex justify-center mb-6 animate-fade-in-up">
             <Badge variant="outline" className="px-4 py-2 text-sm border-primary/50">
-              <Zap className="w-4 h-4 mr-2 text-primary" />
-              Novo: Oportunidades Fiscais Inteligentes + Score Tributário
+              <Navigation className="w-4 h-4 mr-2 text-primary" />
+              Guia completo para a transição 2026-2033
             </Badge>
           </div>
 
           {/* Main Heading */}
           <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold text-foreground mb-6 animate-fade-in-up leading-tight">
-            Inteligência Tributária para
+            O <span className="text-primary">GPS</span> da
             <br />
-            Empresas acima de{" "}
-            <span className="text-primary">R$1M/mês</span>
+            Reforma Tributária
           </h1>
 
           {/* Subheading */}
           <p className="text-lg md:text-xl text-muted-foreground mb-6 max-w-2xl mx-auto animate-fade-in-up animation-delay-100">
-            12 ferramentas que mostram o impacto real das decisões
-            tributárias no seu caixa.{" "}
-            <span className="text-foreground font-medium">Em minutos, não em semanas.</span>
+            Saiba exatamente quanto vai pagar, quando, e o que fazer para se preparar.{" "}
+            <span className="text-foreground font-medium">
+              Diagnóstico automatizado + simuladores + conteúdo diário.
+            </span>
           </p>
 
           {/* Feature Pills */}
           <div className="flex flex-wrap items-center justify-center gap-2 mb-10 animate-fade-in-up animation-delay-150">
             {[
-              "Oportunidades Fiscais",
+              "Simulador Split Payment",
+              "Timeline 2026-2033",
+              "Comparativo de Regimes",
+              "Notícias da Reforma",
               "Score Tributário",
-              "Radar de Créditos",
-              "Calculadora RTC",
             ].map((feature) => (
               <span 
                 key={feature}
@@ -83,19 +84,19 @@ export function HeroSection() {
             </Button>
           </div>
 
-          {/* Trust Badges */}
+          {/* Value Props */}
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground animate-fade-in-up animation-delay-300">
             <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-primary" />
-              <span>Sem cartão</span>
+              <MapPin className="w-4 h-4 text-primary" />
+              <span>Onde você está</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Route className="w-4 h-4 text-primary" />
+              <span>Para onde vai</span>
             </div>
             <div className="flex items-center gap-2">
               <Check className="w-4 h-4 text-primary" />
-              <span>Cancele quando quiser</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-primary" />
-              <span>API oficial da Receita</span>
+              <span>O que fazer</span>
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Check, X, Star, Lightbulb } from "lucide-react";
+import { Check, X, Star, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { CONFIG } from "@/config/site";
@@ -8,91 +8,105 @@ type BillingPeriod = "mensal" | "anual";
 
 interface PlanFeature {
   text: string;
-  included: boolean;
+  included: boolean | "limited";
+  limitText?: string;
 }
 
 interface Plan {
   name: string;
+  description: string;
   priceMonthly: number;
   priceAnnual: number;
   highlighted?: boolean;
   popular?: boolean;
+  isEnterprise?: boolean;
   features: PlanFeature[];
   ctaText: string;
   linkMonthly: string;
   linkAnnual: string;
-  specialNote?: string;
+  cnpjLimit: string;
 }
 
 const plans: Plan[] = [
   {
-    name: "FREE",
+    name: "GRÁTIS",
+    description: "Para experimentar",
     priceMonthly: 0,
     priceAnnual: 0,
+    cnpjLimit: "1 CNPJ",
     features: [
-      { text: "1 simulação/mês", included: true },
-      { text: "Só Comparativo de Regimes", included: true },
-      { text: "Calculadora Oficial da Reforma Tributária", included: true },
-      { text: "TribuBot", included: false },
-      { text: "Notícias Tributárias", included: false },
-      { text: "Relatório PDF", included: false },
-      { text: "Comunidade", included: false },
+      { text: "Score Tributário", included: "limited", limitText: "1x" },
+      { text: "Simulador Split Payment", included: "limited", limitText: "1x" },
+      { text: "Comparativo de Regimes", included: false },
+      { text: "Calculadora RTC (CBS/IBS/IS)", included: false },
+      { text: "Timeline 2026-2033", included: false },
+      { text: "Feed de Notícias da Reforma", included: false },
+      { text: "TribuBot (IA 24/7)", included: false },
     ],
-    ctaText: "Começar",
+    ctaText: "Começar grátis",
     linkMonthly: "/cadastro",
     linkAnnual: "/cadastro",
   },
   {
-    name: "BÁSICO",
-    priceMonthly: 199,
-    priceAnnual: 1990,
+    name: "NAVIGATOR",
+    description: "Para monitorar a reforma",
+    priceMonthly: 697,
+    priceAnnual: 6970,
+    cnpjLimit: "1 CNPJ",
     features: [
-      { text: "Simulações ilimitadas", included: true },
-      { text: "Todas as calculadoras", included: true },
-      { text: "Calculadora Oficial da Reforma Tributária", included: true },
-      { text: "TribuBot 10 msgs/dia", included: true },
-      { text: "Notícias Tributárias", included: true },
-      { text: "Relatório PDF", included: false },
-      { text: "Comunidade", included: false },
+      { text: "Score Tributário", included: true },
+      { text: "Simulador Split Payment", included: true },
+      { text: "Comparativo de Regimes", included: true },
+      { text: "Calculadora RTC (CBS/IBS/IS)", included: true },
+      { text: "Timeline 2026-2033", included: true },
+      { text: "Feed de Notícias + Pílula do Dia", included: true },
+      { text: "TribuBot (IA 24/7)", included: "limited", limitText: "10 msgs/dia" },
     ],
-    ctaText: "Assinar",
-    linkMonthly: CONFIG.STRIPE_PAYMENT_LINKS.BASICO_MENSAL,
-    linkAnnual: CONFIG.STRIPE_PAYMENT_LINKS.BASICO_ANUAL,
+    ctaText: "Assinar Navigator",
+    linkMonthly: CONFIG.STRIPE_PAYMENT_LINKS.NAVIGATOR_MENSAL,
+    linkAnnual: CONFIG.STRIPE_PAYMENT_LINKS.NAVIGATOR_ANUAL,
   },
   {
-    name: "PROFISSIONAL",
-    priceMonthly: 297,
-    priceAnnual: 2970,
+    name: "PROFESSIONAL",
+    description: "Para diagnóstico automatizado",
+    priceMonthly: 2497,
+    priceAnnual: 24970,
     highlighted: true,
     popular: true,
+    cnpjLimit: "3 CNPJs",
     features: [
-      { text: "Simulações ilimitadas", included: true },
-      { text: "Todas as calculadoras", included: true },
-      { text: "Calculadora Oficial da Reforma Tributária", included: true },
-      { text: "TribuBot ilimitado", included: true },
-      { text: "Notícias Tributárias", included: true },
-      { text: "Relatório PDF", included: true },
-      { text: "Comunidade", included: true },
+      { text: "Tudo do Navigator", included: true },
+      { text: "Importador de XMLs", included: true },
+      { text: "Radar de Créditos Fiscais", included: true },
+      { text: "DRE Inteligente", included: true },
+      { text: "Oportunidades Fiscais (37+)", included: true },
+      { text: "Relatórios PDF Profissionais", included: true },
+      { text: "TribuBot ilimitado + Comunidade", included: true },
+      { text: "Alertas de Notícias por Email", included: true },
     ],
-    ctaText: "Assinar",
-    linkMonthly: CONFIG.STRIPE_PAYMENT_LINKS.PROFISSIONAL_MENSAL,
-    linkAnnual: CONFIG.STRIPE_PAYMENT_LINKS.PROFISSIONAL_ANUAL,
+    ctaText: "Assinar Professional",
+    linkMonthly: CONFIG.STRIPE_PAYMENT_LINKS.PROFESSIONAL_MENSAL,
+    linkAnnual: CONFIG.STRIPE_PAYMENT_LINKS.PROFESSIONAL_ANUAL,
   },
   {
-    name: "PREMIUM",
-    priceMonthly: 1997,
-    priceAnnual: 19970,
+    name: "ENTERPRISE",
+    description: "Diagnóstico + Implementação",
+    priceMonthly: 0,
+    priceAnnual: 0,
+    isEnterprise: true,
+    cnpjLimit: "Ilimitado",
     features: [
-      { text: "Tudo do Profissional", included: true },
-      { text: "Calculadora Oficial da Reforma Tributária", included: true },
-      { text: "Filtros e Alertas de Notícias", included: true },
-      { text: "2 consultorias/mês com especialista", included: true },
-      { text: "Prioridade em novos recursos", included: true },
+      { text: "Tudo do Professional", included: true },
+      { text: "Diagnóstico completo por especialista", included: true },
+      { text: "Reuniões mensais de acompanhamento", included: true },
+      { text: "Implementação guiada", included: true },
+      { text: "Análise personalizada por CNPJ", included: true },
+      { text: "Success fee (ganho compartilhado)", included: true },
+      { text: "Suporte prioritário", included: true },
     ],
-    ctaText: "Assinar",
-    linkMonthly: CONFIG.STRIPE_PAYMENT_LINKS.PREMIUM_MENSAL,
-    linkAnnual: CONFIG.STRIPE_PAYMENT_LINKS.PREMIUM_ANUAL,
-    specialNote: "2x 30min = 1h consultoria\nValor de mercado: ~R$1.000\nVocê paga: R$1.997 total",
+    ctaText: "Fale conosco",
+    linkMonthly: CONFIG.STRIPE_PAYMENT_LINKS.ENTERPRISE,
+    linkAnnual: CONFIG.STRIPE_PAYMENT_LINKS.ENTERPRISE,
   },
 ];
 
@@ -107,7 +121,7 @@ export function PricingSection() {
             Escolha seu plano
           </h2>
           <p className="text-muted-foreground text-lg">
-            Comece grátis. Upgrade quando fizer sentido.
+            Comece grátis. Faça upgrade quando fizer sentido para o seu negócio.
           </p>
         </div>
 
@@ -166,35 +180,45 @@ export function PricingSection() {
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-semibold">
                       <Star className="w-3 h-3" />
-                      MAIS POPULAR
+                      MAIS COMPLETO
                     </div>
                   </div>
                 )}
 
                 {/* Plan Header */}
                 <div className="text-center mb-6 pt-2">
-                  <h3 className="text-lg font-bold text-foreground mb-4">
+                  <h3 className="text-lg font-bold text-foreground mb-1">
                     {plan.name}
                   </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {plan.description}
+                  </p>
                   <div className="flex items-baseline justify-center gap-1">
-                    {plan.priceMonthly === 0 ? (
+                    {plan.isEnterprise ? (
+                      <span className="text-2xl font-bold text-foreground">
+                        Sob consulta
+                      </span>
+                    ) : plan.priceMonthly === 0 ? (
                       <span className="text-4xl font-bold text-foreground">
                         R$0
                       </span>
                     ) : (
                       <>
                         <span className="text-4xl font-bold text-foreground">
-                          R${billingPeriod === "mensal" ? price : Math.round(price / 12)}
+                          R${billingPeriod === "mensal" ? price.toLocaleString('pt-BR') : Math.round(price / 12).toLocaleString('pt-BR')}
                         </span>
                         <span className="text-muted-foreground">/mês</span>
                       </>
                     )}
                   </div>
-                  {billingPeriod === "anual" && plan.priceAnnual > 0 && (
+                  {billingPeriod === "anual" && price > 0 && !plan.isEnterprise && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      R${plan.priceAnnual} cobrado anualmente
+                      R${price.toLocaleString('pt-BR')} cobrado anualmente
                     </p>
                   )}
+                  <p className="text-xs text-primary mt-2 font-medium">
+                    {plan.cnpjLimit}
+                  </p>
                 </div>
 
                 {/* Divider */}
@@ -204,8 +228,10 @@ export function PricingSection() {
                 <ul className="space-y-3 mb-6">
                   {plan.features.map((feature) => (
                     <li key={feature.text} className="flex items-start gap-2">
-                      {feature.included ? (
+                      {feature.included === true ? (
                         <Check className="w-5 h-5 text-success flex-shrink-0" />
+                      ) : feature.included === "limited" ? (
+                        <Check className="w-5 h-5 text-warning flex-shrink-0" />
                       ) : (
                         <X className="w-5 h-5 text-muted-foreground/50 flex-shrink-0" />
                       )}
@@ -217,22 +243,15 @@ export function PricingSection() {
                         }
                       >
                         {feature.text}
+                        {feature.limitText && (
+                          <span className="text-xs text-warning ml-1">
+                            ({feature.limitText})
+                          </span>
+                        )}
                       </span>
                     </li>
                   ))}
                 </ul>
-
-                {/* Special Note for Premium */}
-                {plan.specialNote && (
-                  <div className="bg-primary/10 border border-primary/30 rounded-lg p-4 mb-6">
-                    <div className="flex items-start gap-2">
-                      <Lightbulb className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                      <p className="text-xs text-foreground whitespace-pre-line">
-                        {plan.specialNote}
-                      </p>
-                    </div>
-                  </div>
-                )}
 
                 {/* CTA Button */}
                 {isExternal ? (
@@ -253,9 +272,12 @@ export function PricingSection() {
                       className={`w-full ${
                         plan.highlighted
                           ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                          : plan.isEnterprise
+                          ? "bg-secondary text-foreground hover:bg-secondary/80"
                           : "bg-transparent border border-foreground text-foreground hover:bg-foreground hover:text-background"
                       }`}
                     >
+                      {plan.isEnterprise && <MessageCircle className="w-4 h-4 mr-2" />}
                       {plan.ctaText}
                     </Button>
                   </Link>
