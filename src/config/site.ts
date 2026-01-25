@@ -2,11 +2,11 @@ export const CONFIG = {
   STRIPE_PAYMENT_LINKS: {
     FREE: "/cadastro",
     // Navigator - R$697/mês ou R$6.970/ano (2 meses grátis)
-    NAVIGATOR_MENSAL: "https://buy.stripe.com/PLACEHOLDER_NAVIGATOR_MENSAL",
-    NAVIGATOR_ANUAL: "https://buy.stripe.com/PLACEHOLDER_NAVIGATOR_ANUAL",
+    NAVIGATOR_MENSAL: "https://buy.stripe.com/test_aFa8wI3V8e9U7PR9iSbo403",
+    NAVIGATOR_ANUAL: "https://buy.stripe.com/test_fZu9AM63g2rcc67gLkbo404",
     // Professional - R$2.497/mês ou R$24.970/ano (2 meses grátis)
-    PROFESSIONAL_MENSAL: "https://buy.stripe.com/PLACEHOLDER_PROFESSIONAL_MENSAL",
-    PROFESSIONAL_ANUAL: "https://buy.stripe.com/PLACEHOLDER_PROFESSIONAL_ANUAL",
+    PROFESSIONAL_MENSAL: "https://buy.stripe.com/test_aFa9AMfDQ7Lw6LNgLkbo402",
+    PROFESSIONAL_ANUAL: "https://buy.stripe.com/test_dRmdR2ajwd5Q6LNcv4bo400",
     // Enterprise - Sob consulta (não usa Stripe)
     ENTERPRISE: "/contato",
     // Legacy - deprecated, mantendo para compatibilidade
