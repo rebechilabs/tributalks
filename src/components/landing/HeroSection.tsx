@@ -34,7 +34,7 @@ export function HeroSection() {
           <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold text-foreground mb-6 animate-fade-in-up leading-tight">
             O <span className="text-primary">GPS</span> da
             <br />
-            Reforma Tributária
+            <span className="text-primary">Reforma Tributária</span>
           </h1>
 
           {/* Subheading */}
