@@ -1224,34 +1224,43 @@ export type Database = {
           afeta_regimes: string[] | null
           afeta_setores: string[] | null
           ativo: boolean | null
+          base_legal: string | null
           created_at: string | null
           data_prazo: string
           descricao: string | null
           id: string
           tipo: string | null
           titulo: string
+          updated_at: string | null
+          url_referencia: string | null
         }
         Insert: {
           afeta_regimes?: string[] | null
           afeta_setores?: string[] | null
           ativo?: boolean | null
+          base_legal?: string | null
           created_at?: string | null
           data_prazo: string
           descricao?: string | null
           id?: string
           tipo?: string | null
           titulo: string
+          updated_at?: string | null
+          url_referencia?: string | null
         }
         Update: {
           afeta_regimes?: string[] | null
           afeta_setores?: string[] | null
           ativo?: boolean | null
+          base_legal?: string | null
           created_at?: string | null
           data_prazo?: string
           descricao?: string | null
           id?: string
           tipo?: string | null
           titulo?: string
+          updated_at?: string | null
+          url_referencia?: string | null
         }
         Relationships: []
       }

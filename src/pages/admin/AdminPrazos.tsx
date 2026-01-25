@@ -32,7 +32,10 @@ import {
   Trash2,
   Calendar,
   ShieldAlert,
-  Clock
+  Clock,
+  ExternalLink,
+  FileText,
+  Filter
 } from "lucide-react";
 
 interface Prazo {
@@ -43,19 +46,23 @@ interface Prazo {
   tipo: string;
   afeta_regimes: string[];
   afeta_setores: string[];
+  base_legal: string | null;
+  url_referencia: string | null;
   ativo: boolean;
   created_at: string;
 }
 
 const TIPOS_PRAZO = [
-  { value: 'inicio', label: 'Início', color: 'bg-green-500/20 text-green-400' },
-  { value: 'transicao', label: 'Transição', color: 'bg-blue-500/20 text-blue-400' },
-  { value: 'obrigacao', label: 'Obrigação', color: 'bg-orange-500/20 text-orange-400' },
-  { value: 'extincao', label: 'Extinção', color: 'bg-red-500/20 text-red-400' },
+  { value: 'inicio', label: 'Início', color: 'bg-green-500/20 text-green-400 border-green-500/30' },
+  { value: 'transicao', label: 'Transição', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
+  { value: 'obrigacao', label: 'Obrigação', color: 'bg-orange-500/20 text-orange-400 border-orange-500/30' },
+  { value: 'extincao', label: 'Extinção', color: 'bg-red-500/20 text-red-400 border-red-500/30' },
+  { value: 'prazo_final', label: 'Prazo Final', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
 ];
 
 const REGIMES = ['simples', 'presumido', 'real'];
 const SETORES = ['comercio', 'servicos', 'industria'];
+const ANOS = ['2026', '2027', '2028', '2029', '2030', '2031', '2032', '2033'];
 
 export default function AdminPrazos() {
   const { user, loading: authLoading } = useAuth();
@@ -66,6 +73,11 @@ export default function AdminPrazos() {
   const [editingPrazo, setEditingPrazo] = useState<Prazo | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // Filtros
+  const [filtroTipo, setFiltroTipo] = useState<string>('todos');
+  const [filtroRegime, setFiltroRegime] = useState<string>('todos');
+  const [filtroAno, setFiltroAno] = useState<string>('todos');
+
   // Form state
   const [formData, setFormData] = useState({
     titulo: '',
@@ -74,6 +86,8 @@ export default function AdminPrazos() {
     tipo: 'transicao',
     afeta_regimes: [] as string[],
     afeta_setores: [] as string[],
+    base_legal: '',
+    url_referencia: '',
     ativo: true,
   });
 
@@ -105,14 +119,30 @@ export default function AdminPrazos() {
     if (isAdmin) {
       fetchPrazos();
     }
-  }, [isAdmin]);
+  }, [isAdmin, filtroTipo, filtroRegime, filtroAno]);
 
   const fetchPrazos = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    
+    let query = supabase
       .from('prazos_reforma')
       .select('*')
       .order('data_prazo', { ascending: true });
+
+    // Aplicar filtros
+    if (filtroTipo !== 'todos') {
+      query = query.eq('tipo', filtroTipo);
+    }
+    if (filtroRegime !== 'todos') {
+      query = query.contains('afeta_regimes', [filtroRegime]);
+    }
+    if (filtroAno !== 'todos') {
+      const startDate = `${filtroAno}-01-01`;
+      const endDate = `${filtroAno}-12-31`;
+      query = query.gte('data_prazo', startDate).lte('data_prazo', endDate);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       toast.error('Erro ao carregar prazos');
@@ -138,6 +168,8 @@ export default function AdminPrazos() {
       tipo: formData.tipo,
       afeta_regimes: formData.afeta_regimes,
       afeta_setores: formData.afeta_setores,
+      base_legal: formData.base_legal || null,
+      url_referencia: formData.url_referencia || null,
       ativo: formData.ativo,
     };
 
@@ -183,6 +215,20 @@ export default function AdminPrazos() {
     }
   };
 
+  const handleToggleAtivo = async (prazo: Prazo) => {
+    const { error } = await supabase
+      .from('prazos_reforma')
+      .update({ ativo: !prazo.ativo })
+      .eq('id', prazo.id);
+
+    if (error) {
+      toast.error('Erro ao atualizar status');
+    } else {
+      toast.success(prazo.ativo ? 'Prazo desativado' : 'Prazo ativado');
+      fetchPrazos();
+    }
+  };
+
   const openEdit = (prazo: Prazo) => {
     setEditingPrazo(prazo);
     setFormData({
@@ -192,6 +238,8 @@ export default function AdminPrazos() {
       tipo: prazo.tipo || 'transicao',
       afeta_regimes: prazo.afeta_regimes || [],
       afeta_setores: prazo.afeta_setores || [],
+      base_legal: prazo.base_legal || '',
+      url_referencia: prazo.url_referencia || '',
       ativo: prazo.ativo,
     });
     setDialogOpen(true);
@@ -206,6 +254,8 @@ export default function AdminPrazos() {
       tipo: 'transicao',
       afeta_regimes: [],
       afeta_setores: [],
+      base_legal: '',
+      url_referencia: '',
       ativo: true,
     });
   };
@@ -226,6 +276,14 @@ export default function AdminPrazos() {
     const diff = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     return diff;
   };
+
+  const clearFilters = () => {
+    setFiltroTipo('todos');
+    setFiltroRegime('todos');
+    setFiltroAno('todos');
+  };
+
+  const hasActiveFilters = filtroTipo !== 'todos' || filtroRegime !== 'todos' || filtroAno !== 'todos';
 
   if (authLoading || isAdmin === null) {
     return (
@@ -255,13 +313,13 @@ export default function AdminPrazos() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 max-w-4xl">
+      <div className="space-y-6 max-w-5xl">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Prazos da Reforma</h1>
             <p className="text-muted-foreground mt-1">
-              Calendário de marcos 2026-2033
+              Calendário de marcos 2026-2033 • {prazos.length} prazos
             </p>
           </div>
           
@@ -275,7 +333,7 @@ export default function AdminPrazos() {
                 Novo Prazo
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
                   {editingPrazo ? 'Editar Prazo' : 'Novo Prazo'}
@@ -289,7 +347,7 @@ export default function AdminPrazos() {
                     value={formData.titulo}
                     onChange={(e) => setFormData(prev => ({ ...prev, titulo: e.target.value }))}
                     placeholder="Ex: CBS entra em vigor"
-                    maxLength={200}
+                    maxLength={300}
                   />
                 </div>
 
@@ -331,6 +389,26 @@ export default function AdminPrazos() {
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Base Legal</Label>
+                  <Input
+                    value={formData.base_legal}
+                    onChange={(e) => setFormData(prev => ({ ...prev, base_legal: e.target.value }))}
+                    placeholder="Ex: LC 214/2025, Art. 15"
+                    maxLength={200}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>URL de Referência</Label>
+                  <Input
+                    type="url"
+                    value={formData.url_referencia}
+                    onChange={(e) => setFormData(prev => ({ ...prev, url_referencia: e.target.value }))}
+                    placeholder="https://..."
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -390,6 +468,68 @@ export default function AdminPrazos() {
           </Dialog>
         </div>
 
+        {/* Filtros */}
+        <Card>
+          <CardContent className="pt-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Filter className="w-4 h-4 text-primary" />
+              <span className="font-medium text-foreground">Filtros</span>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs">
+                  Limpar filtros
+                </Button>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="text-sm text-muted-foreground mb-2 block">Tipo</label>
+                <Select value={filtroTipo} onValueChange={setFiltroTipo}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    {TIPOS_PRAZO.map(t => (
+                      <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="text-sm text-muted-foreground mb-2 block">Regime</label>
+                <Select value={filtroRegime} onValueChange={setFiltroRegime}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    <SelectItem value="simples">Simples Nacional</SelectItem>
+                    <SelectItem value="presumido">Lucro Presumido</SelectItem>
+                    <SelectItem value="real">Lucro Real</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="text-sm text-muted-foreground mb-2 block">Ano</label>
+                <Select value={filtroAno} onValueChange={setFiltroAno}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    {ANOS.map(ano => (
+                      <SelectItem key={ano} value={ano}>{ano}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Lista de Prazos */}
         {loading ? (
           <div className="flex items-center justify-center h-32">
@@ -399,7 +539,9 @@ export default function AdminPrazos() {
           <Card>
             <CardContent className="py-12 text-center">
               <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Nenhum prazo cadastrado.</p>
+              <p className="text-muted-foreground">
+                {hasActiveFilters ? 'Nenhum prazo encontrado com os filtros selecionados.' : 'Nenhum prazo cadastrado.'}
+              </p>
             </CardContent>
           </Card>
         ) : (
@@ -414,7 +556,7 @@ export default function AdminPrazos() {
                   <CardContent className="py-4">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <Badge className={tipoConfig.color}>
                             {tipoConfig.label}
                           </Badge>
@@ -428,6 +570,9 @@ export default function AdminPrazos() {
                               {daysUntil} dias
                             </span>
                           )}
+                          {isPast && (
+                            <Badge variant="secondary" className="text-xs">Passado</Badge>
+                          )}
                           {!prazo.ativo && (
                             <Badge variant="secondary">Inativo</Badge>
                           )}
@@ -438,6 +583,30 @@ export default function AdminPrazos() {
                             {prazo.descricao}
                           </p>
                         )}
+                        
+                        {/* Base legal e URL */}
+                        {(prazo.base_legal || prazo.url_referencia) && (
+                          <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                            {prazo.base_legal && (
+                              <span className="flex items-center gap-1">
+                                <FileText className="w-3 h-3" />
+                                {prazo.base_legal}
+                              </span>
+                            )}
+                            {prazo.url_referencia && (
+                              <a 
+                                href={prazo.url_referencia} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 text-primary hover:underline"
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                                Ver referência
+                              </a>
+                            )}
+                          </div>
+                        )}
+                        
                         {(prazo.afeta_regimes?.length > 0 || prazo.afeta_setores?.length > 0) && (
                           <div className="flex flex-wrap gap-1 mt-2">
                             {prazo.afeta_regimes?.map(r => (
@@ -455,6 +624,10 @@ export default function AdminPrazos() {
                       </div>
                       
                       <div className="flex items-center gap-2">
+                        <Switch
+                          checked={prazo.ativo}
+                          onCheckedChange={() => handleToggleAtivo(prazo)}
+                        />
                         <Button 
                           variant="ghost" 
                           size="icon"

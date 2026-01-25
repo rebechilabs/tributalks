@@ -72,6 +72,8 @@ interface Prazo {
   descricao: string | null;
   data_prazo: string;
   tipo: string;
+  base_legal: string | null;
+  url_referencia: string | null;
 }
 
 interface AlertConfig {
@@ -178,16 +180,17 @@ export default function Noticias() {
     }
 
     // Buscar próximo prazo
-    const { data: prazos } = await supabase
+    const { data: prazoData } = await supabase
       .from('prazos_reforma')
-      .select('*')
+      .select('id, titulo, descricao, data_prazo, tipo, base_legal, url_referencia')
       .eq('ativo', true)
       .gte('data_prazo', today)
       .order('data_prazo', { ascending: true })
-      .limit(1);
+      .limit(1)
+      .maybeSingle();
     
-    if (prazos && prazos.length > 0) {
-      setProximoPrazo(prazos[0]);
+    if (prazoData) {
+      setProximoPrazo(prazoData);
     }
 
     // Buscar notícias
@@ -375,6 +378,27 @@ export default function Noticias() {
                     <h3 className="font-semibold text-foreground">{proximoPrazo.titulo}</h3>
                     {proximoPrazo.descricao && (
                       <p className="text-sm text-muted-foreground mt-1">{proximoPrazo.descricao}</p>
+                    )}
+                    {/* Base legal e URL */}
+                    {(proximoPrazo.base_legal || proximoPrazo.url_referencia) && (
+                      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                        {proximoPrazo.base_legal && (
+                          <span className="flex items-center gap-1">
+                            📜 {proximoPrazo.base_legal}
+                          </span>
+                        )}
+                        {proximoPrazo.url_referencia && (
+                          <a 
+                            href={proximoPrazo.url_referencia} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-primary hover:underline"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            Ver referência
+                          </a>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
