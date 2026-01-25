@@ -40,7 +40,7 @@ interface ToolItem {
   icon: React.ComponentType<{ className?: string }>;
   badge?: string;
   disabled?: boolean;
-  requiredPlan?: 'BASICO' | 'PROFISSIONAL' | 'PREMIUM';
+  requiredPlan?: 'NAVIGATOR' | 'PROFESSIONAL' | 'ENTERPRISE';
 }
 
 interface ToolGroup {
@@ -51,21 +51,35 @@ interface ToolGroup {
 
 const toolGroups: ToolGroup[] = [
   {
+    title: 'GPS da Reforma',
+    icon: Newspaper,
+    items: [
+      { 
+        name: 'Notícias da Reforma', 
+        description: 'Feed atualizado + pílula do dia',
+        href: '/noticias', 
+        icon: Newspaper,
+        requiredPlan: 'NAVIGATOR'
+      },
+      { 
+        name: 'Timeline 2026-2033', 
+        description: 'O que fazer em cada etapa',
+        href: '/dashboard/timeline-reforma', 
+        icon: Lightbulb,
+        requiredPlan: 'NAVIGATOR',
+        badge: 'Novo'
+      },
+    ]
+  },
+  {
     title: 'Calculadoras',
     icon: Calculator,
     items: [
       { 
-        name: 'Calculadora RTC', 
-        description: 'Calcule impostos da Reforma Tributária',
-        href: '/calculadora/rtc', 
-        icon: Calculator,
-        badge: 'API'
-      },
-      { 
-        name: 'Comparativo de Regimes', 
-        description: 'Compare Simples, Presumido e Real',
-        href: '/calculadora/comparativo-regimes', 
-        icon: Scale 
+        name: 'Score Tributário', 
+        description: 'Avalie sua saúde fiscal',
+        href: '/dashboard/score-tributario', 
+        icon: Trophy
       },
       { 
         name: 'Split Payment', 
@@ -73,89 +87,103 @@ const toolGroups: ToolGroup[] = [
         href: '/calculadora/split-payment', 
         icon: Wallet 
       },
+      { 
+        name: 'Comparativo de Regimes', 
+        description: 'Compare Simples, Presumido e Real',
+        href: '/calculadora/comparativo-regimes', 
+        icon: Scale,
+        requiredPlan: 'NAVIGATOR'
+      },
+      { 
+        name: 'Calculadora RTC', 
+        description: 'Calcule CBS/IBS/IS da Reforma',
+        href: '/calculadora/rtc', 
+        icon: Calculator,
+        badge: 'API',
+        requiredPlan: 'NAVIGATOR'
+      },
     ]
   },
   {
-    title: 'XMLs e Créditos',
+    title: 'Diagnóstico',
     icon: Target,
     items: [
       { 
         name: 'Importar XMLs', 
         description: 'Importe notas fiscais para análise',
         href: '/dashboard/importar-xml', 
-        icon: Upload 
+        icon: Upload,
+        requiredPlan: 'PROFESSIONAL'
       },
       { 
         name: 'Radar de Créditos', 
         description: 'Identifique créditos recuperáveis',
         href: '/dashboard/radar-creditos', 
         icon: Target,
-        badge: 'Novo'
+        requiredPlan: 'PROFESSIONAL'
       },
-    ]
-  },
-  {
-    title: 'Análise Financeira',
-    icon: BarChart3,
-    items: [
       { 
         name: 'DRE Inteligente', 
         description: 'Análise de resultado econômico',
         href: '/dashboard/dre', 
         icon: BarChart3,
-        badge: 'Novo'
-      },
-      { 
-        name: 'Score Tributário', 
-        description: 'Avalie sua saúde fiscal',
-        href: '/dashboard/score-tributario', 
-        icon: Trophy,
-        badge: 'Novo'
+        requiredPlan: 'PROFESSIONAL'
       },
       { 
         name: 'Oportunidades', 
         description: 'Descubra economia tributária',
         href: '/dashboard/oportunidades', 
         icon: Lightbulb,
-        badge: 'Novo'
+        requiredPlan: 'PROFESSIONAL'
       },
     ]
   },
   {
-    title: 'Conteúdo e IA',
+    title: 'IA e Suporte',
     icon: Bot,
     items: [
-      { 
-        name: 'Notícias Tributárias', 
-        description: 'Acompanhe a legislação',
-        href: '/noticias', 
-        icon: Newspaper,
-        requiredPlan: 'BASICO'
-      },
       { 
         name: 'TribuBot', 
         description: 'Assistente de IA tributária',
         href: '/tribubot', 
         icon: Bot,
         badge: 'IA',
-        requiredPlan: 'BASICO'
+        requiredPlan: 'NAVIGATOR'
+      },
+      { 
+        name: 'Comunidade', 
+        description: 'Grupo exclusivo + webinars',
+        href: '/comunidade', 
+        icon: Users,
+        requiredPlan: 'PROFESSIONAL'
       },
     ]
   },
 ];
 
-const PLAN_LIMITS = {
-  FREE: { simulations: 1, label: 'Grátis' },
-  BASICO: { simulations: -1, label: 'Básico' },
-  PROFISSIONAL: { simulations: -1, label: 'Profissional' },
-  PREMIUM: { simulations: -1, label: 'Premium' },
+// Mapeamento de planos legados para novos
+const LEGACY_PLAN_MAP: Record<string, string> = {
+  'FREE': 'FREE',
+  'BASICO': 'NAVIGATOR',
+  'PROFISSIONAL': 'PROFESSIONAL',
+  'PREMIUM': 'ENTERPRISE',
+  'NAVIGATOR': 'NAVIGATOR',
+  'PROFESSIONAL': 'PROFESSIONAL',
+  'ENTERPRISE': 'ENTERPRISE',
 };
 
-const PLAN_HIERARCHY = {
+const PLAN_LIMITS: Record<string, { simulations: number; label: string }> = {
+  FREE: { simulations: 1, label: 'Grátis' },
+  NAVIGATOR: { simulations: -1, label: 'Navigator' },
+  PROFESSIONAL: { simulations: -1, label: 'Professional' },
+  ENTERPRISE: { simulations: -1, label: 'Enterprise' },
+};
+
+const PLAN_HIERARCHY: Record<string, number> = {
   'FREE': 0,
-  'BASICO': 1,
-  'PROFISSIONAL': 2,
-  'PREMIUM': 3,
+  'NAVIGATOR': 1,
+  'PROFESSIONAL': 2,
+  'ENTERPRISE': 3,
 };
 
 const Dashboard = () => {
@@ -164,13 +192,14 @@ const Dashboard = () => {
   const [simulationsThisMonth, setSimulationsThisMonth] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const currentPlan = (profile?.plano || 'FREE') as keyof typeof PLAN_LIMITS;
+  const rawPlan = profile?.plano || 'FREE';
+  const currentPlan = LEGACY_PLAN_MAP[rawPlan] || 'FREE';
   const planLimit = PLAN_LIMITS[currentPlan]?.simulations || 1;
 
   const hasAccess = (requiredPlan?: string) => {
     if (!requiredPlan) return true;
-    const userLevel = PLAN_HIERARCHY[currentPlan as keyof typeof PLAN_HIERARCHY] || 0;
-    const requiredLevel = PLAN_HIERARCHY[requiredPlan as keyof typeof PLAN_HIERARCHY] || 0;
+    const userLevel = PLAN_HIERARCHY[currentPlan] || 0;
+    const requiredLevel = PLAN_HIERARCHY[requiredPlan] || 0;
     return userLevel >= requiredLevel;
   };
 

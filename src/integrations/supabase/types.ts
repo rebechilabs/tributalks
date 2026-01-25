@@ -1186,6 +1186,75 @@ export type Database = {
         }
         Relationships: []
       }
+      pilulas_reforma: {
+        Row: {
+          ativo: boolean | null
+          conteudo: string
+          created_at: string | null
+          data_exibicao: string | null
+          id: string
+          tipo: string | null
+          titulo: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          conteudo: string
+          created_at?: string | null
+          data_exibicao?: string | null
+          id?: string
+          tipo?: string | null
+          titulo: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          conteudo?: string
+          created_at?: string | null
+          data_exibicao?: string | null
+          id?: string
+          tipo?: string | null
+          titulo?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      prazos_reforma: {
+        Row: {
+          afeta_regimes: string[] | null
+          afeta_setores: string[] | null
+          ativo: boolean | null
+          created_at: string | null
+          data_prazo: string
+          descricao: string | null
+          id: string
+          tipo: string | null
+          titulo: string
+        }
+        Insert: {
+          afeta_regimes?: string[] | null
+          afeta_setores?: string[] | null
+          ativo?: boolean | null
+          created_at?: string | null
+          data_prazo: string
+          descricao?: string | null
+          id?: string
+          tipo?: string | null
+          titulo: string
+        }
+        Update: {
+          afeta_regimes?: string[] | null
+          afeta_setores?: string[] | null
+          ativo?: boolean | null
+          created_at?: string | null
+          data_prazo?: string
+          descricao?: string | null
+          id?: string
+          tipo?: string | null
+          titulo?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           cnae: string | null

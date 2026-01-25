@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { 
   Menu, X, Home, Scale, Wallet, Bot, FileText, Users, Calendar, 
   Clock, Settings, Lock, Sparkles, Newspaper, Upload, Calculator,
-  Target, BarChart3, Trophy, Lightbulb, LayoutDashboard
+  Target, BarChart3, Trophy, Lightbulb, LayoutDashboard, MapPin
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -16,7 +16,7 @@ interface NavItem {
   label: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
-  requiredPlan?: 'BASICO' | 'PROFISSIONAL' | 'PREMIUM';
+  requiredPlan?: 'NAVIGATOR' | 'PROFESSIONAL' | 'ENTERPRISE';
   badge?: string;
 }
 
@@ -30,45 +30,45 @@ const navGroups: NavGroup[] = [
     title: '',
     items: [
       { label: 'Dashboard', href: '/dashboard', icon: Home },
-      { label: 'Painel Executivo', href: '/dashboard/executivo', icon: LayoutDashboard, badge: 'Premium', requiredPlan: 'PREMIUM' },
+    ]
+  },
+  {
+    title: 'GPS da Reforma',
+    items: [
+      { label: 'Notícias da Reforma', href: '/noticias', icon: Newspaper, requiredPlan: 'NAVIGATOR' },
+      { label: 'Timeline 2026-2033', href: '/dashboard/timeline-reforma', icon: MapPin, requiredPlan: 'NAVIGATOR' },
     ]
   },
   {
     title: 'Calculadoras',
     items: [
-      { label: 'Calculadora RTC', href: '/calculadora/rtc', icon: Calculator, badge: 'API' },
-      { label: 'Comparativo de Regimes', href: '/calculadora/comparativo-regimes', icon: Scale },
+      { label: 'Score Tributário', href: '/dashboard/score-tributario', icon: Trophy },
       { label: 'Split Payment', href: '/calculadora/split-payment', icon: Wallet },
+      { label: 'Comparativo de Regimes', href: '/calculadora/comparativo-regimes', icon: Scale, requiredPlan: 'NAVIGATOR' },
+      { label: 'Calculadora RTC', href: '/calculadora/rtc', icon: Calculator, requiredPlan: 'NAVIGATOR', badge: 'API' },
     ]
   },
   {
-    title: 'XMLs e Créditos',
+    title: 'Diagnóstico',
     items: [
-      { label: 'Importar XMLs', href: '/dashboard/importar-xml', icon: Upload },
-      { label: 'Radar de Créditos', href: '/dashboard/radar-creditos', icon: Target, badge: 'Novo' },
+      { label: 'Importar XMLs', href: '/dashboard/importar-xml', icon: Upload, requiredPlan: 'PROFESSIONAL' },
+      { label: 'Radar de Créditos', href: '/dashboard/radar-creditos', icon: Target, requiredPlan: 'PROFESSIONAL' },
+      { label: 'DRE Inteligente', href: '/dashboard/dre', icon: BarChart3, requiredPlan: 'PROFESSIONAL' },
+      { label: 'Oportunidades', href: '/dashboard/oportunidades', icon: Lightbulb, requiredPlan: 'PROFESSIONAL' },
     ]
   },
   {
-    title: 'Análise Financeira',
+    title: 'IA e Suporte',
     items: [
-      { label: 'DRE Inteligente', href: '/dashboard/dre', icon: BarChart3, badge: 'Novo' },
-      { label: 'Score Tributário', href: '/dashboard/score-tributario', icon: Trophy, badge: 'Novo' },
-      { label: 'Oportunidades', href: '/dashboard/oportunidades', icon: Lightbulb, badge: 'Novo' },
+      { label: 'TribuBot', href: '/tribubot', icon: Bot, requiredPlan: 'NAVIGATOR', badge: 'IA' },
+      { label: 'Comunidade', href: '/comunidade', icon: Users, requiredPlan: 'PROFESSIONAL' },
     ]
   },
   {
-    title: 'Conteúdo e IA',
+    title: 'Enterprise',
     items: [
-      { label: 'Notícias', href: '/noticias', icon: Newspaper, requiredPlan: 'BASICO' },
-      { label: 'TribuBot', href: '/tribubot', icon: Bot, requiredPlan: 'BASICO', badge: 'IA' },
-    ]
-  },
-  {
-    title: 'Premium',
-    items: [
-      { label: 'Relatórios PDF', href: '/relatorios', icon: FileText, requiredPlan: 'PROFISSIONAL' },
-      { label: 'Comunidade', href: '/comunidade', icon: Users, requiredPlan: 'PROFISSIONAL' },
-      { label: 'Consultorias', href: '/consultorias', icon: Calendar, requiredPlan: 'PREMIUM' },
+      { label: 'Painel Executivo', href: '/dashboard/executivo', icon: LayoutDashboard, requiredPlan: 'ENTERPRISE' },
+      { label: 'Consultorias', href: '/consultorias', icon: Calendar, requiredPlan: 'ENTERPRISE' },
     ]
   },
   {
@@ -80,23 +80,35 @@ const navGroups: NavGroup[] = [
   },
 ];
 
-const PLAN_HIERARCHY = {
+// Mapeamento de planos legados para novos
+const LEGACY_PLAN_MAP: Record<string, string> = {
+  'FREE': 'FREE',
+  'BASICO': 'NAVIGATOR',
+  'PROFISSIONAL': 'PROFESSIONAL',
+  'PREMIUM': 'ENTERPRISE',
+  'NAVIGATOR': 'NAVIGATOR',
+  'PROFESSIONAL': 'PROFESSIONAL',
+  'ENTERPRISE': 'ENTERPRISE',
+};
+
+const PLAN_HIERARCHY: Record<string, number> = {
   'FREE': 0,
-  'BASICO': 1,
-  'PROFISSIONAL': 2,
-  'PREMIUM': 3,
+  'NAVIGATOR': 1,
+  'PROFESSIONAL': 2,
+  'ENTERPRISE': 3,
 };
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const { profile } = useAuth();
-  const currentPlan = profile?.plano || 'FREE';
+  const rawPlan = profile?.plano || 'FREE';
+  const currentPlan = LEGACY_PLAN_MAP[rawPlan] || 'FREE';
 
   const hasAccess = (requiredPlan?: string) => {
     if (!requiredPlan) return true;
-    const userLevel = PLAN_HIERARCHY[currentPlan as keyof typeof PLAN_HIERARCHY] || 0;
-    const requiredLevel = PLAN_HIERARCHY[requiredPlan as keyof typeof PLAN_HIERARCHY] || 0;
+    const userLevel = PLAN_HIERARCHY[currentPlan] || 0;
+    const requiredLevel = PLAN_HIERARCHY[requiredPlan] || 0;
     return userLevel >= requiredLevel;
   };
 
