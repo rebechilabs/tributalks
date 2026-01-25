@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Navigation } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export function CTASection() {
@@ -17,12 +17,23 @@ export function CTASection() {
 
       <div className="container mx-auto px-4 md:px-6 lg:px-8 relative">
         <div className="max-w-3xl mx-auto text-center">
+          {/* Icon */}
+          <div className="flex justify-center mb-6">
+            <div className="p-4 rounded-full bg-primary-foreground/10">
+              <Navigation className="w-10 h-10 text-primary-foreground" />
+            </div>
+          </div>
+
           {/* Heading */}
           <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-6">
-            Pronto para tomar decisões tributárias
+            Pronto para navegar pela reforma
             <br />
             com confiança?
           </h2>
+
+          <p className="text-lg text-primary-foreground/80 mb-8">
+            Saiba onde você está, para onde a reforma vai te levar, e o que fazer em cada etapa.
+          </p>
 
           {/* CTA Button */}
           <Link to="/cadastro">
@@ -30,14 +41,14 @@ export function CTASection() {
               size="lg"
               className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-semibold px-8 py-6 text-lg group"
             >
-              Criar minha conta grátis
+              Começar minha jornada
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>
 
           {/* Guarantee Text */}
           <p className="text-sm text-primary-foreground/80 mt-6">
-            Sem cartão. Sem compromisso. Sem pegadinha.
+            Sem cartão. Sem compromisso. Cancele quando quiser.
           </p>
         </div>
       </div>

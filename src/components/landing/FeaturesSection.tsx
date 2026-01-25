@@ -1,10 +1,46 @@
 import { 
   Scale, Wallet, Bot, FileText, Users, 
-  Calculator, Upload, Target, BarChart3, Trophy, Newspaper, Lightbulb 
+  Calculator, Upload, Target, BarChart3, Trophy, Newspaper, Clock, Navigation, MapPin
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const features = [
+  {
+    icon: Wallet,
+    title: "Simulador Split Payment",
+    description:
+      "Saiba exatamente quanto vai ficar retido no seu caixa com a nova regra de 2026.",
+    badge: "Destaque",
+    badgeVariant: "default" as const,
+  },
+  {
+    icon: Clock,
+    title: "Timeline 2026-2033",
+    description:
+      "Acompanhe o que muda em cada ano da transição e o que você precisa fazer.",
+    badge: "Novo",
+    badgeVariant: "secondary" as const,
+  },
+  {
+    icon: Scale,
+    title: "Comparativo de Regimes",
+    description:
+      "Sistema atual vs reforma — descubra quanto vai pagar em cada cenário.",
+  },
+  {
+    icon: Newspaper,
+    title: "Notícias da Reforma",
+    description:
+      "Feed diário com pílulas, prazos e análises sobre a reforma tributária.",
+    badge: "Diário",
+    badgeVariant: "outline" as const,
+  },
+  {
+    icon: Trophy,
+    title: "Score Tributário",
+    description:
+      "Avalie a saúde fiscal da sua empresa em 5 dimensões com ações recomendadas.",
+  },
   {
     icon: Calculator,
     title: "Calculadora RTC",
@@ -14,54 +50,36 @@ const features = [
     badgeVariant: "default" as const,
   },
   {
-    icon: Lightbulb,
-    title: "Oportunidades Fiscais",
-    description:
-      "Identifique automaticamente oportunidades de economia com match inteligente ao seu perfil.",
-    badge: "Novo",
-    badgeVariant: "secondary" as const,
-  },
-  {
-    icon: Scale,
-    title: "Comparativo de Regimes",
-    description:
-      "Simples vs Presumido vs Real — descubra qual regime gera mais economia para sua empresa.",
-  },
-  {
-    icon: Wallet,
-    title: "Simulador Split Payment",
-    description:
-      "Saiba exatamente quanto vai ficar retido no seu caixa com a nova regra de 2026.",
-  },
-  {
     icon: Upload,
     title: "Importar XMLs",
     description:
       "Faça upload das suas notas fiscais e analise automaticamente oportunidades de crédito.",
+    badge: "Professional",
+    badgeVariant: "outline" as const,
   },
   {
     icon: Target,
     title: "Radar de Créditos",
     description:
       "Identifique créditos tributários não aproveitados de ICMS, PIS/COFINS e IPI.",
-    badge: "Novo",
-    badgeVariant: "secondary" as const,
+    badge: "Professional",
+    badgeVariant: "outline" as const,
   },
   {
     icon: BarChart3,
     title: "DRE Inteligente",
     description:
       "Preencha seu DRE e receba diagnóstico com score de saúde financeira e recomendações.",
-    badge: "Novo",
-    badgeVariant: "secondary" as const,
+    badge: "Professional",
+    badgeVariant: "outline" as const,
   },
   {
-    icon: Trophy,
-    title: "Score Tributário",
+    icon: Navigation,
+    title: "Oportunidades Fiscais",
     description:
-      "Avalie a saúde fiscal da sua empresa em 5 dimensões com ações recomendadas.",
-    badge: "Novo",
-    badgeVariant: "secondary" as const,
+      "37+ benefícios fiscais por setor com match inteligente ao seu perfil de empresa.",
+    badge: "Professional",
+    badgeVariant: "outline" as const,
   },
   {
     icon: Bot,
@@ -69,25 +87,13 @@ const features = [
     description:
       "Tire dúvidas tributárias em linguagem simples, a qualquer hora, sem esperar.",
     badge: "IA",
-    badgeVariant: "outline" as const,
-  },
-  {
-    icon: Newspaper,
-    title: "Notícias Tributárias",
-    description:
-      "Fique por dentro das mudanças na legislação com resumos executivos e alertas.",
+    badgeVariant: "secondary" as const,
   },
   {
     icon: FileText,
     title: "Relatórios PDF",
     description:
       "Gere PDFs profissionais para apresentar nas reuniões com sócios e diretoria.",
-  },
-  {
-    icon: Users,
-    title: "Comunidade Exclusiva",
-    description:
-      "Networking com empresários e CFOs que faturam acima de R$1M/mês.",
   },
 ];
 
@@ -97,17 +103,16 @@ export function FeaturesSection() {
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className="text-center mb-16">
           <Badge variant="outline" className="mb-4 text-primary border-primary">
-            12 ferramentas disponíveis
+            Ferramentas do GPS Tributário
           </Badge>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Tudo que você precisa para
             <br />
-            decisões tributárias{" "}
-            <span className="text-primary">inteligentes</span>
+            navegar pela <span className="text-primary">reforma</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Da análise de regime ao score tributário completo — ferramentas que transformam
-            complexidade fiscal em ações claras.
+            De simuladores a diagnósticos completos — ferramentas que transformam
+            a complexidade da reforma em ações claras para o seu negócio.
           </p>
         </div>
 
