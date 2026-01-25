@@ -62,7 +62,7 @@ export function Header() {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <img src={logoTributech} alt="TribuTech" className="h-10 md:h-12 w-auto" />
+            <img src={logoTributech} alt="TribuTech" className="h-20 md:h-24 w-auto" />
             <span className="hidden sm:inline text-xs text-muted-foreground font-medium">
               GPS da Reforma
             </span>
