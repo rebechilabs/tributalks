@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
-import jsPDF from "jspdf";
 
 export function TributechPitchPdf() {
   const [generating, setGenerating] = useState(false);
 
   const generatePdf = async () => {
     setGenerating(true);
+    
+    // Dynamic import to avoid build issues
+    const { default: jsPDF } = await import("jspdf");
     
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
     const pageWidth = doc.internal.pageSize.getWidth();

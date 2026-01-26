@@ -1,7 +1,9 @@
-import jsPDF from "jspdf";
 import type { CaseStudy } from "@/data/caseStudies";
 
 export async function CaseStudyPdf(caseStudy: CaseStudy): Promise<void> {
+  // Dynamic import to avoid build issues
+  const { default: jsPDF } = await import("jspdf");
+  
   const doc = new jsPDF({
     orientation: "portrait",
     unit: "mm",

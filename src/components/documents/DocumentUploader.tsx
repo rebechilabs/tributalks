@@ -6,17 +6,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { AnalysisResult } from "@/pages/AnalisadorDocumentos";
 
-// Dynamic import to avoid top-level await issues
-let pdfjsLib: typeof import("pdfjs-dist") | null = null;
-
-const loadPdfJs = async () => {
-  if (!pdfjsLib) {
-    pdfjsLib = await import("pdfjs-dist");
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-  }
-  return pdfjsLib;
-};
-
 interface DocumentUploaderProps {
   onAnalysisComplete: (result: AnalysisResult | null) => void;
   isAnalyzing: boolean;
@@ -31,29 +20,38 @@ export function DocumentUploader({
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [extractionProgress, setExtractionProgress] = useState("");
 
-  const extractTextFromPdf = async (file: File): Promise<string> => {
-    setExtractionProgress("Carregando biblioteca PDF...");
-    const pdfjs = await loadPdfJs();
-    
-    setExtractionProgress("Lendo arquivo PDF...");
-    
-    const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
-    
-    let fullText = "";
-    const totalPages = pdf.numPages;
-    
-    for (let i = 1; i <= Math.min(totalPages, 20); i++) {
-      setExtractionProgress(`Extraindo página ${i} de ${Math.min(totalPages, 20)}...`);
-      const page = await pdf.getPage(i);
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items
-        .map((item: any) => item.str)
-        .join(" ");
-      fullText += pageText + "\n\n";
-    }
-    
-    return fullText;
+  const readFileAsText = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result;
+        if (typeof result === 'string') {
+          resolve(result);
+        } else {
+          reject(new Error('Failed to read file'));
+        }
+      };
+      reader.onerror = () => reject(new Error('Error reading file'));
+      reader.readAsText(file);
+    });
+  };
+
+  const readFileAsBase64 = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result;
+        if (typeof result === 'string') {
+          // Remove the data URL prefix to get just the base64
+          const base64 = result.split(',')[1];
+          resolve(base64);
+        } else {
+          reject(new Error('Failed to read file'));
+        }
+      };
+      reader.onerror = () => reject(new Error('Error reading file'));
+      reader.readAsDataURL(file);
+    });
   };
 
   const analyzeDocument = async () => {
@@ -66,20 +64,20 @@ export function DocumentUploader({
     onAnalysisComplete(null);
 
     try {
-      // Extract text from PDF
-      const documentText = await extractTextFromPdf(uploadedFile);
+      setExtractionProgress("Preparando documento...");
       
-      if (documentText.trim().length < 100) {
-        throw new Error("O documento parece estar vazio ou ser uma imagem escaneada. Use um PDF com texto selecionável.");
-      }
-
+      // Read the PDF as base64 and send to the edge function
+      // The edge function will use Gemini's vision capabilities to read the PDF
+      const base64Content = await readFileAsBase64(uploadedFile);
+      
       setExtractionProgress("Analisando documento com IA...");
 
-      // Call the edge function
+      // Call the edge function with the base64 content
       const { data, error } = await supabase.functions.invoke("analyze-document", {
         body: {
-          documentText,
+          documentBase64: base64Content,
           documentType: "Contrato Social",
+          fileName: uploadedFile.name,
         },
       });
 
