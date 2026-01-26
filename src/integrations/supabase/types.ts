@@ -1689,9 +1689,19 @@ export type Database = {
           economia_potencial: number | null
           id: string
           resp_certidoes: string | null
+          resp_conhece_carga_tributaria: boolean | null
+          resp_conhece_receita_sintonia: boolean | null
           resp_controles: string | null
+          resp_debitos_abertos: string | null
+          resp_documentacao_pronta: boolean | null
+          resp_faturamento_faixa: string | null
+          resp_nota_receita_sintonia: string | null
           resp_obrigacoes: string | null
+          resp_preparando_reforma: boolean | null
+          resp_recebeu_notificacao: boolean | null
           resp_situacao_fiscal: string | null
+          resp_surpresas_tributarias: boolean | null
+          resp_tempo_reunir_docs: string | null
           risco_autuacao: number | null
           score_conformidade: number | null
           score_documentacao: number | null
@@ -1720,9 +1730,19 @@ export type Database = {
           economia_potencial?: number | null
           id?: string
           resp_certidoes?: string | null
+          resp_conhece_carga_tributaria?: boolean | null
+          resp_conhece_receita_sintonia?: boolean | null
           resp_controles?: string | null
+          resp_debitos_abertos?: string | null
+          resp_documentacao_pronta?: boolean | null
+          resp_faturamento_faixa?: string | null
+          resp_nota_receita_sintonia?: string | null
           resp_obrigacoes?: string | null
+          resp_preparando_reforma?: boolean | null
+          resp_recebeu_notificacao?: boolean | null
           resp_situacao_fiscal?: string | null
+          resp_surpresas_tributarias?: boolean | null
+          resp_tempo_reunir_docs?: string | null
           risco_autuacao?: number | null
           score_conformidade?: number | null
           score_documentacao?: number | null
@@ -1751,9 +1771,19 @@ export type Database = {
           economia_potencial?: number | null
           id?: string
           resp_certidoes?: string | null
+          resp_conhece_carga_tributaria?: boolean | null
+          resp_conhece_receita_sintonia?: boolean | null
           resp_controles?: string | null
+          resp_debitos_abertos?: string | null
+          resp_documentacao_pronta?: boolean | null
+          resp_faturamento_faixa?: string | null
+          resp_nota_receita_sintonia?: string | null
           resp_obrigacoes?: string | null
+          resp_preparando_reforma?: boolean | null
+          resp_recebeu_notificacao?: boolean | null
           resp_situacao_fiscal?: string | null
+          resp_surpresas_tributarias?: boolean | null
+          resp_tempo_reunir_docs?: string | null
           risco_autuacao?: number | null
           score_conformidade?: number | null
           score_documentacao?: number | null
