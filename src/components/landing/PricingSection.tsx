@@ -38,8 +38,8 @@ const plans: Plan[] = [
     features: [
       { text: "Score Tributário", included: "limited", limitText: "1x" },
       { text: "Simulador Split Payment", included: "limited", limitText: "1x" },
-      { text: "Comparativo de Regimes", included: true },
-      { text: "Calculadora RTC (CBS/IBS/IS)", included: true },
+      { text: "Comparativo de Regimes", included: "limited", limitText: "1x" },
+      { text: "Calculadora RTC (CBS/IBS/IS)", included: "limited", limitText: "1x" },
       { text: "Timeline 2026-2033", included: false },
       { text: "Feed de Notícias da Reforma", included: false },
       { text: "TribuBot (IA 24/7)", included: false },
