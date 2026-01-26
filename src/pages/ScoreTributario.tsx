@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
-import { Building2, Scale, Upload, BarChart3, Shield, FileCheck, Clock, Settings, HelpCircle, Info } from "lucide-react";
+import { Building2, Scale, Shield, FileCheck, Clock, Settings, HelpCircle, Info, DollarSign, Bell, CreditCard, Target, FileSearch, AlertTriangle, TrendingUp, Lightbulb } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { ScoreGauge } from "@/components/score/ScoreGauge";
 import { ScoreCard } from "@/components/score/ScoreCard";
 import { ScoreResults } from "@/components/score/ScoreResults";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -24,16 +24,23 @@ interface TaxScoreData {
   score_risco: number;
   score_documentacao: number;
   score_gestao: number;
+  // Perguntas estratégicas
+  resp_faturamento_faixa?: string;
+  resp_recebeu_notificacao?: boolean;
+  resp_debitos_abertos?: string;
+  resp_conhece_receita_sintonia?: boolean;
+  resp_nota_receita_sintonia?: string;
+  resp_documentacao_pronta?: boolean;
+  resp_tempo_reunir_docs?: string;
+  resp_surpresas_tributarias?: boolean;
+  resp_preparando_reforma?: boolean;
+  resp_conhece_carga_tributaria?: boolean;
+  // Perguntas originais mantidas
   resp_situacao_fiscal?: string;
   resp_certidoes?: string;
   resp_obrigacoes?: string;
   resp_controles?: string;
-  auto_regime_tributario?: string;
-  auto_xmls_importados: number;
-  auto_xmls_periodo_inicio?: string;
-  auto_xmls_periodo_fim?: string;
-  auto_dre_preenchido: boolean;
-  auto_creditos_identificados: number;
+  // Campos calculados
   economia_potencial: number;
   risco_autuacao: number;
   creditos_nao_aproveitados: number;
@@ -66,7 +73,6 @@ export default function ScoreTributario() {
     if (!user) return;
 
     try {
-      // Buscar score atual
       const { data: score, error: scoreError } = await supabase
         .from('tax_score')
         .select('*')
@@ -76,10 +82,9 @@ export default function ScoreTributario() {
       if (scoreError) throw scoreError;
       
       if (score) {
-        setScoreData(score as TaxScoreData);
+        setScoreData(score as unknown as TaxScoreData);
       }
 
-      // Buscar ações recomendadas
       const { data: actionsData, error: actionsError } = await supabase
         .from('score_actions')
         .select('*')
@@ -134,11 +139,10 @@ export default function ScoreTributario() {
     }
   };
 
-  const updateManualAnswer = async (field: string, value: string) => {
+  const updateManualAnswer = async (field: string, value: string | boolean) => {
     if (!user) return;
 
     try {
-      // Verificar se já existe um registro
       const { data: existing } = await supabase
         .from('tax_score')
         .select('id')
@@ -146,13 +150,11 @@ export default function ScoreTributario() {
         .maybeSingle();
 
       if (existing) {
-        // Atualizar
         await supabase
           .from('tax_score')
           .update({ [field]: value, updated_at: new Date().toISOString() })
           .eq('id', existing.id);
       } else {
-        // Criar novo
         await supabase
           .from('tax_score')
           .insert({ user_id: user.id, [field]: value });
@@ -163,7 +165,6 @@ export default function ScoreTributario() {
         description: "Recalcule o score para ver o impacto.",
       });
 
-      // Recalcular automaticamente
       await calculateScore();
     } catch (error) {
       console.error('Error saving answer:', error);
@@ -175,21 +176,28 @@ export default function ScoreTributario() {
     }
   };
 
-  const progressPercent = scoreData 
-    ? (scoreData.cards_completos / scoreData.cards_total) * 100 
-    : 0;
-
-  // Formatar período dos XMLs
-  const getXmlPeriodo = () => {
-    if (!scoreData?.auto_xmls_periodo_inicio || !scoreData?.auto_xmls_periodo_fim) {
-      return undefined;
-    }
-    const inicio = new Date(scoreData.auto_xmls_periodo_inicio).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
-    const fim = new Date(scoreData.auto_xmls_periodo_fim).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
-    return `${inicio} - ${fim}`;
+  // Calcular cards completos com base nas novas perguntas
+  const calculateCardsComplete = () => {
+    if (!scoreData) return 0;
+    let count = 0;
+    if (scoreData.resp_faturamento_faixa) count++;
+    if (scoreData.resp_recebeu_notificacao !== undefined) count++;
+    if (scoreData.resp_debitos_abertos) count++;
+    if (scoreData.resp_obrigacoes) count++;
+    if (scoreData.resp_conhece_receita_sintonia !== undefined) count++;
+    if (scoreData.resp_documentacao_pronta !== undefined) count++;
+    if (scoreData.resp_surpresas_tributarias !== undefined) count++;
+    if (scoreData.resp_preparando_reforma !== undefined) count++;
+    if (scoreData.resp_conhece_carga_tributaria !== undefined) count++;
+    if (scoreData.resp_certidoes) count++;
+    if (scoreData.resp_controles) count++;
+    return count;
   };
 
-  // Usuários FREE que já têm score calculado atingiram o limite de 1
+  const TOTAL_CARDS = 11;
+  const cardsCompletos = calculateCardsComplete();
+  const progressPercent = (cardsCompletos / TOTAL_CARDS) * 100;
+
   const hasUsedFreeLimit = !isNavigator && scoreData && scoreData.score_total > 0;
 
   if (loading) {
@@ -211,7 +219,7 @@ export default function ScoreTributario() {
           <div>
             <h1 className="text-2xl font-bold">Score Tributário</h1>
             <p className="text-muted-foreground">
-              Avalie a saúde fiscal da sua empresa em 5 dimensões
+              Diagnóstico completo da saúde fiscal da sua empresa
             </p>
           </div>
           <Button variant="outline" className="gap-2">
@@ -224,7 +232,6 @@ export default function ScoreTributario() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex flex-col lg:flex-row items-center gap-8">
-              {/* Gauge */}
               <div className="flex-shrink-0">
                 <ScoreGauge
                   score={scoreData?.score_total || 0}
@@ -234,25 +241,22 @@ export default function ScoreTributario() {
                 />
               </div>
 
-              {/* Progresso e Dimensões */}
               <div className="flex-1 w-full space-y-6">
-                {/* Barra de Progresso */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">Diagnóstico completo</span>
                     <span className="text-sm text-muted-foreground">
-                      {scoreData?.cards_completos || 0} de {scoreData?.cards_total || 8} itens
+                      {cardsCompletos} de {TOTAL_CARDS} perguntas
                     </span>
                   </div>
                   <Progress value={progressPercent} className="h-2" />
                   {progressPercent < 100 && (
                     <p className="text-xs text-muted-foreground mt-2">
-                      Complete os itens abaixo para um diagnóstico mais preciso
+                      Responda todas as perguntas para um diagnóstico preciso
                     </p>
                   )}
                 </div>
 
-                {/* Dimensões */}
                 {scoreData && scoreData.score_total > 0 && (
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                     {[
@@ -276,11 +280,10 @@ export default function ScoreTributario() {
                   </div>
                 )}
 
-                {/* Botão de Calcular */}
                 {(!scoreData || scoreData.score_total === 0) && (
                   <Button 
                     onClick={calculateScore} 
-                    disabled={calculating}
+                    disabled={calculating || cardsCompletos < 4}
                     className="w-full sm:w-auto"
                   >
                     {calculating ? 'Calculando...' : 'Calcular meu Score'}
@@ -296,114 +299,150 @@ export default function ScoreTributario() {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              Responda as perguntas abaixo e clique em "Calcular meu Score" para obter seu diagnóstico fiscal completo.
+              Responda as perguntas estratégicas abaixo. Elas ajudam a identificar riscos ocultos e oportunidades de economia.
             </AlertDescription>
           </Alert>
         )}
 
-        {/* Grid de Cards */}
+        {/* SEÇÃO 1: CONTEXTO - Identificar se faz sentido */}
         <div>
-          <h2 className="text-lg font-semibold mb-4">Diagnóstico Fiscal</h2>
+          <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
+            <Target className="h-5 w-5 text-primary" />
+            Contexto Inicial
+          </h2>
+          <p className="text-sm text-muted-foreground mb-4">Entender o tamanho e situação da empresa</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Card 1: Dados da Empresa (Automático) */}
+            {/* P1: Faturamento */}
             <ScoreCard
-              title="Dados da Empresa"
-              icon={Building2}
-              status={profile?.empresa || profile?.cnae ? 'complete' : 'incomplete'}
-              helpText="Informações do cadastro da sua empresa"
-              autoData={{
-                value: profile?.empresa || 'Não informado',
-                subtitle: profile?.cnae ? `CNAE: ${profile.cnae}` : profile?.setor || undefined,
-                linkText: 'Editar cadastro',
-                linkTo: '/perfil',
+              title="Faturamento Anual"
+              icon={DollarSign}
+              status={scoreData?.resp_faturamento_faixa ? 'complete' : 'incomplete'}
+              helpText="Empresas acima de R$1M/ano têm mais oportunidades de otimização"
+              question={{
+                text: 'Qual o faturamento anual da sua empresa?',
+                options: [
+                  { value: 'ate_1m', label: 'Até R$ 1 milhão/ano' },
+                  { value: '1m_10m', label: 'Entre R$ 1 e 10 milhões/ano' },
+                  { value: 'acima_10m', label: 'Acima de R$ 10 milhões/ano' },
+                ],
+                currentValue: scoreData?.resp_faturamento_faixa,
+                onAnswer: (value) => updateManualAnswer('resp_faturamento_faixa', value),
+                hint: 'Empresas > R$10M já estão no radar pesado da Receita',
               }}
             />
 
-            {/* Card 2: Regime Tributário (Automático) */}
+            {/* P2: Notificação da Receita */}
             <ScoreCard
-              title="Regime Tributário"
-              icon={Scale}
-              status={profile?.regime ? 'complete' : 'incomplete'}
-              helpText="O regime tributário impacta diretamente sua carga de impostos"
-              autoData={profile?.regime ? {
-                value: profile.regime === 'SIMPLES' ? 'Simples Nacional' 
-                     : profile.regime === 'PRESUMIDO' ? 'Lucro Presumido'
-                     : profile.regime === 'REAL' ? 'Lucro Real'
-                     : profile.regime,
-                linkText: 'Verificar melhor regime',
-                linkTo: '/calculadora/comparativo-regimes',
-              } : {
-                value: 'Não informado',
-                linkText: 'Informar regime',
-                linkTo: '/perfil',
-              }}
-            />
-
-            {/* Card 3: XMLs Importados (Automático) */}
-            <ScoreCard
-              title="XMLs Importados"
-              icon={Upload}
+              title="Notificações da Receita"
+              icon={Bell}
               status={
-                (scoreData?.auto_xmls_importados || 0) > 100 ? 'complete'
-                : (scoreData?.auto_xmls_importados || 0) > 0 ? 'warning'
-                : 'incomplete'
+                scoreData?.resp_recebeu_notificacao === undefined ? 'incomplete'
+                : scoreData.resp_recebeu_notificacao ? 'warning'
+                : 'complete'
               }
-              helpText="Notas fiscais importadas para análise de créditos"
-              autoData={{
-                value: `${scoreData?.auto_xmls_importados || 0} notas`,
-                subtitle: getXmlPeriodo(),
-                linkText: 'Importar mais',
-                linkTo: '/dashboard/importar-xml',
+              helpText="Receber notificação indica que você já está sendo monitorado"
+              question={{
+                text: 'Recebeu alguma notificação da Receita nos últimos 2 anos?',
+                options: [
+                  { value: 'nao', label: 'Não, nenhuma notificação' },
+                  { value: 'sim', label: 'Sim, recebi notificação' },
+                ],
+                currentValue: scoreData?.resp_recebeu_notificacao === undefined 
+                  ? undefined 
+                  : scoreData.resp_recebeu_notificacao ? 'sim' : 'nao',
+                onAnswer: (value) => updateManualAnswer('resp_recebeu_notificacao', value === 'sim'),
+                hint: 'Se SIM, o Score é urgente - você já está sendo monitorado',
               }}
             />
+          </div>
+        </div>
 
-            {/* Card 4: DRE Preenchido (Automático) */}
+        {/* SEÇÃO 2: QUALIFICAÇÃO - Identificar riscos ocultos */}
+        <div>
+          <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
+            <Shield className="h-5 w-5 text-yellow-500" />
+            Qualificação de Riscos
+          </h2>
+          <p className="text-sm text-muted-foreground mb-4">Identificar riscos ocultos na sua operação</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* P3: Débitos em aberto */}
             <ScoreCard
-              title="DRE Inteligente"
-              icon={BarChart3}
-              status={scoreData?.auto_dre_preenchido ? 'complete' : 'incomplete'}
-              helpText="O DRE permite análise de margens e carga tributária"
-              autoData={{
-                value: scoreData?.auto_dre_preenchido ? 'Preenchido' : 'Não preenchido',
-                subtitle: scoreData?.auto_dre_preenchido ? 'Análise disponível' : undefined,
-                linkText: scoreData?.auto_dre_preenchido ? 'Ver DRE' : 'Preencher DRE',
-                linkTo: '/dashboard/dre',
-              }}
-            />
-
-            {/* Card 5: Situação Fiscal (Manual) */}
-            <ScoreCard
-              title="Situação Fiscal"
-              icon={Shield}
+              title="Débitos em Aberto"
+              icon={CreditCard}
               status={
-                !scoreData?.resp_situacao_fiscal ? 'incomplete'
-                : scoreData.resp_situacao_fiscal === 'sem_pendencias' ? 'complete'
-                : scoreData.resp_situacao_fiscal === 'nao_sei' ? 'warning'
+                !scoreData?.resp_debitos_abertos ? 'incomplete'
+                : scoreData.resp_debitos_abertos === 'nenhum' ? 'complete'
                 : 'warning'
               }
-              helpText="Pendências com a Receita Federal ou Estadual"
+              helpText="Débitos = nota baixa automática no Receita Sintonia"
               question={{
-                text: 'Sua empresa tem alguma pendência com a Receita Federal ou Estadual?',
+                text: 'Sua empresa tem débitos em aberto com a Receita? Mesmo que parcelados?',
                 options: [
-                  { value: 'sem_pendencias', label: 'Não, está tudo ok' },
-                  { value: 'com_pendencias', label: 'Sim, tenho algumas pendências' },
-                  { value: 'notificacao', label: 'Sim, recebi notificação ou multa' },
-                  { value: 'nao_sei', label: 'Não sei' },
+                  { value: 'nenhum', label: 'Não, nenhum débito' },
+                  { value: 'parcelado', label: 'Sim, mas está parcelado' },
+                  { value: 'em_aberto', label: 'Sim, tenho débitos em aberto' },
+                  { value: 'nao_sei', label: 'Não sei / Preciso verificar' },
                 ],
-                currentValue: scoreData?.resp_situacao_fiscal,
-                onAnswer: (value) => updateManualAnswer('resp_situacao_fiscal', value),
-                hint: 'Se você emite notas normalmente e não recebeu carta da Receita, provavelmente está ok',
+                currentValue: scoreData?.resp_debitos_abertos,
+                onAnswer: (value) => updateManualAnswer('resp_debitos_abertos', value),
               }}
             />
 
-            {/* Card 6: Certidões (Manual) */}
+            {/* P4: Obrigações Acessórias */}
+            <ScoreCard
+              title="Obrigações Acessórias"
+              icon={FileCheck}
+              status={
+                !scoreData?.resp_obrigacoes ? 'incomplete'
+                : scoreData.resp_obrigacoes === 'em_dia' ? 'complete'
+                : scoreData.resp_obrigacoes === 'nao_sei' ? 'warning'
+                : 'warning'
+              }
+              helpText="SPED Fiscal, DCTFWeb, eSocial, EFD-Reinf"
+              question={{
+                text: 'Você tem certeza de que todas as obrigações acessórias estão em dia?',
+                options: [
+                  { value: 'em_dia', label: 'Sim, tenho certeza' },
+                  { value: 'algumas_atrasadas', label: 'Não tenho certeza / Às vezes atrasa' },
+                  { value: 'nao_sei', label: 'Meu contador cuida, não sei' },
+                ],
+                currentValue: scoreData?.resp_obrigacoes,
+                onAnswer: (value) => updateManualAnswer('resp_obrigacoes', value),
+                hint: 'Pergunte ao contador: "Estamos em dia com SPED, DCTF, eSocial?"',
+              }}
+            />
+
+            {/* P5: Conhece Receita Sintonia */}
+            <ScoreCard
+              title="Receita Sintonia"
+              icon={Target}
+              status={
+                scoreData?.resp_conhece_receita_sintonia === undefined ? 'incomplete'
+                : scoreData.resp_conhece_receita_sintonia ? 'complete'
+                : 'warning'
+              }
+              helpText="Sistema de classificação A+ a D da Receita Federal"
+              question={{
+                text: 'Você sabe qual é sua nota no Receita Sintonia (A+ a D)?',
+                options: [
+                  { value: 'sim', label: 'Sim, sei minha nota' },
+                  { value: 'nao', label: 'Não sei o que é isso' },
+                ],
+                currentValue: scoreData?.resp_conhece_receita_sintonia === undefined 
+                  ? undefined 
+                  : scoreData.resp_conhece_receita_sintonia ? 'sim' : 'nao',
+                onAnswer: (value) => updateManualAnswer('resp_conhece_receita_sintonia', value === 'sim'),
+                hint: '99% dos empresários não conhece sua nota',
+              }}
+            />
+
+            {/* P6: Certidões */}
             <ScoreCard
               title="Certidões Negativas"
               icon={FileCheck}
               status={
                 !scoreData?.resp_certidoes ? 'incomplete'
                 : scoreData.resp_certidoes === 'sim' ? 'complete'
-                : scoreData.resp_certidoes === 'nao_sei' ? 'warning'
                 : 'warning'
               }
               helpText="Documento que bancos pedem para conceder crédito"
@@ -411,45 +450,77 @@ export default function ScoreTributario() {
                 text: 'Você consegue emitir Certidão Negativa de Débitos (CND)?',
                 options: [
                   { value: 'sim', label: 'Sim, consigo emitir' },
-                  { value: 'parcelado', label: 'Consigo, mas mostra débitos parcelados' },
+                  { value: 'parcelado', label: 'Consigo, mas mostra parcelamentos' },
                   { value: 'nao', label: 'Não consigo, tenho débitos' },
                   { value: 'nao_sei', label: 'Nunca tentei / Não sei' },
                 ],
                 currentValue: scoreData?.resp_certidoes,
                 onAnswer: (value) => updateManualAnswer('resp_certidoes', value),
-                hint: 'Acesse o e-CAC da Receita Federal para consultar',
               }}
             />
+          </div>
+        </div>
 
-            {/* Card 7: Obrigações (Manual) */}
+        {/* SEÇÃO 3: DOR - Criar urgência */}
+        <div>
+          <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-red-500" />
+            Exposição a Riscos
+          </h2>
+          <p className="text-sm text-muted-foreground mb-4">Avaliar sua vulnerabilidade fiscal</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* P7: Documentação pronta */}
             <ScoreCard
-              title="Obrigações Acessórias"
-              icon={Clock}
+              title="Prontidão Documental"
+              icon={FileSearch}
               status={
-                !scoreData?.resp_obrigacoes ? 'incomplete'
-                : scoreData.resp_obrigacoes === 'em_dia' ? 'complete'
-                : scoreData.resp_obrigacoes === 'nao_sei' ? 'warning'
+                scoreData?.resp_documentacao_pronta === undefined ? 'incomplete'
+                : scoreData.resp_documentacao_pronta ? 'complete'
                 : 'warning'
               }
-              helpText="SPED, DCTF, EFD e outras declarações obrigatórias"
+              helpText="Se a Receita pedir documentos, você consegue responder em 48h?"
               question={{
-                text: 'As declarações da empresa são entregues no prazo?',
+                text: 'Se receber uma intimação hoje, consegue reunir toda documentação em 48h?',
                 options: [
-                  { value: 'em_dia', label: 'Sempre no prazo' },
-                  { value: 'algumas_atrasadas', label: 'Às vezes atrasa' },
-                  { value: 'frequente_atraso', label: 'Frequentemente atrasa' },
-                  { value: 'nao_sei', label: 'Meu contador cuida, não sei' },
+                  { value: 'sim', label: 'Sim, está tudo organizado' },
+                  { value: 'nao', label: 'Não, levaria mais tempo' },
                 ],
-                currentValue: scoreData?.resp_obrigacoes,
-                onAnswer: (value) => updateManualAnswer('resp_obrigacoes', value),
-                hint: 'Pergunte ao contador: "Estamos em dia com obrigações acessórias?"',
+                currentValue: scoreData?.resp_documentacao_pronta === undefined 
+                  ? undefined 
+                  : scoreData.resp_documentacao_pronta ? 'sim' : 'nao',
+                onAnswer: (value) => updateManualAnswer('resp_documentacao_pronta', value === 'sim'),
+                hint: 'Expõe despreparo - Score funciona como um seguro',
               }}
             />
 
-            {/* Card 8: Controles (Manual) */}
+            {/* P8: Surpresas tributárias */}
+            <ScoreCard
+              title="Surpresas Tributárias"
+              icon={AlertTriangle}
+              status={
+                scoreData?.resp_surpresas_tributarias === undefined ? 'incomplete'
+                : scoreData.resp_surpresas_tributarias ? 'warning'
+                : 'complete'
+              }
+              helpText="Multas inesperadas ou créditos que deixou de aproveitar"
+              question={{
+                text: 'Já teve surpresas desagradáveis? Multas inesperadas ou créditos perdidos?',
+                options: [
+                  { value: 'sim', label: 'Sim, já tive surpresas' },
+                  { value: 'nao', label: 'Não, nunca tive problemas' },
+                ],
+                currentValue: scoreData?.resp_surpresas_tributarias === undefined 
+                  ? undefined 
+                  : scoreData.resp_surpresas_tributarias ? 'sim' : 'nao',
+                onAnswer: (value) => updateManualAnswer('resp_surpresas_tributarias', value === 'sim'),
+                hint: 'Se SIM, Score evita repetição. Se NÃO, garante que continue assim',
+              }}
+            />
+
+            {/* P9: Controle de Prazos */}
             <ScoreCard
               title="Controle de Prazos"
-              icon={Settings}
+              icon={Clock}
               status={
                 !scoreData?.resp_controles ? 'incomplete'
                 : scoreData.resp_controles === 'sistema' ? 'complete'
@@ -472,8 +543,66 @@ export default function ScoreTributario() {
           </div>
         </div>
 
+        {/* SEÇÃO 4: POSICIONAMENTO - Mostrar que você entende o jogo */}
+        <div>
+          <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
+            <Lightbulb className="h-5 w-5 text-green-500" />
+            Visão Estratégica
+          </h2>
+          <p className="text-sm text-muted-foreground mb-4">Sua preparação para o futuro tributário</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* P10: Preparação Reforma */}
+            <ScoreCard
+              title="Reforma Tributária"
+              icon={TrendingUp}
+              status={
+                scoreData?.resp_preparando_reforma === undefined ? 'incomplete'
+                : scoreData.resp_preparando_reforma ? 'complete'
+                : 'warning'
+              }
+              helpText="Empresas que esperam 'ver como vai ser' perdem vantagem competitiva"
+              question={{
+                text: 'Sua empresa está se preparando para a Reforma Tributária?',
+                options: [
+                  { value: 'sim', label: 'Sim, já estou me preparando' },
+                  { value: 'nao', label: 'Ainda estou esperando pra ver' },
+                ],
+                currentValue: scoreData?.resp_preparando_reforma === undefined 
+                  ? undefined 
+                  : scoreData.resp_preparando_reforma ? 'sim' : 'nao',
+                onAnswer: (value) => updateManualAnswer('resp_preparando_reforma', value === 'sim'),
+                hint: 'Score mapeia o impacto da Reforma no SEU negócio',
+              }}
+            />
+
+            {/* P11: Conhece carga tributária */}
+            <ScoreCard
+              title="Carga Tributária"
+              icon={Scale}
+              status={
+                scoreData?.resp_conhece_carga_tributaria === undefined ? 'incomplete'
+                : scoreData.resp_conhece_carga_tributaria ? 'complete'
+                : 'warning'
+              }
+              helpText="Saber quanto paga de tributo é o primeiro passo para otimizar"
+              question={{
+                text: 'Você sabe quanto do seu faturamento vai para tributos? E quanto poderia otimizar?',
+                options: [
+                  { value: 'sim', label: 'Sim, conheço minha carga tributária' },
+                  { value: 'nao', label: 'Não sei exatamente' },
+                ],
+                currentValue: scoreData?.resp_conhece_carga_tributaria === undefined 
+                  ? undefined 
+                  : scoreData.resp_conhece_carga_tributaria ? 'sim' : 'nao',
+                onAnswer: (value) => updateManualAnswer('resp_conhece_carga_tributaria', value === 'sim'),
+                hint: 'Score revela exatamente isso',
+              }}
+            />
+          </div>
+        </div>
+
         {/* Seção de Resultados */}
-        {scoreData && scoreData.cards_completos >= 4 && (
+        {scoreData && cardsCompletos >= 4 && (
           <ScoreResults
             financialImpact={{
               economiaPotencial: scoreData.economia_potencial || 0,
