@@ -11,6 +11,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
+import { FeatureGateLimit } from "@/components/FeatureGate";
+import { useSimulationLimit } from "@/hooks/useSimulationLimit";
+import { usePlanAccess } from "@/hooks/useFeatureAccess";
 
 interface SplitPaymentResult {
   mensal_min: number;
@@ -53,6 +56,8 @@ const PERCENTUAIS_PJ = [
 const SplitPayment = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
+  const { isNavigator } = usePlanAccess();
+  const { count: simulationCount, refetch: refetchCount } = useSimulationLimit('split-payment');
   const [isCalculating, setIsCalculating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [result, setResult] = useState<SplitPaymentResult | null>(null);
@@ -160,6 +165,8 @@ const SplitPayment = () => {
           outputs: calculatedResult as any,
         }]);
         setSaved(true);
+        // Atualiza contagem para refletir nova simulação
+        await refetchCount();
       } catch (error) {
         console.error('Error saving simulation:', error);
       } finally {
@@ -199,8 +206,12 @@ const SplitPayment = () => {
     return labels[regime] || regime;
   };
 
+  // Usuários pagos (NAVIGATOR+) não precisam do gate de limite
+  const showLimitGate = !isNavigator;
+
   return (
     <DashboardLayout title="Split Payment">
+      <FeatureGateLimit feature="split_payment" usageCount={showLimitGate ? simulationCount : 0}>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <nav className="text-sm text-muted-foreground mb-6">
@@ -492,6 +503,7 @@ const SplitPayment = () => {
           </Card>
         )}
       </div>
+      </FeatureGateLimit>
     </DashboardLayout>
   );
 };
