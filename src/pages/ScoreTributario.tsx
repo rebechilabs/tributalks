@@ -4,6 +4,7 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { ScoreGauge } from "@/components/score/ScoreGauge";
 import { ScoreCard } from "@/components/score/ScoreCard";
 import { ScoreResults } from "@/components/score/ScoreResults";
+import { ScorePdfReport } from "@/components/score/ScorePdfReport";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -68,6 +69,7 @@ export default function ScoreTributario() {
   const [actions, setActions] = useState<ScoreAction[]>([]);
   const [loading, setLoading] = useState(true);
   const [calculating, setCalculating] = useState(false);
+  const [showPdfReport, setShowPdfReport] = useState(false);
 
   const fetchScoreData = useCallback(async () => {
     if (!user) return;
@@ -139,7 +141,7 @@ export default function ScoreTributario() {
     }
   };
 
-  const handleDownloadPdf = async () => {
+  const handleDownloadPdf = () => {
     if (!scoreData) {
       toast({
         title: "Sem dados",
@@ -148,125 +150,7 @@ export default function ScoreTributario() {
       });
       return;
     }
-
-    try {
-      // Dynamic import to avoid build issues
-      const { default: jsPDF } = await import("jspdf");
-      
-      const doc = new jsPDF();
-      const pageWidth = doc.internal.pageSize.getWidth();
-      
-      // Header
-      doc.setFontSize(20);
-      doc.setTextColor(59, 130, 246);
-      doc.text("Relatório Score Tributário", pageWidth / 2, 25, { align: "center" });
-      
-      doc.setFontSize(10);
-      doc.setTextColor(100, 100, 100);
-      doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, pageWidth / 2, 33, { align: "center" });
-      
-      // Score Principal
-      doc.setFontSize(48);
-      doc.setTextColor(30, 30, 30);
-      doc.text(`${scoreData.score_total}`, pageWidth / 2, 60, { align: "center" });
-      
-      doc.setFontSize(16);
-      doc.text(`Nota: ${scoreData.score_grade}`, pageWidth / 2, 70, { align: "center" });
-      
-      // Linha separadora
-      doc.setDrawColor(200, 200, 200);
-      doc.line(20, 80, pageWidth - 20, 80);
-      
-      // Dimensões do Score
-      doc.setFontSize(14);
-      doc.setTextColor(30, 30, 30);
-      doc.text("Pontuação por Dimensão", 20, 95);
-      
-      doc.setFontSize(11);
-      const dimensions = [
-        { name: "Conformidade", value: scoreData.score_conformidade },
-        { name: "Eficiência", value: scoreData.score_eficiencia },
-        { name: "Risco", value: scoreData.score_risco },
-        { name: "Documentação", value: scoreData.score_documentacao },
-        { name: "Gestão", value: scoreData.score_gestao },
-      ];
-      
-      let yPos = 105;
-      dimensions.forEach((dim) => {
-        doc.setTextColor(80, 80, 80);
-        doc.text(`${dim.name}:`, 25, yPos);
-        doc.setTextColor(30, 30, 30);
-        doc.text(`${dim.value}/200 pontos`, 80, yPos);
-        yPos += 8;
-      });
-      
-      // Impacto Financeiro
-      yPos += 10;
-      doc.setFontSize(14);
-      doc.setTextColor(30, 30, 30);
-      doc.text("Impacto Financeiro Estimado", 20, yPos);
-      
-      yPos += 12;
-      doc.setFontSize(11);
-      
-      const formatCurrency = (value: number) => 
-        new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-      
-      doc.setTextColor(34, 197, 94);
-      doc.text(`Economia Potencial: ${formatCurrency(scoreData.economia_potencial)}`, 25, yPos);
-      
-      yPos += 8;
-      doc.setTextColor(234, 179, 8);
-      doc.text(`Créditos a Recuperar: ${formatCurrency(scoreData.creditos_nao_aproveitados)}`, 25, yPos);
-      
-      yPos += 8;
-      doc.setTextColor(239, 68, 68);
-      doc.text(`Risco de Autuação: ${formatCurrency(scoreData.risco_autuacao)}`, 25, yPos);
-      
-      // Ações Recomendadas
-      if (actions.length > 0) {
-        yPos += 18;
-        doc.setFontSize(14);
-        doc.setTextColor(30, 30, 30);
-        doc.text("Ações Prioritárias", 20, yPos);
-        
-        yPos += 10;
-        doc.setFontSize(10);
-        actions.slice(0, 5).forEach((action, index) => {
-          if (yPos > 270) return;
-          doc.setTextColor(80, 80, 80);
-          doc.text(`${index + 1}. ${action.action_title}`, 25, yPos);
-          yPos += 6;
-          doc.setFontSize(9);
-          doc.setTextColor(120, 120, 120);
-          const description = action.action_description.length > 80 
-            ? action.action_description.substring(0, 80) + "..." 
-            : action.action_description;
-          doc.text(`   ${description}`, 25, yPos);
-          yPos += 8;
-          doc.setFontSize(10);
-        });
-      }
-      
-      // Footer
-      doc.setFontSize(8);
-      doc.setTextColor(150, 150, 150);
-      doc.text("Tributech - Inteligência Tributária | Este relatório é informativo e não substitui consultoria profissional.", pageWidth / 2, 285, { align: "center" });
-      
-      doc.save(`score-tributario-${new Date().toISOString().split('T')[0]}.pdf`);
-      
-      toast({
-        title: "PDF gerado!",
-        description: "Seu relatório foi baixado com sucesso.",
-      });
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      toast({
-        title: "Erro ao gerar PDF",
-        description: "Não foi possível gerar o relatório. Tente novamente.",
-        variant: "destructive",
-      });
-    }
+    setShowPdfReport(true);
   };
 
   const updateManualAnswer = async (field: string, value: string | boolean) => {
@@ -747,6 +631,16 @@ export default function ScoreTributario() {
             onRecalculate={calculateScore}
             onDownloadPdf={handleDownloadPdf}
             isLoading={calculating}
+          />
+        )}
+
+        {/* PDF Report Modal */}
+        {scoreData && (
+          <ScorePdfReport
+            scoreData={scoreData}
+            actions={actions}
+            open={showPdfReport}
+            onClose={() => setShowPdfReport(false)}
           />
         )}
       </div>
