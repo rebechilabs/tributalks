@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Scale, Info, Star, AlertTriangle, RefreshCw, FileDown, Loader2, CheckCircle, Calendar, XCircle, Package, Zap, Truck, Building2, Wrench, HelpCircle } from "lucide-react";
+import { Scale, Info, Star, AlertTriangle, RefreshCw, FileDown, Loader2, CheckCircle, Calendar, XCircle, Package, Zap, Truck, Building2, Wrench, HelpCircle, Sparkles, ArrowRight, TrendingDown, Crown, Lock } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -610,83 +610,178 @@ const ComparativoRegimes = () => {
 
         {/* Result */}
         {result && (
-          <Card id="resultado" className="border-primary/30 animate-fade-in">
-            <CardHeader className="bg-primary/5 border-b border-primary/10">
-              <CardTitle className="flex items-center gap-2">
-                <Scale className="w-5 h-5 text-primary" />
-                Comparativo dos Regimes
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6 space-y-8">
-              {/* Regime Cards */}
-              <div className="grid md:grid-cols-3 gap-4">
-                {/* Simples Nacional */}
-                <div className={`rounded-xl p-6 text-center border-2 transition-all ${
-                  !result.simples_elegivel 
-                    ? 'bg-muted/30 border-muted opacity-60' 
-                    : result.melhor_opcao === 'SIMPLES' 
-                      ? 'bg-secondary/10 border-secondary' 
-                      : 'bg-muted/50 border-border'
-                }`}>
-                  <p className="text-sm font-medium text-muted-foreground mb-2">SIMPLES</p>
-                  {result.simples_elegivel && result.simples !== null ? (
-                    <>
-                      <p className="text-2xl font-bold text-foreground mb-2">
-                        {formatCurrency(result.simples)}<span className="text-sm font-normal">/mês</span>
+          <div id="resultado" className="space-y-6 animate-fade-in">
+            {/* HERO: Melhor Regime - DESTAQUE PRINCIPAL */}
+            <Card className="border-2 border-secondary bg-gradient-to-br from-secondary/10 via-secondary/5 to-background overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/10 rounded-full blur-3xl" />
+              <CardContent className="pt-8 pb-8 relative">
+                <div className="text-center">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-secondary/20 rounded-full text-secondary text-sm font-medium mb-4">
+                    <Sparkles className="w-4 h-4" />
+                    Resultado da Análise
+                  </div>
+                  
+                  <h2 className="text-lg text-muted-foreground mb-2">O regime mais vantajoso para você é</h2>
+                  
+                  <div className="flex items-center justify-center gap-3 mb-4">
+                    <div className="w-16 h-16 rounded-2xl bg-secondary/20 flex items-center justify-center">
+                      <Star className="w-8 h-8 text-secondary" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-3xl md:text-4xl font-bold text-foreground">
+                        {getRegimeLabel(result.melhor_opcao)}
                       </p>
-                      {result.melhor_opcao === 'SIMPLES' && (
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-secondary">
-                          <Star className="w-3 h-3" /> MELHOR
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                      <XCircle className="w-4 h-4" />
-                      <span className="text-sm">Inelegível</span>
+                      <p className="text-xl font-semibold text-secondary">
+                        {formatCurrency(
+                          result.melhor_opcao === 'SIMPLES' && result.simples 
+                            ? result.simples 
+                            : result.melhor_opcao === 'PRESUMIDO' 
+                              ? result.presumido 
+                              : result.real
+                        )}/mês
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Economia em destaque */}
+                  {result.economia_anual > 0 && formData.regime_atual && (
+                    <div className="inline-flex flex-col items-center bg-secondary/20 rounded-2xl px-8 py-4 mt-2">
+                      <div className="flex items-center gap-2 text-secondary mb-1">
+                        <TrendingDown className="w-5 h-5" />
+                        <span className="text-sm font-medium">Economia vs {getRegimeLabel(formData.regime_atual)}</span>
+                      </div>
+                      <p className="text-3xl md:text-4xl font-bold text-secondary">
+                        {formatCurrency(result.economia_anual)}
+                        <span className="text-lg font-normal text-secondary/80"> /ano</span>
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        ({formatCurrency(result.economia_mensal)}/mês)
+                      </p>
                     </div>
                   )}
                 </div>
+              </CardContent>
+            </Card>
 
-                {/* Lucro Presumido */}
-                <div className={`rounded-xl p-6 text-center border-2 transition-all ${
-                  result.melhor_opcao === 'PRESUMIDO' 
-                    ? 'bg-secondary/10 border-secondary' 
-                    : 'bg-muted/50 border-border'
-                }`}>
-                  <p className="text-sm font-medium text-muted-foreground mb-2">PRESUMIDO</p>
-                  <p className="text-2xl font-bold text-foreground mb-2">
-                    {formatCurrency(result.presumido)}<span className="text-sm font-normal">/mês</span>
-                  </p>
-                  {result.melhor_opcao === 'PRESUMIDO' && (
-                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-secondary">
-                      <Star className="w-3 h-3" /> MELHOR
-                    </span>
-                  )}
-                </div>
+            {/* Comparativo detalhado dos 3 regimes */}
+            <Card className="border-primary/30">
+              <CardHeader className="bg-primary/5 border-b border-primary/10">
+                <CardTitle className="flex items-center gap-2">
+                  <Scale className="w-5 h-5 text-primary" />
+                  Comparativo Detalhado
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6 space-y-8">
+                {/* Regime Cards - Redesenhados */}
+                <div className="grid md:grid-cols-3 gap-4">
+                  {/* Simples Nacional */}
+                  <div className={`rounded-2xl p-6 text-center border-2 transition-all relative ${
+                    !result.simples_elegivel 
+                      ? 'bg-muted/30 border-muted opacity-60' 
+                      : result.melhor_opcao === 'SIMPLES' 
+                        ? 'bg-gradient-to-b from-secondary/15 to-secondary/5 border-secondary shadow-lg shadow-secondary/10' 
+                        : 'bg-muted/50 border-border hover:border-primary/30'
+                  }`}>
+                    {result.melhor_opcao === 'SIMPLES' && result.simples_elegivel && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-secondary text-secondary-foreground px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                        <Crown className="w-3 h-3" /> MELHOR OPÇÃO
+                      </div>
+                    )}
+                    <p className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">Simples Nacional</p>
+                    {result.simples_elegivel && result.simples !== null ? (
+                      <>
+                        <p className="text-3xl font-bold text-foreground mb-1">
+                          {formatCurrency(result.simples)}
+                        </p>
+                        <p className="text-sm text-muted-foreground">/mês</p>
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground py-2">
+                        <XCircle className="w-6 h-6" />
+                        <span className="text-sm font-medium">Inelegível</span>
+                        <span className="text-xs">Faturamento acima do limite</span>
+                      </div>
+                    )}
+                  </div>
 
-                {/* Lucro Real */}
-                <div className={`rounded-xl p-6 text-center border-2 transition-all ${
-                  result.melhor_opcao === 'REAL' 
-                    ? 'bg-secondary/10 border-secondary' 
-                    : 'bg-muted/50 border-border'
-                }`}>
-                  <p className="text-sm font-medium text-muted-foreground mb-2">LUCRO REAL</p>
-                  <p className="text-2xl font-bold text-foreground mb-2">
-                    {formatCurrency(result.real)}<span className="text-sm font-normal">/mês</span>
-                  </p>
-                  {result.melhor_opcao === 'REAL' && (
-                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-secondary">
-                      <Star className="w-3 h-3" /> MELHOR
-                    </span>
-                  )}
-                  {result.creditos_pis_cofins > 0 && (
-                    <p className="text-xs text-primary mt-2">
-                      Créditos PIS/COFINS: {formatCurrency(result.creditos_pis_cofins)}
+                  {/* Lucro Presumido */}
+                  <div className={`rounded-2xl p-6 text-center border-2 transition-all relative ${
+                    result.melhor_opcao === 'PRESUMIDO' 
+                      ? 'bg-gradient-to-b from-secondary/15 to-secondary/5 border-secondary shadow-lg shadow-secondary/10' 
+                      : 'bg-muted/50 border-border hover:border-primary/30'
+                  }`}>
+                    {result.melhor_opcao === 'PRESUMIDO' && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-secondary text-secondary-foreground px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                        <Crown className="w-3 h-3" /> MELHOR OPÇÃO
+                      </div>
+                    )}
+                    <p className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">Lucro Presumido</p>
+                    <p className="text-3xl font-bold text-foreground mb-1">
+                      {formatCurrency(result.presumido)}
                     </p>
-                  )}
+                    <p className="text-sm text-muted-foreground">/mês</p>
+                  </div>
+
+                  {/* Lucro Real */}
+                  <div className={`rounded-2xl p-6 text-center border-2 transition-all relative ${
+                    result.melhor_opcao === 'REAL' 
+                      ? 'bg-gradient-to-b from-secondary/15 to-secondary/5 border-secondary shadow-lg shadow-secondary/10' 
+                      : 'bg-muted/50 border-border hover:border-primary/30'
+                  }`}>
+                    {result.melhor_opcao === 'REAL' && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-secondary text-secondary-foreground px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                        <Crown className="w-3 h-3" /> MELHOR OPÇÃO
+                      </div>
+                    )}
+                    <p className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">Lucro Real</p>
+                    <p className="text-3xl font-bold text-foreground mb-1">
+                      {formatCurrency(result.real)}
+                    </p>
+                    <p className="text-sm text-muted-foreground">/mês</p>
+                    {result.creditos_pis_cofins > 0 && (
+                      <p className="text-xs text-primary mt-2 font-medium">
+                        Créditos: {formatCurrency(result.creditos_pis_cofins)}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
+
+                {/* CTA PROFESSIONAL - Oportunidades não consideradas */}
+                <div className="bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-orange-500/10 border-2 border-amber-500/30 rounded-2xl p-6 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl" />
+                  <div className="relative">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
+                        <Lock className="w-6 h-6 text-amber-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-foreground mb-2 flex items-center gap-2">
+                          <Sparkles className="w-5 h-5 text-amber-500" />
+                          Quer economizar ainda mais?
+                        </h3>
+                        <p className="text-muted-foreground mb-4">
+                          Esta simulação <strong>não considera oportunidades tributárias</strong> como incentivos fiscais, 
+                          regimes especiais, créditos acumulados e benefícios setoriais que podem 
+                          <span className="text-amber-600 font-semibold"> reduzir sua carga tributária em até 40%</span>.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <Button asChild className="bg-amber-500 hover:bg-amber-600 text-white">
+                            <Link to="/oportunidades">
+                              <Sparkles className="w-4 h-4 mr-2" />
+                              Ver Oportunidades Tributárias
+                              <ArrowRight className="w-4 h-4 ml-2" />
+                            </Link>
+                          </Button>
+                          <Button variant="outline" asChild className="border-amber-500/30 text-amber-600 hover:bg-amber-500/10">
+                            <Link to="/dashboard">
+                              Conhecer Plano Professional
+                            </Link>
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
               {/* Detalhamento dos créditos - se informou insumos */}
               {calcularCreditosPisCofins() > 0 && (
@@ -725,31 +820,7 @@ const ComparativoRegimes = () => {
                 </div>
               )}
 
-              {/* Savings */}
-              {result.economia_anual > 0 && formData.regime_atual && (
-                <div className="bg-secondary/10 border border-secondary/20 rounded-xl p-6">
-                  <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-                    <Star className="w-5 h-5 text-secondary" />
-                    Economia Potencial
-                  </h3>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Seu regime atual</p>
-                      <p className="font-semibold text-foreground">{getRegimeLabel(formData.regime_atual)}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Regime recomendado</p>
-                      <p className="font-semibold text-secondary">{getRegimeLabel(result.melhor_opcao)}</p>
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-4 border-t border-secondary/20">
-                    <p className="text-sm text-muted-foreground">Economia estimada</p>
-                    <p className="text-2xl font-bold text-secondary">
-                      {formatCurrency(result.economia_anual)} / ano
-                    </p>
-                  </div>
-                </div>
-              )}
+              {/* Seção de economia já está no HERO acima, removida duplicação */}
 
               {/* Warning */}
               <div className="bg-accent/10 border border-accent/20 rounded-xl p-6">
@@ -806,6 +877,7 @@ const ComparativoRegimes = () => {
               <TaxDisclaimer />
             </CardContent>
           </Card>
+        </div>
         )}
       </div>
     </DashboardLayout>
