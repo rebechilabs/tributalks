@@ -99,8 +99,8 @@ serve(async (req) => {
       });
     }
 
-    // Check daily limit for BASICO plan
-    if (plano === "BASICO") {
+    // Check daily limit for BASICO/NAVIGATOR plan (PROFISSIONAL, PREMIUM, ENTERPRISE have unlimited)
+    if (plano === "BASICO" || plano === "NAVIGATOR") {
       const today = new Date().toISOString().split("T")[0];
       const { count } = await supabase
         .from("tributbot_messages")
