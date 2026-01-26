@@ -46,6 +46,43 @@ const priorityConfig: Record<number, { label: string; variant: 'default' | 'seco
   4: { label: 'Opcional', variant: 'outline' },
 };
 
+// Mapeamento de ações para dimensões do score
+const dimensionConfig: Record<string, { dimension: string; icon: string; color: string; tip: string }> = {
+  // Conformidade - regularidade fiscal
+  'REGULARIZAR_DEBITOS': { dimension: 'Conformidade', icon: '⚖️', color: 'text-blue-600', tip: 'Quite débitos pendentes para sair do vermelho fiscal' },
+  'ATUALIZAR_CERTIDOES': { dimension: 'Conformidade', icon: '⚖️', color: 'text-blue-600', tip: 'Renove certidões negativas antes do vencimento' },
+  'RESOLVER_NOTIFICACAO': { dimension: 'Conformidade', icon: '⚖️', color: 'text-blue-600', tip: 'Responda notificações da Receita dentro do prazo' },
+  
+  // Eficiência - aproveitamento de créditos e economia
+  'RECUPERAR_CREDITOS': { dimension: 'Eficiência', icon: '💰', color: 'text-green-600', tip: 'Analise XMLs para identificar créditos não utilizados' },
+  'REVISAR_REGIME': { dimension: 'Eficiência', icon: '💰', color: 'text-green-600', tip: 'Compare regimes tributários e escolha o mais vantajoso' },
+  'REVISAR_NCM': { dimension: 'Eficiência', icon: '💰', color: 'text-green-600', tip: 'Corrija NCMs para pagar alíquotas corretas' },
+  
+  // Risco - exposição a autuações
+  'CORRIGIR_OBRIGACOES': { dimension: 'Risco', icon: '⚠️', color: 'text-red-600', tip: 'Regularize obrigações acessórias em atraso' },
+  'REVISAR_CLASSIFICACAO': { dimension: 'Risco', icon: '⚠️', color: 'text-red-600', tip: 'Verifique CFOPs e CSTs das operações fiscais' },
+  'AUDITORIA_FISCAL': { dimension: 'Risco', icon: '⚠️', color: 'text-red-600', tip: 'Faça revisão preventiva dos últimos 5 anos' },
+  
+  // Documentação - organização documental
+  'IMPORTAR_XMLS': { dimension: 'Documentação', icon: '📁', color: 'text-purple-600', tip: 'Importe XMLs dos últimos 12 meses' },
+  'PREENCHER_DRE': { dimension: 'Documentação', icon: '📁', color: 'text-purple-600', tip: 'Complete seu DRE para análise financeira' },
+  'COMPLETAR_PERFIL': { dimension: 'Documentação', icon: '📁', color: 'text-purple-600', tip: 'Preencha dados da empresa para matching preciso' },
+  
+  // Gestão - controles internos
+  'IMPLEMENTAR_CONTROLES': { dimension: 'Gestão', icon: '📊', color: 'text-orange-600', tip: 'Adote rotinas de conferência fiscal mensal' },
+  'TREINAR_EQUIPE': { dimension: 'Gestão', icon: '📊', color: 'text-orange-600', tip: 'Capacite equipe sobre nova legislação' },
+  'PREPARAR_REFORMA': { dimension: 'Gestão', icon: '📊', color: 'text-orange-600', tip: 'Inicie adequação aos novos tributos CBS/IBS' },
+};
+
+function getDimensionInfo(actionCode: string) {
+  return dimensionConfig[actionCode] || { 
+    dimension: 'Geral', 
+    icon: '🎯', 
+    color: 'text-muted-foreground',
+    tip: 'Ação para melhorar seu score geral'
+  };
+}
+
 export function ScoreResults({ 
   financialImpact, 
   actions, 
@@ -136,6 +173,7 @@ export function ScoreResults({
             <div className="space-y-4">
               {actions.slice(0, 5).map((action, index) => {
                 const priorityInfo = priorityConfig[action.priority] || priorityConfig[3];
+                const dimensionInfo = getDimensionInfo(action.action_code);
                 
                 return (
                   <div 
@@ -146,17 +184,26 @@ export function ScoreResults({
                       {index + 1}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="text-base" title={dimensionInfo.dimension}>
+                          {dimensionInfo.icon}
+                        </span>
+                        <Badge variant="outline" className="text-xs font-normal">
+                          {dimensionInfo.dimension}
+                        </Badge>
                         <h4 className="font-medium">{action.action_title}</h4>
                         <Badge variant={priorityInfo.variant} className="text-xs">
                           {priorityInfo.label}
                         </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-muted-foreground mb-1">
                         {action.action_description}
                       </p>
+                      <p className="text-xs text-primary/80 italic">
+                        💡 {dimensionInfo.tip}
+                      </p>
                       <div className="flex items-center gap-4 mt-2">
-                        <span className="text-xs text-green-600 font-medium">
+                        <span className="text-xs font-medium text-primary">
                           +{action.points_gain} pontos
                         </span>
                         {action.economia_estimada > 0 && (
