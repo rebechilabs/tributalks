@@ -25,7 +25,7 @@ const TribuBot = () => {
   const { profile, user } = useAuth();
   const currentPlan = profile?.plano || "FREE";
   const hasAccess = currentPlan !== "FREE";
-  const isUnlimited = ["PROFISSIONAL", "PREMIUM"].includes(currentPlan);
+  const isUnlimited = ["PROFISSIONAL", "PREMIUM", "ENTERPRISE"].includes(currentPlan);
 
   const [messages, setMessages] = useState<Message[]>([
     {

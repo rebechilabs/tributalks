@@ -399,7 +399,23 @@ const ComparativoRegimes = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Margem de lucro</Label>
+                <div className="flex items-center gap-2">
+                  <Label>Margem de lucro</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p className="text-sm">
+                          <strong>Lucro líquido sobre o faturamento.</strong><br />
+                          Calcule: (Receita - Custos - Despesas) ÷ Receita.<br /><br />
+                          Ex: Se você fatura R$ 100.000 e sobram R$ 20.000 de lucro, sua margem é 20%.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
                 <Select value={formData.margem_lucro} onValueChange={(v) => handleChange("margem_lucro", v)}>
                   <SelectTrigger className="h-12">
                     <SelectValue placeholder="Selecione" />
@@ -738,11 +754,17 @@ const ComparativoRegimes = () => {
               <div className="bg-accent/10 border border-accent/20 rounded-xl p-6">
                 <h3 className="font-semibold text-foreground mb-2 flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5 text-accent" />
-                  Importante
+                  Importante — Esta é uma estimativa simplificada
                 </h3>
-                <p className="text-muted-foreground">
-                  A mudança de regime só pode ser feita no início do ano-calendário. 
-                  Planeje com antecedência.
+                <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                  <li>A mudança de regime só pode ser feita no início do ano-calendário</li>
+                  <li>O comparativo deve considerar: projeções de faturamento, expansão planejada, volume de compras e vendas</li>
+                  <li>Vendas interestaduais e município de prestação de serviços afetam a carga tributária</li>
+                  <li>Incentivos fiscais estaduais/municipais não foram considerados</li>
+                  <li>Créditos acumulados e operações especiais podem alterar o resultado</li>
+                </ul>
+                <p className="text-xs text-muted-foreground mt-3 font-medium">
+                  Recomendamos validar esta análise com um contador antes de tomar decisões.
                 </p>
               </div>
 
@@ -761,12 +783,12 @@ const ComparativoRegimes = () => {
               {/* CTA */}
               <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 text-center">
                 <p className="text-foreground font-medium mb-3">
-                  Quer ajuda para mudar de regime?
+                  Quer uma análise completa para mudar de regime?
                 </p>
                 <Button variant="default" asChild>
-                  <a href="https://calendly.com" target="_blank" rel="noopener noreferrer">
+                  <a href="https://wa.me/5511999999999?text=Olá!%20Gostaria%20de%20uma%20análise%20de%20regime%20tributário." target="_blank" rel="noopener noreferrer">
                     <Calendar className="w-4 h-4 mr-2" />
-                    Agendar consultoria
+                    Falar com R&S Contabilidade
                   </a>
                 </Button>
               </div>

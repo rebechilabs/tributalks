@@ -10,7 +10,7 @@ const COMMUNITY_URL = "https://chat.whatsapp.com/example"; // Substituir pelo li
 const Comunidade = () => {
   const { profile } = useAuth();
   const currentPlan = profile?.plano || "FREE";
-  const hasAccess = ["PROFISSIONAL", "PREMIUM"].includes(currentPlan);
+  const hasAccess = ["PROFISSIONAL", "PREMIUM", "ENTERPRISE"].includes(currentPlan);
 
   if (!hasAccess) {
     return (
