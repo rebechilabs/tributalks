@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { CONFIG } from "@/config/site";
 import logoTributech from "@/assets/logo-tributech.png";
+import { TrustBadges } from "./TrustBadges";
 
 export function Footer() {
   return (
@@ -36,6 +37,9 @@ export function Footer() {
               Contato
             </Link>
           </nav>
+
+          {/* Trust Badges */}
+          <TrustBadges variant="compact" className="mt-2" />
 
           {/* Legal Disclaimer */}
           <p className="text-muted-foreground/70 text-xs max-w-2xl leading-relaxed">

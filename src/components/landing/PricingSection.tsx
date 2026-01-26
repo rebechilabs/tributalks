@@ -3,6 +3,7 @@ import { Check, X, Star, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { CONFIG } from "@/config/site";
+import { TrustBadges } from "./TrustBadges";
 
 type BillingPeriod = "mensal" | "anual";
 
@@ -285,6 +286,14 @@ export function PricingSection() {
               </div>
             );
           })}
+        </div>
+
+        {/* Trust Badges */}
+        <div className="mt-16">
+          <p className="text-center text-sm text-muted-foreground mb-6">
+            Sua segurança é nossa prioridade
+          </p>
+          <TrustBadges variant="full" className="max-w-4xl mx-auto" />
         </div>
       </div>
     </section>
