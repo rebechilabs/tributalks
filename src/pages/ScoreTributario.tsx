@@ -11,6 +11,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { FeatureGateLimit } from "@/components/FeatureGate";
+import { usePlanAccess } from "@/hooks/useFeatureAccess";
 
 interface TaxScoreData {
   id: string;
@@ -54,6 +56,7 @@ interface ScoreAction {
 export default function ScoreTributario() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
+  const { isNavigator } = usePlanAccess();
   const [scoreData, setScoreData] = useState<TaxScoreData | null>(null);
   const [actions, setActions] = useState<ScoreAction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -186,6 +189,9 @@ export default function ScoreTributario() {
     return `${inicio} - ${fim}`;
   };
 
+  // Usuários FREE que já têm score calculado atingiram o limite de 1
+  const hasUsedFreeLimit = !isNavigator && scoreData && scoreData.score_total > 0;
+
   if (loading) {
     return (
       <DashboardLayout title="Score Tributário">
@@ -198,6 +204,7 @@ export default function ScoreTributario() {
 
   return (
     <DashboardLayout title="Score Tributário">
+      <FeatureGateLimit feature="score_tributario" usageCount={hasUsedFreeLimit ? 1 : 0}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -479,6 +486,7 @@ export default function ScoreTributario() {
           />
         )}
       </div>
+      </FeatureGateLimit>
     </DashboardLayout>
   );
 }
