@@ -1,4 +1,4 @@
-import { UserPlus, Upload, Trophy, TrendingUp } from "lucide-react";
+import { UserPlus, Building2, Trophy } from "lucide-react";
 
 const steps = [
   {
@@ -9,21 +9,15 @@ const steps = [
   },
   {
     number: "2",
-    icon: Upload,
-    title: "Importe seus XMLs",
-    description: "Upload das notas fiscais",
+    icon: Building2,
+    title: "Preencha os dados da sua empresa",
+    description: "Informações básicas do negócio",
   },
   {
     number: "3",
     icon: Trophy,
     title: "Receba seu Score",
     description: "Diagnóstico fiscal completo",
-  },
-  {
-    number: "4",
-    icon: TrendingUp,
-    title: "Economize com clareza",
-    description: "Ações claras de economia",
   },
 ];
 
@@ -36,14 +30,14 @@ export function HowItWorksSection() {
             Como funciona
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            Do cadastro ao diagnóstico completo em menos de 10 minutos
+            Do cadastro ao seu score completo em menos de 10 min
           </p>
         </div>
 
-        <div className="max-w-5xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8 relative">
+        <div className="max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 relative">
             {/* Connecting Line - Desktop Only */}
-            <div className="hidden md:block absolute top-8 left-[12.5%] right-[12.5%] h-0.5 bg-border" />
+            <div className="hidden md:block absolute top-8 left-[16.67%] right-[16.67%] h-0.5 bg-border" />
 
             {steps.map((step, index) => (
               <div
