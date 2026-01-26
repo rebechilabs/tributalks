@@ -348,7 +348,7 @@ const Perfil = () => {
               </div>
               {planoAtual !== 'PREMIUM' && (
                 <Button asChild>
-                  <Link to="/#pricing">
+                  <Link to="/#planos">
                     Fazer upgrade
                   </Link>
                 </Button>
@@ -366,7 +366,7 @@ const Perfil = () => {
                 </Button>
               )}
               <Button variant="outline" asChild>
-                <Link to="/#pricing">
+                <Link to="/#planos">
                   Alterar plano
                 </Link>
               </Button>

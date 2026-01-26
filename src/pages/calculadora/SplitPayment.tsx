@@ -386,13 +386,13 @@ const SplitPayment = () => {
             <CardContent className="pt-6 space-y-8">
               {/* Main Result */}
               <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-muted/50 rounded-xl p-6 text-center">
+                <div className="bg-card border-2 border-primary/30 rounded-xl p-6 text-center shadow-sm">
                   <p className="text-sm text-muted-foreground mb-2">IMPACTO MENSAL</p>
                   <p className="text-2xl font-bold text-foreground">
                     {formatCurrency(result.mensal_min)} - {formatCurrency(result.mensal_max)}
                   </p>
                 </div>
-                <div className="bg-muted/50 rounded-xl p-6 text-center">
+                <div className="bg-card border-2 border-primary/30 rounded-xl p-6 text-center shadow-sm">
                   <p className="text-sm text-muted-foreground mb-2">IMPACTO ANUAL</p>
                   <p className="text-2xl font-bold text-foreground">
                     {formatCurrency(result.anual_min)} - {formatCurrency(result.anual_max)}
@@ -402,21 +402,21 @@ const SplitPayment = () => {
 
               {/* Tax Breakdown */}
               <div className="grid grid-cols-3 gap-3">
-                <div className="bg-muted/30 rounded-lg p-4 text-center">
+                <div className="bg-card border border-border rounded-lg p-4 text-center shadow-sm">
                   <p className="text-xs text-muted-foreground mb-1">CBS (Federal)</p>
                   <p className="text-lg font-semibold text-foreground">{formatCurrency(result.cbs_mensal)}</p>
                   <Badge variant="outline" className="mt-1 text-xs">
                     {cenario === 'TESTE_2026' ? '0,9%' : '9,3%'}
                   </Badge>
                 </div>
-                <div className="bg-muted/30 rounded-lg p-4 text-center">
+                <div className="bg-card border border-border rounded-lg p-4 text-center shadow-sm">
                   <p className="text-xs text-muted-foreground mb-1">IBS (Est/Mun)</p>
                   <p className="text-lg font-semibold text-foreground">{formatCurrency(result.ibs_mensal)}</p>
                   <Badge variant="outline" className="mt-1 text-xs">
                     {cenario === 'TESTE_2026' ? '0,1%' : '18,7%'}
                   </Badge>
                 </div>
-                <div className="bg-primary/10 rounded-lg p-4 text-center">
+                <div className="bg-card border-2 border-primary rounded-lg p-4 text-center shadow-sm">
                   <p className="text-xs text-muted-foreground mb-1">TOTAL IVA</p>
                   <p className="text-lg font-semibold text-primary">{result.aliquota_total.toFixed(0)}%</p>
                   <Badge variant="default" className="mt-1 text-xs">
@@ -486,23 +486,23 @@ const SplitPayment = () => {
                 </div>
                 
                 <div className="grid sm:grid-cols-3 gap-3 mb-4">
-                  <div className="bg-background/50 rounded-lg p-3 text-center">
+                  <div className="bg-card border border-border rounded-lg p-3 text-center shadow-sm">
                     <p className="text-2xl font-bold text-primary">🔍</p>
-                    <p className="text-xs text-muted-foreground mt-1">Análise de XMLs para identificar créditos perdidos</p>
+                    <p className="text-xs text-foreground mt-1">Análise de XMLs para identificar créditos perdidos</p>
                   </div>
-                  <div className="bg-background/50 rounded-lg p-3 text-center">
+                  <div className="bg-card border border-border rounded-lg p-3 text-center shadow-sm">
                     <p className="text-2xl font-bold text-primary">📊</p>
-                    <p className="text-xs text-muted-foreground mt-1">DRE Inteligente com impacto da reforma</p>
+                    <p className="text-xs text-foreground mt-1">DRE Inteligente com impacto da reforma</p>
                   </div>
-                  <div className="bg-background/50 rounded-lg p-3 text-center">
+                  <div className="bg-card border border-border rounded-lg p-3 text-center shadow-sm">
                     <p className="text-2xl font-bold text-primary">💰</p>
-                    <p className="text-xs text-muted-foreground mt-1">Radar de 57 oportunidades tributárias</p>
+                    <p className="text-xs text-foreground mt-1">Radar de 57 oportunidades tributárias</p>
                   </div>
                 </div>
 
                 <div className="text-center">
                   <Button variant="default" size="lg" asChild>
-                    <Link to="/perfil?upgrade=professional">
+                    <Link to="/#planos">
                       Conhecer Plano Professional
                     </Link>
                   </Button>
