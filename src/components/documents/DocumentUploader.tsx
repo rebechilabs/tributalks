@@ -6,9 +6,16 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { AnalysisResult } from "@/pages/AnalisadorDocumentos";
 
-// PDF.js worker setup
-import * as pdfjsLib from "pdfjs-dist";
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Dynamic import to avoid top-level await issues
+let pdfjsLib: typeof import("pdfjs-dist") | null = null;
+
+const loadPdfJs = async () => {
+  if (!pdfjsLib) {
+    pdfjsLib = await import("pdfjs-dist");
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+  }
+  return pdfjsLib;
+};
 
 interface DocumentUploaderProps {
   onAnalysisComplete: (result: AnalysisResult | null) => void;
@@ -25,10 +32,13 @@ export function DocumentUploader({
   const [extractionProgress, setExtractionProgress] = useState("");
 
   const extractTextFromPdf = async (file: File): Promise<string> => {
+    setExtractionProgress("Carregando biblioteca PDF...");
+    const pdfjs = await loadPdfJs();
+    
     setExtractionProgress("Lendo arquivo PDF...");
     
     const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
     
     let fullText = "";
     const totalPages = pdf.numPages;
