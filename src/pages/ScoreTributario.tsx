@@ -422,6 +422,10 @@ export default function ScoreTributario() {
                 : 'warning'
               }
               helpText="Sistema de classificação A+ a D da Receita Federal"
+              infoTooltip={{
+                title: "O que é o Receita Sintonia?",
+                content: "O Receita Sintonia é um programa de estímulo à conformidade tributária e aduaneira da Receita Federal. Ele classifica contribuintes de A+ (melhor) a D (pior) com base em critérios de regularidade. Quem se classifica bem recebe benefícios e tratamento diferenciado, como prioridade na restituição do IR, redução de garantias em parcelamentos e canal exclusivo de atendimento."
+              }}
               question={{
                 text: 'Você sabe qual é sua nota no Receita Sintonia (A+ a D)?',
                 options: [

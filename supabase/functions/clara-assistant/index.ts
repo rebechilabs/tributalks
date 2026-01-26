@@ -14,12 +14,14 @@ interface ToolContext {
 const TOOL_CONTEXTS: Record<string, ToolContext> = {
   "score-tributario": {
     toolName: "Score Tributário",
-    toolDescription: "avaliação da saúde tributária da sua empresa",
+    toolDescription: "avaliação da saúde tributária da sua empresa, inspirado no programa Receita Sintonia da Receita Federal",
     stepByStep: [
-      "Responda as perguntas sobre sua situação fiscal atual",
-      "Informe sobre certidões negativas e obrigações",
-      "Veja seu score de 0 a 1000 pontos",
-      "Analise as recomendações para melhorar sua nota"
+      "Responda as 11 perguntas estratégicas sobre sua situação fiscal",
+      "As perguntas avaliam: faturamento, notificações, débitos, obrigações acessórias, certidões e preparo para a Reforma",
+      "Veja seu score de 0 a 1000 pontos com nota de A+ a E",
+      "Analise as 5 dimensões: Conformidade, Eficiência, Risco, Documentação e Gestão",
+      "Siga as ações recomendadas para melhorar sua nota e economizar",
+      "💡 Dica: O Receita Sintonia é o programa oficial da Receita Federal que classifica contribuintes de A+ a D - quem tem boa classificação recebe benefícios como prioridade na restituição e tratamento diferenciado"
     ]
   },
   "split-payment": {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LucideIcon, Check, HelpCircle, ChevronRight, AlertCircle } from "lucide-react";
+import { LucideIcon, Check, HelpCircle, ChevronRight, AlertCircle, Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -9,6 +9,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 
@@ -17,6 +22,12 @@ interface ScoreCardProps {
   icon: LucideIcon;
   status: 'complete' | 'incomplete' | 'warning';
   helpText?: string;
+  
+  // Info tooltip com explicação detalhada
+  infoTooltip?: {
+    title: string;
+    content: string;
+  };
   
   // Para cards automáticos
   autoData?: {
@@ -62,6 +73,7 @@ export function ScoreCard({
   icon: Icon, 
   status, 
   helpText,
+  infoTooltip,
   autoData,
   question,
 }: ScoreCardProps) {
@@ -137,6 +149,23 @@ export function ScoreCard({
                 <CardTitle className="text-sm font-medium uppercase tracking-wide">
                   {title}
                 </CardTitle>
+                {infoTooltip && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-5 w-5 p-0">
+                        <Info className="h-4 w-4 text-primary cursor-pointer" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80" align="start">
+                      <div className="space-y-2">
+                        <h4 className="font-semibold text-sm">{infoTooltip.title}</h4>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {infoTooltip.content}
+                        </p>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                )}
               </div>
               {helpText && (
                 <Tooltip>
@@ -177,6 +206,23 @@ export function ScoreCard({
               <CardTitle className="text-sm font-medium uppercase tracking-wide">
                 {title}
               </CardTitle>
+              {infoTooltip && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-5 w-5 p-0">
+                      <Info className="h-4 w-4 text-primary cursor-pointer" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80" align="start">
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-sm">{infoTooltip.title}</h4>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {infoTooltip.content}
+                      </p>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
             </div>
             {helpText && (
               <Tooltip>
