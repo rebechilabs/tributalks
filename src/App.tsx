@@ -18,6 +18,8 @@ import Privacidade from "./pages/Privacidade";
 import Contato from "./pages/Contato";
 import DocumentoComercial from "./pages/DocumentoComercial";
 import DocumentoOportunidades from "./pages/DocumentoOportunidades";
+import EstudosCaso from "./pages/EstudosCaso";
+import EstudoCasoDetalhe from "./pages/EstudoCasoDetalhe";
 
 // Páginas protegidas
 import Onboarding from "./pages/Onboarding";
@@ -40,6 +42,8 @@ import PerfilEmpresa from "./pages/PerfilEmpresa";
 import Oportunidades from "./pages/Oportunidades";
 import CbsIbsNcm from "./pages/CbsIbsNcm";
 import TimelineReforma from "./pages/TimelineReforma";
+import AnalisadorDocumentos from "./pages/AnalisadorDocumentos";
+import WorkflowsGuiados from "./pages/WorkflowsGuiados";
 
 // Calculadoras
 import SplitPayment from "./pages/calculadora/SplitPayment";
@@ -76,6 +80,8 @@ const App = () => (
             <Route path="/contato" element={<Contato />} />
             <Route path="/documento-comercial" element={<DocumentoComercial />} />
             <Route path="/documento-oportunidades" element={<DocumentoOportunidades />} />
+            <Route path="/casos" element={<EstudosCaso />} />
+            <Route path="/casos/:slug" element={<EstudoCasoDetalhe />} />
             
             {/* Protegidas */}
             <Route 
@@ -263,6 +269,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <CbsIbsNcm />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/analisador-documentos" 
+              element={
+                <ProtectedRoute>
+                  <AnalisadorDocumentos />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/workflows" 
+              element={
+                <ProtectedRoute>
+                  <WorkflowsGuiados />
                 </ProtectedRoute>
               } 
             />

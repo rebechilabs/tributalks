@@ -51,8 +51,10 @@ export type FeatureKey =
   | 'dre_inteligente'       // PROFESSIONAL+
   | 'oportunidades'         // PROFESSIONAL+
   | 'relatorios_pdf'        // PROFESSIONAL+
-  // IA
+  // IA e Documentos
   | 'tribubot'              // NAVIGATOR: 10 msg/dia, PROFESSIONAL+: ilimitado
+  | 'document_analyzer'     // NAVIGATOR+ (Analisador de Documentos)
+  | 'workflows'             // NAVIGATOR+ (Workflows Guiados)
   // Extras
   | 'comunidade'            // PROFESSIONAL+
   // Serviço Humano
@@ -87,8 +89,10 @@ export const FEATURE_CONFIG: Record<FeatureKey, FeatureConfig> = {
   oportunidades: { minPlan: 'PROFESSIONAL' },
   relatorios_pdf: { minPlan: 'PROFESSIONAL' },
   
-  // IA
+  // IA e Documentos
   tribubot: { minPlan: 'NAVIGATOR', limit: 10, usageKey: 'tribubot_messages_today' },
+  document_analyzer: { minPlan: 'NAVIGATOR' },
+  workflows: { minPlan: 'NAVIGATOR' },
   
   // Extras
   comunidade: { minPlan: 'PROFESSIONAL' },

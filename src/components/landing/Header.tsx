@@ -68,6 +68,16 @@ export function Header() {
             </span>
           </Link>
 
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-6">
+            <Link 
+              to="/casos" 
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              Estudos de Caso
+            </Link>
+          </nav>
+
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-3">
             {user ? (
