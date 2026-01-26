@@ -73,9 +73,9 @@ export const FEATURE_CONFIG: Record<FeatureKey, FeatureConfig> = {
   score_tributario: { minPlan: 'FREE', limit: 1, usageKey: 'score-tributario' },
   split_payment: { minPlan: 'FREE', limit: 1, usageKey: 'split-payment' },
   
-  // Calculadoras NAVIGATOR+ (sem limite)
+  // Calculadoras - RTC é FREE, Comparativo é NAVIGATOR+
+  calculadora_rtc: { minPlan: 'FREE' },
   comparativo_regimes: { minPlan: 'NAVIGATOR' },
-  calculadora_rtc: { minPlan: 'NAVIGATOR' },
   
   // Notícias
   news_feed: { minPlan: 'NAVIGATOR' },
