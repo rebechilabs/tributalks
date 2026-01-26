@@ -87,7 +87,7 @@ export function FloatingAssistant() {
       const toolName = currentTool?.replace(/-/g, " ") || "ferramenta";
       setMessages([{ 
         role: "assistant", 
-        content: `Olá! Sou a Clara, assistente da Tributech. 👋 Posso te ajudar a usar ${toolName}? Me pergunte qualquer coisa!` 
+        content: `Olá! Sou a Clara, assistente virtual do GPS Tributário. 👋 Posso te ajudar a usar ${toolName}? Me pergunte qualquer coisa!` 
       }]);
       setHasGreeted(true);
     } finally {
