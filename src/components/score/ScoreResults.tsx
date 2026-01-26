@@ -1,4 +1,4 @@
-import { ArrowRight, TrendingUp, AlertTriangle, Coins, FileText, Mail, RefreshCw, Clock } from "lucide-react";
+import { ArrowRight, TrendingUp, AlertTriangle, Coins, FileText, RefreshCw, Clock, Download } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,7 @@ interface ScoreResultsProps {
   financialImpact: FinancialImpact;
   actions: ScoreAction[];
   onRecalculate: () => void;
+  onDownloadPdf: () => void;
   isLoading?: boolean;
 }
 
@@ -87,6 +88,7 @@ export function ScoreResults({
   financialImpact, 
   actions, 
   onRecalculate,
+  onDownloadPdf,
   isLoading 
 }: ScoreResultsProps) {
   return (
@@ -229,13 +231,13 @@ export function ScoreResults({
 
       {/* Botões de Ação */}
       <div className="flex flex-wrap gap-3">
-        <Button variant="outline" className="gap-2">
-          <FileText className="h-4 w-4" />
+        <Button 
+          variant="outline" 
+          className="gap-2"
+          onClick={onDownloadPdf}
+        >
+          <Download className="h-4 w-4" />
           Baixar Relatório PDF
-        </Button>
-        <Button variant="outline" className="gap-2">
-          <Mail className="h-4 w-4" />
-          Enviar para Contador
         </Button>
         <Button 
           variant="outline" 
