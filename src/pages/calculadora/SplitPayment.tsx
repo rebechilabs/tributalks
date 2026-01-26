@@ -474,17 +474,42 @@ const SplitPayment = () => {
                 </Button>
               </div>
 
-              {/* CTA */}
-              <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 text-center">
-                <p className="text-foreground font-medium mb-3">
-                  Quer validar esses números com um especialista?
-                </p>
-                <Button variant="default" asChild>
-                  <Link to="/consultorias">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Agendar consultoria
-                  </Link>
-                </Button>
+              {/* CTA Professional */}
+              <div className="bg-primary/5 border border-primary/20 rounded-xl p-6">
+                <div className="text-center mb-4">
+                  <p className="text-foreground font-semibold text-lg mb-2">
+                    Quer reduzir esse impacto no seu caixa?
+                  </p>
+                  <p className="text-muted-foreground text-sm">
+                    O Plano Professional identifica oportunidades de economia que podem compensar o efeito do Split Payment.
+                  </p>
+                </div>
+                
+                <div className="grid sm:grid-cols-3 gap-3 mb-4">
+                  <div className="bg-background/50 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-primary">🔍</p>
+                    <p className="text-xs text-muted-foreground mt-1">Análise de XMLs para identificar créditos perdidos</p>
+                  </div>
+                  <div className="bg-background/50 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-primary">📊</p>
+                    <p className="text-xs text-muted-foreground mt-1">DRE Inteligente com impacto da reforma</p>
+                  </div>
+                  <div className="bg-background/50 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-primary">💰</p>
+                    <p className="text-xs text-muted-foreground mt-1">Radar de 57 oportunidades tributárias</p>
+                  </div>
+                </div>
+
+                <div className="text-center">
+                  <Button variant="default" size="lg" asChild>
+                    <Link to="/perfil?upgrade=professional">
+                      Conhecer Plano Professional
+                    </Link>
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Empresas que usam o diagnóstico completo economizam em média 15% a 40% em tributos
+                  </p>
+                </div>
               </div>
 
               {/* Save Status */}
