@@ -11,6 +11,7 @@ import { ChevronDown, User, Edit, LogOut, Calculator } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Sidebar } from "./Sidebar";
 import { MobileNav } from "./MobileNav";
+import { FloatingAssistant } from "@/components/common/FloatingAssistant";
 import logoTributech from "@/assets/logo-tributech.png";
 
 interface DashboardLayoutProps {
@@ -85,6 +86,9 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
         <main className="flex-1 overflow-y-auto">
           {children}
         </main>
+
+        {/* Floating AI Assistant */}
+        <FloatingAssistant />
       </div>
     </div>
   );
