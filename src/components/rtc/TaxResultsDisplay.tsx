@@ -20,6 +20,7 @@ import {
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { AlertTriangle, RefreshCw, FileText, CheckCircle2 } from "lucide-react";
 import { WARNING_MESSAGES } from "./rtcConstants";
+import { TaxDisclaimer } from "@/components/common/TaxDisclaimer";
 
 interface TaxResultsDisplayProps {
   results: {
@@ -295,6 +296,9 @@ export function TaxResultsDisplay({
           Exportar PDF (em breve)
         </Button>
       </div>
+
+      {/* Professional Disclaimer */}
+      <TaxDisclaimer />
     </div>
   );
 }

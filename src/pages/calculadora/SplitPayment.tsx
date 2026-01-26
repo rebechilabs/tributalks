@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { FeatureGateLimit } from "@/components/FeatureGate";
 import { useSimulationLimit } from "@/hooks/useSimulationLimit";
 import { usePlanAccess } from "@/hooks/useFeatureAccess";
+import { TaxDisclaimer } from "@/components/common/TaxDisclaimer";
 
 interface SplitPaymentResult {
   mensal_min: number;
@@ -494,11 +495,8 @@ const SplitPayment = () => {
                 </p>
               )}
 
-              {/* Disclaimer */}
-              <p className="text-xs text-muted-foreground text-center">
-                * Alíquotas conforme LC 214/2025 e Manual RTC (Receita Federal, 13/01/2026). 
-                Valores são estimativas e não constituem parecer técnico ou promessa de resultado.
-              </p>
+              {/* Professional Disclaimer */}
+              <TaxDisclaimer />
             </CardContent>
           </Card>
         )}

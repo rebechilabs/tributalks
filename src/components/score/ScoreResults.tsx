@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import { TaxDisclaimer } from "@/components/common/TaxDisclaimer";
 
 interface ScoreAction {
   id: string;
@@ -205,6 +206,9 @@ export function ScoreResults({
           </Button>
         </Link>
       </div>
+
+      {/* Professional Disclaimer */}
+      <TaxDisclaimer />
     </div>
   );
 }

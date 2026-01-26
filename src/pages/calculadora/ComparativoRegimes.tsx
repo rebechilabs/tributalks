@@ -12,6 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { TaxDisclaimer } from "@/components/common/TaxDisclaimer";
 interface RegimeResult {
   simples: number | null;
   presumido: number;
@@ -801,11 +802,8 @@ const ComparativoRegimes = () => {
                 </p>
               )}
 
-              {/* Disclaimer */}
-              <p className="text-xs text-muted-foreground text-center">
-                * Valores são estimativas baseadas em médias de mercado e alíquotas simplificadas. 
-                Consulte um contador para análise detalhada.
-              </p>
+              {/* Professional Disclaimer */}
+              <TaxDisclaimer />
             </CardContent>
           </Card>
         )}
