@@ -69,17 +69,62 @@ serve(async (req) => {
 
     const userId = claimsData.claims.sub;
 
-    const { documentText, documentType } = await req.json();
+    const { documentBase64, documentText, documentType, fileName } = await req.json();
 
-    if (!documentText) {
+    // Accept either base64 PDF or plain text
+    if (!documentBase64 && !documentText) {
       return new Response(
-        JSON.stringify({ error: "Document text is required" }),
+        JSON.stringify({ error: "Document content is required (base64 or text)" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Step 1: Extract data from document using AI
-    const extractionPrompt = `Você é um especialista em análise de documentos societários brasileiros.
+    // Step 1: Extract data from document using AI with vision capabilities
+    let extractionPrompt: string;
+    let messages: any[];
+    
+    if (documentBase64) {
+      // Use Gemini vision to read PDF directly
+      extractionPrompt = `Você é um especialista em análise de documentos societários brasileiros.
+
+Analise este ${documentType || "Contrato Social"} (arquivo: ${fileName || "documento.pdf"}) e extraia as informações estruturadas.
+
+Responda APENAS com um JSON válido no seguinte formato (sem markdown, sem explicações):
+{
+  "razaoSocial": "Nome completo da empresa",
+  "cnpj": "00.000.000/0000-00",
+  "cnaesPrincipais": ["0000-0/00"],
+  "cnaesSecundarios": ["0000-0/00"],
+  "objetoSocial": "Descrição resumida do objeto social",
+  "regimeTributario": "Simples Nacional|Lucro Presumido|Lucro Real|Não identificado",
+  "capitalSocial": 100000,
+  "dataConstituicao": "2020-01-15",
+  "socios": [{"nome": "Nome do Sócio", "participacao": 50}],
+  "endereco": {"cidade": "São Paulo", "uf": "SP"},
+  "atividadesIdentificadas": ["Comércio varejista", "Prestação de serviços de TI"]
+}
+
+Se algum campo não for encontrado, use null. Mantenha o JSON válido.`;
+
+      messages = [
+        { role: "system", content: "Você é um analisador de documentos. Responda apenas com JSON válido." },
+        { 
+          role: "user", 
+          content: [
+            { type: "text", text: extractionPrompt },
+            { 
+              type: "file", 
+              file: {
+                filename: fileName || "document.pdf",
+                file_data: `data:application/pdf;base64,${documentBase64}`
+              }
+            }
+          ]
+        },
+      ];
+    } else {
+      // Fallback to text-based analysis
+      extractionPrompt = `Você é um especialista em análise de documentos societários brasileiros.
 
 Analise o seguinte texto extraído de um ${documentType || "Contrato Social"} e extraia as informações estruturadas.
 
@@ -103,6 +148,12 @@ Responda APENAS com um JSON válido no seguinte formato (sem markdown, sem expli
 
 Se algum campo não for encontrado, use null. Mantenha o JSON válido.`;
 
+      messages = [
+        { role: "system", content: "Você é um analisador de documentos. Responda apenas com JSON válido." },
+        { role: "user", content: extractionPrompt },
+      ];
+    }
+
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -110,11 +161,8 @@ Se algum campo não for encontrado, use null. Mantenha o JSON válido.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: "Você é um analisador de documentos. Responda apenas com JSON válido." },
-          { role: "user", content: extractionPrompt },
-        ],
+        model: "google/gemini-2.5-flash",
+        messages,
       }),
     });
 
