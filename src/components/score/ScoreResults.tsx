@@ -152,11 +152,11 @@ export function ScoreResults({
               </p>
               <p className="text-xs text-muted-foreground mt-1">exposição estimada</p>
               {financialImpact.riscoAutuacao > 0 && (
-                <Link to="/consultorias">
+                <a href="https://bit.ly/rescontabilidade" target="_blank" rel="noopener noreferrer">
                   <Button variant="link" size="sm" className="p-0 h-auto mt-2 text-red-600">
                     Mitigar riscos
                   </Button>
-                </Link>
+                </a>
               )}
             </div>
           </div>
