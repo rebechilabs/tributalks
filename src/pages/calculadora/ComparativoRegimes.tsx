@@ -773,7 +773,7 @@ const ComparativoRegimes = () => {
                             </Link>
                           </Button>
                           <Button variant="outline" asChild className="border-amber-500/30 text-amber-600 hover:bg-amber-500/10">
-                            <Link to="/dashboard">
+                            <Link to="/#planos">
                               Conhecer Plano Professional
                             </Link>
                           </Button>
@@ -858,7 +858,7 @@ const ComparativoRegimes = () => {
                   Quer uma análise completa para mudar de regime?
                 </p>
                 <Button variant="default" asChild>
-                  <a href="https://wa.me/5511999999999?text=Olá!%20Gostaria%20de%20uma%20análise%20de%20regime%20tributário." target="_blank" rel="noopener noreferrer">
+                  <a href="https://bit.ly/rescontabilidade" target="_blank" rel="noopener noreferrer">
                     <Calendar className="w-4 h-4 mr-2" />
                     Falar com R&S Contabilidade
                   </a>
