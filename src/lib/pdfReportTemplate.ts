@@ -140,7 +140,7 @@ export function addHeader(doc: jsPDF, pageNumber: number = 1): void {
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(PDF_COLORS.primary.r, PDF_COLORS.primary.g, PDF_COLORS.primary.b);
-  doc.text('Rebechi & Silva Advogados Associados', margin, 15);
+  doc.text('Rebechi & Silva Produções', margin, 15);
   
   // Linha separadora
   doc.setDrawColor(PDF_COLORS.border.r, PDF_COLORS.border.g, PDF_COLORS.border.b);
@@ -194,7 +194,7 @@ export function drawCoverPage(
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(255, 255, 255);
-  doc.text('Rebechi & Silva Advogados Associados', margin + 5, 25);
+  doc.text('Rebechi & Silva Produções', margin + 5, 25);
   
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
