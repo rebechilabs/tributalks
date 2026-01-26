@@ -619,15 +619,9 @@ export default function ScoreTributario() {
           </div>
         </div>
 
-        {/* Seção de Resultados */}
-        {scoreData && cardsCompletos >= 4 && (
+        {/* Seção de Resultados - Botões de ação */}
+        {scoreData && scoreData.score_total > 0 && (
           <ScoreResults
-            financialImpact={{
-              economiaPotencial: scoreData.economia_potencial || 0,
-              riscoAutuacao: scoreData.risco_autuacao || 0,
-              creditosNaoAproveitados: scoreData.creditos_nao_aproveitados || 0,
-            }}
-            actions={actions}
             onRecalculate={calculateScore}
             onDownloadPdf={handleDownloadPdf}
             isLoading={calculating}
