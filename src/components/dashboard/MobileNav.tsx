@@ -44,8 +44,8 @@ const navGroups: NavGroup[] = [
     items: [
       { label: 'Score Tributário', href: '/dashboard/score-tributario', icon: Trophy },
       { label: 'Split Payment', href: '/calculadora/split-payment', icon: Wallet },
-      { label: 'Comparativo de Regimes', href: '/calculadora/comparativo-regimes', icon: Scale, requiredPlan: 'NAVIGATOR' },
-      { label: 'Calculadora RTC', href: '/calculadora/rtc', icon: Calculator, requiredPlan: 'NAVIGATOR', badge: 'API' },
+      { label: 'Comparativo de Regimes', href: '/calculadora/comparativo-regimes', icon: Scale },
+      { label: 'Calculadora RTC', href: '/calculadora/rtc', icon: Calculator, badge: 'API' },
     ]
   },
   {
