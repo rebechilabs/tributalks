@@ -111,14 +111,34 @@ export default function Contato() {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.from("contatos").insert({
+      // Save to database
+      const { error: dbError } = await supabase.from("contatos").insert({
         nome: data.nome,
         email: data.email,
         assunto: data.assunto,
         mensagem: data.mensagem,
       });
 
-      if (error) throw error;
+      if (dbError) throw dbError;
+
+      // Send email notification
+      try {
+        const { error: emailError } = await supabase.functions.invoke("send-contact-email", {
+          body: {
+            nome: data.nome,
+            email: data.email,
+            assunto: data.assunto,
+            mensagem: data.mensagem,
+          },
+        });
+
+        if (emailError) {
+          console.error("Email sending failed:", emailError);
+          // Don't fail the form submission if email fails
+        }
+      } catch (emailErr) {
+        console.error("Email service error:", emailErr);
+      }
 
       setSubmitted(true);
       toast.success("Mensagem enviada com sucesso! Responderemos em breve.");
@@ -225,7 +245,7 @@ export default function Contato() {
               <span className="font-medium text-primary">REDES SOCIAIS</span>
               <div className="flex items-center gap-4">
                 <a
-                  href="https://linkedin.com/company/tributech"
+                  href="https://www.linkedin.com/company/tributalks/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
