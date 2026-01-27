@@ -1,63 +1,88 @@
 
-# Plano: Corrigir Acesso e Limitador de Simulações
+# Correção: Validação Robusta no Onboarding
 
-## Parte 1: Dar Acesso Total ao Usuário (Imediato)
+## O Que Estava Errado
 
-Atualizar o plano do usuário `raphael@rebechisilva.com.br` para **ENTERPRISE**, garantindo acesso ilimitado a todas as funcionalidades.
+O problema ocorreu porque a validação `canProceed()` usa verificação truthy simples (`formData.regime`) que pode falhar em edge cases. Quando o formulário é submetido com valor inválido, o banco rejeita por violar o CHECK constraint.
 
-**Ação via SQL:**
-```sql
-UPDATE profiles 
-SET plano = 'ENTERPRISE', 
-    subscription_status = 'active'
-WHERE email = 'raphael@rebechisilva.com.br';
+## Solução: Validação Explícita de Valores
+
+Vou fortalecer a validação para garantir que **somente valores válidos** sejam aceitos:
+
+### Arquivo: `src/pages/Onboarding.tsx`
+
+**1. Criar constantes com valores válidos:**
+
+```typescript
+const REGIMES_VALIDOS = ['SIMPLES', 'PRESUMIDO', 'REAL'] as const;
+const SETORES_VALIDOS = ['industria', 'comercio', 'servicos', 'tecnologia', 'outro'] as const;
 ```
 
----
+**2. Atualizar `canProceed()` com validação explícita:**
 
-## Parte 2: Corrigir o Bug do Limitador (Evitar que aconteça novamente)
+```typescript
+const canProceed = () => {
+  switch (step) {
+    case 1:
+      return formData.empresa.trim() !== '' && formData.estado !== '';
+    case 2:
+      return formData.faturamento_mensal !== '';
+    case 3:
+      // Garante que regime é um dos valores válidos
+      return REGIMES_VALIDOS.includes(formData.regime as any);
+    case 4:
+      // Garante que setor é um dos valores válidos  
+      return SETORES_VALIDOS.includes(formData.setor as any);
+    default:
+      return true;
+  }
+};
+```
 
-O limitador de simulações não está funcionando por dois motivos:
+**3. Adicionar validação extra no `handleSubmit` como safety net:**
 
-### Problema A: Calculadora não verifica limites
-A página `SplitPayment.tsx` salva simulações diretamente sem usar o componente `FeatureGateLimit`.
+```typescript
+const handleSubmit = async () => {
+  if (!user) return;
+  
+  // Validação de segurança antes de enviar
+  if (!REGIMES_VALIDOS.includes(formData.regime as any)) {
+    toast({
+      title: "Regime inválido",
+      description: "Por favor, selecione um regime tributário válido.",
+      variant: "destructive",
+    });
+    setStep(3);
+    return;
+  }
+  
+  if (!SETORES_VALIDOS.includes(formData.setor as any)) {
+    toast({
+      title: "Setor inválido", 
+      description: "Por favor, selecione um setor válido.",
+      variant: "destructive",
+    });
+    setStep(4);
+    return;
+  }
+  
+  setIsLoading(true);
+  // ... resto do código de submit
+};
+```
 
-**Solução:** 
-- Criar um hook `useSimulationLimit` que busca a contagem de simulações do banco
-- Envolver o formulário da calculadora com `FeatureGateLimit` passando a contagem
+## Resultado
 
-### Problema B: Hook retorna sempre usage = 0
-O `useFeatureAccess.ts` tem um placeholder que não busca dados reais do banco.
-
-**Solução:**
-- Modificar o hook para opcionalmente receber o `usageCount` como parâmetro
-- Ou criar um hook separado `useUsageCount(featureKey)` que busca do Supabase
-
----
+- O botão "Próximo" só fica habilitado com valores válidos
+- Validação dupla (client-side + antes do submit) previne qualquer bypass
+- Se algo der errado, mensagem clara e redirecionamento para o passo correto
+- Zero chance de enviar strings vazias ou valores inválidos ao banco
 
 ## Detalhes Técnicos
 
-### Arquivos a modificar:
+**Constraints do banco que serão respeitados:**
+- `regime`: CHECK `(regime = ANY (ARRAY['SIMPLES', 'PRESUMIDO', 'REAL']))`
+- `setor`: CHECK `(setor = ANY (ARRAY['industria', 'comercio', 'servicos', 'tecnologia', 'outro']))`
 
-1. **src/hooks/useSimulationLimit.ts** (novo)
-   - Hook que busca contagem de simulações do mês para uma calculadora específica
-   - Query: `SELECT COUNT(*) FROM simulations WHERE user_id = X AND calculator_slug = Y AND created_at >= início_do_mês`
-
-2. **src/pages/calculadora/SplitPayment.tsx**
-   - Importar `FeatureGateLimit` e `useSimulationLimit`
-   - Buscar contagem com: `const { count } = useSimulationLimit('split-payment')`
-   - Envolver o conteúdo principal com: `<FeatureGateLimit feature="split_payment" usageCount={count}>`
-
-3. **src/pages/calculadora/ScoreTributario.tsx** (aplicar mesmo padrão)
-   - Verificar se também precisa do limitador
-
----
-
-## Resumo das Ações
-
-| Prioridade | Ação | Impacto |
-|------------|------|---------|
-| Alta | Atualizar plano do Raphael para ENTERPRISE | Acesso imediato |
-| Alta | Criar hook `useSimulationLimit` | Base para limitador |
-| Alta | Aplicar `FeatureGateLimit` nas calculadoras | Corrige bug |
-| Média | Revisar outras calculadoras | Consistência |
+**Arquivos modificados:** 1
+- `src/pages/Onboarding.tsx`
