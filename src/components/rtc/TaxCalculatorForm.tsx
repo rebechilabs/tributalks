@@ -24,7 +24,9 @@ import {
 } from "./rtcConstants";
 
 const itemSchema = z.object({
-  ncm: z.string().min(8, "NCM deve ter 8 dígitos"),
+  ncm: z.string()
+    .transform(val => val.replace(/\D/g, "")) // Remove non-digits
+    .pipe(z.string().length(8, "NCM deve ter exatamente 8 dígitos numéricos")),
   descricao: z.string().optional(),
   quantidade: z.number().min(0.01, "Quantidade inválida"),
   unidade: z.string().min(1, "Selecione a unidade"),
@@ -236,8 +238,8 @@ export function TaxCalculatorForm({ onSubmit, isLoading }: TaxCalculatorFormProp
                       <Input
                         {...register(`itens.${index}.ncm`)}
                         placeholder="00000000"
-                        maxLength={8}
-                        className="bg-card border-border font-mono"
+                        maxLength={10}
+                        className={`bg-card border-border font-mono ${errors.itens?.[index]?.ncm ? 'border-destructive' : ''}`}
                       />
                       <Button
                         type="button"
@@ -251,6 +253,11 @@ export function TaxCalculatorForm({ onSubmit, isLoading }: TaxCalculatorFormProp
                         <Search className="h-4 w-4" />
                       </Button>
                     </div>
+                    {errors.itens?.[index]?.ncm && (
+                      <p className="text-xs text-destructive">
+                        {errors.itens[index].ncm?.message}
+                      </p>
+                    )}
                     {watchedItens[index]?.descricao && (
                       <p className="text-xs text-muted-foreground truncate">
                         {watchedItens[index].descricao}
