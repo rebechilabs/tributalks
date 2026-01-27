@@ -9,6 +9,11 @@ export const CONFIG = {
     PROFESSIONAL_ANUAL: "https://buy.stripe.com/test_dRmdR2ajwd5Q6LNcv4bo400",
     // Enterprise - Sob consulta (WhatsApp direto)
     ENTERPRISE: "https://wa.me/5511914523971",
+    // Credit packages for Navigator users (TribuBot extra credits)
+    // TODO: Replace with real Stripe Payment Links after creating products
+    CREDITS_10: "https://buy.stripe.com/PLACEHOLDER_CREDITS_10",
+    CREDITS_20: "https://buy.stripe.com/PLACEHOLDER_CREDITS_20",
+    CREDITS_30: "https://buy.stripe.com/PLACEHOLDER_CREDITS_30",
     // Legacy - deprecated, mantendo para compatibilidade
     BASICO_MENSAL: "https://buy.stripe.com/PLACEHOLDER_BASICO_MENSAL",
     BASICO_ANUAL: "https://buy.stripe.com/PLACEHOLDER_BASICO_ANUAL",
