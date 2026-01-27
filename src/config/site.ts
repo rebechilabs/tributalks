@@ -20,6 +20,6 @@ export const CONFIG = {
   // Legacy - keeping for compatibility
   STRIPE_PAYMENT_LINK: "https://buy.stripe.com/PLACEHOLDER_PRO_MENSAL",
   STRIPE_ANNUAL_LINK: "https://buy.stripe.com/PLACEHOLDER_PRO_ANUAL",
-  CONTACT_EMAIL: "contato@tributech.com.br",
+  CONTACT_EMAIL: "suporte@tributalks.com.br",
   CALENDLY_LINK: "https://calendly.com/PLACEHOLDER",
 };

@@ -410,7 +410,7 @@ export function TributechPitchPdf() {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
     doc.setTextColor(100, 100, 100);
-    doc.text("contato@tributech.com.br", margin, y);
+    doc.text("suporte@tributalks.com.br", margin, y);
     y += 5;
     doc.text("tributechai.lovable.app", margin, y);
     y += 10;

@@ -37,7 +37,7 @@ export default function Privacidade() {
               <p className="font-medium text-foreground">Rebechi & Silva Produções</p>
               <p>CNPJ: 47.706.144/0001-21</p>
               <p>Endereço: Avenida Marquês de São Vicente, 1619 - conjunto 2712 - Barra Funda - São Paulo - SP</p>
-              <p>E-mail do Encarregado (DPO): privacidade@tributech.com.br</p>
+              <p>E-mail do Encarregado (DPO): privacidade@tributalks.com.br</p>
             </div>
           </section>
 
@@ -181,7 +181,7 @@ export default function Privacidade() {
                 <li><strong>Oposição:</strong> opor-se ao tratamento em determinadas situações.</li>
               </ul>
             </div>
-            <p className="mt-4"><strong>8.2.</strong> Para exercer seus direitos, entre em contato pelo e-mail: privacidade@tributech.com.br</p>
+            <p className="mt-4"><strong>8.2.</strong> Para exercer seus direitos, entre em contato pelo e-mail: privacidade@tributalks.com.br</p>
             <p><strong>8.3.</strong> Responderemos sua solicitação em até 15 (quinze) dias, conforme previsto na LGPD.</p>
             <p><strong>8.4.</strong> Você também tem o direito de apresentar reclamação à Autoridade Nacional de Proteção de Dados (ANPD).</p>
           </section>
@@ -216,7 +216,7 @@ export default function Privacidade() {
             <p>Para dúvidas, solicitações ou reclamações sobre esta Política ou sobre o tratamento de seus dados:</p>
             <div className="bg-card border border-border rounded-lg p-4 mt-4">
               <p className="font-medium text-foreground">Encarregado de Proteção de Dados (DPO)</p>
-              <p>E-mail: privacidade@tributech.com.br</p>
+              <p>E-mail: privacidade@tributalks.com.br</p>
               <div className="mt-4 pt-4 border-t border-border">
                 <p className="font-medium text-foreground">TribuTech — Uma iniciativa Rebechi & Silva Produções</p>
                 <p>Endereço: Avenida Marquês de São Vicente, 1619 - conjunto 2712 - Barra Funda - São Paulo - SP</p>
