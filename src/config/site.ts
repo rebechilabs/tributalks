@@ -20,6 +20,20 @@ export const CONFIG = {
   // Legacy - keeping for compatibility
   STRIPE_PAYMENT_LINK: "https://buy.stripe.com/PLACEHOLDER_PRO_MENSAL",
   STRIPE_ANNUAL_LINK: "https://buy.stripe.com/PLACEHOLDER_PRO_ANUAL",
+  // Contact Info
   CONTACT_EMAIL: "suporte@tributalks.com.br",
+  COMMERCIAL_EMAIL: "comercial@tributalks.com.br",
+  PHONE: "+55 11 91452-3971",
+  WHATSAPP: "https://wa.me/5511914523971",
+  // Address
+  ADDRESS: {
+    company: "Rebechi & Silva Produções",
+    street: "Avenida Marquês de São Vicente, 1619",
+    complement: "Conjunto 2712 - Barra Funda",
+    city: "São Paulo/SP",
+    zip: "01139-003",
+  },
+  // Social
+  LINKEDIN: "https://www.linkedin.com/company/tributalks/",
   CALENDLY_LINK: "https://calendly.com/PLACEHOLDER",
 };
