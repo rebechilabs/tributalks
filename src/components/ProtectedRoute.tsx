@@ -1,6 +1,8 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -8,10 +10,34 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children, requireOnboarding = true }: ProtectedRouteProps) => {
-  const { user, profile, loading } = useAuth();
+  const { user, loading } = useAuth();
   const location = useLocation();
+  const [profileChecked, setProfileChecked] = useState(false);
+  const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(null);
 
-  if (loading) {
+  // Fetch fresh profile directly to avoid stale context data
+  useEffect(() => {
+    const checkProfile = async () => {
+      if (user && requireOnboarding) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('onboarding_complete')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        setOnboardingComplete(data?.onboarding_complete ?? false);
+      }
+      setProfileChecked(true);
+    };
+
+    if (!loading && user) {
+      checkProfile();
+    } else if (!loading && !user) {
+      setProfileChecked(true);
+    }
+  }, [user, loading, requireOnboarding]);
+
+  if (loading || !profileChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -24,7 +50,7 @@ export const ProtectedRoute = ({ children, requireOnboarding = true }: Protected
   }
 
   // Redirect to onboarding if profile is incomplete
-  if (requireOnboarding && profile && !profile.onboarding_complete && location.pathname !== '/onboarding') {
+  if (requireOnboarding && onboardingComplete === false && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
   }
 
