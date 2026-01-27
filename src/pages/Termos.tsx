@@ -131,7 +131,7 @@ export default function Termos() {
             <p><strong>9.1.</strong> A TribuTech se esforça para manter a Plataforma disponível 24 horas por dia, 7 dias por semana, mas não garante disponibilidade ininterrupta.</p>
             <p><strong>9.2.</strong> Manutenções programadas serão comunicadas com antecedência quando possível.</p>
             <p><strong>9.3.</strong> A TribuTech não se responsabiliza por interrupções causadas por fatores externos, como falhas de internet, ataques cibernéticos ou força maior.</p>
-            <p><strong>9.4.</strong> O suporte ao usuário é oferecido por e-mail (contato@tributech.com.br) com prazo de resposta de até 48 horas úteis para planos Básico e Profissional, e prioritário para o plano Premium.</p>
+            <p><strong>9.4.</strong> O suporte ao usuário é oferecido por e-mail (suporte@tributalks.com.br) com prazo de resposta de até 48 horas úteis para planos Básico e Profissional, e prioritário para o plano Premium.</p>
           </section>
 
           <section>
@@ -181,7 +181,7 @@ export default function Termos() {
             <p>Para dúvidas, sugestões ou reclamações sobre estes Termos:</p>
             <div className="bg-card border border-border rounded-lg p-4 mt-4">
               <p className="font-medium text-foreground">TribuTech — Uma iniciativa Rebechi & Silva Produções</p>
-              <p>E-mail: contato@tributech.com.br</p>
+              <p>E-mail: suporte@tributalks.com.br</p>
               <p>Endereço: Avenida Marquês de São Vicente, 1619 - conjunto 2712 - Barra Funda - São Paulo - SP</p>
               <p>Telefone: +55 11 91452-3971</p>
             </div>

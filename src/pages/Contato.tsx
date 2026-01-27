@@ -171,22 +171,22 @@ export default function Contato() {
                 <p>
                   <span className="text-foreground/70">Suporte geral:</span>
                   <br />
-                  <a href="mailto:contato@tributech.com.br" className="hover:text-primary transition-colors">
-                    contato@tributech.com.br
+                  <a href="mailto:suporte@tributalks.com.br" className="hover:text-primary transition-colors">
+                    suporte@tributalks.com.br
                   </a>
                 </p>
                 <p>
                   <span className="text-foreground/70">Privacidade e dados:</span>
                   <br />
-                  <a href="mailto:privacidade@tributech.com.br" className="hover:text-primary transition-colors">
-                    privacidade@tributech.com.br
+                  <a href="mailto:privacidade@tributalks.com.br" className="hover:text-primary transition-colors">
+                    privacidade@tributalks.com.br
                   </a>
                 </p>
                 <p>
                   <span className="text-foreground/70">Comercial e parcerias:</span>
                   <br />
-                  <a href="mailto:comercial@tributech.com.br" className="hover:text-primary transition-colors">
-                    comercial@tributech.com.br
+                  <a href="mailto:comercial@tributalks.com.br" className="hover:text-primary transition-colors">
+                    comercial@tributalks.com.br
                   </a>
                 </p>
               </div>

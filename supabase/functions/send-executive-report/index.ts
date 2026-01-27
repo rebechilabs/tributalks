@@ -395,7 +395,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
     
     // Send email
-    const fromEmail = Deno.env.get("RESEND_FROM_EMAIL") || "Tributech <noreply@tributech.com.br>";
+    const fromEmail = Deno.env.get("RESEND_FROM_EMAIL") || "TribuTalks <noreply@tributalks.com.br>";
     const sendResult = await sendWithResend(resendApiKey, recipients, emailContent, fromEmail);
     
     // Update log with result

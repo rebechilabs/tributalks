@@ -221,14 +221,14 @@ function gerarEmailHTML(nome: string, noticias: Noticia[]): string {
       ${noticiasHTML}
       
       <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #eee; text-align: center;">
-        <a href="https://tributech.com.br/noticias" style="display: inline-block; padding: 12px 24px; background: #10b981; color: white; text-decoration: none; border-radius: 8px; font-weight: 500;">
+        <a href="https://tributalks.com.br/noticias" style="display: inline-block; padding: 12px 24px; background: #10b981; color: white; text-decoration: none; border-radius: 8px; font-weight: 500;">
           Ver todas as notícias
         </a>
       </div>
       
       <p style="color: #999; font-size: 12px; text-align: center; margin-top: 32px;">
         Você está recebendo este e-mail porque ativou os alertas de notícias tributárias.<br>
-        <a href="https://tributech.com.br/configuracoes" style="color: #666;">Gerenciar preferências</a>
+        <a href="https://tributalks.com.br/configuracoes" style="color: #666;">Gerenciar preferências</a>
       </p>
     </body>
     </html>
