@@ -684,8 +684,8 @@ serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
@@ -704,7 +704,19 @@ serve(async (req) => {
       .eq("user_id", user.id)
       .single();
 
-    const userPlan = profile?.plano || "FREE";
+    // Map legacy/different plan names to standard ones
+    const PLAN_MAPPING: Record<string, string> = {
+      'FREE': 'FREE',
+      'BASICO': 'NAVIGATOR',
+      'NAVIGATOR': 'NAVIGATOR',
+      'PROFISSIONAL': 'PROFISSIONAL',
+      'PROFESSIONAL': 'PROFISSIONAL',
+      'PREMIUM': 'ENTERPRISE',
+      'ENTERPRISE': 'ENTERPRISE',
+    };
+
+    const rawPlan = profile?.plano || "FREE";
+    const userPlan = PLAN_MAPPING[rawPlan] || "FREE";
 
     const { messages, toolSlug, isGreeting, getStarters } = await req.json();
 
