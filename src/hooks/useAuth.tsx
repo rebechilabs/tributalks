@@ -79,11 +79,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(currentSession?.user ?? null);
         
         if (currentSession?.user) {
-          // Defer profile fetch to avoid blocking
-          setTimeout(async () => {
-            const profileData = await fetchProfile(currentSession.user.id);
-            setProfile(profileData);
-          }, 0);
+          // Fetch profile before setting loading to false
+          const profileData = await fetchProfile(currentSession.user.id);
+          setProfile(profileData);
         } else {
           setProfile(null);
         }
@@ -93,16 +91,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     );
 
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+    const initializeAuth = async () => {
+      const { data: { session: initialSession } } = await supabase.auth.getSession();
       setSession(initialSession);
       setUser(initialSession?.user ?? null);
       
       if (initialSession?.user) {
-        fetchProfile(initialSession.user.id).then(setProfile);
+        const profileData = await fetchProfile(initialSession.user.id);
+        setProfile(profileData);
       }
       
       setLoading(false);
-    });
+    };
+
+    initializeAuth();
 
     return () => subscription.unsubscribe();
   }, []);
