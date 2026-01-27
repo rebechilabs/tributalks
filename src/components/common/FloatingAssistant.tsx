@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Message {
   role: "user" | "assistant";
@@ -39,7 +40,182 @@ const ROUTE_TO_TOOL: Record<string, string> = {
   "/dashboard/perfil-empresa": "perfil-empresa",
 };
 
+// Mapeamento de planos legados
+const LEGACY_PLAN_MAP: Record<string, string> = {
+  'FREE': 'FREE',
+  'BASICO': 'NAVIGATOR',
+  'PROFISSIONAL': 'PROFESSIONAL',
+  'PREMIUM': 'ENTERPRISE',
+  'NAVIGATOR': 'NAVIGATOR',
+  'PROFESSIONAL': 'PROFESSIONAL',
+  'ENTERPRISE': 'ENTERPRISE',
+};
+
+// Mensagens de boas-vindas por plano
+const GETTING_STARTED_MESSAGES: Record<string, string> = {
+  FREE: `Ótima pergunta! Vamos começar do jeito certo.
+
+No plano Grátis, você tem acesso a ferramentas essenciais para dar seus primeiros passos na Reforma Tributária. Cada ferramenta pode ser usada 1 vez para você experimentar:
+
+🎯 **Suas ferramentas disponíveis:**
+
+- **Score Tributário** - Descubra o nível de complexidade tributária da sua empresa
+- **Simulador Split Payment** - Entenda a nova forma automática de pagamento de impostos
+- **Comparativo de Regimes** - Compare Simples Nacional, Lucro Presumido e Lucro Real
+- **Calculadora RTC** - Simule como CBS, IBS e Imposto Seletivo impactam sua operação
+
+💡 **Por onde começar?**
+
+Recomendo fortemente o **Score Tributário**. Em poucos minutos, você terá:
+- Um panorama claro da sua situação tributária atual
+- Identificação dos principais riscos e oportunidades
+- Orientação sobre quais ferramentas explorar em seguida
+
+Quer que eu te guie passo a passo no preenchimento do Score Tributário? Ou prefere conhecer outra ferramenta primeiro?
+
+⚠️ *Lembre-se: antes de implementar qualquer estratégia tributária em sua empresa, converse com seu contador ou advogado tributarista para avaliar sua situação específica.*`,
+
+  NAVIGATOR: `Excelente! Você tem acesso completo ao GPS da Reforma Tributária. Vou te orientar na jornada ideal:
+
+📍 **JORNADA RECOMENDADA:**
+
+**FASE 1 - Entenda o Cenário** (comece aqui)
+- **Timeline 2026-2033** - Visualize todos os prazos e etapas da Reforma que impactam você
+- **Notícias da Reforma** - Mantenha-se atualizado com mudanças legislativas
+- **Feed + Pílula do Dia** - Receba resumos diários das novidades mais importantes
+
+*Tempo estimado: 30 minutos | Resultado: Visão clara do que está por vir*
+
+**FASE 2 - Avalie sua Situação**
+- **Score Tributário** - Identifique o nível de complexidade tributária da sua empresa
+- **Comparativo de Regimes** - Valide se Simples, Lucro Presumido ou Real ainda será o melhor para você
+- **Calculadora RTC** - Simule o impacto real de CBS, IBS e Imposto Seletivo na sua operação
+
+*Tempo estimado: 1-1,5 hora | Resultado: Diagnóstico da sua situação atual*
+
+**FASE 3 - Simule Impactos**
+- **Simulador Split Payment** - Projete como o pagamento automático afetará seu fluxo de caixa
+- **Calculadora de Serviços (NBS)** - Se você presta serviços, simule a nova tributação específica
+
+*Tempo estimado: 45 minutos | Resultado: Projeção de impacto financeiro*
+
+**FASE 4 - Tire Dúvidas Específicas**
+- **TribuBot** (10 msgs/dia) - Use a IA para esclarecer dúvidas específicas durante suas análises
+
+💡 **Minha recomendação de início:**
+
+Dedique 1 hora para completar:
+1. Timeline 2026-2033 (15 min)
+2. Score Tributário (30 min)
+3. Calculadora RTC (15 min)
+
+Isso te dará uma base sólida para entender seu cenário e próximos passos.
+
+Quer começar pela Timeline ou prefere ir direto ao Score Tributário? Posso te guiar em cada ferramenta passo a passo.
+
+⚠️ *Lembre-se: antes de implementar qualquer estratégia tributária em sua empresa, converse com seu contador ou advogado tributarista para avaliar sua situação específica.*`,
+
+  PROFESSIONAL: `Perfeito! Você tem a plataforma completa com diagnóstico automatizado e inteligência artificial ilimitada.
+
+🚀 **WORKFLOWS GUIADOS + AUTOMAÇÃO COMPLETA:**
+
+Você tem acesso a 4 Workflows Guiados - jornadas estruturadas que conectam diferentes ferramentas da plataforma de forma lógica e eficiente, como um roteiro personalizado para cada objetivo.
+
+📋 **Seus Workflows (versão turbinada):**
+
+**1. Diagnóstico Tributário Completo ⭐**
+Análise automática e profunda com importação ilimitada de XMLs.
+→ Importador de XMLs automatizado → Radar de Créditos → DRE Inteligente → Oportunidades Fiscais (37+)
+*Diferencial: Processamento ilimitado de notas fiscais e análise contínua*
+
+**2. Preparação para a Reforma**
+Entenda impactos com seus dados reais, não apenas simulações.
+→ Seus dados reais → Simulações personalizadas → Relatórios PDF profissionais
+*Diferencial: Análise baseada em dados reais da sua operação*
+
+**3. Análise de Contratos Societários**
+Upload ilimitado para análise profunda de toda estrutura societária.
+→ Analisador de Documentos com IA → Identificação automática de oportunidades
+*Diferencial: IA analisa documentos sem limite de volume*
+
+**4. Simulação de Preços**
+Cálculo preciso com base nos seus XMLs reais de compra e venda.
+→ Dados reais de operação → Split Payment real → Precificação otimizada
+*Diferencial: Simulação com margem real, não teórica*
+
+🎁 **EXCLUSIVIDADES DO PROFISSIONAL:**
+✅ Importador de XMLs ilimitado
+✅ Radar de Créditos Fiscais
+✅ DRE Inteligente
+✅ 37+ Oportunidades Fiscais
+✅ Relatórios PDF Profissionais
+✅ TribuBot ilimitado
+✅ Comunidade exclusiva
+✅ Alertas por Email
+
+💡 **Quick Start Recomendado (90 minutos):**
+
+**Passo 1:** Execute o Workflow 1 completo com seus XMLs reais (45 min)
+**Passo 2:** Analise os resultados do Radar de Créditos e DRE Inteligente (30 min)
+**Passo 3:** Execute o Workflow 2 com os insights obtidos (15 min)
+
+*Resultado: Diagnóstico completo + plano de ação baseado na sua realidade.*
+
+Por qual Workflow quer começar? Ou prefere que eu te ajude a importar seus XMLs primeiro?
+
+⚠️ *Lembre-se: antes de implementar qualquer estratégia tributária em sua empresa, converse com seu contador ou advogado tributarista para avaliar sua situação específica.*`,
+
+  ENTERPRISE: `Excelente escolha! Você tem a plataforma completa + acompanhamento especializado da Rebechi & Silva Advogados.
+
+🎯 **TUDO DO PROFISSIONAL + CONSULTORIA ESTRATÉGICA:**
+
+✅ **Você tem acesso a:**
+- Todos os 4 Workflows Guiados (versão completa)
+- Importador de XMLs, Radar de Créditos, DRE Inteligente
+- 37+ Oportunidades Fiscais mapeadas
+- TribuBot ilimitado + Comunidade
+- Relatórios PDF Profissionais
+
+🏆 **EXCLUSIVIDADES ENTERPRISE:**
+
+**FASE 1 - Diagnóstico Estratégico com Especialista**
+✅ Diagnóstico completo personalizado - Advogado tributarista analisa sua situação específica
+✅ Painel Executivo - Dashboard com KPIs tributários em tempo real
+✅ Análise por CNPJ - Simulações considerando todas as particularidades da sua empresa
+
+**FASE 2 - Acompanhamento Contínuo**
+✅ Reuniões mensais estratégicas - Alinhamento periódico com especialista dedicado
+✅ Consultorias ilimitadas - Acesso direto aos advogados tributaristas sempre que precisar
+✅ Suporte prioritário - Atendimento preferencial em todas as demandas
+
+**FASE 3 - Implementação Assistida**
+✅ Implementação guiada - Apoio prático na execução das estratégias definidas
+✅ Histórico completo - Rastreabilidade de todas as análises, decisões e recomendações
+✅ Configurações personalizadas - Plataforma ajustada às necessidades específicas do seu negócio
+
+💡 **Próximos Passos Recomendados:**
+
+**Agora:**
+1. Acesse **Enterprise > Consultorias** e agende sua primeira reunião de diagnóstico
+2. Enquanto aguarda, execute o Workflow 1 e importe seus XMLs
+3. Acesse o **Painel Executivo** para visualizar seus indicadores em tempo real
+
+**Na primeira reunião:**
+- Apresentaremos análise preliminar com base nos dados da plataforma
+- Definiremos estratégia personalizada para sua empresa
+- Estabeleceremos cronograma de implementação e próximos encontros
+
+📞 **Quer agendar sua reunião de diagnóstico agora?**
+
+Entre em contato pelo menu **Enterprise > Consultorias** ou me avise que direciono você para o time da Rebechi & Silva.
+
+Posso te ajudar a preparar os dados para a consultoria? Ou prefere que eu explique alguma ferramenta específica da plataforma?
+
+✨ *Lembre-se: No Enterprise, suas consultorias com advogados tributaristas são incluídas e ilimitadas. Use esse benefício sem moderação para maximizar seus resultados.*`
+};
+
 export function FloatingAssistant() {
+  const { profile } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -49,7 +225,9 @@ export function FloatingAssistant() {
   const [starters, setStarters] = useState<ConversationStarter[]>([]);
   const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
   const [autoSpeak, setAutoSpeak] = useState(false);
+  const [isGettingStarted, setIsGettingStarted] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const location = useLocation();
 
   // Voice hooks
@@ -95,9 +273,21 @@ export function FloatingAssistant() {
       setIsOpen(true);
     };
 
+    // Listen for "Por onde eu começo?" button
+    const handleOpenWithWelcome = (e: CustomEvent<{ type: string }>) => {
+      if (e.detail.type === 'getting-started') {
+        setIsGettingStarted(true);
+        setMessages([]);
+        setHasGreeted(false);
+        setIsOpen(true);
+      }
+    };
+
     window.addEventListener('openClaraWithQuestion', handleOpenWithQuestion as EventListener);
+    window.addEventListener('openClaraWithWelcome', handleOpenWithWelcome as EventListener);
     return () => {
       window.removeEventListener('openClaraWithQuestion', handleOpenWithQuestion as EventListener);
+      window.removeEventListener('openClaraWithWelcome', handleOpenWithWelcome as EventListener);
     };
   }, []);
 
@@ -140,12 +330,23 @@ export function FloatingAssistant() {
     }
   }, [location.pathname, currentTool]);
 
-  // Auto-greet when opening
+  // Auto-greet when opening (or show getting-started message)
   useEffect(() => {
     if (isOpen && !hasGreeted && messages.length === 0) {
-      fetchGreeting();
+      if (isGettingStarted) {
+        showGettingStartedMessage();
+      } else {
+        fetchGreeting();
+      }
     }
-  }, [isOpen, hasGreeted, messages.length]);
+  }, [isOpen, hasGreeted, messages.length, isGettingStarted]);
+
+  // Focus input after messages load
+  useEffect(() => {
+    if (isOpen && hasGreeted && !isLoading && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isOpen, hasGreeted, isLoading]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -163,6 +364,17 @@ export function FloatingAssistant() {
       }
     }
   }, [messages, autoSpeak, isLoading]);
+
+  // Show personalized getting started message based on plan
+  const showGettingStartedMessage = () => {
+    const rawPlan = profile?.plano || 'FREE';
+    const currentPlan = LEGACY_PLAN_MAP[rawPlan] || 'FREE';
+    const message = GETTING_STARTED_MESSAGES[currentPlan] || GETTING_STARTED_MESSAGES.FREE;
+    
+    setMessages([{ role: "assistant", content: message }]);
+    setHasGreeted(true);
+    setIsGettingStarted(false);
+  };
 
   const fetchGreeting = async () => {
     setIsLoading(true);
@@ -373,6 +585,7 @@ export function FloatingAssistant() {
             <div className="p-3 border-t border-border">
               <div className="flex gap-2">
                 <Input
+                  ref={inputRef}
                   placeholder={isListening ? "Escutando..." : "Pergunte sobre a Reforma Tributária..."}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
