@@ -25,12 +25,11 @@ import {
 
 // Detecta automaticamente: NCM (8 dígitos para produtos) ou NBS (9 dígitos para serviços)
 const codigoSchema = z.string()
+  .min(1, "Informe o código NCM ou NBS")
   .transform(val => val.replace(/\D/g, "")) // Remove non-digits
-  .pipe(
-    z.string().refine(
-      val => val.length === 8 || val.length === 9,
-      "Código inválido: NCM (8 dígitos) para produtos ou NBS (9 dígitos) para serviços"
-    )
+  .refine(
+    val => val.length === 8 || val.length === 9,
+    { message: "Código inválido: informe NCM (8 dígitos) ou NBS (9 dígitos)" }
   );
 
 const itemSchema = z.object({
