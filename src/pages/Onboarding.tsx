@@ -96,21 +96,25 @@ const Onboarding = () => {
 
       if (error) throw error;
 
-      await refreshProfile();
-      
       toast({
         title: "Perfil configurado!",
         description: "Você está pronto para usar as calculadoras.",
       });
       
-      navigate('/dashboard');
+      // Navigate first, then refresh profile in background
+      navigate('/dashboard', { replace: true });
+      
+      // Refresh profile after navigation (non-blocking)
+      refreshProfile().catch(() => {
+        // Silently ignore abort errors from navigation
+      });
     } catch (error: any) {
+      console.error('Onboarding save error:', error);
       toast({
         title: "Erro ao salvar",
         description: error.message,
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };
