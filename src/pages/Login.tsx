@@ -26,13 +26,16 @@ const Login = () => {
     setError(null);
 
     try {
+      console.log('[Login] Starting login...');
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      console.log('[Login] SignIn response:', { user: !!data?.user, session: !!data?.session, error: signInError?.message });
+
       if (signInError) {
-        console.error('SignIn error:', signInError);
+        console.error('[Login] SignIn error:', signInError);
         if (signInError.message === 'Invalid login credentials') {
           setError('E-mail ou senha incorretos');
         } else {
@@ -43,17 +46,22 @@ const Login = () => {
       }
 
       if (!data.user || !data.session) {
+        console.error('[Login] No user or session');
         setError('Erro ao fazer login. Tente novamente.');
         setIsLoading(false);
         return;
       }
 
+      console.log('[Login] Fetching profile for user:', data.user.id);
+      
       // Login successful - fetch profile to determine redirect
-      const { data: freshProfile } = await supabase
+      const { data: freshProfile, error: profileError } = await supabase
         .from('profiles')
         .select('onboarding_complete')
         .eq('user_id', data.user.id)
         .maybeSingle();
+      
+      console.log('[Login] Profile result:', { onboardingComplete: freshProfile?.onboarding_complete, error: profileError?.message });
       
       // Show success toast
       toast({
@@ -63,14 +71,13 @@ const Login = () => {
       
       // Determine destination
       const destination = freshProfile?.onboarding_complete ? '/dashboard' : '/onboarding';
+      console.log('[Login] Navigating to:', destination);
       
-      // Use navigate with a small delay to ensure session is persisted
-      setTimeout(() => {
-        navigate(destination, { replace: true });
-      }, 100);
+      // Navigate directly
+      navigate(destination, { replace: true });
       
     } catch (error: any) {
-      console.error('Unexpected login error:', error);
+      console.error('[Login] Unexpected error:', error);
       setError('Erro inesperado. Tente novamente.');
       setIsLoading(false);
     }
