@@ -12,6 +12,9 @@ verify_jwt = false
 [functions.fetch-news]
 verify_jwt = false
 
+[functions.search-news]
+verify_jwt = false
+
 [functions.send-news-alerts]
 verify_jwt = false
 
