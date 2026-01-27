@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Link } from "react-router-dom";
 
-const COMMUNITY_URL = "https://chat.whatsapp.com/example"; // Substituir pelo link real
+const COMMUNITY_URL = "https://chat.whatsapp.com/BbdIWJqap2FHmj90zfz5l3";
 
 const Comunidade = () => {
   const { profile } = useAuth();
