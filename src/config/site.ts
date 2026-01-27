@@ -7,8 +7,8 @@ export const CONFIG = {
     // Professional - R$2.497/mês ou R$24.970/ano (2 meses grátis)
     PROFESSIONAL_MENSAL: "https://buy.stripe.com/test_aFa9AMfDQ7Lw6LNgLkbo402",
     PROFESSIONAL_ANUAL: "https://buy.stripe.com/test_dRmdR2ajwd5Q6LNcv4bo400",
-    // Enterprise - Sob consulta (não usa Stripe)
-    ENTERPRISE: "/contato",
+    // Enterprise - Sob consulta (WhatsApp direto)
+    ENTERPRISE: "https://wa.me/5511914523971",
     // Legacy - deprecated, mantendo para compatibilidade
     BASICO_MENSAL: "https://buy.stripe.com/PLACEHOLDER_BASICO_MENSAL",
     BASICO_ANUAL: "https://buy.stripe.com/PLACEHOLDER_BASICO_ANUAL",
