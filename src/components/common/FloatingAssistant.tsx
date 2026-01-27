@@ -224,27 +224,43 @@ export function FloatingAssistant() {
         </Card>
       )}
 
-      {/* Floating Button */}
-      <Button
-        size="lg"
-        className={`rounded-full w-14 h-14 shadow-lg transition-all ${
-          isOpen 
-            ? "bg-muted hover:bg-muted text-muted-foreground" 
-            : "bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
-        }`}
-        onClick={() => isOpen ? setIsOpen(false) : handleOpen()}
-      >
-        {isOpen ? (
-          <X className="w-6 h-6" />
-        ) : (
-          <MessageCircle className="w-6 h-6" />
+      {/* Floating Button with tooltip */}
+      <div className="relative">
+        {/* Tooltip bubble */}
+        {!isOpen && (
+          <div className="absolute bottom-full right-0 mb-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="bg-card border border-primary/30 rounded-lg px-4 py-2 shadow-lg whitespace-nowrap">
+              <p className="text-sm font-medium text-foreground flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary" />
+                Tire suas dúvidas aqui!
+              </p>
+            </div>
+            {/* Arrow pointing down */}
+            <div className="absolute -bottom-2 right-6 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px] border-t-primary/30" />
+          </div>
         )}
-      </Button>
 
-      {/* Pulse indicator when closed */}
-      {!isOpen && (
-        <span className="absolute top-0 right-0 w-3 h-3 bg-success rounded-full animate-pulse" />
-      )}
+        <Button
+          size="lg"
+          className={`rounded-full w-14 h-14 shadow-lg transition-all ${
+            isOpen 
+              ? "bg-muted hover:bg-muted text-muted-foreground" 
+              : "bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+          }`}
+          onClick={() => isOpen ? setIsOpen(false) : handleOpen()}
+        >
+          {isOpen ? (
+            <X className="w-6 h-6" />
+          ) : (
+            <MessageCircle className="w-6 h-6" />
+          )}
+        </Button>
+
+        {/* Pulse indicator when closed */}
+        {!isOpen && (
+          <span className="absolute top-0 right-0 w-3 h-3 bg-success rounded-full animate-pulse" />
+        )}
+      </div>
     </div>
   );
 }
