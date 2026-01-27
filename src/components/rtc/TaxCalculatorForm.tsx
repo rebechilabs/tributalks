@@ -237,8 +237,7 @@ export function TaxCalculatorForm({ onSubmit, isLoading }: TaxCalculatorFormProp
                     <div className="flex gap-2">
                       <Input
                         {...register(`itens.${index}.ncm`)}
-                        placeholder="00000000"
-                        maxLength={10}
+                        placeholder="6910.11.00 ou 69101100"
                         className={`bg-card border-border font-mono ${errors.itens?.[index]?.ncm ? 'border-destructive' : ''}`}
                       />
                       <Button
