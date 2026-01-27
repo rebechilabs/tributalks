@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { 
   Menu, X, Home, Scale, Wallet, Bot, FileText, Users, Calendar, 
   Clock, Settings, Lock, Sparkles, Newspaper, Upload, Calculator,
-  Target, BarChart3, Trophy, Lightbulb, LayoutDashboard, MapPin
+  Target, BarChart3, Trophy, Lightbulb, LayoutDashboard, MapPin, Briefcase
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -45,7 +45,8 @@ const navGroups: NavGroup[] = [
       { label: 'Score Tributário', href: '/dashboard/score-tributario', icon: Trophy },
       { label: 'Split Payment', href: '/calculadora/split-payment', icon: Wallet },
       { label: 'Comparativo de Regimes', href: '/calculadora/comparativo-regimes', icon: Scale },
-      { label: 'Calculadora RTC', href: '/calculadora/rtc', icon: Calculator, badge: 'API' },
+      { label: 'Calculadora RTC', href: '/calculadora/rtc', icon: Calculator, badge: 'NCM' },
+      { label: 'Calculadora Serviços', href: '/calculadora/servicos', icon: Briefcase, badge: 'NBS' },
     ]
   },
   {
