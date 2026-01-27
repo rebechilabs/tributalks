@@ -59,6 +59,7 @@ const plans: Plan[] = [
       { text: "Simulador Split Payment", included: true },
       { text: "Comparativo de Regimes", included: true },
       { text: "Calculadora RTC (CBS/IBS/IS)", included: true },
+      { text: "Calculadora NBS (Serviços)", included: true },
       { text: "Timeline 2026-2033", included: true },
       { text: "Feed de Notícias + Pílula do Dia", included: true },
       { text: "TribuBot (IA 24/7)", included: "limited", limitText: "10 msgs/dia" },
@@ -77,6 +78,7 @@ const plans: Plan[] = [
     cnpjLimit: "3 CNPJs",
     features: [
       { text: "Tudo do Navigator", included: true },
+      { text: "Workflows Guiados", included: true },
       { text: "Importador de XMLs", included: true },
       { text: "Radar de Créditos Fiscais", included: true },
       { text: "DRE Inteligente", included: true },
