@@ -69,6 +69,17 @@ const TIMELINE_DATA: Omit<TimelineYear, 'prazos'>[] = [
     ]
   },
   {
+    year: 2028,
+    title: "Consolidação do CBS",
+    description: "Segundo ano do CBS em vigor. Empresas devem estar plenamente adaptadas ao novo sistema federal.",
+    actions: [
+      "Auditar processos de apuração do CBS",
+      "Otimizar aproveitamento de créditos federais",
+      "Preparar sistemas para entrada do IBS",
+      "Revisar margens considerando novo cenário"
+    ]
+  },
+  {
     year: 2029,
     title: "Início da Transição ICMS/ISS",
     description: "Começa a redução gradual de ICMS e ISS com entrada proporcional do IBS estadual e municipal.",
@@ -77,6 +88,28 @@ const TIMELINE_DATA: Omit<TimelineYear, 'prazos'>[] = [
       "Ajustar planejamento tributário",
       "Revisar benefícios fiscais estaduais",
       "Atualizar cálculos de margem"
+    ]
+  },
+  {
+    year: 2030,
+    title: "Transição em Andamento",
+    description: "ICMS e ISS reduzidos em 10%. IBS ganha participação crescente na tributação sobre consumo.",
+    actions: [
+      "Acompanhar reduções progressivas de ICMS/ISS",
+      "Validar cálculos híbridos (antigo + novo)",
+      "Treinar equipe em apuração dual",
+      "Revisar contratos de longo prazo"
+    ]
+  },
+  {
+    year: 2031,
+    title: "Aceleração da Transição",
+    description: "ICMS e ISS com reduções mais significativas. IBS assume papel cada vez maior.",
+    actions: [
+      "Intensificar preparação para fim do regime antigo",
+      "Migrar processos remanescentes",
+      "Atualizar sistemas para cenário majoritário IBS",
+      "Planejar extinção de rotinas ICMS/ISS"
     ]
   },
   {
@@ -156,8 +189,6 @@ export default function TimelineReforma() {
     return TIMELINE_DATA.map(yearData => {
       const yearPrazos = filteredPrazos.filter(p => {
         const prazoYear = new Date(p.data_prazo).getFullYear();
-        // Agrupa 2029-2031 em 2029, 2032 em 2032
-        if (yearData.year === 2029 && prazoYear >= 2029 && prazoYear <= 2031) return true;
         return prazoYear === yearData.year;
       });
       
