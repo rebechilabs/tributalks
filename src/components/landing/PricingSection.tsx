@@ -36,7 +36,7 @@ const plans: Plan[] = [
     priceAnnual: 0,
     cnpjLimit: "1 CNPJ",
     features: [
-      { text: "TribuBot (IA 24/7)", included: false },
+      { text: "Clara IA (Assistente)", included: "limited", limitText: "3 conversas" },
       { text: "Score Tributário", included: "limited", limitText: "1x" },
       { text: "Simulador Split Payment", included: "limited", limitText: "1x" },
       { text: "Comparativo de Regimes", included: "limited", limitText: "1x" },
