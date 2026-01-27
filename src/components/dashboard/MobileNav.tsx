@@ -35,7 +35,6 @@ const navGroups: NavGroup[] = [
   {
     title: 'GPS da Reforma',
     items: [
-      { label: 'TribuBot', href: '/tribubot', icon: Bot, requiredPlan: 'NAVIGATOR', badge: 'IA' },
       { label: 'Notícias da Reforma', href: '/noticias', icon: Newspaper, requiredPlan: 'NAVIGATOR' },
       { label: 'Timeline 2026-2033', href: '/dashboard/timeline-reforma', icon: MapPin, requiredPlan: 'NAVIGATOR' },
     ]
@@ -60,8 +59,9 @@ const navGroups: NavGroup[] = [
     ]
   },
   {
-    title: 'Documentos',
+    title: 'IA e Suporte',
     items: [
+      { label: 'TribuBot', href: '/tribubot', icon: Bot, requiredPlan: 'NAVIGATOR', badge: 'IA' },
       { label: 'Comunidade', href: '/comunidade', icon: Users, requiredPlan: 'PROFESSIONAL' },
     ]
   },
