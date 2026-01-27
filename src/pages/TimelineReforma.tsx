@@ -11,6 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlanAccess } from "@/hooks/useFeatureAccess";
@@ -24,7 +29,9 @@ import {
   Briefcase,
   TrendingUp,
   AlertTriangle,
-  Loader2
+  Loader2,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 
 interface Prazo {
@@ -153,6 +160,7 @@ export default function TimelineReforma() {
   const { isNavigator } = usePlanAccess();
   const [prazos, setPrazos] = useState<Prazo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedYears, setExpandedYears] = useState<number[]>([2026]); // Only 2026 expanded by default
   const [selectedRegime, setSelectedRegime] = useState<string>(profile?.regime?.toLowerCase() || 'presumido');
   const [selectedSetor, setSelectedSetor] = useState<string>(profile?.setor?.toLowerCase() || 'comercio');
 
@@ -206,6 +214,14 @@ export default function TimelineReforma() {
   };
 
   const getCurrentYear = () => new Date().getFullYear();
+
+  const toggleYear = (year: number) => {
+    setExpandedYears(prev => 
+      prev.includes(year) 
+        ? prev.filter(y => y !== year)
+        : [...prev, year]
+    );
+  };
 
   const getTipoIcon = (tipo: string) => {
     switch (tipo) {
@@ -280,106 +296,148 @@ export default function TimelineReforma() {
               {/* Linha vertical */}
               <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-border" />
 
-              <div className="space-y-8">
+              <div className="space-y-4">
                 {timeline.map((yearData, index) => {
                   const isCurrentOrPast = yearData.year <= getCurrentYear();
                   const isCurrent = yearData.year === getCurrentYear();
+                  const isExpanded = expandedYears.includes(yearData.year);
                   
                   return (
-                    <div key={yearData.year} className="relative pl-16">
+                    <div key={yearData.year} className="relative pl-12">
                       {/* Marker */}
-                      <div className={`absolute left-4 w-5 h-5 rounded-full border-2 ${
+                      <div className={`absolute left-4 w-5 h-5 rounded-full border-2 z-10 ${
                         isCurrent 
                           ? 'bg-primary border-primary animate-pulse' 
                           : isCurrentOrPast 
                             ? 'bg-success border-success' 
                             : 'bg-muted border-border'
                       }`} />
+                      
+                      {/* Connector line */}
+                      {index < timeline.length - 1 && (
+                        <div className="absolute left-[22px] top-5 w-0.5 h-full bg-border" />
+                      )}
 
-                      <Card className={isCurrent ? 'border-primary/50 bg-primary/5' : ''}>
-                        <CardHeader>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <span className={`text-2xl font-bold ${
-                                isCurrent ? 'text-primary' : 'text-foreground'
-                              }`}>
-                                {yearData.year}
-                              </span>
-                              {isCurrent && (
-                                <Badge className="bg-primary/20 text-primary">
-                                  Ano Atual
-                                </Badge>
-                              )}
-                              {isCurrentOrPast && !isCurrent && (
-                                <Badge variant="secondary">Concluído</Badge>
-                              )}
-                            </div>
-                          </div>
-                          <CardTitle className="text-lg">{yearData.title}</CardTitle>
-                          <CardDescription>{yearData.description}</CardDescription>
-                        </CardHeader>
-                        
-                        <CardContent className="space-y-4">
-                          {/* Prazos específicos */}
-                          {yearData.prazos.length > 0 && (
-                            <div className="space-y-2">
-                              <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-primary" />
-                                Prazos Importantes
-                              </h4>
-                              <div className="space-y-2">
-                                {yearData.prazos.map(prazo => {
-                                  const daysUntil = getDaysUntil(prazo.data_prazo);
-                                  const isPast = daysUntil < 0;
-                                  
-                                  return (
-                                    <div 
-                                      key={prazo.id}
-                                      className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg"
-                                    >
-                                      {getTipoIcon(prazo.tipo)}
-                                      <div className="flex-1 min-w-0">
-                                        <p className="font-medium text-sm">{prazo.titulo}</p>
-                                        {prazo.descricao && (
-                                          <p className="text-xs text-muted-foreground mt-0.5">
-                                            {prazo.descricao}
-                                          </p>
-                                        )}
-                                      </div>
-                                      <div className="text-right">
-                                        <p className="text-xs text-muted-foreground">
-                                          {new Date(prazo.data_prazo).toLocaleDateString('pt-BR')}
-                                        </p>
-                                        {!isPast && (
-                                          <p className="text-xs text-primary font-medium">
-                                            {daysUntil} dias
-                                          </p>
-                                        )}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
+                      <Collapsible open={isExpanded} onOpenChange={() => toggleYear(yearData.year)}>
+                        {/* Year Header - Always visible */}
+                        <CollapsibleTrigger asChild>
+                          <button className={`w-full text-left rounded-lg border transition-all ${
+                            isCurrent 
+                              ? 'border-primary/50 bg-primary/5 hover:bg-primary/10' 
+                              : 'border-border hover:bg-accent'
+                          }`}>
+                            <div className="p-4 flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                {isExpanded ? (
+                                  <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                                ) : (
+                                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                                )}
+                                <span className={`text-2xl font-bold ${
+                                  isCurrent ? 'text-primary' : 'text-foreground'
+                                }`}>
+                                  {yearData.year}
+                                </span>
+                                <span className="text-lg font-medium text-muted-foreground hidden sm:inline">
+                                  {yearData.title}
+                                </span>
+                                {isCurrent && (
+                                  <Badge className="bg-primary/20 text-primary">
+                                    Ano Atual
+                                  </Badge>
+                                )}
+                                {isCurrentOrPast && !isCurrent && (
+                                  <Badge variant="secondary">Concluído</Badge>
+                                )}
                               </div>
+                              
+                              {/* Preview badges when collapsed */}
+                              {!isExpanded && (
+                                <div className="flex items-center gap-2">
+                                  {yearData.prazos.length > 0 && (
+                                    <Badge variant="outline" className="text-xs">
+                                      {yearData.prazos.length} prazo{yearData.prazos.length !== 1 ? 's' : ''}
+                                    </Badge>
+                                  )}
+                                  <Badge variant="outline" className="text-xs">
+                                    {yearData.actions.length} ações
+                                  </Badge>
+                                </div>
+                              )}
                             </div>
-                          )}
+                          </button>
+                        </CollapsibleTrigger>
 
-                          {/* Ações recomendadas */}
-                          <div className="space-y-2">
-                            <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
-                              <Briefcase className="w-4 h-4 text-primary" />
-                              O que fazer
-                            </h4>
-                            <ul className="space-y-1">
-                              {yearData.actions.map((action, i) => (
-                                <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                                  <ArrowRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                                  {action}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        </CardContent>
-                      </Card>
+                        {/* Expanded Content */}
+                        <CollapsibleContent className="mt-2">
+                          <Card>
+                            <CardHeader className="pb-2">
+                              <CardDescription>{yearData.description}</CardDescription>
+                            </CardHeader>
+                            
+                            <CardContent className="space-y-4">
+                              {/* Prazos específicos */}
+                              {yearData.prazos.length > 0 && (
+                                <div className="space-y-2">
+                                  <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
+                                    <Calendar className="w-4 h-4 text-primary" />
+                                    Prazos Importantes
+                                  </h4>
+                                  <div className="space-y-2">
+                                    {yearData.prazos.map(prazo => {
+                                      const daysUntil = getDaysUntil(prazo.data_prazo);
+                                      const isPast = daysUntil < 0;
+                                      
+                                      return (
+                                        <div 
+                                          key={prazo.id}
+                                          className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg"
+                                        >
+                                          {getTipoIcon(prazo.tipo)}
+                                          <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-sm">{prazo.titulo}</p>
+                                            {prazo.descricao && (
+                                              <p className="text-xs text-muted-foreground mt-0.5">
+                                                {prazo.descricao}
+                                              </p>
+                                            )}
+                                          </div>
+                                          <div className="text-right">
+                                            <p className="text-xs text-muted-foreground">
+                                              {new Date(prazo.data_prazo).toLocaleDateString('pt-BR')}
+                                            </p>
+                                            {!isPast && (
+                                              <p className="text-xs text-primary font-medium">
+                                                {daysUntil} dias
+                                              </p>
+                                            )}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Ações recomendadas */}
+                              <div className="space-y-2">
+                                <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
+                                  <Briefcase className="w-4 h-4 text-primary" />
+                                  O que fazer
+                                </h4>
+                                <ul className="space-y-1">
+                                  {yearData.actions.map((action, i) => (
+                                    <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                                      <ArrowRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                                      {action}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </CollapsibleContent>
+                      </Collapsible>
                     </div>
                   );
                 })}
