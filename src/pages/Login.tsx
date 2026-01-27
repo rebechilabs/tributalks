@@ -61,9 +61,13 @@ const Login = () => {
         description: "Bem-vindo de volta ao TribuTech.",
       });
       
-      // Navigate using full page reload to ensure clean state
+      // Determine destination
       const destination = freshProfile?.onboarding_complete ? '/dashboard' : '/onboarding';
-      window.location.href = destination;
+      
+      // Use navigate with a small delay to ensure session is persisted
+      setTimeout(() => {
+        navigate(destination, { replace: true });
+      }, 100);
       
     } catch (error: any) {
       console.error('Unexpected login error:', error);
