@@ -49,6 +49,7 @@ import WorkflowsGuiados from "./pages/WorkflowsGuiados";
 import SplitPayment from "./pages/calculadora/SplitPayment";
 import ComparativoRegimes from "./pages/calculadora/ComparativoRegimes";
 import CalculadoraRTC from "./pages/calculadora/CalculadoraRTC";
+import CalculadoraNBS from "./pages/calculadora/CalculadoraNBS";
 
 // Painel Executivo
 import PainelExecutivo from "./pages/PainelExecutivo";
@@ -195,6 +196,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <CalculadoraRTC />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/calculadora/servicos" 
+              element={
+                <ProtectedRoute>
+                  <CalculadoraNBS />
                 </ProtectedRoute>
               } 
             />

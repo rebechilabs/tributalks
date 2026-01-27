@@ -3,7 +3,7 @@ import {
   Home, Scale, Wallet, Bot, FileText, Users, Calendar, 
   Clock, Settings, Lock, Sparkles, Newspaper,
   Upload, Calculator, Target, BarChart3, Trophy, Lightbulb, LayoutDashboard,
-  MapPin, ShieldCheck, FileSearch, Route
+  MapPin, ShieldCheck, FileSearch, Route, Briefcase
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import logoTributech from "@/assets/logo-tributech.png";
@@ -43,7 +43,8 @@ const navGroups: NavGroup[] = [
       { label: 'Score Tributário', href: '/dashboard/score-tributario', icon: Trophy },
       { label: 'Split Payment', href: '/calculadora/split-payment', icon: Wallet },
       { label: 'Comparativo de Regimes', href: '/calculadora/comparativo-regimes', icon: Scale },
-      { label: 'Calculadora RTC', href: '/calculadora/rtc', icon: Calculator, badge: 'API' },
+      { label: 'Calculadora RTC', href: '/calculadora/rtc', icon: Calculator, badge: 'NCM' },
+      { label: 'Calculadora Serviços', href: '/calculadora/servicos', icon: Briefcase, badge: 'NBS' },
     ]
   },
   {
