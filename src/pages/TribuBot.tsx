@@ -2,13 +2,15 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Bot, Lock, Sparkles, Send, Loader2, User, AlertCircle } from "lucide-react";
+import { Bot, Lock, Sparkles, Send, Loader2, User, Coins } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Link } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import DOMPurify from "dompurify";
+import { CreditDisplay } from "@/components/credits/CreditDisplay";
+import { useUserCredits } from "@/hooks/useUserCredits";
 interface Message {
   role: "user" | "assistant";
   content: string;
@@ -23,9 +25,12 @@ const SUGGESTIONS = [
 
 const TribuBot = () => {
   const { profile, user } = useAuth();
+  const { credits, consumeCredit, refetch: refetchCredits } = useUserCredits();
+  const balance = credits?.balance ?? 0;
   const currentPlan = profile?.plano || "FREE";
   const hasAccess = currentPlan !== "FREE";
   const isUnlimited = ["PROFISSIONAL", "PREMIUM", "ENTERPRISE"].includes(currentPlan);
+  const isNavigator = currentPlan === "BASICO";
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -243,14 +248,21 @@ Como posso te ajudar hoje?`,
       <div className="flex flex-col h-[calc(100vh-4rem)] max-w-4xl mx-auto">
         {/* Header */}
         <div className="px-4 sm:px-6 py-4 border-b border-border">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Bot className="w-5 h-5 text-primary" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Bot className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h1 className="font-bold text-foreground">TribuBot</h1>
+                <p className="text-xs text-muted-foreground">Seu consultor tributário com IA</p>
+              </div>
             </div>
-            <div>
-              <h1 className="font-bold text-foreground">TribuBot</h1>
-              <p className="text-xs text-muted-foreground">Seu consultor tributário com IA</p>
-            </div>
+            
+            {/* Credit display for Navigator plan */}
+            {isNavigator && (
+              <CreditDisplay variant="compact" />
+            )}
           </div>
         </div>
 
@@ -335,12 +347,19 @@ Como posso te ajudar hoje?`,
             </Button>
           </div>
           
-          {/* Rate limit info */}
-          {!isUnlimited && (
+          {/* Rate limit info for Navigator */}
+          {isNavigator && (
             <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-              <span>Mensagens hoje: {dailyCount} de 10</span>
+              <div className="flex items-center gap-3">
+                <span>Hoje: {dailyCount}/10</span>
+                <span className="text-border">•</span>
+                <span className="flex items-center gap-1">
+                  <Coins className="w-3 h-3" />
+                  {balance} extra{balance !== 1 ? "s" : ""}
+                </span>
+              </div>
               <Link to="/#planos" className="text-primary hover:underline">
-                Fazer upgrade
+                Upgrade ilimitado
               </Link>
             </div>
           )}
