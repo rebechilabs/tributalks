@@ -259,19 +259,12 @@ export function PricingSection() {
 
                 {/* CTA Button */}
                 {isExternal ? (
-                  <a href={link} target="_blank" rel="noopener noreferrer">
-                    <Button
-                      className={`w-full ${
-                        plan.highlighted
-                          ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                          : "bg-transparent border border-foreground text-foreground hover:bg-foreground hover:text-background"
-                      }`}
-                    >
-                      {plan.ctaText}
-                    </Button>
-                  </a>
-                ) : (
-                  <Link to={link}>
+                  <a 
+                    href={link} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="block"
+                  >
                     <Button
                       className={`w-full ${
                         plan.highlighted
@@ -282,6 +275,18 @@ export function PricingSection() {
                       }`}
                     >
                       {plan.isEnterprise && <MessageCircle className="w-4 h-4 mr-2" />}
+                      {plan.ctaText}
+                    </Button>
+                  </a>
+                ) : (
+                  <Link to={link}>
+                    <Button
+                      className={`w-full ${
+                        plan.highlighted
+                          ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                          : "bg-transparent border border-foreground text-foreground hover:bg-foreground hover:text-background"
+                      }`}
+                    >
                       {plan.ctaText}
                     </Button>
                   </Link>
