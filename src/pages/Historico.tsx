@@ -8,8 +8,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Calculator, Clock, Search, Filter, ArrowRight, Trash2, Eye, FileText, Scale, DollarSign, RefreshCw } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { format, formatDistanceToNow, subDays } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { subDays } from "date-fns";
+import { formatBrasilia, formatDistanceBrasilia } from "@/lib/dateUtils";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { toast } from "@/hooks/use-toast";
 
@@ -291,11 +291,11 @@ const Historico = () => {
                             {getCalculatorLabel(sim.calculator_slug)}
                           </h3>
                           <p className="text-sm text-muted-foreground mt-1">
-                            {format(new Date(sim.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                            {formatBrasilia(sim.created_at, "dd/MM/yyyy 'às' HH:mm")}
                           </p>
                         </div>
                         <p className="text-xs text-muted-foreground whitespace-nowrap">
-                          {formatDistanceToNow(new Date(sim.created_at), { addSuffix: true, locale: ptBR })}
+                          {formatDistanceBrasilia(sim.created_at)}
                         </p>
                       </div>
                       
@@ -362,7 +362,7 @@ const Historico = () => {
                 {selectedSimulation && getCalculatorLabel(selectedSimulation.calculator_slug)}
               </DialogTitle>
               <DialogDescription>
-                {selectedSimulation && format(new Date(selectedSimulation.created_at), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+                {selectedSimulation && formatBrasilia(selectedSimulation.created_at, "dd 'de' MMMM 'de' yyyy 'às' HH:mm")}
               </DialogDescription>
             </DialogHeader>
             

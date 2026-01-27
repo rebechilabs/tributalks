@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { formatBrasilia, nowBrasilia } from "@/lib/dateUtils";
 import { FileText, Download, Mail, X, TrendingUp, TrendingDown, AlertTriangle, Wallet, Shield, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -88,8 +87,8 @@ export function ExecutiveReportPreview({
   userId,
 }: ExecutiveReportPreviewProps) {
   const [isSending, setIsSending] = useState(false);
-  const currentMonth = format(new Date(), "MMMM 'de' yyyy", { locale: ptBR });
-  const currentDate = format(new Date(), "dd/MM/yyyy");
+  const currentMonth = formatBrasilia(nowBrasilia(), "MMMM 'de' yyyy");
+  const currentDate = formatBrasilia(nowBrasilia(), "dd/MM/yyyy");
 
   const handleDownloadPdf = () => {
     // TODO: Implement PDF generation with jsPDF

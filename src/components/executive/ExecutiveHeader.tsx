@@ -1,7 +1,6 @@
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { formatBrasilia } from "@/lib/dateUtils";
 
 interface ExecutiveHeaderProps {
   lastUpdate: Date | null;
@@ -16,7 +15,7 @@ export function ExecutiveHeader({ lastUpdate, onRefresh, loading }: ExecutiveHea
         <h1 className="text-2xl font-bold text-foreground">Painel Executivo</h1>
         <p className="text-sm text-muted-foreground mt-1">
           {lastUpdate ? (
-            <>Atualizado em {format(lastUpdate, "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })} · </>
+            <>Atualizado em {formatBrasilia(lastUpdate, "dd 'de' MMMM 'às' HH:mm")} · </>
           ) : null}
           Pensado para decisões de diretoria em menos de 10 minutos
         </p>
