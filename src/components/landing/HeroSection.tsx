@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Check, Navigation, MapPin, Route } from "lucide-react";
 import { Link } from "react-router-dom";
+import logoHero from "@/assets/logo-tributalks-hero.jpg";
 
 export function HeroSection() {
   const scrollToPlanos = () => {
@@ -22,6 +23,15 @@ export function HeroSection() {
 
       <div className="container mx-auto px-4 md:px-6 lg:px-8 py-20 relative">
         <div className="max-w-4xl mx-auto text-center">
+          {/* Logo */}
+          <div className="flex justify-center mb-6 animate-fade-in-up">
+            <img 
+              src={logoHero} 
+              alt="TribuTalks" 
+              className="h-24 md:h-32 lg:h-40 w-auto"
+            />
+          </div>
+
           {/* Announcement Badge */}
           <div className="flex justify-center mb-6 animate-fade-in-up">
             <Badge variant="outline" className="px-4 py-2 text-sm border-primary/50">
