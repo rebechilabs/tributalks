@@ -27,6 +27,10 @@ const FAIXAS_FATURAMENTO = [
   { value: '50000000', label: 'Acima de R$50M' },
 ];
 
+// Valores válidos que correspondem aos CHECK constraints do banco
+const REGIMES_VALIDOS = ['SIMPLES', 'PRESUMIDO', 'REAL'] as const;
+const SETORES_VALIDOS = ['industria', 'comercio', 'servicos', 'tecnologia', 'outro'] as const;
+
 const Onboarding = () => {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -79,17 +83,38 @@ const Onboarding = () => {
   const handleSubmit = async () => {
     if (!user) return;
     
+    // Validação de segurança antes de enviar
+    if (!REGIMES_VALIDOS.includes(formData.regime as typeof REGIMES_VALIDOS[number])) {
+      toast({
+        title: "Regime inválido",
+        description: "Por favor, selecione um regime tributário válido.",
+        variant: "destructive",
+      });
+      setStep(3);
+      return;
+    }
+    
+    if (!SETORES_VALIDOS.includes(formData.setor as typeof SETORES_VALIDOS[number])) {
+      toast({
+        title: "Setor inválido", 
+        description: "Por favor, selecione um setor válido.",
+        variant: "destructive",
+      });
+      setStep(4);
+      return;
+    }
+    
     setIsLoading(true);
     try {
       const { error } = await supabase
         .from('profiles')
         .update({
-          empresa: formData.empresa,
+          empresa: formData.empresa.trim(),
           estado: formData.estado,
           faturamento_mensal: parseFloat(formData.faturamento_mensal) || null,
-          regime: formData.regime as 'SIMPLES' | 'PRESUMIDO' | 'REAL' | null,
-          setor: formData.setor as 'industria' | 'comercio' | 'servicos' | 'tecnologia' | 'outro' | null,
-          cnae: formData.cnae || null,
+          regime: formData.regime as 'SIMPLES' | 'PRESUMIDO' | 'REAL',
+          setor: formData.setor as 'industria' | 'comercio' | 'servicos' | 'tecnologia' | 'outro',
+          cnae: formData.cnae?.trim() || null,
           onboarding_complete: true,
         })
         .eq('user_id', user.id);
@@ -117,13 +142,15 @@ const Onboarding = () => {
   const canProceed = () => {
     switch (step) {
       case 1:
-        return formData.empresa && formData.estado;
+        return formData.empresa.trim() !== '' && formData.estado !== '';
       case 2:
-        return formData.faturamento_mensal;
+        return formData.faturamento_mensal !== '';
       case 3:
-        return formData.regime;
+        // Garante que regime é um dos valores válidos do banco
+        return REGIMES_VALIDOS.includes(formData.regime as typeof REGIMES_VALIDOS[number]);
       case 4:
-        return formData.setor;
+        // Garante que setor é um dos valores válidos do banco
+        return SETORES_VALIDOS.includes(formData.setor as typeof SETORES_VALIDOS[number]);
       default:
         return true;
     }
