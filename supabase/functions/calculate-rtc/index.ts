@@ -108,10 +108,22 @@ Deno.serve(async (req) => {
     if (!apiResponse.ok) {
       const errorText = await apiResponse.text();
       console.error("Erro API RTC:", apiResponse.status, errorText);
+      
+      // Try to parse error for better message
+      let userMessage = `Erro na API da Receita Federal (${apiResponse.status})`;
+      try {
+        const errorData = JSON.parse(errorText);
+        if (errorData.detail) {
+          userMessage = errorData.detail;
+        }
+      } catch {
+        // Use default message
+      }
+      
       return new Response(
         JSON.stringify({
           success: false,
-          error: `Erro na API da Receita Federal: ${apiResponse.status}`,
+          error: userMessage,
           details: errorText,
         }),
         { status: apiResponse.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -121,24 +133,73 @@ Deno.serve(async (req) => {
     const apiData = await apiResponse.json();
     console.log("Resposta API RTC:", JSON.stringify(apiData, null, 2));
 
-    // Calculate totals
+    // Parse the API response - the structure uses "objetos" not "itens"
+    // and has a different nested structure for taxes
     let totalCbs = 0;
     let totalIbsUf = 0;
     let totalIbsMun = 0;
     let totalIs = 0;
 
-    if (apiData.itens) {
-      for (const item of apiData.itens) {
-        if (item.tributosCalculados) {
-          totalCbs += item.tributosCalculados.cbs?.valor || 0;
-          totalIbsUf += item.tributosCalculados.ibsUf?.valor || 0;
-          totalIbsMun += item.tributosCalculados.ibsMun?.valor || 0;
-          totalIs += item.tributosCalculados.is?.valor || 0;
-        }
-      }
+    // Parse from "total" section if available (more reliable)
+    if (apiData.total?.tribCalc?.IBSCBSTot) {
+      const totais = apiData.total.tribCalc.IBSCBSTot;
+      totalCbs = parseFloat(totais.gCBS?.vCBS || "0");
+      totalIbsUf = parseFloat(totais.gIBS?.gIBSUF?.vIBSUF || "0");
+      totalIbsMun = parseFloat(totais.gIBS?.gIBSMun?.vIBSMun || "0");
     }
 
+    // Parse IS (Imposto Seletivo) if present
+    if (apiData.total?.tribCalc?.ISTot) {
+      totalIs = parseFloat(apiData.total.tribCalc.ISTot.vIS || "0");
+    }
+
+    // Build processed items for display
+    const processedItems = (apiData.objetos || []).map((obj: any, index: number) => {
+      const tribCalc = obj.tribCalc?.IBSCBS?.gIBSCBS || {};
+      const inputItem = itens[index] || {};
+      
+      const itemCbs = parseFloat(tribCalc.gCBS?.vCBS || "0");
+      const itemIbsUf = parseFloat(tribCalc.gIBSUF?.vIBSUF || "0");
+      const itemIbsMun = parseFloat(tribCalc.gIBSMun?.vIBSMun || "0");
+      const baseCalculo = parseFloat(tribCalc.vBC || "0");
+      
+      // Get IS for item if present
+      const itemIs = parseFloat(obj.tribCalc?.IS?.gIS?.vIS || "0");
+      
+      return {
+        numero: obj.nObj || index + 1,
+        ncm: inputItem.ncm || "",
+        descricao: inputItem.descricao || "",
+        baseCalculo: baseCalculo,
+        tributosCalculados: {
+          cbs: { 
+            valor: itemCbs, 
+            aliquota: parseFloat(tribCalc.gCBS?.pCBS || "0"),
+            memoriaCalculo: tribCalc.gCBS?.memoriaCalculo || ""
+          },
+          ibsUf: { 
+            valor: itemIbsUf, 
+            aliquota: parseFloat(tribCalc.gIBSUF?.pIBSUF || "0"),
+            memoriaCalculo: tribCalc.gIBSUF?.memoriaCalculo || ""
+          },
+          ibsMun: { 
+            valor: itemIbsMun, 
+            aliquota: parseFloat(tribCalc.gIBSMun?.pIBSMun || "0"),
+            memoriaCalculo: tribCalc.gIBSMun?.memoriaCalculo || ""
+          },
+          is: { 
+            valor: itemIs, 
+            aliquota: parseFloat(obj.tribCalc?.IS?.gIS?.pIS || "0"),
+            memoriaCalculo: obj.tribCalc?.IS?.gIS?.memoriaCalculo || ""
+          },
+        },
+        memoriaCalculo: tribCalc.gCBS?.memoriaCalculo || "",
+      };
+    });
+
     const totalGeral = totalCbs + totalIbsUf + totalIbsMun + totalIs;
+
+    console.log("Totais calculados:", { totalCbs, totalIbsUf, totalIbsMun, totalIs, totalGeral });
 
     // Save to database
     const { error: insertError } = await supabase.from("tax_calculations").insert({
@@ -164,7 +225,10 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        data: apiData,
+        data: {
+          ...apiData,
+          itens: processedItems, // Use processed items for frontend compatibility
+        },
         totals: {
           cbs: totalCbs,
           ibsUf: totalIbsUf,
