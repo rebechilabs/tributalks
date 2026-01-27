@@ -30,7 +30,7 @@ const FAIXAS_FATURAMENTO = [
 const Onboarding = () => {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
 
   // Initialize form with existing profile data
@@ -101,13 +101,8 @@ const Onboarding = () => {
         description: "Você está pronto para usar as calculadoras.",
       });
       
-      // Navigate first, then refresh profile in background
+      // Navigate directly - the auth listener will pick up profile changes automatically
       navigate('/dashboard', { replace: true });
-      
-      // Refresh profile after navigation (non-blocking)
-      refreshProfile().catch(() => {
-        // Silently ignore abort errors from navigation
-      });
     } catch (error: any) {
       console.error('Onboarding save error:', error);
       toast({
