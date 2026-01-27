@@ -351,9 +351,13 @@ export function FloatingAssistant() {
   // Scroll to bottom on new messages
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      // ScrollArea uses a viewport inside, need to scroll that
+      const viewport = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (viewport) {
+        viewport.scrollTop = viewport.scrollHeight;
+      }
     }
-  }, [messages]);
+  }, [messages, isLoading]);
 
   // Auto-speak assistant messages
   useEffect(() => {
@@ -531,7 +535,7 @@ export function FloatingAssistant() {
 
           <CardContent className="p-0">
             {/* Messages Area */}
-            <ScrollArea className="h-80 p-3" ref={scrollRef}>
+            <ScrollArea className="h-80 p-3" ref={scrollRef as React.RefObject<HTMLDivElement>}>
               <div className="space-y-3">
                 {messages.length === 0 && !isLoading && (
                   <div className="text-center text-muted-foreground text-sm py-8 animate-fade-in">
@@ -555,8 +559,8 @@ export function FloatingAssistant() {
                       }`}
                     >
                       {msg.role === "assistant" ? (
-                        <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:my-1 [&>ul]:my-1 [&>ol]:my-1">
-                          <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:my-1 [&>ul]:my-1 [&>ol]:my-1 [&_strong]:font-semibold">
+                          <ReactMarkdown skipHtml>{msg.content}</ReactMarkdown>
                         </div>
                       ) : (
                         msg.content
