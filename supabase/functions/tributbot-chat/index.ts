@@ -90,17 +90,27 @@ serve(async (req) => {
       .eq("user_id", user.id)
       .single();
 
-    // Check plan access
+    // Check limits based on plan
     const plano = profile?.plano || "FREE";
+    
     if (plano === "FREE") {
-      return new Response(JSON.stringify({ error: "Acesso negado. Faça upgrade para usar o TribuBot." }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+      // FREE plan: 3 messages TOTAL (lifetime limit)
+      const { count } = await supabase
+        .from("tributbot_messages")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id);
 
-    // Check daily limit for BASICO/NAVIGATOR plan (PROFISSIONAL, PREMIUM, ENTERPRISE have unlimited)
-    if (plano === "BASICO" || plano === "NAVIGATOR") {
+      if ((count || 0) >= 3) {
+        return new Response(JSON.stringify({ 
+          error: "Você usou suas 3 conversas gratuitas. Faça upgrade para continuar usando a Clara.",
+          limit_reached: true
+        }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    } else if (plano === "BASICO" || plano === "NAVIGATOR") {
+      // NAVIGATOR plan: 10 messages per day
       const today = new Date().toISOString().split("T")[0];
       const { count } = await supabase
         .from("tributbot_messages")
@@ -110,7 +120,7 @@ serve(async (req) => {
 
       if ((count || 0) >= 10) {
         return new Response(JSON.stringify({ 
-          error: "Limite diário atingido. Você pode enviar até 10 mensagens por dia no plano Básico.",
+          error: "Limite diário atingido. Você pode enviar até 10 mensagens por dia no plano Navigator.",
           limit_reached: true
         }), {
           status: 429,
@@ -118,6 +128,7 @@ serve(async (req) => {
         });
       }
     }
+    // PROFESSIONAL, PREMIUM, ENTERPRISE: unlimited
 
     const { messages } = await req.json();
     

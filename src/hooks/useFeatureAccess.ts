@@ -90,7 +90,7 @@ export const FEATURE_CONFIG: Record<FeatureKey, FeatureConfig> = {
   relatorios_pdf: { minPlan: 'PROFESSIONAL' },
   
   // IA e Documentos
-  tribubot: { minPlan: 'NAVIGATOR', limit: 10, usageKey: 'tribubot_messages_today' },
+  tribubot: { minPlan: 'FREE', limit: 3, usageKey: 'tribubot_messages_total' },
   document_analyzer: { minPlan: 'NAVIGATOR' },
   workflows: { minPlan: 'NAVIGATOR' },
   
@@ -111,9 +111,9 @@ export const CNPJ_LIMITS: Record<UserPlan, number | 'unlimited'> = {
   'ENTERPRISE': 'unlimited',
 };
 
-// Limite de mensagens TribuBot por plano (por dia)
+// Limite de mensagens TribuBot/Clara por plano
 export const TRIBUBOT_LIMITS: Record<UserPlan, number | 'unlimited'> = {
-  'FREE': 0,        // Sem acesso
+  'FREE': 3,        // 3 mensagens total
   'NAVIGATOR': 10,  // 10 mensagens/dia
   'PROFESSIONAL': 'unlimited',
   'ENTERPRISE': 'unlimited',
