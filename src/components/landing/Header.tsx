@@ -29,9 +29,7 @@ export function Header() {
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center">
-            <span className="text-lg font-bold text-foreground">TribuTech</span>
-          </Link>
+          <div className="w-10 md:w-12" />
 
           {/* Desktop Navigation - placeholder for future links */}
           <nav className="hidden md:flex items-center gap-6">
