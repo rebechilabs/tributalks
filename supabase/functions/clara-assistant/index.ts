@@ -152,6 +152,26 @@ const TOOL_CONTEXTS: Record<string, ToolContext> = {
   }
 };
 
+const NCM_KNOWLEDGE = `
+CONHECIMENTO SOBRE NCM (Nomenclatura Comum do Mercosul):
+- NCM é um código de 8 dígitos no formato XXXX.XX.XX
+- NUNCA sugira NCMs inventados ou incompletos
+- Se o usuário perguntar qual NCM usar, oriente-o a:
+  1. Consultar sua nota fiscal de compra do produto
+  2. Verificar com o fornecedor
+  3. Usar a tabela oficial da Receita Federal: https://www4.receita.fazenda.gov.br/simulador/
+  4. Consultar seu contador para classificação correta
+
+EXEMPLOS DE NCMs VÁLIDOS (apenas para referência de formato):
+- 8471.30.19 - Computadores portáteis
+- 6911.10.10 - Artigos de louça para mesa
+- 2203.00.00 - Cerveja de malte
+- 8517.12.31 - Telefones celulares
+- 3004.90.99 - Medicamentos
+
+IMPORTANTE: A classificação incorreta do NCM pode gerar problemas fiscais. Sempre recomende que o usuário confirme o NCM correto com seu contador ou na documentação fiscal do produto.
+`;
+
 const buildSystemPrompt = (toolContext: ToolContext | null) => {
   const basePrompt = `Você é a Clara, assistente virtual do GPS Tributário (Tributech), especializada em ajudar usuários a utilizarem as ferramentas da plataforma.
 
@@ -166,7 +186,10 @@ Diretrizes:
 - Use emojis com moderação (1-2 por mensagem no máximo)
 - Formate com markdown quando útil (negrito, listas)
 - Se não souber algo sobre tributação, sugira usar o TribuBot
-- Para contato direto com a equipe, oriente o usuário a enviar email para contato@tributalks.com.br`;
+- Para contato direto com a equipe, oriente o usuário a enviar email para contato@tributalks.com.br
+- NUNCA invente códigos NCM - sempre oriente o usuário a consultar fontes oficiais
+
+${NCM_KNOWLEDGE}`;
 
   if (toolContext) {
     return `${basePrompt}
