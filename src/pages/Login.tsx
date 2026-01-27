@@ -26,25 +26,34 @@ const Login = () => {
     setError(null);
 
     try {
-      await signIn(email, password);
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        throw signInError;
+      }
+
+      if (!data.user) {
+        throw new Error('Login failed');
+      }
       
       // Fetch fresh profile to check onboarding status
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: freshProfile } = await supabase
-          .from('profiles')
-          .select('onboarding_complete')
-          .eq('user_id', user.id)
-          .maybeSingle();
-        
-        toast({
-          title: "Login realizado!",
-          description: "Bem-vindo de volta ao TribuTech.",
-        });
-        
-        navigate(freshProfile?.onboarding_complete ? '/dashboard' : '/onboarding');
-      }
+      const { data: freshProfile } = await supabase
+        .from('profiles')
+        .select('onboarding_complete')
+        .eq('user_id', data.user.id)
+        .maybeSingle();
+      
+      toast({
+        title: "Login realizado!",
+        description: "Bem-vindo de volta ao TribuTech.",
+      });
+      
+      navigate(freshProfile?.onboarding_complete ? '/dashboard' : '/onboarding');
     } catch (error: any) {
+      console.error('Login error:', error);
       const errorMessage = error.message === 'Invalid login credentials' 
         ? 'E-mail ou senha incorretos' 
         : 'Erro ao fazer login. Tente novamente.';
