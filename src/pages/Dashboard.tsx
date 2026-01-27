@@ -288,8 +288,22 @@ const Dashboard = () => {
         </div>
 
         {/* Clara Card - Expert AI Assistant */}
-        <div className="mb-8">
+        <div className="mb-4">
           <ClaraCard />
+        </div>
+
+        {/* Getting Started CTA */}
+        <div className="mb-8">
+          <Link to="/dashboard/score-tributario">
+            <Button 
+              size="lg" 
+              className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground font-semibold py-6 text-lg shadow-lg hover:shadow-xl transition-all group"
+            >
+              <Sparkles className="w-5 h-5 mr-2" />
+              Por onde eu começo?
+              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </Link>
         </div>
 
         {/* Plan Status Card */}
