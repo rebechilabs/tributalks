@@ -73,8 +73,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let mounted = true;
+    
+    // Garantia absoluta: loading NUNCA fica preso mais que 3 segundos
+    const forceLoadTimeout = setTimeout(() => {
+      if (mounted) {
+        setLoading(false);
+      }
+    }, 3000);
 
-    // Get initial session first, then set up listener
     const initializeAuth = async () => {
       try {
         const { data: { session: initialSession } } = await supabase.auth.getSession();
@@ -89,19 +95,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           if (mounted) setProfile(profileData);
         }
         
-        if (mounted) setLoading(false);
+        if (mounted) {
+          clearTimeout(forceLoadTimeout);
+          setLoading(false);
+        }
       } catch (error) {
-        console.error('[Auth] Error initializing:', error);
-        if (mounted) setLoading(false);
+        console.error('[Auth] Error:', error);
+        if (mounted) {
+          clearTimeout(forceLoadTimeout);
+          setLoading(false);
+        }
       }
     };
 
-    // Set up auth state listener for future changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
         if (!mounted) return;
         
-        // Only handle actual auth changes, not initial load
         if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
           setSession(currentSession);
           setUser(currentSession?.user ?? null);
@@ -120,6 +130,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => {
       mounted = false;
+      clearTimeout(forceLoadTimeout);
       subscription.unsubscribe();
     };
   }, []);
