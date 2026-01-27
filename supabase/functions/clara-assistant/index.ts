@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.91.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -152,6 +153,190 @@ const TOOL_CONTEXTS: Record<string, ToolContext> = {
   }
 };
 
+const REFORMA_KNOWLEDGE = `
+## CONHECIMENTO PROFUNDO SOBRE A REFORMA TRIBUTÁRIA BRASILEIRA
+
+### O QUE É A REFORMA TRIBUTÁRIA?
+A Reforma Tributária é a maior mudança no sistema de impostos do Brasil desde a Constituição de 1988. Aprovada em dezembro de 2023 (EC 132/2023) e regulamentada pela Lei Complementar 214/2025, ela simplifica drasticamente a tributação sobre consumo, substituindo 5 tributos por apenas 2 novos impostos + 1 imposto seletivo.
+
+### IMPOSTOS QUE SERÃO EXTINTOS (gradualmente até 2033):
+1. **PIS** (Programa de Integração Social) - Federal
+2. **COFINS** (Contribuição para Financiamento da Seguridade Social) - Federal
+3. **IPI** (Imposto sobre Produtos Industrializados) - Federal
+4. **ICMS** (Imposto sobre Circulação de Mercadorias e Serviços) - Estadual
+5. **ISS** (Imposto Sobre Serviços) - Municipal
+
+### NOVOS IMPOSTOS QUE SUBSTITUEM:
+1. **CBS** (Contribuição sobre Bens e Serviços) - Federal
+   - Substitui PIS, COFINS e IPI
+   - Alíquota estimada: ~8,8%
+   - Administrado pela Receita Federal
+
+2. **IBS** (Imposto sobre Bens e Serviços) - Estadual/Municipal
+   - Substitui ICMS e ISS
+   - Alíquota estimada: ~17,7% (soma de UF + Município)
+   - Administrado pelo Comitê Gestor do IBS
+
+3. **IS** (Imposto Seletivo) - Federal
+   - "Imposto do pecado" - incide sobre produtos nocivos à saúde e ao meio ambiente
+   - Cigarros, bebidas alcoólicas, bebidas açucaradas, veículos poluentes, mineração
+   - Alíquotas variáveis conforme o produto
+
+### ALÍQUOTA DE REFERÊNCIA (IVA Dual):
+- **Alíquota total combinada**: ~26,5% (CBS + IBS)
+- Esta é a alíquota padrão, com reduções para setores específicos
+
+### CRONOGRAMA DA TRANSIÇÃO (TIMELINE 2026-2033):
+
+**2026 - ANO DE TESTE:**
+- CBS começa a ser cobrada em TESTE: 0,9%
+- IBS começa em TESTE: 0,1%
+- Imposto Seletivo (IS) entra em vigor
+- Empresas devem adequar sistemas para nova apuração
+- Período para identificar erros e ajustes
+
+**2027 - TRANSIÇÃO INICIA:**
+- CBS passa para alíquota cheia (estimada ~8,8%)
+- IBS continua em 0,1%
+- PIS e COFINS são EXTINTOS
+- IPI mantido apenas para Zona Franca de Manaus
+- **SIMPLES NACIONAL**: empresas podem optar por regime híbrido
+
+**2028:**
+- IBS sobe para 1% (compensado com redução de ICMS/ISS)
+- Crédito do IBS começa a ser liberado gradualmente
+
+**2029-2032 - TRANSIÇÃO GRADUAL:**
+- ICMS e ISS vão sendo reduzidos 1/8 ao ano
+- IBS vai aumentando proporcionalmente
+- Empresas precisam gerenciar dois sistemas em paralelo
+
+**2033 - CONCLUSÃO:**
+- ICMS e ISS são completamente EXTINTOS
+- IBS atinge alíquota plena
+- Sistema novo 100% operacional
+
+### PRINCÍPIOS FUNDAMENTAIS:
+
+1. **NÃO-CUMULATIVIDADE PLENA:**
+   - Todo imposto pago na cadeia vira crédito
+   - Elimina o "efeito cascata" que encarece produtos
+   - Crédito financeiro (não mais físico)
+
+2. **TRIBUTAÇÃO NO DESTINO:**
+   - Imposto vai para onde o produto/serviço é consumido
+   - Acaba com a "guerra fiscal" entre estados
+   - Transição de 50 anos para receitas estaduais
+
+3. **CASHBACK PARA FAMÍLIAS DE BAIXA RENDA:**
+   - Devolução de impostos para famílias no CadÚnico
+   - Foco em reduzir desigualdade
+
+4. **CESTA BÁSICA NACIONAL:**
+   - Produtos essenciais terão alíquota ZERO
+   - Lista definida em lei complementar
+
+### SETORES COM TRATAMENTO ESPECIAL:
+
+**Alíquota ZERO:**
+- Cesta básica nacional
+- Medicamentos essenciais
+- Dispositivos médicos
+- Serviços de educação (sob condições)
+- Transporte público coletivo
+
+**Redução de 60% da alíquota:**
+- Saúde (hospitais, clínicas, laboratórios)
+- Educação
+- Dispositivos de acessibilidade
+- Alimentos fora da cesta básica
+- Produtos agropecuários
+- Atividades artísticas e culturais
+- Transporte de passageiros
+
+**Redução de 30% da alíquota:**
+- Profissionais liberais (médicos, advogados, contadores, engenheiros, etc.)
+- Aplicável apenas se optarem por regime especial
+
+### SPLIT PAYMENT - RECOLHIMENTO AUTOMÁTICO:
+O Split Payment é o mecanismo que vai automatizar o recolhimento dos novos impostos:
+- No momento do pagamento, o banco/adquirente separa automaticamente a parcela do imposto
+- O valor do imposto vai direto para o governo
+- O vendedor recebe apenas o valor líquido
+- Reduz sonegação e simplifica compliance
+- Implementação gradual a partir de 2026
+
+### SIMPLES NACIONAL NA REFORMA:
+
+**Empresas do Simples têm 3 opções a partir de 2027:**
+
+1. **Permanecer 100% no Simples:**
+   - Mantém regime atual simplificado
+   - NÃO gera créditos de CBS/IBS para clientes
+   - Pode perder competitividade em B2B
+
+2. **Regime Híbrido:**
+   - Recolhe CBS/IBS separadamente (fora do DAS)
+   - Gera créditos para clientes
+   - Mantém Simples para IRPJ, CSLL, CPP
+   - Melhor para quem vende para outras empresas (B2B)
+
+3. **Sair do Simples:**
+   - Migrar para Lucro Presumido ou Real
+   - Decisão deve ser analisada caso a caso
+
+### IMPACTOS POR SETOR:
+
+**INDÚSTRIA:**
+- Tende a PAGAR MENOS (não-cumulatividade plena)
+- Créditos de todos os insumos
+- Fim do IPI (exceto ZFM)
+
+**COMÉRCIO:**
+- Impacto neutro a positivo
+- Simplificação de ICMS
+- Split Payment automatiza recolhimento
+
+**SERVIÇOS:**
+- Tendência de AUMENTO de carga tributária
+- ISS médio era 2-5%, CBS+IBS será ~26,5%
+- Reduções para setores regulamentados
+- Profissionais liberais: redução de 30%
+
+**AGRONEGÓCIO:**
+- Redução de 60% na alíquota
+- Créditos mais amplos
+- Exportações continuam isentas
+
+**SAÚDE E EDUCAÇÃO:**
+- Alíquota zero ou reduzida (60%)
+- Condições específicas para isenção
+- Entidades sem fins lucrativos mantêm benefícios
+
+### ZONA FRANCA DE MANAUS:
+- Mantém benefícios até 2073
+- IPI permanece para proteger vantagem competitiva
+- Crédito presumido para compensar mudanças
+
+### O QUE AS EMPRESAS DEVEM FAZER AGORA:
+
+1. **Mapear operações** - entender como cada produto/serviço será tributado
+2. **Revisar contratos** - cláusulas de preço podem precisar de ajuste
+3. **Atualizar sistemas** - ERPs precisarão emitir documentos com novos campos
+4. **Treinar equipe** - contabilidade e fiscal precisam dominar novas regras
+5. **Simular impactos** - calcular se vai pagar mais ou menos
+6. **Revisar precificação** - ajustar preços considerando nova carga
+7. **Avaliar Simples Nacional** - decidir sobre regime híbrido
+
+### FONTES OFICIAIS:
+- Receita Federal: https://www.gov.br/receitafederal
+- Ministério da Fazenda: https://www.gov.br/fazenda
+- Portal da Reforma: https://www.gov.br/reforma-tributaria
+- Lei Complementar 214/2025
+
+IMPORTANTE: A reforma ainda terá regulamentações adicionais. Sempre recomende acompanhar as atualizações oficiais e consultar um contador especializado para decisões estratégicas.
+`;
+
 const NCM_NBS_KNOWLEDGE = `
 ## CONHECIMENTO SOBRE NCM (Nomenclatura Comum do Mercosul) - PRODUTOS
 
@@ -241,27 +426,11 @@ A estrutura é: Capítulo (2) + Posição (2) + Subposição (2) + Item (2)
 - 8708.29.99 - Autopeças diversas
 - 4011.10.00 - Pneus para automóveis
 
-**CERÂMICA E LOUÇAS:**
-- 6910.10.00 - Pias e lavatórios de porcelana
-- 6910.90.00 - Outros artigos cerâmicos sanitários
-- 6911.10.10 - Artigos de porcelana para mesa
-- 6911.10.90 - Outros artigos de porcelana
-- 6912.00.00 - Louça de cerâmica
-
-**MATERIAIS DE CONSTRUÇÃO:**
-- 2523.29.10 - Cimento Portland
-- 6802.23.00 - Granito trabalhado
-- 6907.21.00 - Pisos cerâmicos
-- 6907.22.00 - Revestimentos cerâmicos
-- 7213.10.00 - Vergalhões de aço
-- 7308.90.90 - Estruturas metálicas
-
 **IMPOSTO SELETIVO (IS) - NCMs com tributação especial:**
 - 2402.20.00 - Cigarros
 - 2203.00.00, 2204.xx.xx, 2205.xx.xx, 2206.xx.xx, 2207.xx.xx, 2208.xx.xx - Bebidas alcoólicas
 - 2202.10.00 - Bebidas açucaradas
 - 8703.xx.xx - Veículos de passageiros
-- Minerais extraídos
 
 ---
 
@@ -288,49 +457,6 @@ Estrutura: Capítulo (2) + Posição (2) + Subposição (2) + Item (3)
 - 1.0501.10.00 - Serviços de arquitetura
 - 1.0601.10.00 - Serviços de engenharia
 
-**SERVIÇOS FINANCEIROS:**
-- 1.2101.10.00 - Serviços bancários
-- 1.2201.10.00 - Serviços de seguros
-- 1.2301.10.00 - Corretagem de valores
-- 1.2401.10.00 - Gestão de ativos
-
-**SERVIÇOS DE COMUNICAÇÃO:**
-- 1.0901.10.00 - Serviços de telecomunicações
-- 1.0902.10.00 - Serviços de internet
-- 1.0903.10.00 - Transmissão de dados
-
-**SERVIÇOS DE MARKETING E PUBLICIDADE:**
-- 1.0701.10.00 - Serviços de publicidade
-- 1.0702.10.00 - Pesquisa de mercado
-- 1.0703.10.00 - Serviços de design
-
-**SERVIÇOS DE EDUCAÇÃO:**
-- 1.1601.10.00 - Educação presencial
-- 1.1602.10.00 - Educação a distância (EAD)
-- 1.1603.10.00 - Treinamentos corporativos
-
-**SERVIÇOS DE SAÚDE:**
-- 1.1701.10.00 - Serviços médicos
-- 1.1702.10.00 - Serviços odontológicos
-- 1.1703.10.00 - Serviços de laboratório
-
-**SERVIÇOS DE CONSTRUÇÃO:**
-- 1.0801.10.00 - Construção de edificações
-- 1.0802.10.00 - Instalações elétricas
-- 1.0803.10.00 - Instalações hidráulicas
-
-**SERVIÇOS DE TRANSPORTE:**
-- 1.0801.20.00 - Transporte rodoviário de cargas
-- 1.0802.20.00 - Transporte aéreo
-- 1.0803.20.00 - Transporte marítimo
-
-**SERVIÇOS DE TURISMO:**
-- 1.2001.10.00 - Agências de viagem
-- 1.2002.10.00 - Serviços de hospedagem
-- 1.2003.10.00 - Serviços de alimentação
-
----
-
 ## COMO IDENTIFICAR: NCM vs NBS
 
 | Característica | NCM (Produtos) | NBS (Serviços) |
@@ -347,29 +473,68 @@ Estrutura: Capítulo (2) + Posição (2) + Subposição (2) + Item (3)
 IMPORTANTE: A classificação incorreta pode gerar problemas fiscais. Sempre recomende confirmar com contador ou nas fontes oficiais.
 `;
 
+const CONVERSATION_STARTERS = [
+  {
+    id: "basico",
+    question: "O que é essa Reforma Tributária que todo mundo está falando?",
+    shortLabel: "O que é a Reforma?"
+  },
+  {
+    id: "impacto",
+    question: "Como a Reforma Tributária vai afetar minha empresa na prática?",
+    shortLabel: "Impacto na minha empresa"
+  },
+  {
+    id: "impostos",
+    question: "Quais impostos vão mudar e quando isso começa a valer?",
+    shortLabel: "Quais impostos mudam?"
+  },
+  {
+    id: "financeiro",
+    question: "Vou pagar mais ou menos impostos depois da Reforma?",
+    shortLabel: "Vou pagar mais ou menos?"
+  },
+  {
+    id: "acao",
+    question: "O que preciso fazer agora para não ser pego de surpresa pela Reforma Tributária?",
+    shortLabel: "O que fazer agora?"
+  }
+];
+
 const buildSystemPrompt = (toolContext: ToolContext | null) => {
-  const basePrompt = `Você é a Clara, assistente virtual do GPS Tributário (Tributech), especializada em ajudar usuários a utilizarem as ferramentas da plataforma.
+  const basePrompt = `Você é a Clara, consultora tributária virtual do GPS Tributário (Tributech), especialista em Reforma Tributária Brasileira e em ajudar usuários a navegarem pelas ferramentas da plataforma.
 
-Sua personalidade:
-- Simpática, acolhedora e profissional
-- Usa linguagem simples e direta
-- Sempre oferece ajuda prática e passo a passo
-- Celebra as conquistas do usuário
+## SUA IDENTIDADE
+- Nome: Clara
+- Papel: Consultora tributária virtual especializada na Reforma Tributária
+- Tom: Profissional, acolhedora, didática e direta
+- Objetivo: Transformar a complexidade tributária em clareza para empresários
 
-Diretrizes:
-- Mantenha respostas curtas e objetivas
-- Use emojis com moderação (1-2 por mensagem no máximo)
-- Formate com markdown quando útil (negrito, listas)
-- Se não souber algo sobre tributação, sugira usar o TribuBot
-- Para contato direto com a equipe, oriente o usuário a enviar email para contato@tributalks.com.br
-- NUNCA invente códigos NCM - sempre oriente o usuário a consultar fontes oficiais
+## DIRETRIZES DE COMUNICAÇÃO
+- Seja didática: explique conceitos complexos de forma simples
+- Use analogias quando apropriado para facilitar entendimento
+- Formate com markdown (negrito, listas, tabelas) para organizar informações
+- Respostas devem ser completas mas objetivas - nem muito curtas nem prolixas
+- Use emojis com moderação (1-2 por mensagem, apenas quando agregar)
+- Para dúvidas operacionais detalhadas ou casos específicos, sugira consultar um contador especializado
+- Para contato direto com a equipe: suporte@tributalks.com.br
 
-${NCM_NBS_KNOWLEDGE}`;
+## CONHECIMENTO ESPECIALIZADO
+
+${REFORMA_KNOWLEDGE}
+
+${NCM_NBS_KNOWLEDGE}
+
+## REGRAS IMPORTANTES
+- NUNCA invente códigos NCM/NBS - oriente a consultar fontes oficiais
+- Sempre cite a base legal quando relevante (EC 132/2023, LC 214/2025)
+- Para decisões estratégicas, recomende validar com contador especializado
+- Mantenha-se atualizada com as regulamentações mais recentes`;
 
   if (toolContext) {
     return `${basePrompt}
 
-CONTEXTO ATUAL:
+## CONTEXTO ATUAL
 O usuário está na ferramenta "${toolContext.toolName}" - ${toolContext.toolDescription}.
 
 Passo a passo desta ferramenta:
@@ -387,12 +552,42 @@ serve(async (req) => {
   }
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!ANTHROPIC_API_KEY) {
+      throw new Error("ANTHROPIC_API_KEY is not configured");
     }
 
-    const { messages, toolSlug, isGreeting } = await req.json();
+    // Validate authentication
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: "Invalid token" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { messages, toolSlug, isGreeting, getStarters } = await req.json();
+
+    // Return conversation starters if requested
+    if (getStarters) {
+      return new Response(JSON.stringify({ starters: CONVERSATION_STARTERS }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const toolContext = toolSlug ? TOOL_CONTEXTS[toolSlug] || null : null;
     const systemPrompt = buildSystemPrompt(toolContext);
@@ -400,23 +595,28 @@ serve(async (req) => {
     // For greeting, generate a contextual welcome message
     const messagesWithContext = isGreeting 
       ? [
-          { role: "user", content: `Acabei de entrar na ferramenta. Me dê uma saudação breve, se apresente como Clara e pergunte se posso ajudar a usar esta ferramenta. Seja breve (máximo 3 frases).` }
+          { role: "user", content: toolContext 
+            ? `Acabei de entrar na ferramenta. Me dê uma saudação breve, se apresente como Clara e pergunte se posso ajudar a usar esta ferramenta. Seja breve (máximo 3 frases).`
+            : `Olá! Me apresente brevemente como Clara, especialista em Reforma Tributária. Mencione que posso tirar dúvidas sobre a reforma ou ajudar com as ferramentas. Seja breve e acolhedora (máximo 4 frases).`
+          }
         ]
       : messages;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messagesWithContext,
-        ],
-        stream: false,
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 2048,
+        system: systemPrompt,
+        messages: messagesWithContext.map((msg: { role: string; content: string }) => ({
+          role: msg.role === "assistant" ? "assistant" : "user",
+          content: msg.content,
+        })),
       }),
     });
 
@@ -427,14 +627,8 @@ serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos de IA esgotados." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
       const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
+      console.error("Anthropic API error:", response.status, errorText);
       return new Response(JSON.stringify({ error: "Erro ao processar. Tente novamente." }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -442,7 +636,7 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const assistantMessage = data.choices?.[0]?.message?.content || "Olá! Sou a Clara, como posso ajudar?";
+    const assistantMessage = data.content?.[0]?.text || "Olá! Sou a Clara, como posso ajudar?";
 
     return new Response(JSON.stringify({ message: assistantMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
