@@ -7,10 +7,17 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+}
+
+interface ConversationStarter {
+  id: string;
+  question: string;
+  shortLabel: string;
 }
 
 // Map routes to tool slugs for context
@@ -37,8 +44,50 @@ export function FloatingAssistant() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasGreeted, setHasGreeted] = useState(false);
   const [currentTool, setCurrentTool] = useState<string | null>(null);
+  const [starters, setStarters] = useState<ConversationStarter[]>([]);
+  const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
+
+  // Listen for external events to open Clara with a question
+  useEffect(() => {
+    const handleOpenWithQuestion = (e: CustomEvent<{ question: string }>) => {
+      setPendingQuestion(e.detail.question);
+      setIsOpen(true);
+    };
+
+    window.addEventListener('openClaraWithQuestion', handleOpenWithQuestion as EventListener);
+    return () => {
+      window.removeEventListener('openClaraWithQuestion', handleOpenWithQuestion as EventListener);
+    };
+  }, []);
+
+  // Send pending question after greeting
+  useEffect(() => {
+    if (pendingQuestion && hasGreeted && !isLoading && messages.length === 1) {
+      const question = pendingQuestion;
+      setPendingQuestion(null);
+      // Small delay to allow UI to render
+      setTimeout(() => sendMessage(question), 300);
+    }
+  }, [pendingQuestion, hasGreeted, isLoading, messages.length]);
+
+  // Fetch conversation starters on mount
+  useEffect(() => {
+    const fetchStarters = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("clara-assistant", {
+          body: { getStarters: true },
+        });
+        if (!error && data?.starters) {
+          setStarters(data.starters);
+        }
+      } catch (e) {
+        console.error("Error fetching starters:", e);
+      }
+    };
+    fetchStarters();
+  }, []);
 
   // Detect current tool from route
   useEffect(() => {
@@ -52,12 +101,12 @@ export function FloatingAssistant() {
     }
   }, [location.pathname, currentTool]);
 
-  // Auto-greet when opening on a tool page
+  // Auto-greet when opening
   useEffect(() => {
-    if (isOpen && currentTool && !hasGreeted && messages.length === 0) {
+    if (isOpen && !hasGreeted && messages.length === 0) {
       fetchGreeting();
     }
-  }, [isOpen, currentTool, hasGreeted, messages.length]);
+  }, [isOpen, hasGreeted, messages.length]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -84,10 +133,10 @@ export function FloatingAssistant() {
     } catch (error) {
       console.error("Greeting error:", error);
       // Fallback greeting
-      const toolName = currentTool?.replace(/-/g, " ") || "ferramenta";
+      const toolName = currentTool?.replace(/-/g, " ") || "Reforma Tributária";
       setMessages([{ 
         role: "assistant", 
-        content: `Olá! Sou a Clara, assistente virtual do GPS Tributário. 👋 Posso te ajudar a usar ${toolName}? Me pergunte qualquer coisa!` 
+        content: `Olá! Sou a **Clara**, sua consultora especializada em Reforma Tributária. 👋\n\nPosso te ajudar com dúvidas sobre a reforma, impostos, cronograma ou qualquer ferramenta do GPS Tributário. Como posso ajudar?` 
       }]);
       setHasGreeted(true);
     } finally {
@@ -95,10 +144,10 @@ export function FloatingAssistant() {
     }
   };
 
-  const sendMessage = async () => {
-    if (!input.trim() || isLoading) return;
+  const sendMessage = async (messageText?: string) => {
+    const userMessage = messageText || input.trim();
+    if (!userMessage || isLoading) return;
 
-    const userMessage = input.trim();
     setInput("");
     setMessages(prev => [...prev, { role: "user", content: userMessage }]);
     setIsLoading(true);
@@ -115,6 +164,8 @@ export function FloatingAssistant() {
       if (error) {
         if (error.message?.includes("429")) {
           toast.error("Muitas requisições. Aguarde um momento.");
+        } else if (error.message?.includes("401")) {
+          toast.error("Faça login para usar a Clara.");
         } else {
           throw error;
         }
@@ -137,23 +188,28 @@ export function FloatingAssistant() {
     }
   };
 
+  const handleStarterClick = (starter: ConversationStarter) => {
+    sendMessage(starter.question);
+  };
+
   const handleOpen = () => {
     setIsOpen(true);
-    // If opening for first time on a tool and no messages, greeting will trigger via useEffect
   };
+
+  const showStarters = messages.length === 1 && hasGreeted && !isLoading;
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
       {/* Chat Card */}
       {isOpen && (
-        <Card className="absolute bottom-16 right-0 w-80 md:w-96 shadow-2xl border-primary/20 animate-in slide-in-from-bottom-4 fade-in duration-200">
-          <CardHeader className="p-3 border-b border-border flex flex-row items-center gap-3">
+        <Card className="absolute bottom-16 right-0 w-80 md:w-[420px] shadow-2xl border-primary/20 animate-in slide-in-from-bottom-4 fade-in duration-200">
+          <CardHeader className="p-3 border-b border-border flex flex-row items-center gap-3 bg-gradient-to-r from-primary/5 to-transparent">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shrink-0">
               <Sparkles className="w-5 h-5 text-primary-foreground" />
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-foreground text-sm">Clara</h3>
-              <p className="text-xs text-muted-foreground">Assistente Tributech</p>
+              <p className="text-xs text-muted-foreground">Especialista em Reforma Tributária</p>
             </div>
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsOpen(false)}>
               <X className="w-4 h-4" />
@@ -162,13 +218,13 @@ export function FloatingAssistant() {
 
           <CardContent className="p-0">
             {/* Messages Area */}
-            <ScrollArea className="h-64 p-3" ref={scrollRef}>
+            <ScrollArea className="h-80 p-3" ref={scrollRef}>
               <div className="space-y-3">
                 {messages.length === 0 && !isLoading && (
                   <div className="text-center text-muted-foreground text-sm py-8">
                     <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-50" />
                     <p>Olá! Sou a Clara.</p>
-                    <p className="text-xs">Como posso ajudar?</p>
+                    <p className="text-xs">Especialista em Reforma Tributária</p>
                   </div>
                 )}
                 
@@ -184,10 +240,34 @@ export function FloatingAssistant() {
                           : "bg-muted text-foreground"
                       }`}
                     >
-                      {msg.content}
+                      {msg.role === "assistant" ? (
+                        <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:my-1 [&>ul]:my-1 [&>ol]:my-1">
+                          <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        </div>
+                      ) : (
+                        msg.content
+                      )}
                     </div>
                   </div>
                 ))}
+
+                {/* Conversation Starters */}
+                {showStarters && starters.length > 0 && (
+                  <div className="pt-2">
+                    <p className="text-xs text-muted-foreground mb-2">Perguntas frequentes:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {starters.map((starter) => (
+                        <button
+                          key={starter.id}
+                          onClick={() => handleStarterClick(starter)}
+                          className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-left"
+                        >
+                          {starter.shortLabel}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {isLoading && (
                   <div className="flex justify-start">
@@ -203,7 +283,7 @@ export function FloatingAssistant() {
             <div className="p-3 border-t border-border">
               <div className="flex gap-2">
                 <Input
-                  placeholder="Digite sua dúvida..."
+                  placeholder="Pergunte sobre a Reforma Tributária..."
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
@@ -212,7 +292,7 @@ export function FloatingAssistant() {
                 />
                 <Button 
                   size="icon" 
-                  onClick={sendMessage} 
+                  onClick={() => sendMessage()} 
                   disabled={!input.trim() || isLoading}
                   className="shrink-0"
                 >

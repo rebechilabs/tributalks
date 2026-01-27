@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-
+import { ClaraCard } from "@/components/dashboard/ClaraCard";
 interface CalcItem {
   id: string;
   slug: string;
@@ -285,6 +285,11 @@ const Dashboard = () => {
           <p className="text-muted-foreground">
             Bem-vindo ao seu painel de inteligência tributária.
           </p>
+        </div>
+
+        {/* Clara Card - Expert AI Assistant */}
+        <div className="mb-8">
+          <ClaraCard />
         </div>
 
         {/* Plan Status Card */}
