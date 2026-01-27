@@ -5,6 +5,7 @@ import { ArrowLeft, Loader2, Eye, EyeOff, Mail, KeyRound } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import logoTributech from "@/assets/logo-tributech.png";
 
@@ -26,11 +27,23 @@ const Login = () => {
 
     try {
       await signIn(email, password);
-      toast({
-        title: "Login realizado!",
-        description: "Bem-vindo de volta ao TribuTech.",
-      });
-      navigate(profile?.onboarding_complete ? '/dashboard' : '/onboarding');
+      
+      // Fetch fresh profile to check onboarding status
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: freshProfile } = await supabase
+          .from('profiles')
+          .select('onboarding_complete')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        toast({
+          title: "Login realizado!",
+          description: "Bem-vindo de volta ao TribuTech.",
+        });
+        
+        navigate(freshProfile?.onboarding_complete ? '/dashboard' : '/onboarding');
+      }
     } catch (error: any) {
       const errorMessage = error.message === 'Invalid login credentials' 
         ? 'E-mail ou senha incorretos' 
