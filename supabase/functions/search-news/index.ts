@@ -5,30 +5,50 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Temas de busca para notícias
-const SEARCH_TOPICS = [
-  // Reforma Tributária
+// Temas de busca para notícias - SEPARADOS EM DOIS GRUPOS
+const SEARCH_TOPICS_REFORMA = [
   {
-    query: "reforma tributária Brasil IBS CBS 2026 últimas notícias",
+    query: "reforma tributária Brasil IBS CBS 2026 2027 últimas notícias implementação",
     categoria: "REFORMA",
   },
   {
-    query: "split payment nota fiscal eletrônica Brasil",
+    query: "split payment nota fiscal eletrônica Brasil reforma tributária",
     categoria: "REFORMA",
   },
-  // Economia e Empresas
   {
-    query: "economia brasileira empresas mercado financeiro últimas notícias",
-    categoria: "ECONOMIA",
+    query: "transição tributária Brasil IVA dual CBS IBS cronograma",
+    categoria: "REFORMA",
   },
   {
-    query: "tributação empresas Brasil impostos negócios",
+    query: "imposto seletivo Brasil reforma tributária produtos tributados",
+    categoria: "REFORMA",
+  },
+  {
+    query: "regulamentação reforma tributária LC 214 Senado Câmara votação",
+    categoria: "REFORMA",
+  },
+];
+
+const SEARCH_TOPICS_TRIBUTARIAS = [
+  {
+    query: "tributação empresas Brasil ICMS PIS COFINS novidades fiscais",
     categoria: "TRIBUTOS",
   },
-  // Receita Federal e Fiscalização
   {
-    query: "Receita Federal fiscalização empresas novidades",
+    query: "Receita Federal fiscalização empresas autuação malha fina",
     categoria: "FISCALIZACAO",
+  },
+  {
+    query: "benefícios fiscais incentivos tributários empresas Brasil estados",
+    categoria: "INCENTIVOS",
+  },
+  {
+    query: "obrigações acessórias SPED EFD empresas prazos novidades",
+    categoria: "OBRIGACOES",
+  },
+  {
+    query: "jurisprudência tributária STF STJ decisões impostos empresas",
+    categoria: "JURISPRUDENCIA",
   },
 ];
 
@@ -111,10 +131,11 @@ Deno.serve(async (req) => {
 
     console.log(`Iniciando busca de notícias (scheduled: ${isScheduledJob})`);
 
-    const noticiasEncontradas: NoticiaProcessada[] = [];
+    const noticiasReforma: NoticiaProcessada[] = [];
+    const noticiasTributarias: NoticiaProcessada[] = [];
 
-    // Buscar notícias para cada tópico
-    for (const topic of SEARCH_TOPICS) {
+    // Função auxiliar para buscar notícias de um tópico
+    async function buscarNoticias(topic: { query: string; categoria: string }, targetArray: NoticiaProcessada[]) {
       console.log(`Buscando: ${topic.query}`);
 
       try {
@@ -131,96 +152,111 @@ Deno.serve(async (req) => {
                 role: "system",
                 content: `Você é um assistente que busca e resume notícias recentes sobre tributação e economia empresarial no Brasil. 
                 
-Retorne EXATAMENTE 3 notícias recentes e relevantes no seguinte formato JSON:
+Retorne EXATAMENTE 1 notícia recente e muito relevante no seguinte formato JSON:
 [
   {
-    "titulo": "Título da notícia",
-    "resumo": "Resumo de 2-3 parágrafos explicando o conteúdo principal",
-    "fonte": "Nome do veículo/site"
+    "titulo": "Título da notícia (máximo 100 caracteres)",
+    "resumo": "Resumo objetivo de 2-3 parágrafos explicando o conteúdo principal e impacto para empresas",
+    "fonte": "Nome do veículo/site",
+    "relevancia": "ALTA ou MEDIA (ALTA = impacto direto em empresas, MEDIA = informativo)"
   }
 ]
 
-Priorize notícias dos últimos 7 dias de fontes confiáveis como: Valor Econômico, InfoMoney, Folha, Estadão, G1, Portal Contábeis, Receita Federal.`
+IMPORTANTE: Só retorne notícias dos últimos 3 dias. Se não houver notícia relevante recente, retorne array vazio [].
+Priorize notícias de fontes confiáveis como: Valor Econômico, InfoMoney, Folha, Estadão, G1, Portal Contábeis, Receita Federal, Jota, Conjur.`
               },
               {
                 role: "user",
                 content: topic.query
               }
             ],
-            search_recency_filter: "week",
+            search_recency_filter: "day",
           }),
         });
 
         if (!response.ok) {
           console.error(`Erro Perplexity para ${topic.categoria}: ${response.status}`);
-          continue;
+          return;
         }
 
         const data: PerplexityResult = await response.json();
         const content = data.choices?.[0]?.message?.content || "";
         const citations = data.citations || [];
 
-        // Tentar parsear o JSON da resposta
         try {
-          // Extrair JSON do conteúdo (pode vir com texto extra)
           const jsonMatch = content.match(/\[[\s\S]*\]/);
           if (jsonMatch) {
             const noticias = JSON.parse(jsonMatch[0]);
             
-            for (let i = 0; i < noticias.length && i < 3; i++) {
-              const noticia = noticias[i];
-              noticiasEncontradas.push({
-                titulo_original: noticia.titulo,
-                conteudo_original: noticia.resumo,
-                fonte: noticia.fonte || "Perplexity Search",
-                fonte_url: citations[i] || "",
-                categoria: topic.categoria,
-              });
+            for (const noticia of noticias) {
+              // Só adiciona se for relevante
+              if (noticia.titulo && noticia.resumo) {
+                targetArray.push({
+                  titulo_original: noticia.titulo,
+                  conteudo_original: noticia.resumo,
+                  fonte: noticia.fonte || "Perplexity Search",
+                  fonte_url: citations[0] || "",
+                  categoria: topic.categoria,
+                });
+              }
             }
           }
         } catch (parseError) {
           console.error(`Erro ao parsear resposta para ${topic.categoria}:`, parseError);
-          // Mesmo sem JSON, criar uma notícia com o conteúdo
-          if (content.length > 100) {
-            noticiasEncontradas.push({
-              titulo_original: `Atualização: ${topic.categoria}`,
-              conteudo_original: content.slice(0, 2000),
-              fonte: "Perplexity Search",
-              fonte_url: citations[0] || "",
-              categoria: topic.categoria,
-            });
-          }
         }
 
-        // Pequeno delay entre requisições para evitar rate limit
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Delay entre requisições
+        await new Promise(resolve => setTimeout(resolve, 300));
 
       } catch (topicError) {
         console.error(`Erro ao buscar ${topic.categoria}:`, topicError);
       }
     }
 
-    if (noticiasEncontradas.length === 0) {
+    // Buscar notícias de REFORMA TRIBUTÁRIA (5 tópicos)
+    console.log("=== Buscando notícias de REFORMA TRIBUTÁRIA ===");
+    for (const topic of SEARCH_TOPICS_REFORMA) {
+      await buscarNoticias(topic, noticiasReforma);
+    }
+
+    // Buscar notícias TRIBUTÁRIAS GERAIS (5 tópicos)
+    console.log("=== Buscando notícias TRIBUTÁRIAS GERAIS ===");
+    for (const topic of SEARCH_TOPICS_TRIBUTARIAS) {
+      await buscarNoticias(topic, noticiasTributarias);
+    }
+
+    // Limitar a 5 de cada grupo
+    const reformaFinal = noticiasReforma.slice(0, 5);
+    const tributariasFinal = noticiasTributarias.slice(0, 5);
+
+    console.log(`Reforma: ${reformaFinal.length} notícias | Tributárias: ${tributariasFinal.length} notícias`);
+
+    // Só envia para processamento se houver novas notícias
+    const todasNoticias = [...reformaFinal, ...tributariasFinal];
+
+    if (todasNoticias.length === 0) {
       return new Response(
         JSON.stringify({
           success: true,
-          message: "Nenhuma notícia nova encontrada",
-          processadas: 0,
+          message: "Nenhuma notícia nova relevante encontrada. Notícias anteriores mantidas.",
+          noticias_reforma: 0,
+          noticias_tributarias: 0,
+          timestamp: new Date().toISOString(),
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`Encontradas ${noticiasEncontradas.length} notícias, enviando para processamento...`);
+    console.log(`Enviando ${todasNoticias.length} notícias para processamento...`);
 
-    // Enviar para processamento com IA (process-news já existe)
+    // Enviar para processamento com IA
     const processResponse = await fetch(`${supabaseUrl}/functions/v1/process-news`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${supabaseServiceKey}`,
       },
-      body: JSON.stringify({ noticias: noticiasEncontradas }),
+      body: JSON.stringify({ noticias: todasNoticias }),
     });
 
     const processResult = await processResponse.json();
@@ -230,9 +266,11 @@ Priorize notícias dos últimos 7 dias de fontes confiáveis como: Valor Econôm
     return new Response(
       JSON.stringify({
         success: true,
-        noticias_encontradas: noticiasEncontradas.length,
+        noticias_reforma: reformaFinal.length,
+        noticias_tributarias: tributariasFinal.length,
         noticias_processadas: processResult.processadas || 0,
-        categorias: [...new Set(noticiasEncontradas.map(n => n.categoria))],
+        categorias_reforma: [...new Set(reformaFinal.map(n => n.categoria))],
+        categorias_tributarias: [...new Set(tributariasFinal.map(n => n.categoria))],
         timestamp: new Date().toISOString(),
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
