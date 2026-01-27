@@ -23,10 +23,18 @@ import {
   UNIDADE_OPTIONS,
 } from "./rtcConstants";
 
+// Detecta automaticamente: NCM (8 dígitos para produtos) ou NBS (9 dígitos para serviços)
+const codigoSchema = z.string()
+  .transform(val => val.replace(/\D/g, "")) // Remove non-digits
+  .pipe(
+    z.string().refine(
+      val => val.length === 8 || val.length === 9,
+      "Código inválido: NCM (8 dígitos) para produtos ou NBS (9 dígitos) para serviços"
+    )
+  );
+
 const itemSchema = z.object({
-  ncm: z.string()
-    .transform(val => val.replace(/\D/g, "")) // Remove non-digits
-    .pipe(z.string().length(8, "NCM deve ter exatamente 8 dígitos numéricos")),
+  ncm: codigoSchema, // Campo unificado que aceita NCM ou NBS
   descricao: z.string().optional(),
   quantidade: z.number().min(0.01, "Quantidade inválida"),
   unidade: z.string().min(1, "Selecione a unidade"),
@@ -231,13 +239,23 @@ export function TaxCalculatorForm({ onSubmit, isLoading }: TaxCalculatorFormProp
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4">
-                  {/* NCM */}
+                  {/* NCM/NBS */}
                   <div className="space-y-2">
-                    <Label>NCM</Label>
+                    <Label>
+                      NCM / NBS
+                      <span className="ml-2 text-xs font-normal text-muted-foreground">
+                        {(() => {
+                          const code = watchedItens[index]?.ncm?.replace(/\D/g, "") || "";
+                          if (code.length === 8) return "(Produto)";
+                          if (code.length === 9) return "(Serviço)";
+                          return "";
+                        })()}
+                      </span>
+                    </Label>
                     <div className="flex gap-2">
                       <Input
                         {...register(`itens.${index}.ncm`)}
-                        placeholder="6910.11.00 ou 69101100"
+                        placeholder="NCM: 8 dígitos | NBS: 9 dígitos"
                         className={`bg-card border-border font-mono ${errors.itens?.[index]?.ncm ? 'border-destructive' : ''}`}
                       />
                       <Button
@@ -248,10 +266,14 @@ export function TaxCalculatorForm({ onSubmit, isLoading }: TaxCalculatorFormProp
                           setActiveItemIndex(index);
                           setNcmModalOpen(true);
                         }}
+                        title="Buscar NCM de produto"
                       >
                         <Search className="h-4 w-4" />
                       </Button>
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                      Produtos: NCM 8 dígitos (ex: 69101100) • Serviços: NBS 9 dígitos (ex: 123456789)
+                    </p>
                     {errors.itens?.[index]?.ncm && (
                       <p className="text-xs text-destructive">
                         {errors.itens[index].ncm?.message}
