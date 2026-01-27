@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { MessageCircle, X, Sparkles, Send, Loader2 } from "lucide-react";
+import { MessageCircle, X, Sparkles, Send, Loader2, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
+import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
 
 interface Message {
   role: "user" | "assistant";
@@ -46,8 +48,45 @@ export function FloatingAssistant() {
   const [currentTool, setCurrentTool] = useState<string | null>(null);
   const [starters, setStarters] = useState<ConversationStarter[]>([]);
   const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
+  const [autoSpeak, setAutoSpeak] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
+
+  // Voice hooks
+  const { 
+    transcript, 
+    isListening, 
+    isSupported: isSpeechRecognitionSupported,
+    startListening, 
+    stopListening,
+    resetTranscript 
+  } = useSpeechRecognition();
+  
+  const { 
+    speak, 
+    stop: stopSpeaking, 
+    isSpeaking,
+    isSupported: isSpeechSynthesisSupported 
+  } = useSpeechSynthesis();
+
+  // Update input when transcript changes
+  useEffect(() => {
+    if (transcript) {
+      setInput(transcript);
+    }
+  }, [transcript]);
+
+  // Auto-send when speech recognition ends with text
+  useEffect(() => {
+    if (!isListening && transcript && transcript.trim().length > 0) {
+      // Small delay to ensure transcript is complete
+      const timer = setTimeout(() => {
+        sendMessage(transcript.trim());
+        resetTranscript();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isListening, transcript]);
 
   // Listen for external events to open Clara with a question
   useEffect(() => {
@@ -115,6 +154,16 @@ export function FloatingAssistant() {
     }
   }, [messages]);
 
+  // Auto-speak assistant messages
+  useEffect(() => {
+    if (autoSpeak && messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.role === "assistant" && !isLoading) {
+        speak(lastMessage.content);
+      }
+    }
+  }, [messages, autoSpeak, isLoading]);
+
   const fetchGreeting = async () => {
     setIsLoading(true);
     try {
@@ -133,7 +182,6 @@ export function FloatingAssistant() {
     } catch (error) {
       console.error("Greeting error:", error);
       // Fallback greeting
-      const toolName = currentTool?.replace(/-/g, " ") || "Reforma Tributária";
       setMessages([{ 
         role: "assistant", 
         content: `Olá! Sou a **Clara**, sua consultora especializada em Reforma Tributária. 👋\n\nPosso te ajudar com dúvidas sobre a reforma, impostos, cronograma ou qualquer ferramenta do GPS Tributário. Como posso ajudar?` 
@@ -196,7 +244,31 @@ export function FloatingAssistant() {
     setIsOpen(true);
   };
 
+  const handleVoiceToggle = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      resetTranscript();
+      startListening();
+    }
+  };
+
+  const handleSpeakToggle = () => {
+    if (isSpeaking) {
+      stopSpeaking();
+    } else {
+      setAutoSpeak(!autoSpeak);
+      if (!autoSpeak && messages.length > 0) {
+        const lastAssistantMessage = [...messages].reverse().find(m => m.role === "assistant");
+        if (lastAssistantMessage) {
+          speak(lastAssistantMessage.content);
+        }
+      }
+    }
+  };
+
   const showStarters = messages.length === 1 && hasGreeted && !isLoading;
+  const hasVoiceSupport = isSpeechRecognitionSupported || isSpeechSynthesisSupported;
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
@@ -211,6 +283,24 @@ export function FloatingAssistant() {
               <h3 className="font-semibold text-foreground text-sm">Clara</h3>
               <p className="text-xs text-muted-foreground">Especialista em Reforma Tributária</p>
             </div>
+            
+            {/* Voice controls */}
+            {hasVoiceSupport && (
+              <div className="flex gap-1">
+                {isSpeechSynthesisSupported && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className={`h-8 w-8 ${autoSpeak || isSpeaking ? 'text-primary' : 'text-muted-foreground'}`}
+                    onClick={handleSpeakToggle}
+                    title={isSpeaking ? "Parar leitura" : autoSpeak ? "Desativar leitura automática" : "Ativar leitura automática"}
+                  >
+                    {isSpeaking || autoSpeak ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                  </Button>
+                )}
+              </div>
+            )}
+            
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsOpen(false)}>
               <X className="w-4 h-4" />
             </Button>
@@ -283,13 +373,28 @@ export function FloatingAssistant() {
             <div className="p-3 border-t border-border">
               <div className="flex gap-2">
                 <Input
-                  placeholder="Pergunte sobre a Reforma Tributária..."
+                  placeholder={isListening ? "Escutando..." : "Pergunte sobre a Reforma Tributária..."}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  disabled={isLoading}
-                  className="text-sm"
+                  disabled={isLoading || isListening}
+                  className={`text-sm ${isListening ? 'border-primary animate-pulse' : ''}`}
                 />
+                
+                {/* Microphone button */}
+                {isSpeechRecognitionSupported && (
+                  <Button 
+                    size="icon" 
+                    variant={isListening ? "default" : "outline"}
+                    onClick={handleVoiceToggle}
+                    disabled={isLoading}
+                    className={`shrink-0 ${isListening ? 'bg-destructive hover:bg-destructive/90' : ''}`}
+                    title={isListening ? "Parar gravação" : "Falar com a Clara"}
+                  >
+                    {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  </Button>
+                )}
+                
                 <Button 
                   size="icon" 
                   onClick={() => sendMessage()} 
@@ -299,6 +404,14 @@ export function FloatingAssistant() {
                   <Send className="w-4 h-4" />
                 </Button>
               </div>
+              
+              {/* Voice status indicator */}
+              {isListening && (
+                <p className="text-xs text-primary mt-2 flex items-center gap-1">
+                  <span className="w-2 h-2 bg-destructive rounded-full animate-pulse" />
+                  Escutando... Fale sua pergunta
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>

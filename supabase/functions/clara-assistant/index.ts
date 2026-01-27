@@ -22,7 +22,7 @@ const TOOL_CONTEXTS: Record<string, ToolContext> = {
       "Veja seu score de 0 a 1000 pontos com nota de A+ a E",
       "Analise as 5 dimensões: Conformidade, Eficiência, Risco, Documentação e Gestão",
       "Siga as ações recomendadas para melhorar sua nota e economizar",
-      "💡 Dica: O Receita Sintonia é o programa oficial da Receita Federal que classifica contribuintes de A+ a D - quem tem boa classificação recebe benefícios como prioridade na restituição e tratamento diferenciado"
+      "💡 Dica: O Receita Sintonia é o programa oficial da Receita Federal que classifica contribuintes de A+ a D"
     ]
   },
   "split-payment": {
@@ -184,7 +184,6 @@ A Reforma Tributária é a maior mudança no sistema de impostos do Brasil desde
 
 ### ALÍQUOTA DE REFERÊNCIA (IVA Dual):
 - **Alíquota total combinada**: ~26,5% (CBS + IBS)
-- Esta é a alíquota padrão, com reduções para setores específicos
 
 ### CRONOGRAMA DA TRANSIÇÃO (TIMELINE 2026-2033):
 
@@ -193,7 +192,6 @@ A Reforma Tributária é a maior mudança no sistema de impostos do Brasil desde
 - IBS começa em TESTE: 0,1%
 - Imposto Seletivo (IS) entra em vigor
 - Empresas devem adequar sistemas para nova apuração
-- Período para identificar erros e ajustes
 
 **2027 - TRANSIÇÃO INICIA:**
 - CBS passa para alíquota cheia (estimada ~8,8%)
@@ -337,143 +335,12 @@ O Split Payment é o mecanismo que vai automatizar o recolhimento dos novos impo
 IMPORTANTE: A reforma ainda terá regulamentações adicionais. Sempre recomende acompanhar as atualizações oficiais e consultar um contador especializado para decisões estratégicas.
 `;
 
-const NCM_NBS_KNOWLEDGE = `
-## CONHECIMENTO SOBRE NCM (Nomenclatura Comum do Mercosul) - PRODUTOS
-
-NCM é um código de **8 dígitos** no formato XXXX.XX.XX usado para classificar PRODUTOS.
-A estrutura é: Capítulo (2) + Posição (2) + Subposição (2) + Item (2)
-
-### PRINCIPAIS NCMs POR CATEGORIA:
-
-**ALIMENTOS E BEBIDAS:**
-- 0901.21.00 - Café torrado não descafeinado
-- 0902.10.00 - Chá verde
-- 1905.31.00 - Biscoitos doces
-- 1905.90.20 - Pão de forma
-- 2009.11.00 - Suco de laranja
-- 2201.10.00 - Água mineral natural
-- 2202.10.00 - Refrigerantes
-- 2203.00.00 - Cerveja de malte
-- 2204.21.00 - Vinho tinto
-- 2208.30.20 - Uísque
-
-**VESTUÁRIO E TÊXTEIS:**
-- 6109.10.00 - Camisetas de algodão
-- 6110.20.00 - Suéteres de algodão
-- 6203.42.00 - Calças masculinas de algodão
-- 6204.62.00 - Calças femininas de algodão
-- 6402.19.00 - Calçados esportivos
-- 6403.99.90 - Outros calçados de couro
-
-**ELETRÔNICOS E TECNOLOGIA:**
-- 8471.30.12 - Notebooks
-- 8471.30.19 - Computadores portáteis
-- 8471.41.10 - Desktops
-- 8471.70.12 - HDs e SSDs
-- 8517.12.31 - Smartphones
-- 8517.62.99 - Roteadores Wi-Fi
-- 8518.21.00 - Alto-falantes
-- 8518.30.00 - Fones de ouvido
-- 8521.90.00 - Aparelhos de gravação
-- 8525.80.29 - Câmeras digitais
-- 8528.72.00 - TVs LCD/LED
-- 8543.70.99 - Equipamentos eletrônicos diversos
-
-**ELETRODOMÉSTICOS:**
-- 8418.10.00 - Geladeiras
-- 8418.21.00 - Freezers
-- 8422.11.00 - Lavadoras de louça
-- 8450.11.00 - Máquinas de lavar roupa
-- 8451.21.00 - Secadoras de roupa
-- 8516.31.00 - Secadores de cabelo
-- 8516.40.00 - Ferros elétricos
-- 8516.50.00 - Micro-ondas
-- 8516.60.00 - Fogões elétricos
-- 8509.40.10 - Liquidificadores
-- 8509.40.40 - Batedeiras
-
-**MÓVEIS:**
-- 9401.30.90 - Cadeiras de escritório
-- 9401.61.00 - Sofás
-- 9403.30.00 - Móveis de madeira para escritório
-- 9403.50.00 - Móveis de madeira para quartos
-- 9403.60.00 - Móveis de madeira diversos
-- 9404.21.00 - Colchões de espuma
-
-**COSMÉTICOS E HIGIENE:**
-- 3303.00.10 - Perfumes
-- 3304.10.00 - Produtos para lábios
-- 3304.20.10 - Maquiagem para olhos
-- 3304.91.00 - Pós para maquiagem
-- 3304.99.90 - Preparações de beleza
-- 3305.10.00 - Xampus
-- 3305.90.00 - Condicionadores
-- 3306.10.00 - Cremes dentais
-
-**MEDICAMENTOS:**
-- 3003.90.89 - Medicamentos em doses
-- 3004.10.39 - Antibióticos
-- 3004.20.99 - Medicamentos com antibióticos
-- 3004.50.90 - Vitaminas
-- 3004.90.39 - Anti-inflamatórios
-- 3004.90.99 - Outros medicamentos
-
-**AUTOMÓVEIS E PEÇAS:**
-- 8703.23.10 - Automóveis 1000-1500cc
-- 8703.23.90 - Automóveis 1500-3000cc
-- 8703.24.90 - Automóveis acima 3000cc
-- 8711.20.10 - Motos 50-250cc
-- 8708.29.99 - Autopeças diversas
-- 4011.10.00 - Pneus para automóveis
-
-**IMPOSTO SELETIVO (IS) - NCMs com tributação especial:**
-- 2402.20.00 - Cigarros
-- 2203.00.00, 2204.xx.xx, 2205.xx.xx, 2206.xx.xx, 2207.xx.xx, 2208.xx.xx - Bebidas alcoólicas
-- 2202.10.00 - Bebidas açucaradas
-- 8703.xx.xx - Veículos de passageiros
-
----
-
-## CONHECIMENTO SOBRE NBS (Nomenclatura Brasileira de Serviços) - SERVIÇOS
-
-NBS é um código de **9 dígitos** usado para classificar SERVIÇOS, intangíveis e operações de comércio exterior.
-Estrutura: Capítulo (2) + Posição (2) + Subposição (2) + Item (3)
-
-### PRINCIPAIS NBS POR CATEGORIA:
-
-**SERVIÇOS DE TI E TECNOLOGIA:**
-- 1.1101.10.00 - Licenciamento de software
-- 1.1201.10.00 - Desenvolvimento de software sob encomenda
-- 1.1202.10.00 - Suporte técnico de TI
-- 1.1301.10.00 - Processamento de dados
-- 1.1401.10.00 - Hospedagem de sites (hosting)
-- 1.1501.10.00 - Consultoria em TI
-
-**SERVIÇOS PROFISSIONAIS:**
-- 1.0101.10.00 - Serviços jurídicos
-- 1.0201.10.00 - Serviços de contabilidade
-- 1.0301.10.00 - Serviços de auditoria
-- 1.0401.10.00 - Consultoria empresarial
-- 1.0501.10.00 - Serviços de arquitetura
-- 1.0601.10.00 - Serviços de engenharia
-
-## COMO IDENTIFICAR: NCM vs NBS
-
-| Característica | NCM (Produtos) | NBS (Serviços) |
-|----------------|----------------|----------------|
-| Quantidade de dígitos | 8 | 9 |
-| Usado para | Mercadorias físicas | Serviços e intangíveis |
-| Formato | XXXX.XX.XX | X.XXXX.XX.XX |
-| Exemplo | 8471.30.12 | 1.1201.10.00 |
-
-## FONTES OFICIAIS PARA CONSULTA:
-- NCM: https://www4.receita.fazenda.gov.br/simulador/ (Tabela TIPI)
-- NBS: https://www.gov.br/mdic/pt-br/assuntos/comercio-exterior/estatisticas/nomenclatura-brasileira-de-servicos
-
-IMPORTANTE: A classificação incorreta pode gerar problemas fiscais. Sempre recomende confirmar com contador ou nas fontes oficiais.
-`;
-
 const CONVERSATION_STARTERS = [
+  {
+    id: "inicio",
+    question: "Por onde eu começo?",
+    shortLabel: "Por onde começar?"
+  },
   {
     id: "basico",
     question: "O que é essa Reforma Tributária que todo mundo está falando?",
@@ -482,12 +349,7 @@ const CONVERSATION_STARTERS = [
   {
     id: "impacto",
     question: "Como a Reforma Tributária vai afetar minha empresa na prática?",
-    shortLabel: "Impacto na minha empresa"
-  },
-  {
-    id: "impostos",
-    question: "Quais impostos vão mudar e quando isso começa a valer?",
-    shortLabel: "Quais impostos mudam?"
+    shortLabel: "Impacto na empresa"
   },
   {
     id: "financeiro",
@@ -501,7 +363,215 @@ const CONVERSATION_STARTERS = [
   }
 ];
 
-const buildSystemPrompt = (toolContext: ToolContext | null) => {
+// Plan-specific responses for "Por onde eu começo?"
+const PLAN_RESPONSES: Record<string, string> = {
+  FREE: `Ótima pergunta! Vamos começar do jeito certo.
+
+No plano Grátis, você tem acesso a ferramentas essenciais para dar seus primeiros passos na Reforma Tributária. Cada ferramenta pode ser usada 1 vez para você experimentar:
+
+🎯 **Suas ferramentas disponíveis:**
+- **Score Tributário** - Descubra o nível de complexidade tributária da sua empresa
+- **Simulador Split Payment** - Entenda a nova forma automática de pagamento de impostos
+- **Comparativo de Regimes** - Compare Simples Nacional, Lucro Presumido e Lucro Real
+- **Calculadora RTC** - Simule como CBS, IBS e Imposto Seletivo impactam sua operação
+
+💡 **Por onde começar?**
+
+Recomendo fortemente o **Score Tributário**. Em poucos minutos, você terá:
+- Um panorama claro da sua situação tributária atual
+- Identificação dos principais riscos e oportunidades
+- Orientação sobre quais ferramentas explorar em seguida
+
+Quer que eu te guie passo a passo no preenchimento do Score Tributário? Ou prefere conhecer outra ferramenta primeiro?`,
+
+  BASICO: `Excelente! Você tem acesso completo ao GPS da Reforma Tributária. Vou te orientar na jornada ideal:
+
+📍 **JORNADA RECOMENDADA:**
+
+**FASE 1 - Entenda o Cenário** (comece aqui)
+- **Timeline 2026-2033** - Visualize todos os prazos e etapas da Reforma
+- **Notícias da Reforma** - Mantenha-se atualizado com mudanças legislativas
+- **Feed + Pílula do Dia** - Resumos diários das novidades mais importantes
+
+*Tempo estimado: 30 minutos | Resultado: Visão clara do que está por vir*
+
+**FASE 2 - Avalie sua Situação**
+- **Score Tributário** - Identifique o nível de complexidade da sua empresa
+- **Comparativo de Regimes** - Valide se seu regime atual ainda será o melhor
+- **Calculadora RTC** - Simule o impacto real de CBS, IBS e IS
+
+*Tempo estimado: 1-1,5 hora | Resultado: Diagnóstico da sua situação atual*
+
+**FASE 3 - Simule Impactos**
+- **Simulador Split Payment** - Projete como o pagamento automático afetará seu fluxo de caixa
+- **Calculadora de Serviços (NBS)** - Se você presta serviços, simule a nova tributação específica
+
+*Tempo estimado: 45 minutos | Resultado: Projeção de impacto financeiro*
+
+💡 **Minha recomendação de início:**
+Dedique 1 hora para completar:
+1. Timeline 2026-2033 (15 min)
+2. Score Tributário (30 min)
+3. Calculadora RTC (15 min)
+
+Quer começar pela Timeline ou prefere ir direto ao Score Tributário?`,
+
+  NAVIGATOR: `Excelente! Você tem acesso completo ao GPS da Reforma Tributária. Vou te orientar na jornada ideal:
+
+📍 **JORNADA RECOMENDADA:**
+
+**FASE 1 - Entenda o Cenário** (comece aqui)
+- **Timeline 2026-2033** - Visualize todos os prazos e etapas da Reforma
+- **Notícias da Reforma** - Mantenha-se atualizado com mudanças legislativas
+- **Feed + Pílula do Dia** - Resumos diários das novidades mais importantes
+
+*Tempo estimado: 30 minutos | Resultado: Visão clara do que está por vir*
+
+**FASE 2 - Avalie sua Situação**
+- **Score Tributário** - Identifique o nível de complexidade da sua empresa
+- **Comparativo de Regimes** - Valide se seu regime atual ainda será o melhor
+- **Calculadora RTC** - Simule o impacto real de CBS, IBS e IS
+
+*Tempo estimado: 1-1,5 hora | Resultado: Diagnóstico da sua situação atual*
+
+**FASE 3 - Simule Impactos**
+- **Simulador Split Payment** - Projete como o pagamento automático afetará seu fluxo de caixa
+- **Calculadora de Serviços (NBS)** - Se você presta serviços, simule a nova tributação específica
+
+*Tempo estimado: 45 minutos | Resultado: Projeção de impacto financeiro*
+
+**FASE 4 - Tire Dúvidas Específicas**
+- **TribuBot (10 msgs/dia)** - Use a IA para esclarecer dúvidas específicas
+
+💡 **Minha recomendação de início:**
+Dedique 1 hora para completar:
+1. Timeline 2026-2033 (15 min)
+2. Score Tributário (30 min)
+3. Calculadora RTC (15 min)
+
+Quer começar pela Timeline ou prefere ir direto ao Score Tributário?`,
+
+  PROFISSIONAL: `Perfeito! Você tem a plataforma completa com diagnóstico automatizado e inteligência artificial ilimitada.
+
+🚀 **WORKFLOWS GUIADOS + AUTOMAÇÃO COMPLETA:**
+
+Você tem acesso a **4 Workflows Guiados** - jornadas estruturadas que conectam diferentes ferramentas:
+
+📋 **Seus Workflows:**
+
+**1. Diagnóstico Tributário Completo** ⭐
+Análise automática e profunda com importação ilimitada de XMLs.
+→ Importador de XMLs → Radar de Créditos → DRE Inteligente → Oportunidades Fiscais (37+)
+*Diferencial: Processamento ilimitado de notas fiscais e análise contínua*
+
+**2. Preparação para a Reforma**
+Entenda impactos com seus dados reais, não apenas simulações.
+→ Seus dados reais → Simulações personalizadas → Relatórios PDF profissionais
+*Diferencial: Análise baseada em dados reais da sua operação*
+
+**3. Análise de Contratos Societários**
+Upload ilimitado para análise profunda de toda estrutura societária.
+→ Analisador de Documentos com IA → Identificação automática de oportunidades
+*Diferencial: IA analisa documentos sem limite de volume*
+
+**4. Simulação de Preços**
+Cálculo preciso com base nos seus XMLs reais de compra e venda.
+→ Dados reais de operação → Split Payment real → Precificação otimizada
+*Diferencial: Simulação com margem real, não teórica*
+
+🎁 **EXCLUSIVIDADES DO PROFESSIONAL:**
+✅ Importador de XMLs ilimitado
+✅ Radar de Créditos Fiscais
+✅ DRE Inteligente
+✅ 37+ Oportunidades Fiscais
+✅ Relatórios PDF Profissionais
+✅ TribuBot ilimitado + Comunidade
+✅ Alertas por Email
+
+💡 **Quick Start Recomendado (90 minutos):**
+1. Execute o Workflow 1 com seus XMLs reais (45 min)
+2. Analise os resultados do Radar de Créditos e DRE Inteligente (30 min)
+3. Execute o Workflow 2 com os insights obtidos (15 min)
+
+*Resultado: Diagnóstico completo + plano de ação baseado na sua realidade.*
+
+Por qual Workflow quer começar? Ou prefere que eu te ajude a importar seus XMLs primeiro?`,
+
+  PREMIUM: `Perfeito! Você tem a plataforma completa com diagnóstico automatizado e inteligência artificial ilimitada.
+
+🚀 **WORKFLOWS GUIADOS + AUTOMAÇÃO COMPLETA:**
+
+Você tem acesso a **4 Workflows Guiados** - jornadas estruturadas que conectam diferentes ferramentas:
+
+📋 **Seus Workflows:**
+
+**1. Diagnóstico Tributário Completo** ⭐
+→ Importador de XMLs → Radar de Créditos → DRE Inteligente → Oportunidades Fiscais
+
+**2. Preparação para a Reforma**
+→ Seus dados reais → Simulações personalizadas → Relatórios PDF profissionais
+
+**3. Análise de Contratos Societários**
+→ Analisador de Documentos com IA → Identificação automática de oportunidades
+
+**4. Simulação de Preços**
+→ Dados reais de operação → Split Payment real → Precificação otimizada
+
+💡 **Quick Start Recomendado (90 minutos):**
+1. Execute o Workflow 1 com seus XMLs reais (45 min)
+2. Analise os resultados do Radar e DRE Inteligente (30 min)
+3. Execute o Workflow 2 com os insights obtidos (15 min)
+
+Por qual Workflow quer começar?`,
+
+  ENTERPRISE: `Excelente escolha! Você tem a plataforma completa + acompanhamento especializado da Rebechi & Silva Advogados.
+
+🎯 **TUDO DO PROFESSIONAL + CONSULTORIA ESTRATÉGICA:**
+
+✅ Você tem acesso a:
+- Todos os 4 Workflows Guiados (versão completa)
+- Importador de XMLs, Radar de Créditos, DRE Inteligente
+- 37+ Oportunidades Fiscais mapeadas
+- TribuBot ilimitado + Comunidade
+- Relatórios PDF Profissionais
+
+🏆 **EXCLUSIVIDADES ENTERPRISE:**
+
+**FASE 1 - Diagnóstico Estratégico com Especialista**
+✅ Diagnóstico completo personalizado - Advogado tributarista analisa sua situação específica
+✅ Painel Executivo - Dashboard com KPIs tributários em tempo real
+✅ Análise por CNPJ - Simulações considerando todas as particularidades
+
+**FASE 2 - Acompanhamento Contínuo**
+✅ Reuniões mensais estratégicas
+✅ Consultorias ilimitadas - Acesso direto aos advogados tributaristas
+✅ Suporte prioritário
+
+**FASE 3 - Implementação Assistida**
+✅ Implementação guiada - Apoio prático na execução das estratégias
+✅ Histórico completo - Rastreabilidade de todas as análises e decisões
+✅ Configurações personalizadas
+
+💡 **Próximos Passos Recomendados:**
+
+**Agora:**
+1. Acesse Enterprise > Consultorias e agende sua primeira reunião de diagnóstico
+2. Enquanto aguarda, execute o Workflow 1 e importe seus XMLs
+3. Acesse o Painel Executivo para visualizar seus indicadores
+
+**Na primeira reunião:**
+- Apresentaremos análise preliminar com base nos dados da plataforma
+- Definiremos estratégia personalizada para sua empresa
+- Estabeleceremos cronograma de implementação
+
+📞 Quer agendar sua reunião de diagnóstico agora? Entre em contato pelo menu Enterprise > Consultorias.
+
+✨ Lembre-se: No Enterprise, suas consultorias com advogados tributaristas são incluídas e ilimitadas. Use esse benefício sem moderação para maximizar seus resultados.`
+};
+
+const buildSystemPrompt = (toolContext: ToolContext | null, userPlan: string) => {
+  const planContext = userPlan ? `\n\nO usuário está no plano: ${userPlan}` : "";
+  
   const basePrompt = `IDENTIDADE E PROPÓSITO
 
 Você é Clara, a assistente de IA da plataforma TribuTalks: GPS da Reforma Tributária. Sua missão é educar e orientar empresários e profissionais sobre a Reforma Tributária brasileira de forma clara, acessível e sempre atualizada.
@@ -514,18 +584,14 @@ Você está sempre atualizada com as informações mais recentes sobre a legisla
 
 IMPORTANTE: Se tiver qualquer dúvida ou precisar confirmar informações, você DEVE usar ferramentas de busca para pesquisar dados atualizados. NUNCA invente ou presuma informações tributárias.
 
-## CONHECIMENTO DETALHADO
-
 ${REFORMA_KNOWLEDGE}
-
-${NCM_NBS_KNOWLEDGE}
 
 COMO VOCÊ SE COMUNICA
 
 - Use linguagem clara, objetiva e acessível para leigos
 - Explique conceitos complexos com exemplos práticos do dia a dia empresarial
 - Seja empática, paciente e educativa
-- Endereço o usuário de forma respeitosa e profissional
+- Enderece o usuário de forma respeitosa e profissional
 - Evite jargão excessivo; quando usar termos técnicos, explique-os
 - Mantenha tom encorajador que transforma complexidade em compreensão
 - Formate com markdown (negrito, listas, tabelas) para organizar informações
@@ -565,7 +631,10 @@ ENCERRAMENTO OBRIGATÓRIO
 
 Ao final de TODA resposta que envolva orientação tributária, inclua este aviso:
 
-"⚠️ Lembre-se: antes de implementar qualquer estratégia tributária em sua empresa, converse com seu contador ou advogado tributarista para avaliar sua situação específica."
+${userPlan === 'ENTERPRISE' 
+  ? '"✨ Lembre-se: No Enterprise, suas consultorias com advogados tributaristas são incluídas e ilimitadas. Use esse benefício sem moderação para maximizar seus resultados."'
+  : '"⚠️ Lembre-se: antes de implementar qualquer estratégia tributária em sua empresa, converse com seu contador ou advogado tributarista para avaliar sua situação específica."'
+}
 
 TOM E PERSONALIDADE
 
@@ -577,7 +646,7 @@ Você é:
 - Proativa em esclarecer dúvidas
 - Honesta sobre seus limites
 
-Seu objetivo é empoderar o usuário com conhecimento, não intimidá-lo com complexidade.`;
+Seu objetivo é empoderar o usuário com conhecimento, não intimidá-lo com complexidade.${planContext}`;
 
   if (toolContext) {
     return `${basePrompt}
@@ -628,6 +697,15 @@ serve(async (req) => {
       });
     }
 
+    // Get user plan
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("plano")
+      .eq("user_id", user.id)
+      .single();
+
+    const userPlan = profile?.plano || "FREE";
+
     const { messages, toolSlug, isGreeting, getStarters } = await req.json();
 
     // Return conversation starters if requested
@@ -638,7 +716,20 @@ serve(async (req) => {
     }
 
     const toolContext = toolSlug ? TOOL_CONTEXTS[toolSlug] || null : null;
-    const systemPrompt = buildSystemPrompt(toolContext);
+    const systemPrompt = buildSystemPrompt(toolContext, userPlan);
+
+    // Check if user is asking "Por onde eu começo?" and return plan-specific response
+    const lastUserMessage = messages?.[messages.length - 1]?.content?.toLowerCase() || "";
+    if (lastUserMessage.includes("por onde") && (lastUserMessage.includes("começo") || lastUserMessage.includes("inicio") || lastUserMessage.includes("começar"))) {
+      const planResponse = PLAN_RESPONSES[userPlan] || PLAN_RESPONSES.FREE;
+      const disclaimer = userPlan === 'ENTERPRISE' 
+        ? "\n\n✨ Lembre-se: No Enterprise, suas consultorias com advogados tributaristas são incluídas e ilimitadas. Use esse benefício sem moderação para maximizar seus resultados."
+        : "\n\n⚠️ Lembre-se: antes de implementar qualquer estratégia tributária em sua empresa, converse com seu contador ou advogado tributarista para avaliar sua situação específica.";
+      
+      return new Response(JSON.stringify({ message: planResponse + disclaimer }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // For greeting, generate a contextual welcome message
     const messagesWithContext = isGreeting 
