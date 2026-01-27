@@ -32,35 +32,42 @@ const Login = () => {
       });
 
       if (signInError) {
-        throw signInError;
+        console.error('SignIn error:', signInError);
+        if (signInError.message === 'Invalid login credentials') {
+          setError('E-mail ou senha incorretos');
+        } else {
+          setError('Erro ao fazer login. Tente novamente.');
+        }
+        setIsLoading(false);
+        return;
       }
 
       if (!data.user || !data.session) {
-        throw new Error('Login failed');
+        setError('Erro ao fazer login. Tente novamente.');
+        setIsLoading(false);
+        return;
       }
 
-      // Show success toast immediately
-      toast({
-        title: "Login realizado!",
-        description: "Bem-vindo de volta ao TribuTech.",
-      });
-      
-      // Fetch profile and navigate
+      // Login successful - fetch profile to determine redirect
       const { data: freshProfile } = await supabase
         .from('profiles')
         .select('onboarding_complete')
         .eq('user_id', data.user.id)
         .maybeSingle();
       
-      // Use window.location for a clean navigation that resets all state
+      // Show success toast
+      toast({
+        title: "Login realizado!",
+        description: "Bem-vindo de volta ao TribuTech.",
+      });
+      
+      // Navigate using full page reload to ensure clean state
       const destination = freshProfile?.onboarding_complete ? '/dashboard' : '/onboarding';
       window.location.href = destination;
+      
     } catch (error: any) {
-      console.error('Login error:', error);
-      const errorMessage = error.message === 'Invalid login credentials' 
-        ? 'E-mail ou senha incorretos' 
-        : 'Erro ao fazer login. Tente novamente.';
-      setError(errorMessage);
+      console.error('Unexpected login error:', error);
+      setError('Erro inesperado. Tente novamente.');
       setIsLoading(false);
     }
   };
