@@ -36,6 +36,9 @@ export function ClaraCard({ onOpenChat }: ClaraCardProps) {
             <Sparkles className="w-7 h-7 text-primary-foreground" />
           </div>
           <div className="flex-1">
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">
+              TribuChat
+            </p>
             <CardTitle className="text-xl flex items-center gap-2">
               Clara
               <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
