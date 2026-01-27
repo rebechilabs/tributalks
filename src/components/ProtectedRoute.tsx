@@ -39,24 +39,29 @@ export const ProtectedRoute = ({ children, requireOnboarding = true }: Protected
   }, [requireOnboarding]);
 
   useEffect(() => {
-    // Timeout de segurança - nunca travar mais de 3s
+    if (loading) return;
+    
+    if (user) {
+      checkProfile(user.id);
+    } else {
+      setCheckState('done');
+    }
+  }, [user, loading, checkProfile]);
+
+  // Timeout separado - só executa uma vez no mount
+  useEffect(() => {
     const timeout = setTimeout(() => {
-      if (checkState !== 'done') {
-        console.warn('[ProtectedRoute] Force completing after timeout');
-        setCheckState('done');
-      }
+      setCheckState(prev => {
+        if (prev !== 'done') {
+          console.warn('[ProtectedRoute] Force completing after timeout');
+          return 'done';
+        }
+        return prev;
+      });
     }, 3000);
 
-    if (!loading) {
-      if (user) {
-        checkProfile(user.id);
-      } else {
-        setCheckState('done');
-      }
-    }
-
     return () => clearTimeout(timeout);
-  }, [user, loading, checkProfile, checkState]);
+  }, []);
 
   // Loading state
   if (loading || checkState !== 'done') {
