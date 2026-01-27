@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { CONFIG } from "@/config/site";
 import logoTributech from "@/assets/logo-tributech.png";
 import { TrustBadges } from "./TrustBadges";
+import { Linkedin, Phone, Mail, MapPin } from "lucide-react";
 
 export function Footer() {
   return (
@@ -15,6 +16,35 @@ export function Footer() {
           <p className="text-muted-foreground text-sm">
             Uma iniciativa Rebechi & Silva Produções
           </p>
+
+          {/* Contact Info */}
+          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
+            <a
+              href={`mailto:${CONFIG.CONTACT_EMAIL}`}
+              className="flex items-center gap-1.5 hover:text-primary transition-colors"
+            >
+              <Mail className="h-4 w-4" />
+              {CONFIG.CONTACT_EMAIL}
+            </a>
+            <a
+              href={CONFIG.WHATSAPP}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 hover:text-primary transition-colors"
+            >
+              <Phone className="h-4 w-4" />
+              {CONFIG.PHONE}
+            </a>
+            <a
+              href={CONFIG.LINKEDIN}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 hover:text-primary transition-colors"
+            >
+              <Linkedin className="h-4 w-4" />
+              LinkedIn
+            </a>
+          </div>
 
           {/* Links */}
           <nav className="flex flex-wrap items-center justify-center gap-6">
