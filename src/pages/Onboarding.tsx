@@ -101,8 +101,8 @@ const Onboarding = () => {
         description: "Você está pronto para usar as calculadoras.",
       });
       
-      // Navigate directly - the auth listener will pick up profile changes automatically
-      navigate('/dashboard', { replace: true });
+      // Use window.location for a clean navigation that resets all state
+      window.location.href = '/dashboard';
     } catch (error: any) {
       console.error('Onboarding save error:', error);
       toast({
