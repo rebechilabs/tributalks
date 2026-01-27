@@ -14,14 +14,26 @@ const supabaseAdmin = createClient(
 
 // Map Stripe price IDs to plan names
 const PRICE_TO_PLAN: Record<string, string> = {
-  // Monthly prices
+  // Navigator plans
+  [Deno.env.get('STRIPE_PRICE_NAVIGATOR_MONTHLY') || 'price_navigator_monthly']: 'NAVIGATOR',
+  [Deno.env.get('STRIPE_PRICE_NAVIGATOR_ANNUAL') || 'price_navigator_annual']: 'NAVIGATOR',
+  // Professional plans
+  [Deno.env.get('STRIPE_PRICE_PROFESSIONAL_MONTHLY') || 'price_professional_monthly']: 'PROFESSIONAL',
+  [Deno.env.get('STRIPE_PRICE_PROFESSIONAL_ANNUAL') || 'price_professional_annual']: 'PROFESSIONAL',
+  // Legacy - keeping for compatibility
   [Deno.env.get('STRIPE_PRICE_BASICO_MONTHLY') || 'price_basico_monthly']: 'BASICO',
   [Deno.env.get('STRIPE_PRICE_PRO_MONTHLY') || 'price_pro_monthly']: 'PROFISSIONAL',
   [Deno.env.get('STRIPE_PRICE_PREMIUM_MONTHLY') || 'price_premium_monthly']: 'PREMIUM',
-  // Annual prices
   [Deno.env.get('STRIPE_PRICE_BASICO_ANNUAL') || 'price_basico_annual']: 'BASICO',
   [Deno.env.get('STRIPE_PRICE_PRO_ANNUAL') || 'price_pro_annual']: 'PROFISSIONAL',
   [Deno.env.get('STRIPE_PRICE_PREMIUM_ANNUAL') || 'price_premium_annual']: 'PREMIUM',
+}
+
+// Map Stripe price IDs to credit amounts (for one-time purchases)
+const PRICE_TO_CREDITS: Record<string, number> = {
+  [Deno.env.get('STRIPE_PRICE_CREDITS_10') || 'price_credits_10']: 10,
+  [Deno.env.get('STRIPE_PRICE_CREDITS_20') || 'price_credits_20']: 20,
+  [Deno.env.get('STRIPE_PRICE_CREDITS_30') || 'price_credits_30']: 30,
 }
 
 serve(async (req) => {
@@ -64,6 +76,7 @@ serve(async (req) => {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
         
+        // Handle subscription checkout
         if (session.mode === 'subscription' && session.subscription) {
           const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
           const priceId = subscription.items.data[0]?.price?.id
@@ -96,6 +109,68 @@ serve(async (req) => {
             console.error('Failed to update user subscription:', updateError)
           } else {
             console.log(`Updated user ${profiles[0].user_id} to plan ${plano}`)
+          }
+        }
+        
+        // Handle one-time credit purchase
+        if (session.mode === 'payment') {
+          const lineItems = await stripe.checkout.sessions.listLineItems(session.id)
+          const priceId = lineItems.data[0]?.price?.id
+          const creditsAmount = priceId ? PRICE_TO_CREDITS[priceId] : null
+          
+          if (creditsAmount) {
+            // Find user by email
+            const { data: profiles, error: findError } = await supabaseAdmin
+              .from('profiles')
+              .select('user_id')
+              .eq('email', session.customer_email)
+              .limit(1)
+
+            if (findError || !profiles?.length) {
+              console.error('User not found for email:', session.customer_email)
+              break
+            }
+
+            const userId = profiles[0].user_id
+
+            // Get current credits or create new record
+            const { data: existingCredits } = await supabaseAdmin
+              .from('user_credits')
+              .select('balance, total_purchased, purchase_count')
+              .eq('user_id', userId)
+              .single()
+
+            const currentBalance = existingCredits?.balance || 0
+            const currentTotal = existingCredits?.total_purchased || 0
+            const currentCount = existingCredits?.purchase_count || 0
+
+            // Update or insert credits
+            const { error: creditError } = await supabaseAdmin
+              .from('user_credits')
+              .upsert({
+                user_id: userId,
+                balance: currentBalance + creditsAmount,
+                total_purchased: currentTotal + creditsAmount,
+                purchase_count: currentCount + 1,
+              })
+
+            if (creditError) {
+              console.error('Failed to add credits:', creditError)
+            } else {
+              console.log(`Added ${creditsAmount} credits to user ${userId}`)
+            }
+
+            // Log the purchase
+            await supabaseAdmin
+              .from('credit_purchases')
+              .insert({
+                user_id: userId,
+                credits_amount: creditsAmount,
+                price_paid: session.amount_total ? session.amount_total / 100 : 0,
+                stripe_payment_id: session.payment_intent as string,
+                stripe_price_id: priceId,
+                status: 'completed',
+              })
           }
         }
         break

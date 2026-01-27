@@ -919,6 +919,39 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_purchases: {
+        Row: {
+          created_at: string | null
+          credits_amount: number
+          id: string
+          price_paid: number
+          status: string
+          stripe_payment_id: string | null
+          stripe_price_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          credits_amount: number
+          id?: string
+          price_paid: number
+          status?: string
+          stripe_payment_id?: string | null
+          stripe_price_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          credits_amount?: number
+          id?: string
+          price_paid?: number
+          status?: string
+          stripe_payment_id?: string | null
+          stripe_price_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       credit_rules: {
         Row: {
           calculation_formula: string | null
@@ -961,6 +994,33 @@ export type Database = {
           rule_name?: string
           tax_type?: string
           trigger_conditions?: Json
+        }
+        Relationships: []
+      }
+      credit_usage: {
+        Row: {
+          created_at: string | null
+          credits_used: number
+          feature: string
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          credits_used?: number
+          feature?: string
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          credits_used?: number
+          feature?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -1854,6 +1914,36 @@ export type Database = {
           created_at?: string
           id?: string
           message?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_credits: {
+        Row: {
+          balance: number
+          created_at: string | null
+          id: string
+          purchase_count: number
+          total_purchased: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string | null
+          id?: string
+          purchase_count?: number
+          total_purchased?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string | null
+          id?: string
+          purchase_count?: number
+          total_purchased?: number
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
