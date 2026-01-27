@@ -105,34 +105,43 @@ const Onboarding = () => {
     }
     
     setIsLoading(true);
+    
     try {
+      const updateData = {
+        empresa: formData.empresa.trim(),
+        estado: formData.estado,
+        faturamento_mensal: parseFloat(formData.faturamento_mensal) || null,
+        regime: formData.regime as 'SIMPLES' | 'PRESUMIDO' | 'REAL',
+        setor: formData.setor as 'industria' | 'comercio' | 'servicos' | 'tecnologia' | 'outro',
+        cnae: formData.cnae?.trim() || null,
+        onboarding_complete: true,
+      };
+
       const { error } = await supabase
         .from('profiles')
-        .update({
-          empresa: formData.empresa.trim(),
-          estado: formData.estado,
-          faturamento_mensal: parseFloat(formData.faturamento_mensal) || null,
-          regime: formData.regime as 'SIMPLES' | 'PRESUMIDO' | 'REAL',
-          setor: formData.setor as 'industria' | 'comercio' | 'servicos' | 'tecnologia' | 'outro',
-          cnae: formData.cnae?.trim() || null,
-          onboarding_complete: true,
-        })
+        .update(updateData)
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
+      // Sucesso - mostrar toast e aguardar um momento antes de navegar
       toast({
         title: "Perfil configurado!",
         description: "Você está pronto para usar as calculadoras.",
       });
       
-      // Use window.location for a clean navigation that resets all state
-      window.location.href = '/dashboard';
+      // Aguarda o toast aparecer e depois navega
+      setTimeout(() => {
+        navigate('/dashboard', { replace: true });
+      }, 500);
+      
     } catch (error: any) {
       console.error('Onboarding save error:', error);
       toast({
         title: "Erro ao salvar",
-        description: error.message,
+        description: error?.message || "Tente novamente em alguns segundos.",
         variant: "destructive",
       });
       setIsLoading(false);
