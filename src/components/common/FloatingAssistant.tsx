@@ -485,11 +485,17 @@ export function FloatingAssistant() {
   return (
     <div className="fixed bottom-6 right-6 z-50">
       {/* Chat Card */}
-      {isOpen && (
-        <Card className="absolute bottom-16 right-0 w-80 md:w-[420px] shadow-2xl border-primary/20 animate-in slide-in-from-bottom-4 fade-in duration-200">
+      <div
+        className={`absolute bottom-20 right-0 w-80 md:w-[420px] transition-all duration-300 ease-out ${
+          isOpen 
+            ? "opacity-100 translate-y-0 scale-100 pointer-events-auto" 
+            : "opacity-0 translate-y-4 scale-95 pointer-events-none"
+        }`}
+      >
+        <Card className="shadow-2xl border-primary/20 overflow-hidden">
           <CardHeader className="p-3 border-b border-border flex flex-row items-center gap-3 bg-gradient-to-r from-primary/5 to-transparent">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shrink-0">
-              <Sparkles className="w-5 h-5 text-primary-foreground" />
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shrink-0 shadow-lg shadow-primary/30">
+              <Sparkles className={`w-5 h-5 text-primary-foreground transition-transform duration-500 ${isOpen ? 'rotate-0' : 'rotate-180'}`} />
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-foreground text-sm">Clara</h3>
@@ -503,7 +509,7 @@ export function FloatingAssistant() {
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className={`h-8 w-8 ${autoSpeak || isSpeaking ? 'text-primary' : 'text-muted-foreground'}`}
+                    className={`h-8 w-8 transition-colors duration-200 ${autoSpeak || isSpeaking ? 'text-primary' : 'text-muted-foreground'}`}
                     onClick={handleSpeakToggle}
                     title={isSpeaking ? "Parar leitura" : autoSpeak ? "Desativar leitura automática" : "Ativar leitura automática"}
                   >
@@ -513,7 +519,12 @@ export function FloatingAssistant() {
               </div>
             )}
             
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsOpen(false)}>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 hover:rotate-90 transition-transform duration-200" 
+              onClick={() => setIsOpen(false)}
+            >
               <X className="w-4 h-4" />
             </Button>
           </CardHeader>
@@ -523,8 +534,8 @@ export function FloatingAssistant() {
             <ScrollArea className="h-80 p-3" ref={scrollRef}>
               <div className="space-y-3">
                 {messages.length === 0 && !isLoading && (
-                  <div className="text-center text-muted-foreground text-sm py-8">
-                    <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <div className="text-center text-muted-foreground text-sm py-8 animate-fade-in">
+                    <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-50 animate-pulse" />
                     <p>Olá! Sou a Clara.</p>
                     <p className="text-xs">Especialista em Reforma Tributária</p>
                   </div>
@@ -533,10 +544,11 @@ export function FloatingAssistant() {
                 {messages.map((msg, i) => (
                   <div
                     key={i}
-                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} animate-fade-in`}
+                    style={{ animationDelay: `${i * 50}ms` }}
                   >
                     <div
-                      className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
+                      className={`max-w-[85%] rounded-lg px-3 py-2 text-sm transition-all duration-200 hover:shadow-md ${
                         msg.role === "user"
                           ? "bg-primary text-primary-foreground"
                           : "bg-muted text-foreground"
@@ -555,14 +567,15 @@ export function FloatingAssistant() {
 
                 {/* Conversation Starters */}
                 {showStarters && starters.length > 0 && (
-                  <div className="pt-2">
+                  <div className="pt-2 animate-fade-in">
                     <p className="text-xs text-muted-foreground mb-2">Perguntas frequentes:</p>
                     <div className="flex flex-wrap gap-2">
-                      {starters.map((starter) => (
+                      {starters.map((starter, i) => (
                         <button
                           key={starter.id}
                           onClick={() => handleStarterClick(starter)}
-                          className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-left"
+                          className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 hover:scale-105 transition-all duration-200 text-left"
+                          style={{ animationDelay: `${i * 75}ms` }}
                         >
                           {starter.shortLabel}
                         </button>
@@ -572,9 +585,11 @@ export function FloatingAssistant() {
                 )}
 
                 {isLoading && (
-                  <div className="flex justify-start">
-                    <div className="bg-muted rounded-lg px-3 py-2">
-                      <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                  <div className="flex justify-start animate-fade-in">
+                    <div className="bg-muted rounded-lg px-4 py-3 flex items-center gap-2">
+                      <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
                   </div>
                 )}
@@ -591,7 +606,7 @@ export function FloatingAssistant() {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
                   disabled={isLoading || isListening}
-                  className={`text-sm ${isListening ? 'border-primary animate-pulse' : ''}`}
+                  className={`text-sm transition-all duration-300 ${isListening ? 'border-primary ring-2 ring-primary/30' : ''}`}
                 />
                 
                 {/* Microphone button */}
@@ -601,7 +616,7 @@ export function FloatingAssistant() {
                     variant={isListening ? "default" : "outline"}
                     onClick={handleVoiceToggle}
                     disabled={isLoading}
-                    className={`shrink-0 ${isListening ? 'bg-destructive hover:bg-destructive/90' : ''}`}
+                    className={`shrink-0 transition-all duration-200 ${isListening ? 'bg-destructive hover:bg-destructive/90 scale-110' : 'hover:scale-105'}`}
                     title={isListening ? "Parar gravação" : "Falar com a Clara"}
                   >
                     {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
@@ -612,7 +627,7 @@ export function FloatingAssistant() {
                   size="icon" 
                   onClick={() => sendMessage()} 
                   disabled={!input.trim() || isLoading}
-                  className="shrink-0"
+                  className="shrink-0 transition-transform duration-200 hover:scale-105 active:scale-95"
                 >
                   <Send className="w-4 h-4" />
                 </Button>
@@ -620,51 +635,66 @@ export function FloatingAssistant() {
               
               {/* Voice status indicator */}
               {isListening && (
-                <p className="text-xs text-primary mt-2 flex items-center gap-1">
-                  <span className="w-2 h-2 bg-destructive rounded-full animate-pulse" />
+                <p className="text-xs text-primary mt-2 flex items-center gap-2 animate-fade-in">
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-destructive" />
+                  </span>
                   Escutando... Fale sua pergunta
                 </p>
               )}
             </div>
           </CardContent>
         </Card>
-      )}
+      </div>
 
       {/* Floating Button with tooltip */}
       <div className="relative">
         {/* Tooltip bubble */}
-        {!isOpen && (
-          <div className="absolute bottom-full right-0 mb-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <div className="bg-card border border-primary/30 rounded-lg px-4 py-2 shadow-lg whitespace-nowrap">
-              <p className="text-sm font-medium text-foreground flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-primary" />
-                Tire suas dúvidas aqui!
-              </p>
-            </div>
-            {/* Arrow pointing down */}
-            <div className="absolute -bottom-2 right-6 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px] border-t-primary/30" />
+        <div
+          className={`absolute bottom-full right-0 mb-3 transition-all duration-300 ease-out ${
+            isOpen 
+              ? "opacity-0 translate-y-2 pointer-events-none" 
+              : "opacity-100 translate-y-0 pointer-events-auto"
+          }`}
+        >
+          <div className="bg-card border border-primary/30 rounded-lg px-4 py-2 shadow-lg whitespace-nowrap animate-bounce-gentle">
+            <p className="text-sm font-medium text-foreground flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+              Tire suas dúvidas aqui!
+            </p>
           </div>
-        )}
+          {/* Arrow pointing down */}
+          <div className="absolute -bottom-2 right-6 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px] border-t-primary/30" />
+        </div>
 
+        {/* Main floating button */}
         <Button
           size="lg"
-          className={`rounded-full w-14 h-14 shadow-lg transition-all ${
+          className={`rounded-full w-14 h-14 shadow-lg transition-all duration-300 ease-out ${
             isOpen 
-              ? "bg-muted hover:bg-muted text-muted-foreground" 
-              : "bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+              ? "bg-muted hover:bg-muted/80 text-muted-foreground rotate-0" 
+              : "bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 hover:scale-110 hover:shadow-xl hover:shadow-primary/25"
           }`}
           onClick={() => isOpen ? setIsOpen(false) : handleOpen()}
         >
-          {isOpen ? (
-            <X className="w-6 h-6" />
-          ) : (
-            <MessageCircle className="w-6 h-6" />
-          )}
+          <span className={`transition-transform duration-300 ${isOpen ? 'rotate-90' : 'rotate-0'}`}>
+            {isOpen ? (
+              <X className="w-6 h-6" />
+            ) : (
+              <MessageCircle className="w-6 h-6" />
+            )}
+          </span>
         </Button>
 
-        {/* Pulse indicator when closed */}
+        {/* Pulse ring when closed */}
         {!isOpen && (
-          <span className="absolute top-0 right-0 w-3 h-3 bg-success rounded-full animate-pulse" />
+          <>
+            <span className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
+            <span className="absolute top-0 right-0 w-3 h-3 bg-success rounded-full shadow-lg shadow-success/50">
+              <span className="absolute inset-0 rounded-full bg-success animate-ping opacity-75" />
+            </span>
+          </>
         )}
       </div>
     </div>
