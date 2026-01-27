@@ -17,7 +17,7 @@ const Login = () => {
   const [error, setError] = useState<string | null>(null);
   const [useMagicLink, setUseMagicLink] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
-  const { signIn, signInWithMagicLink, profile } = useAuth();
+  const { signInWithMagicLink } = useAuth();
   const navigate = useNavigate();
 
   const handlePasswordLogin = async (e: React.FormEvent) => {
@@ -35,30 +35,32 @@ const Login = () => {
         throw signInError;
       }
 
-      if (!data.user) {
+      if (!data.user || !data.session) {
         throw new Error('Login failed');
       }
+
+      // Show success toast immediately
+      toast({
+        title: "Login realizado!",
+        description: "Bem-vindo de volta ao TribuTech.",
+      });
       
-      // Fetch fresh profile to check onboarding status
+      // Fetch profile and navigate
       const { data: freshProfile } = await supabase
         .from('profiles')
         .select('onboarding_complete')
         .eq('user_id', data.user.id)
         .maybeSingle();
       
-      toast({
-        title: "Login realizado!",
-        description: "Bem-vindo de volta ao TribuTech.",
-      });
-      
-      navigate(freshProfile?.onboarding_complete ? '/dashboard' : '/onboarding');
+      // Use window.location for a clean navigation that resets all state
+      const destination = freshProfile?.onboarding_complete ? '/dashboard' : '/onboarding';
+      window.location.href = destination;
     } catch (error: any) {
       console.error('Login error:', error);
       const errorMessage = error.message === 'Invalid login credentials' 
         ? 'E-mail ou senha incorretos' 
         : 'Erro ao fazer login. Tente novamente.';
       setError(errorMessage);
-    } finally {
       setIsLoading(false);
     }
   };
