@@ -48,28 +48,26 @@ interface ToolGroup {
   items: ToolItem[];
 }
 
-const toolGroups: ToolGroup[] = [
-  {
-    title: 'GPS da Reforma',
+// GPS da Reforma - primeira seção após Clara
+const gpsReformaItems: ToolItem[] = [
+  { 
+    name: 'Notícias da Reforma', 
+    description: 'Feed atualizado + pílula do dia',
+    href: '/noticias', 
     icon: Newspaper,
-    items: [
-      { 
-        name: 'Notícias da Reforma', 
-        description: 'Feed atualizado + pílula do dia',
-        href: '/noticias', 
-        icon: Newspaper,
-        requiredPlan: 'NAVIGATOR'
-      },
-      { 
-        name: 'Timeline 2026-2033', 
-        description: 'O que fazer em cada etapa',
-        href: '/dashboard/timeline-reforma', 
-        icon: Lightbulb,
-        requiredPlan: 'NAVIGATOR',
-        badge: 'Novo'
-      },
-    ]
+    requiredPlan: 'NAVIGATOR'
   },
+  { 
+    name: 'Timeline 2026-2033', 
+    description: 'O que fazer em cada etapa',
+    href: '/dashboard/timeline-reforma', 
+    icon: Calendar,
+    requiredPlan: 'NAVIGATOR',
+    badge: 'Novo'
+  },
+];
+
+const toolGroups: ToolGroup[] = [
   {
     title: 'Calculadoras',
     icon: Calculator,
@@ -286,8 +284,8 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* Clara Card - Expert AI Assistant */}
-        <div className="mb-4">
+        {/* TribuChat - Clara Card */}
+        <div className="mb-6">
           <ClaraCard />
         </div>
 
@@ -307,6 +305,69 @@ const Dashboard = () => {
             <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
           </Button>
         </div>
+
+        {/* GPS DA REFORMA - Section right after Clara */}
+        <section className="mb-8">
+          <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+            <Newspaper className="w-5 h-5 text-primary" />
+            GPS da Reforma
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {gpsReformaItems.map((tool) => {
+              const Icon = tool.icon;
+              const canAccess = hasAccess(tool.requiredPlan);
+              const isDisabled = tool.disabled || !canAccess;
+
+              return (
+                <Card 
+                  key={tool.href} 
+                  className={`transition-all ${isDisabled ? 'opacity-60' : 'hover:shadow-md hover:border-primary/30'}`}
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                        isDisabled ? 'bg-muted' : 'bg-primary/10'
+                      }`}>
+                        {isDisabled ? (
+                          <Lock className="w-6 h-6 text-muted-foreground" />
+                        ) : (
+                          <Icon className="w-6 h-6 text-primary" />
+                        )}
+                      </div>
+                      {tool.badge && (
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          isDisabled 
+                            ? 'bg-muted text-muted-foreground' 
+                            : 'bg-primary/10 text-primary'
+                        }`}>
+                          {tool.badge}
+                        </span>
+                      )}
+                    </div>
+                    <CardTitle className="text-lg mt-3">{tool.name}</CardTitle>
+                    <CardDescription>{tool.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {isDisabled ? (
+                      <Button variant="outline" disabled className="w-full">
+                        <Lock className="w-4 h-4 mr-2" />
+                        {tool.requiredPlan ? `Plano ${tool.requiredPlan}` : 'Em breve'}
+                      </Button>
+                    ) : (
+                      <Button asChild className="w-full">
+                        <Link to={tool.href}>
+                          Acessar
+                          <ArrowRight className="w-4 h-4 ml-2" />
+                        </Link>
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </section>
 
         {/* Plan Status Card */}
         <Card className="mb-8 border-primary/20">
