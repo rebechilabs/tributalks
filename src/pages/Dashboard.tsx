@@ -11,8 +11,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { formatBrasilia } from "@/lib/dateUtils";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { ClaraCard } from "@/components/dashboard/ClaraCard";
 interface CalcItem {
@@ -470,7 +469,7 @@ const Dashboard = () => {
                       </div>
                       <div className="flex items-center gap-4 ml-4">
                         <span className="text-sm text-muted-foreground whitespace-nowrap">
-                          {format(new Date(sim.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                          {formatBrasilia(sim.created_at, "dd/MM/yyyy")}
                         </span>
                         <Button variant="ghost" size="sm" asChild>
                           <Link to={`/simulacao/${sim.id}`}>

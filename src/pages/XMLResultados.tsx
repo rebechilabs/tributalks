@@ -26,8 +26,7 @@ import {
   Lightbulb,
   AlertTriangle
 } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { formatBrasilia } from "@/lib/dateUtils";
 import { PieChart as RechartsPie, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from "recharts";
 
 interface XmlAnalysis {
@@ -144,7 +143,7 @@ export default function XMLResultados() {
             <div>
               <h1 className="text-2xl font-bold">Análise de {filteredAnalyses.length} Notas Fiscais</h1>
               <p className="text-muted-foreground">
-                {analyses.length > 0 && `Última importação: ${format(new Date(analyses[0].created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`}
+                {analyses.length > 0 && `Última importação: ${formatBrasilia(analyses[0].created_at, "dd/MM/yyyy 'às' HH:mm")}`}
               </p>
             </div>
           </div>
@@ -405,7 +404,7 @@ export default function XMLResultados() {
                         <TableCell className="font-medium">{analysis.document_number || '-'}</TableCell>
                         <TableCell>
                           {analysis.issue_date 
-                            ? format(new Date(analysis.issue_date), 'dd/MM/yyyy')
+                            ? formatBrasilia(analysis.issue_date, 'dd/MM/yyyy')
                             : '-'
                           }
                         </TableCell>
@@ -468,7 +467,7 @@ export default function XMLResultados() {
                   <p className="text-sm text-muted-foreground">Data de Emissão</p>
                   <p className="font-medium">
                     {selectedAnalysis.issue_date 
-                      ? format(new Date(selectedAnalysis.issue_date), "dd/MM/yyyy HH:mm", { locale: ptBR })
+                      ? formatBrasilia(selectedAnalysis.issue_date, "dd/MM/yyyy HH:mm")
                       : '-'
                     }
                   </p>
