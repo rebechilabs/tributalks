@@ -1,225 +1,339 @@
 
-
-# Plano: Implementar Sincronização Automática de ERPs
+# Plano: Integração de APIs Públicas Governamentais
 
 ## Resumo Executivo
 
-Criar um sistema de sincronização automática que executa a cada 24 horas para todas as conexões de ERP ativas, sincronizando NF-e, Produtos e Financeiro sem intervenção manual do usuário.
+Implementar integração com APIs públicas gratuitas (BrasilAPI, IBGE, Portal da Transparência) para enriquecer automaticamente dados de empresas, validar códigos tributários e buscar municípios em tempo real, alimentando Onboarding, Calculadora RTC, Perfil de Empresa e Análise de NCM.
 
 ---
 
 ## 1. Arquitetura da Solução
 
 ```text
-┌─────────────────────────────────────────────────────────────────┐
-│                    Cron Job (pg_cron + pg_net)                   │
-│                    Executa a cada 24 horas                       │
-├─────────────────────────────────────────────────────────────────┤
-│                    erp-auto-sync Edge Function                   │
-│  - Busca todas conexões ativas com auto_sync = true              │
-│  - Executa sync para cada uma sequencialmente                    │
-│  - Atualiza next_sync_at após conclusão                          │
-├─────────────────────────────────────────────────────────────────┤
-│                    erp-sync Edge Function                        │
-│  (Reutiliza adapters existentes)                                 │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                       Edge Function: gov-data-api                        │
+│  Endpoint unificado para consultas a APIs públicas governamentais        │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│   /cnpj/{cnpj}      → BrasilAPI + OpenCNPJ (fallback)                   │
+│   /cep/{cep}        → BrasilAPI CEP                                      │
+│   /ncm/{codigo}     → BrasilAPI NCM (validação)                         │
+│   /ibge/municipios  → BrasilAPI IBGE (lista completa)                   │
+│   /bancos           → BrasilAPI Bancos                                   │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                    ┌───────────────┴───────────────┐
+                    ▼                               ▼
+        ┌───────────────────────┐       ┌───────────────────────┐
+        │  Onboarding.tsx       │       │  PerfilEmpresa.tsx    │
+        │  - Auto-fill CNPJ     │       │  - Enriquecimento     │
+        │  - Valida CEP sede    │       │  - Dados CNAE         │
+        └───────────────────────┘       └───────────────────────┘
+                    │                               │
+                    ▼                               ▼
+        ┌───────────────────────┐       ┌───────────────────────┐
+        │  TaxCalculatorForm    │       │  ERPSync              │
+        │  - Municípios IBGE    │       │  - Valida CNPJ        │
+        │  - Valida NCM         │       │  - Fornecedores       │
+        └───────────────────────┘       └───────────────────────┘
 ```
 
 ---
 
-## 2. Nova Edge Function: `erp-auto-sync`
+## 2. APIs Gratuitas a Integrar
 
-### Objetivo
-Endpoint dedicado para ser chamado pelo cron job, que processa todas as conexões ativas automaticamente.
+| API | Endpoint Base | Uso na Plataforma | Autenticação |
+|-----|---------------|-------------------|--------------|
+| **CNPJ** | `brasilapi.com.br/api/cnpj/v1/` | Auto-fill onboarding, validação fornecedores | Nenhuma |
+| **CEP** | `brasilapi.com.br/api/cep/v2/` | Endereço sede empresa, validação entregas | Nenhuma |
+| **NCM** | `brasilapi.com.br/api/ncm/v1/` | Validação códigos fiscais na calculadora | Nenhuma |
+| **IBGE Municípios** | `brasilapi.com.br/api/ibge/municipios/v1/` | Lista completa de municípios por UF | Nenhuma |
+| **Bancos** | `brasilapi.com.br/api/banks/v1` | Validação dados bancários (futuro) | Nenhuma |
+| **Feriados** | `brasilapi.com.br/api/feriados/v1/` | Cálculo prazos fiscais | Nenhuma |
 
-### Fluxo de Execução
-1. Valida que a requisição vem do cron (Bearer token do anon key)
-2. Busca todas as conexões com `status = 'active'` e `sync_config.auto_sync = true`
-3. Para cada conexão:
-   - Cria log de sync com `sync_type = 'auto'`
-   - Chama a lógica do `erp-sync` internamente
-   - Atualiza `last_sync_at` e `next_sync_at`
-   - Trata erros individualmente (falha em uma não afeta outras)
-4. Retorna resumo de execução
+---
+
+## 3. Edge Function: `gov-data-api`
 
 ### Estrutura do Arquivo
 
-**Arquivo:** `supabase/functions/erp-auto-sync/index.ts`
+**Arquivo:** `supabase/functions/gov-data-api/index.ts`
+
+### Endpoints Implementados
 
 ```typescript
-// Pseudo-código do fluxo
-Deno.serve(async (req) => {
-  // 1. Buscar conexões ativas
-  const { data: connections } = await supabase
-    .from('erp_connections')
-    .select('*')
-    .eq('status', 'active')
-    .filter('sync_config->>auto_sync', 'eq', 'true');
+// Roteamento por path
+switch (path) {
+  case '/cnpj':     // Consulta dados da empresa por CNPJ
+  case '/cep':      // Busca endereço por CEP
+  case '/ncm':      // Valida e retorna descrição NCM
+  case '/municipios': // Lista municípios por UF
+  case '/bancos':   // Lista bancos brasileiros
+  case '/feriados': // Lista feriados nacionais
+}
+```
 
-  const results = [];
+### Funcionalidades de cada Endpoint
+
+**CNPJ (`/cnpj/{cnpj}`):**
+- Consulta BrasilAPI como fonte primária
+- Fallback para OpenCNPJ se BrasilAPI falhar
+- Retorna: razão social, nome fantasia, CNAE, endereço, situação
+
+**NCM (`/ncm/{codigo}`):**
+- Valida código NCM de 8 dígitos
+- Retorna descrição completa do produto
+- Indica se código é válido para cálculo RTC
+
+**Municípios (`/municipios/{uf}`):**
+- Lista TODOS os municípios de uma UF (não só capitais)
+- Retorna código IBGE para uso na calculadora
+- Cache de 24h para performance
+
+---
+
+## 4. Modificações no Frontend
+
+### 4.1 Onboarding com Auto-Fill CNPJ
+
+**Arquivo:** `src/pages/Onboarding.tsx`
+
+**Mudanças:**
+- Adicionar campo CNPJ no Step 1 (antes do nome da empresa)
+- Botão "Buscar" ao lado do campo CNPJ
+- Auto-preenchimento de: empresa, estado, CNAE
+- Indicador de loading durante busca
+- Mensagem de erro se CNPJ inválido/não encontrado
+
+```typescript
+// Novo fluxo Step 1
+1. Usuário digita CNPJ
+2. Clica "Buscar" ou Enter
+3. Sistema consulta gov-data-api/cnpj
+4. Preenche automaticamente:
+   - Nome da empresa (razão social)
+   - Estado (UF)
+   - CNAE principal
+   - Nome fantasia
+```
+
+### 4.2 Calculadora RTC com Municípios Dinâmicos
+
+**Arquivo:** `src/components/rtc/TaxCalculatorForm.tsx`
+
+**Mudanças:**
+- Remover lista estática `MUNICIPIOS_PRINCIPAIS`
+- Buscar municípios dinamicamente ao selecionar UF
+- Adicionar campo de busca/filtro nos municípios
+- Validação de NCM em tempo real (opcional)
+
+```typescript
+// Novo comportamento
+1. Usuário seleciona UF
+2. Sistema busca gov-data-api/municipios/{uf}
+3. Dropdown mostra TODOS os municípios
+4. Campo de busca para filtrar por nome
+5. Código IBGE correto enviado para API RTC
+```
+
+### 4.3 Perfil Empresa com Enriquecimento
+
+**Arquivo:** `src/pages/PerfilEmpresa.tsx`
+
+**Mudanças:**
+- Opção de buscar dados por CNPJ a qualquer momento
+- Preencher campos automaticamente do company_profile
+- Validar CEP da sede
+
+---
+
+## 5. Componentes Auxiliares
+
+### 5.1 Hook: `useCnpjLookup`
+
+**Arquivo:** `src/hooks/useCnpjLookup.ts`
+
+```typescript
+export function useCnpjLookup() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [data, setData] = useState<CnpjData | null>(null);
+  const [error, setError] = useState<string | null>(null);
   
-  for (const connection of connections) {
-    try {
-      // 2. Executar sync
-      const result = await syncConnection(connection);
-      
-      // 3. Atualizar timestamps
-      await supabase
-        .from('erp_connections')
-        .update({
-          last_sync_at: new Date().toISOString(),
-          next_sync_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        })
-        .eq('id', connection.id);
-      
-      results.push({ id: connection.id, success: true });
-    } catch (error) {
-      results.push({ id: connection.id, success: false, error: error.message });
-    }
-  }
-
-  return Response.json({ processed: results.length, results });
-});
+  const lookup = async (cnpj: string) => { ... };
+  
+  return { lookup, isLoading, data, error };
+}
 ```
 
----
+### 5.2 Hook: `useMunicipios`
 
-## 3. Configurar Cron Job no Supabase
-
-### Extensões Necessárias
-- `pg_cron` - Para agendar jobs
-- `pg_net` - Para fazer requisições HTTP
-
-### SQL para Criar o Cron Job
-
-```sql
--- Habilitar extensões (se necessário)
-CREATE EXTENSION IF NOT EXISTS pg_cron;
-CREATE EXTENSION IF NOT EXISTS pg_net;
-
--- Criar cron job para rodar a cada 24 horas (meia-noite)
-SELECT cron.schedule(
-  'erp-auto-sync-daily',
-  '0 0 * * *',  -- Todos os dias à meia-noite UTC (21h Brasília)
-  $$
-  SELECT
-    net.http_post(
-      url := 'https://rhhzsmupixdhurricppk.supabase.co/functions/v1/erp-auto-sync',
-      headers := '{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoaHpzbXVwaXhkaHVycmljcHBrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkxOTQxMjMsImV4cCI6MjA4NDc3MDEyM30.YNT52SQJMynb9Lf9i_Tv74Wau5OJ7nPleJQpxV3901o"}'::jsonb,
-      body := '{"source": "cron"}'::jsonb
-    ) AS request_id;
-  $$
-);
-```
-
----
-
-## 4. Atualizar UI para Mostrar Status de Auto-Sync
-
-### Modificações no `ERPConnectionCard.tsx`
-
-**Adicionar indicador visual:**
-- Badge mostrando se auto-sync está ativo
-- Próxima sincronização agendada (`next_sync_at`)
-- Checkbox para ativar/desativar auto-sync
+**Arquivo:** `src/hooks/useMunicipios.ts`
 
 ```typescript
-// Exemplo de UI
-{connection.sync_config.auto_sync && (
-  <Badge variant="outline" className="gap-1">
-    <Clock className="h-3 w-3" />
-    Próxima: {formatNextSync(connection.next_sync_at)}
-  </Badge>
-)}
+export function useMunicipios(uf: string) {
+  // Busca municípios quando UF muda
+  // Cache local com React Query
+  // Retorna lista para dropdown
+}
+```
+
+### 5.3 Componente: `CnpjInput`
+
+**Arquivo:** `src/components/common/CnpjInput.tsx`
+
+- Input com máscara XX.XXX.XXX/XXXX-XX
+- Botão de busca integrado
+- Estados de loading/erro
+- Callback com dados da empresa
+
+---
+
+## 6. Fluxo de Dados
+
+```text
+┌─────────────┐     ┌─────────────────┐     ┌──────────────────┐
+│  Frontend   │────▶│  gov-data-api   │────▶│  BrasilAPI       │
+│  (hook)     │◀────│  (Edge Func)    │◀────│  (Público)       │
+└─────────────┘     └─────────────────┘     └──────────────────┘
+       │                                            │
+       ▼                                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Dados Retornados                          │
+├─────────────────────────────────────────────────────────────┤
+│  CNPJ: razao_social, nome_fantasia, cnae_fiscal,            │
+│        uf, municipio, situacao_cadastral, porte             │
+│                                                              │
+│  Município: codigo_ibge, nome, uf (lista completa)          │
+│                                                              │
+│  NCM: codigo, descricao, unidade, aliquota_estimada         │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 5. Arquivos a Criar/Modificar
+## 7. Arquivos a Criar/Modificar
 
 | Arquivo | Ação | Descrição |
 |---------|------|-----------|
-| `supabase/functions/erp-auto-sync/index.ts` | CRIAR | Edge function para sincronização automática |
-| `supabase/config.toml` | MODIFICAR | Adicionar config do erp-auto-sync |
-| `src/components/integrations/ERPConnectionCard.tsx` | MODIFICAR | Mostrar status de auto-sync e próxima execução |
-| SQL (via insert tool) | EXECUTAR | Criar cron job no pg_cron |
+| `supabase/functions/gov-data-api/index.ts` | CRIAR | Edge function unificada |
+| `supabase/config.toml` | MODIFICAR | Adicionar config gov-data-api |
+| `src/hooks/useCnpjLookup.ts` | CRIAR | Hook para consulta CNPJ |
+| `src/hooks/useMunicipios.ts` | CRIAR | Hook para listar municípios |
+| `src/components/common/CnpjInput.tsx` | CRIAR | Componente de input CNPJ |
+| `src/pages/Onboarding.tsx` | MODIFICAR | Adicionar auto-fill CNPJ |
+| `src/components/rtc/TaxCalculatorForm.tsx` | MODIFICAR | Municípios dinâmicos |
+| `src/components/rtc/rtcConstants.ts` | MODIFICAR | Remover lista estática |
 
 ---
 
-## 6. Tratamento de Erros
+## 8. Cache e Performance
 
-**Erros são isolados por conexão:**
-- Se a conexão A falhar, a B e C continuam
-- Cada erro é logado em `erp_sync_logs`
-- Status da conexão é atualizado para `error` se falhar
-- E-mail de alerta pode ser enviado (futuro)
+**Estratégia de Cache:**
 
-**Retry automático:**
-- Se falhar, tenta novamente na próxima execução (24h)
-- Erros de autenticação marcam conexão como `error` para revisão manual
+| Endpoint | Cache | Motivo |
+|----------|-------|--------|
+| CNPJ | Sem cache | Dados podem mudar |
+| Municípios | 24 horas | Lista raramente muda |
+| NCM | 7 dias | Tabela estável |
+| Bancos | 7 dias | Lista estável |
 
----
-
-## 7. Segurança
-
-- Cron job usa anon key (não expõe service role)
-- Edge function valida origem da requisição
-- Credenciais nunca são expostas em logs
-- Rate limiting respeitado por adapter
+**Implementação:**
+- Municípios: Cache em `sessionStorage` no frontend
+- NCM: Cache em `sessionStorage` (já implementado)
+- Edge Function: Headers `Cache-Control` apropriados
 
 ---
 
-## 8. Monitoramento
+## 9. Tratamento de Erros
 
-**Campos já existentes na tabela `erp_connections`:**
-- `last_sync_at` - Última sincronização
-- `next_sync_at` - Próxima sincronização agendada
-- `status` - active/inactive/error
-- `status_message` - Mensagem de erro se houver
-
-**Logs detalhados em `erp_sync_logs`:**
-- `sync_type` = 'auto' para diferenciar de manual
-- `started_at`, `completed_at`
-- `records_synced`, `records_failed`
+| Cenário | Comportamento |
+|---------|---------------|
+| CNPJ não encontrado | Mensagem amigável + permite preenchimento manual |
+| BrasilAPI offline | Fallback para OpenCNPJ / CNPJ.ws |
+| NCM inválido | Alerta mas não bloqueia cálculo |
+| Timeout | Retry automático (1x) + mensagem |
 
 ---
 
-## Entregáveis
+## 10. Validações
 
-1. **Edge Function `erp-auto-sync`** - Orquestrador de sincronização automática
-2. **Cron Job configurado** - Execução diária à meia-noite
-3. **UI atualizada** - Indicadores visuais de auto-sync e próxima execução
-4. **Logs de auditoria** - Distinção entre sync manual e automático
+**CNPJ:**
+- Formato: 14 dígitos numéricos
+- Dígitos verificadores válidos
+- Não aceita CNPJs zerados ou sequenciais
 
----
+**CEP:**
+- Formato: 8 dígitos numéricos
+- Validação de range (01000-000 a 99999-999)
 
-## Cronograma de Sincronização
-
-| Horário (UTC) | Horário (Brasília) | Ação |
-|---------------|---------------------|------|
-| 00:00 | 21:00 | Execução do cron job |
-| 00:01-00:30 | 21:01-21:30 | Processamento das conexões |
-| Após sync | - | `next_sync_at` = T+24h |
+**NCM:**
+- Exatamente 8 dígitos
+- Diferenciação de NBS (9 dígitos)
 
 ---
 
-## Dados Sincronizados
+## 11. Entregáveis
 
-Para cada conexão ativa, o sync automático processa:
+1. **Edge Function `gov-data-api`** - Consultas unificadas a APIs públicas
+2. **Hook `useCnpjLookup`** - Busca e cache de dados CNPJ
+3. **Hook `useMunicipios`** - Lista dinâmica de municípios
+4. **Componente `CnpjInput`** - Input reutilizável com busca
+5. **Onboarding aprimorado** - Auto-fill via CNPJ
+6. **Calculadora RTC aprimorada** - Municípios dinâmicos
 
-1. **NF-e** (últimos 90 dias)
-   - Importa para `xml_imports`
-   - Dispara `analyze-credits`
+---
 
-2. **Produtos/NCM**
-   - Atualiza `company_ncm_analysis`
-   - Dispara `analyze-ncm-from-xmls`
+## 12. Seção Técnica
 
-3. **Financeiro (DRE)**
-   - Atualiza `company_dre`
-   - Dispara `calculate-tax-score`
+### Estrutura da Edge Function
 
-4. **Perfil da Empresa**
-   - Atualiza `company_profile`
-   - Dispara `match-opportunities`
+```typescript
+// supabase/functions/gov-data-api/index.ts
+const BRASIL_API_BASE = 'https://brasilapi.com.br/api';
 
+// Endpoints
+async function lookupCnpj(cnpj: string) {
+  const response = await fetch(`${BRASIL_API_BASE}/cnpj/v1/${cnpj}`);
+  if (!response.ok) {
+    // Fallback to OpenCNPJ
+    return await lookupCnpjFallback(cnpj);
+  }
+  return await response.json();
+}
+
+async function getMunicipios(uf: string) {
+  const response = await fetch(`${BRASIL_API_BASE}/ibge/municipios/v1/${uf}`);
+  return await response.json();
+}
+
+async function validateNcm(codigo: string) {
+  const response = await fetch(`${BRASIL_API_BASE}/ncm/v1/${codigo}`);
+  return await response.json();
+}
+```
+
+### Formato de Resposta CNPJ
+
+```json
+{
+  "cnpj": "00000000000191",
+  "razao_social": "BANCO DO BRASIL SA",
+  "nome_fantasia": "BANCO DO BRASIL",
+  "cnae_fiscal": 6422100,
+  "cnae_fiscal_descricao": "Bancos múltiplos",
+  "uf": "DF",
+  "municipio": "BRASILIA",
+  "situacao_cadastral": "ATIVA",
+  "porte": "DEMAIS"
+}
+```
+
+### Formato de Resposta Municípios
+
+```json
+[
+  { "nome": "São Paulo", "codigo_ibge": "3550308" },
+  { "nome": "Guarulhos", "codigo_ibge": "3518800" }
+]
+```
