@@ -539,7 +539,12 @@ serve(async (req) => {
           differenceValue,
           differencePercent,
           isBeneficial: differenceValue < 0,
-          itemsCount: nfeData.produtos.length
+          itemsCount: nfeData.produtos.length,
+          // New metadata fields for summary
+          issuerName: nfeData.emitenteNome,
+          issuerCnpj: nfeData.emitenteCnpj,
+          documentTotal: nfeData.totalNota,
+          issueDate: nfeData.dataEmissao
         });
 
       } catch (error) {
@@ -565,6 +570,44 @@ serve(async (req) => {
       console.log('Credit analysis result:', creditAnalysisResult);
     }
 
+    // Build metadata for summary
+    const processingTimeMs = Date.now();
+    const byYearMap: Record<string, { count: number; totalValue: number; taxes: number }> = {};
+    const byTypeMap: Record<string, { count: number; totalValue: number }> = {};
+    const suppliersMap: Record<string, { cnpj: string; name: string; count: number; total: number }> = {};
+
+    for (const r of results) {
+      // By year
+      const year = r.issueDate ? new Date(r.issueDate).getFullYear().toString() : 'unknown';
+      if (!byYearMap[year]) {
+        byYearMap[year] = { count: 0, totalValue: 0, taxes: 0 };
+      }
+      byYearMap[year].count++;
+      byYearMap[year].totalValue += r.documentTotal || 0;
+      byYearMap[year].taxes += r.currentTaxTotal;
+
+      // By type
+      if (!byTypeMap[r.documentType]) {
+        byTypeMap[r.documentType] = { count: 0, totalValue: 0 };
+      }
+      byTypeMap[r.documentType].count++;
+      byTypeMap[r.documentType].totalValue += r.documentTotal || 0;
+
+      // Suppliers
+      if (r.issuerCnpj) {
+        if (!suppliersMap[r.issuerCnpj]) {
+          suppliersMap[r.issuerCnpj] = { 
+            cnpj: r.issuerCnpj, 
+            name: r.issuerName || 'Desconhecido', 
+            count: 0, 
+            total: 0 
+          };
+        }
+        suppliersMap[r.issuerCnpj].count++;
+        suppliersMap[r.issuerCnpj].total += r.documentTotal || 0;
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -572,9 +615,16 @@ serve(async (req) => {
         errors: errors.length,
         results,
         errorDetails: errors,
+        metadata: {
+          processingTimeMs,
+          byYear: byYearMap,
+          byType: byTypeMap,
+          suppliers: Object.values(suppliersMap).sort((a, b) => b.total - a.total).slice(0, 10)
+        },
         creditAnalysis: creditAnalysisResult ? {
           creditsFound: creditAnalysisResult.credits_count || 0,
-          totalPotential: creditAnalysisResult.summary?.total_potential || 0
+          totalPotential: creditAnalysisResult.summary?.total_potential || 0,
+          byCategory: creditAnalysisResult.summary?.by_category || []
         } : null
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
