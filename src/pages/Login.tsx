@@ -2,8 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Loader2, Eye, EyeOff, Mail, KeyRound } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -17,8 +17,31 @@ const Login = () => {
   const [error, setError] = useState<string | null>(null);
   const [useMagicLink, setUseMagicLink] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
-  const { signInWithMagicLink } = useAuth();
-  const navigate = useNavigate();
+  const [checkingSession, setCheckingSession] = useState(true);
+  const { signInWithMagicLink, user, profile, loading } = useAuth();
+
+  // If user is already logged in, redirect immediately
+  useEffect(() => {
+    if (loading) return;
+    
+    if (user) {
+      console.log('[Login] User already logged in, redirecting...');
+      const destination = profile?.onboarding_complete ? '/dashboard' : '/onboarding';
+      window.location.href = destination;
+      return;
+    }
+    
+    setCheckingSession(false);
+  }, [user, profile, loading]);
+
+  // Show loading while checking session
+  if (checkingSession || loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,18 +86,20 @@ const Login = () => {
       
       console.log('[Login] Profile result:', { onboardingComplete: freshProfile?.onboarding_complete, error: profileError?.message });
       
-      // Show success toast
-      toast({
-        title: "Login realizado!",
-        description: "Bem-vindo de volta ao TribuTech.",
-      });
-      
       // Determine destination
       const destination = freshProfile?.onboarding_complete ? '/dashboard' : '/onboarding';
       console.log('[Login] Navigating to:', destination);
       
-      // Use full page redirect for more reliable navigation after auth state change
-      window.location.href = destination;
+      // Show success toast
+      toast({
+        title: "Login realizado!",
+        description: "Redirecionando...",
+      });
+      
+      // Small delay to ensure session is fully persisted before redirect
+      setTimeout(() => {
+        window.location.href = destination;
+      }, 100);
       
     } catch (error: any) {
       console.error('[Login] Unexpected error:', error);
