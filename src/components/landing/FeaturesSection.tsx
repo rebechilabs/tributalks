@@ -59,9 +59,9 @@ const features = [
   },
   {
     icon: Target,
-    title: "Radar de Créditos",
+    title: "Radar Tributário",
     description:
-      "Identifique créditos tributários não aproveitados de ICMS, PIS/COFINS e IPI.",
+      "Identifique créditos recuperáveis e projete sua exposição fiscal durante a transição.",
     badge: "Professional",
     badgeVariant: "outline" as const,
   },
