@@ -1,12 +1,7 @@
-import { Zap, LineChart, Globe, Smartphone } from "lucide-react";
+import { LineChart, Globe, Smartphone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const upcomingFeatures = [
-  {
-    icon: Zap,
-    label: "Integração Contábil",
-    description: "Sincronize com seu ERP",
-  },
   {
     icon: LineChart,
     label: "Dashboard Analytics",
