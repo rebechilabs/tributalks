@@ -59,7 +59,7 @@ const navGroups: NavGroup[] = [
   {
     title: 'IA e Documentos',
     items: [
-      { label: 'TribuBot', href: '/tribubot', icon: Bot, requiredPlan: 'NAVIGATOR', badge: 'IA' },
+      { label: 'Clara AI', href: '/tribubot', icon: Sparkles, requiredPlan: 'NAVIGATOR', badge: 'IA' },
       { label: 'Analisador de Documentos', href: '/dashboard/analisador-documentos', icon: FileSearch, requiredPlan: 'NAVIGATOR', badge: 'Novo' },
       { label: 'Workflows', href: '/dashboard/workflows', icon: Route, requiredPlan: 'NAVIGATOR', badge: 'Novo' },
       { label: 'Comunidade', href: '/comunidade', icon: Users, requiredPlan: 'PROFESSIONAL' },
