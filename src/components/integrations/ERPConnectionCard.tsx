@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,9 +22,11 @@ import {
   RefreshCw,
   Settings,
   Trash2,
-  Loader2
+  Loader2,
+  CalendarClock,
+  Zap
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface ERPConnection {
@@ -55,6 +59,7 @@ interface ERPConnectionCardProps {
   erpInfo: ERPInfo;
   onDelete: () => void;
   onSync: () => void;
+  onToggleAutoSync?: (enabled: boolean) => void;
   isDeleting: boolean;
   isSyncing: boolean;
 }
@@ -99,6 +104,7 @@ export function ERPConnectionCard({
   erpInfo, 
   onDelete,
   onSync,
+  onToggleAutoSync,
   isDeleting,
   isSyncing 
 }: ERPConnectionCardProps) {
@@ -110,6 +116,23 @@ export function ERPConnectionCard({
   const handleDelete = () => {
     onDelete();
     setDeleteDialogOpen(false);
+  };
+
+  const formatNextSync = (dateStr: string | null) => {
+    if (!dateStr) return null;
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return null;
+      
+      const now = new Date();
+      const diffHours = Math.round((date.getTime() - now.getTime()) / (1000 * 60 * 60));
+      
+      if (diffHours < 1) return "Em breve";
+      if (diffHours < 24) return `Em ${diffHours}h`;
+      return format(date, "dd/MM 'às' HH:mm", { locale: ptBR });
+    } catch {
+      return null;
+    }
   };
 
   return (
@@ -152,6 +175,30 @@ export function ERPConnectionCard({
             </div>
           )}
 
+          {/* Auto-sync toggle and next sync */}
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-primary" />
+              <Label htmlFor={`auto-sync-${connection.id}`} className="text-sm font-medium cursor-pointer">
+                Sincronização automática
+              </Label>
+            </div>
+            <div className="flex items-center gap-3">
+              {connection.sync_config.auto_sync && connection.next_sync_at && (
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <CalendarClock className="h-3 w-3" />
+                  Próxima: {formatNextSync(connection.next_sync_at)}
+                </span>
+              )}
+              <Switch
+                id={`auto-sync-${connection.id}`}
+                checked={connection.sync_config.auto_sync}
+                onCheckedChange={(checked) => onToggleAutoSync?.(checked)}
+                disabled={isSyncing}
+              />
+            </div>
+          </div>
+
           {/* Modules */}
           <div>
             <p className="text-xs text-muted-foreground mb-2">Módulos sincronizados:</p>
@@ -182,7 +229,11 @@ export function ERPConnectionCard({
               <p className="text-muted-foreground text-xs">Frequência</p>
               <p className="font-medium">
                 A cada {connection.sync_config.frequency_hours}h
-                {connection.sync_config.auto_sync && " (auto)"}
+                {connection.sync_config.auto_sync && (
+                  <Badge variant="secondary" className="ml-2 text-[10px] px-1.5 py-0">
+                    Auto
+                  </Badge>
+                )}
               </p>
             </div>
           </div>
