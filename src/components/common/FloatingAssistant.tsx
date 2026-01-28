@@ -100,7 +100,7 @@ Quer que eu te guie passo a passo no preenchimento do Score Tributário? Ou pref
 *Tempo estimado: 45 minutos | Resultado: Projeção de impacto financeiro*
 
 **FASE 4 - Tire Dúvidas Específicas**
-- **TribuBot** (10 msgs/dia) - Use a IA para esclarecer dúvidas específicas durante suas análises
+- **Clara AI** (10 msgs/dia) - Use a IA para esclarecer dúvidas específicas durante suas análises
 
 💡 **Minha recomendação de início:**
 

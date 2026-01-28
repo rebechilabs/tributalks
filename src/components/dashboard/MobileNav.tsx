@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { 
-  Menu, X, Home, Scale, Wallet, Bot, FileText, Users, Calendar, 
+  Menu, X, Home, Scale, Wallet, FileText, Users, Calendar, 
   Clock, Settings, Lock, Sparkles, Newspaper, Upload, Calculator,
   Target, BarChart3, Trophy, Lightbulb, LayoutDashboard, MapPin, Briefcase
 } from "lucide-react";
@@ -61,7 +61,7 @@ const navGroups: NavGroup[] = [
   {
     title: 'IA e Suporte',
     items: [
-      { label: 'TribuBot', href: '/tribubot', icon: Bot, requiredPlan: 'NAVIGATOR', badge: 'IA' },
+      { label: 'Clara AI', href: '/tribubot', icon: Sparkles, requiredPlan: 'NAVIGATOR', badge: 'IA' },
       { label: 'Comunidade', href: '/comunidade', icon: Users, requiredPlan: 'PROFESSIONAL' },
     ]
   },

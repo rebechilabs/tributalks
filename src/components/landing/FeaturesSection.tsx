@@ -1,5 +1,5 @@
 import { 
-  Scale, Wallet, Bot, FileText, Users, 
+  Scale, Wallet, Sparkles, FileText, Users, 
   Calculator, Upload, Target, BarChart3, Trophy, Newspaper, Clock, Navigation, MapPin
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -82,8 +82,8 @@ const features = [
     badgeVariant: "outline" as const,
   },
   {
-    icon: Bot,
-    title: "TribuBot — IA 24/7",
+    icon: Sparkles,
+    title: "Clara AI — Copiloto Tributário",
     description:
       "Tire dúvidas tributárias em linguagem simples, a qualquer hora, sem esperar.",
     badge: "IA",

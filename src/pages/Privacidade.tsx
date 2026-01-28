@@ -62,7 +62,7 @@ export default function Privacidade() {
             <h3 className="text-lg font-medium text-foreground mt-4 mb-2">2.3. Dados gerados pelo uso da Plataforma:</h3>
             <ul className="list-disc list-inside space-y-1 ml-4">
               <li>Histórico de simulações e cálculos</li>
-              <li>Conversas com o TribuBot</li>
+              <li>Conversas com a Clara AI</li>
               <li>Configurações e preferências</li>
             </ul>
           </section>
@@ -107,7 +107,7 @@ export default function Privacidade() {
             <ul className="list-disc list-inside space-y-2 ml-4 mt-2">
               <li><strong>Processadores de pagamento:</strong> Stripe, para processar transações financeiras.</li>
               <li><strong>Provedores de infraestrutura:</strong> Supabase (banco de dados), Vercel/Lovable (hospedagem), para operar a Plataforma.</li>
-              <li><strong>Provedores de IA:</strong> Para funcionamento do TribuBot. Os dados são processados de forma anonimizada quando possível.</li>
+              <li><strong>Provedores de IA:</strong> Para funcionamento da Clara AI. Os dados são processados de forma anonimizada quando possível.</li>
               <li><strong>Autoridades competentes:</strong> quando exigido por lei ou ordem judicial.</li>
             </ul>
 
@@ -139,7 +139,7 @@ export default function Privacidade() {
             <ul className="list-disc list-inside space-y-1 ml-4 mt-2">
               <li><strong>Dados de identificação:</strong> mantidos por 5 anos para fins legais</li>
               <li><strong>Histórico de simulações:</strong> excluído em até 90 dias</li>
-              <li><strong>Conversas do TribuBot:</strong> excluídas em até 30 dias</li>
+              <li><strong>Conversas da Clara AI:</strong> excluídas em até 30 dias</li>
               <li><strong>Dados de pagamento:</strong> mantidos conforme exigências fiscais (5 anos)</li>
             </ul>
             <p className="mt-4"><strong>6.3.</strong> Dados agregados e anonimizados podem ser mantidos indefinidamente para fins estatísticos.</p>

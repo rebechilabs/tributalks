@@ -36,7 +36,7 @@ export default function Termos() {
             <p><strong>1.1.</strong> "TribuTech" ou "Plataforma": refere-se ao site, aplicativo e serviços disponibilizados pela Rebechi & Silva Produções, inscrita no CNPJ sob nº 47.706.144/0001-21, com sede na Avenida Marquês de São Vicente, 1619 - conjunto 2712 - Barra Funda - São Paulo - SP.</p>
             <p><strong>1.2.</strong> "Usuário": qualquer pessoa física ou jurídica que acessa ou utiliza a Plataforma.</p>
             <p><strong>1.3.</strong> "Conteúdo": todas as informações, textos, gráficos, simulações, cálculos, notícias e materiais disponibilizados na Plataforma.</p>
-            <p><strong>1.4.</strong> "Serviços": as funcionalidades oferecidas pela Plataforma, incluindo calculadoras tributárias, TribuBot (assistente de IA), notícias tributárias, comunidade e consultorias.</p>
+            <p><strong>1.4.</strong> "Serviços": as funcionalidades oferecidas pela Plataforma, incluindo calculadoras tributárias, Clara AI (copiloto de decisão tributária), notícias tributárias, comunidade e consultorias.</p>
           </section>
 
           <section>
