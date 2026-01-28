@@ -1,339 +1,397 @@
 
-# Plano: Integração de APIs Públicas Governamentais
+# Plano: Importador de XMLs para Lotes Históricos (5 Anos)
 
 ## Resumo Executivo
 
-Implementar integração com APIs públicas gratuitas (BrasilAPI, IBGE, Portal da Transparência) para enriquecer automaticamente dados de empresas, validar códigos tributários e buscar municípios em tempo real, alimentando Onboarding, Calculadora RTC, Perfil de Empresa e Análise de NCM.
+Aprimorar o importador de XMLs existente para suportar upload em massa de arquivos históricos (5 anos de notas fiscais), com processamento em lotes, barra de progresso detalhada em tempo real, estimativa de tempo restante, e resumo completo da importação incluindo estatísticas por período, tipo de documento, fornecedores e análise de créditos identificados.
 
 ---
 
-## 1. Arquitetura da Solução
+## 1. Limitações Atuais Identificadas
+
+| Limitação | Impacto |
+|-----------|---------|
+| Limite de 100 arquivos por vez | Insuficiente para 5 anos de histórico |
+| Processamento sequencial | Timeout em lotes grandes |
+| Progresso geral apenas | Usuário não sabe qual arquivo está processando |
+| Sem estimativa de tempo | Incerteza sobre duração |
+| Resumo básico | Só mostra total/erros, sem análise de período |
+| Sem suporte a ZIP | Usuário precisa extrair manualmente |
+
+---
+
+## 2. Melhorias Propostas
+
+### 2.1 Capacidade Ampliada
 
 ```text
-┌─────────────────────────────────────────────────────────────────────────┐
-│                       Edge Function: gov-data-api                        │
-│  Endpoint unificado para consultas a APIs públicas governamentais        │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                          │
-│   /cnpj/{cnpj}      → BrasilAPI + OpenCNPJ (fallback)                   │
-│   /cep/{cep}        → BrasilAPI CEP                                      │
-│   /ncm/{codigo}     → BrasilAPI NCM (validação)                         │
-│   /ibge/municipios  → BrasilAPI IBGE (lista completa)                   │
-│   /bancos           → BrasilAPI Bancos                                   │
-│                                                                          │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                    ┌───────────────┴───────────────┐
-                    ▼                               ▼
-        ┌───────────────────────┐       ┌───────────────────────┐
-        │  Onboarding.tsx       │       │  PerfilEmpresa.tsx    │
-        │  - Auto-fill CNPJ     │       │  - Enriquecimento     │
-        │  - Valida CEP sede    │       │  - Dados CNAE         │
-        └───────────────────────┘       └───────────────────────┘
-                    │                               │
-                    ▼                               ▼
-        ┌───────────────────────┐       ┌───────────────────────┐
-        │  TaxCalculatorForm    │       │  ERPSync              │
-        │  - Municípios IBGE    │       │  - Valida CNPJ        │
-        │  - Valida NCM         │       │  - Fornecedores       │
-        └───────────────────────┘       └───────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                    ANTES          →          DEPOIS                  │
+├─────────────────────────────────────────────────────────────────────┤
+│  100 arquivos/vez              →    1.000 arquivos/vez              │
+│  Apenas .xml                   →    .xml + .zip (extração auto)     │
+│  Barra única                   →    Progresso por fase              │
+│  Sem tempo estimado            →    ETA calculado dinamicamente     │
+│  Lista simples de arquivos     →    Agrupamento por ano/período     │
+│  Resumo: X processados         →    Resumo completo com insights    │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
----
-
-## 2. APIs Gratuitas a Integrar
-
-| API | Endpoint Base | Uso na Plataforma | Autenticação |
-|-----|---------------|-------------------|--------------|
-| **CNPJ** | `brasilapi.com.br/api/cnpj/v1/` | Auto-fill onboarding, validação fornecedores | Nenhuma |
-| **CEP** | `brasilapi.com.br/api/cep/v2/` | Endereço sede empresa, validação entregas | Nenhuma |
-| **NCM** | `brasilapi.com.br/api/ncm/v1/` | Validação códigos fiscais na calculadora | Nenhuma |
-| **IBGE Municípios** | `brasilapi.com.br/api/ibge/municipios/v1/` | Lista completa de municípios por UF | Nenhuma |
-| **Bancos** | `brasilapi.com.br/api/banks/v1` | Validação dados bancários (futuro) | Nenhuma |
-| **Feriados** | `brasilapi.com.br/api/feriados/v1/` | Cálculo prazos fiscais | Nenhuma |
-
----
-
-## 3. Edge Function: `gov-data-api`
-
-### Estrutura do Arquivo
-
-**Arquivo:** `supabase/functions/gov-data-api/index.ts`
-
-### Endpoints Implementados
-
-```typescript
-// Roteamento por path
-switch (path) {
-  case '/cnpj':     // Consulta dados da empresa por CNPJ
-  case '/cep':      // Busca endereço por CEP
-  case '/ncm':      // Valida e retorna descrição NCM
-  case '/municipios': // Lista municípios por UF
-  case '/bancos':   // Lista bancos brasileiros
-  case '/feriados': // Lista feriados nacionais
-}
-```
-
-### Funcionalidades de cada Endpoint
-
-**CNPJ (`/cnpj/{cnpj}`):**
-- Consulta BrasilAPI como fonte primária
-- Fallback para OpenCNPJ se BrasilAPI falhar
-- Retorna: razão social, nome fantasia, CNAE, endereço, situação
-
-**NCM (`/ncm/{codigo}`):**
-- Valida código NCM de 8 dígitos
-- Retorna descrição completa do produto
-- Indica se código é válido para cálculo RTC
-
-**Municípios (`/municipios/{uf}`):**
-- Lista TODOS os municípios de uma UF (não só capitais)
-- Retorna código IBGE para uso na calculadora
-- Cache de 24h para performance
-
----
-
-## 4. Modificações no Frontend
-
-### 4.1 Onboarding com Auto-Fill CNPJ
-
-**Arquivo:** `src/pages/Onboarding.tsx`
-
-**Mudanças:**
-- Adicionar campo CNPJ no Step 1 (antes do nome da empresa)
-- Botão "Buscar" ao lado do campo CNPJ
-- Auto-preenchimento de: empresa, estado, CNAE
-- Indicador de loading durante busca
-- Mensagem de erro se CNPJ inválido/não encontrado
-
-```typescript
-// Novo fluxo Step 1
-1. Usuário digita CNPJ
-2. Clica "Buscar" ou Enter
-3. Sistema consulta gov-data-api/cnpj
-4. Preenche automaticamente:
-   - Nome da empresa (razão social)
-   - Estado (UF)
-   - CNAE principal
-   - Nome fantasia
-```
-
-### 4.2 Calculadora RTC com Municípios Dinâmicos
-
-**Arquivo:** `src/components/rtc/TaxCalculatorForm.tsx`
-
-**Mudanças:**
-- Remover lista estática `MUNICIPIOS_PRINCIPAIS`
-- Buscar municípios dinamicamente ao selecionar UF
-- Adicionar campo de busca/filtro nos municípios
-- Validação de NCM em tempo real (opcional)
-
-```typescript
-// Novo comportamento
-1. Usuário seleciona UF
-2. Sistema busca gov-data-api/municipios/{uf}
-3. Dropdown mostra TODOS os municípios
-4. Campo de busca para filtrar por nome
-5. Código IBGE correto enviado para API RTC
-```
-
-### 4.3 Perfil Empresa com Enriquecimento
-
-**Arquivo:** `src/pages/PerfilEmpresa.tsx`
-
-**Mudanças:**
-- Opção de buscar dados por CNPJ a qualquer momento
-- Preencher campos automaticamente do company_profile
-- Validar CEP da sede
-
----
-
-## 5. Componentes Auxiliares
-
-### 5.1 Hook: `useCnpjLookup`
-
-**Arquivo:** `src/hooks/useCnpjLookup.ts`
-
-```typescript
-export function useCnpjLookup() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [data, setData] = useState<CnpjData | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  
-  const lookup = async (cnpj: string) => { ... };
-  
-  return { lookup, isLoading, data, error };
-}
-```
-
-### 5.2 Hook: `useMunicipios`
-
-**Arquivo:** `src/hooks/useMunicipios.ts`
-
-```typescript
-export function useMunicipios(uf: string) {
-  // Busca municípios quando UF muda
-  // Cache local com React Query
-  // Retorna lista para dropdown
-}
-```
-
-### 5.3 Componente: `CnpjInput`
-
-**Arquivo:** `src/components/common/CnpjInput.tsx`
-
-- Input com máscara XX.XXX.XXX/XXXX-XX
-- Botão de busca integrado
-- Estados de loading/erro
-- Callback com dados da empresa
-
----
-
-## 6. Fluxo de Dados
+### 2.2 Processamento em Lotes (Chunked)
 
 ```text
-┌─────────────┐     ┌─────────────────┐     ┌──────────────────┐
-│  Frontend   │────▶│  gov-data-api   │────▶│  BrasilAPI       │
-│  (hook)     │◀────│  (Edge Func)    │◀────│  (Público)       │
-└─────────────┘     └─────────────────┘     └──────────────────┘
-       │                                            │
-       ▼                                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    Dados Retornados                          │
-├─────────────────────────────────────────────────────────────┤
-│  CNPJ: razao_social, nome_fantasia, cnae_fiscal,            │
-│        uf, municipio, situacao_cadastral, porte             │
-│                                                              │
-│  Município: codigo_ibge, nome, uf (lista completa)          │
-│                                                              │
-│  NCM: codigo, descricao, unidade, aliquota_estimada         │
-└─────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────┐
+│                      FLUXO DE PROCESSAMENTO                         │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│   Arquivos      Lotes de 20       Edge Function       Resultado    │
+│   Selecionados  ───────────►    process-xml-batch   ───────────►   │
+│   (500 XMLs)    25 chamadas      (paralelas 5x)       Consolidado  │
+│                                                                     │
+│   FASE 1: Upload Storage (25%)                                      │
+│   FASE 2: Processamento (60%)                                       │
+│   FASE 3: Análise de Créditos (15%)                                │
+│                                                                     │
+└────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 7. Arquivos a Criar/Modificar
+## 3. Nova Interface do Importador
+
+### 3.1 Barra de Progresso Aprimorada
+
+**Elementos visuais:**
+- Indicador de fase atual (Upload / Processamento / Análise)
+- Barra de progresso principal com porcentagem
+- Contador de arquivos: "Processando 127/500"
+- Tempo estimado restante: "~3 min restantes"
+- Arquivo atual sendo processado
+- Velocidade média: "~8 arquivos/seg"
+
+### 3.2 Agrupamento por Período
+
+**Antes do processamento:**
+```text
+┌──────────────────────────────────────────────────────────┐
+│  📁 Arquivos por Ano                                      │
+├──────────────────────────────────────────────────────────┤
+│  ▸ 2024 (142 arquivos)         ████████████░░░ 28%       │
+│  ▸ 2023 (156 arquivos)         ██████████████░ 31%       │
+│  ▸ 2022 (98 arquivos)          ███████░░░░░░░░ 20%       │
+│  ▸ 2021 (67 arquivos)          ████░░░░░░░░░░░ 13%       │
+│  ▸ 2020 (37 arquivos)          ██░░░░░░░░░░░░░  8%       │
+│                                                          │
+│  Total: 500 arquivos • ~12 MB                            │
+└──────────────────────────────────────────────────────────┘
+```
+
+### 3.3 Resumo Detalhado Pós-Importação
+
+**Componente de Resumo (novo):**
+
+```text
+┌─────────────────────────────────────────────────────────────────────┐
+│                    RESUMO DA IMPORTAÇÃO                              │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  ✅ 487 processados    ❌ 13 com erro    ⏱️ 4min 23s                │
+│                                                                      │
+├──────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  📊 ESTATÍSTICAS POR PERÍODO                                         │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │  Ano   │ Notas │ Valor Total  │ Tributos Atuais │ Com Reforma  │ │
+│  ├────────┼───────┼──────────────┼─────────────────┼──────────────┤ │
+│  │  2024  │  142  │ R$ 2.3M      │ R$ 310K         │ R$ 285K ↓    │ │
+│  │  2023  │  156  │ R$ 2.8M      │ R$ 378K         │ R$ 352K ↓    │ │
+│  │  2022  │   98  │ R$ 1.9M      │ R$ 256K         │ R$ 271K ↑    │ │
+│  │  2021  │   67  │ R$ 1.2M      │ R$ 162K         │ R$ 158K ↓    │ │
+│  │  2020  │   37  │ R$ 0.8M      │ R$ 108K         │ R$ 112K ↑    │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                                                      │
+│  💰 CRÉDITOS IDENTIFICADOS                                           │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │  PIS/COFINS sobre frete        R$ 45.200    Alta confiança     │ │
+│  │  ICMS energia industrial       R$ 28.900    Média confiança    │ │
+│  │  IPI ativo imobilizado         R$ 12.500    Alta confiança     │ │
+│  │                                ─────────                        │ │
+│  │  TOTAL POTENCIAL              R$ 86.600                        │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                                                      │
+│  📈 TOP 5 FORNECEDORES                                               │
+│  1. Distribuidora ABC Ltda (87 notas - R$ 1.2M)                     │
+│  2. Indústria XYZ S/A (56 notas - R$ 890K)                          │
+│  3. Transportes Rápido (43 notas - R$ 320K)                         │
+│  ...                                                                 │
+│                                                                      │
+│  ❌ ERROS ENCONTRADOS                                                │
+│  • 5 arquivos com estrutura XML inválida                            │
+│  • 3 arquivos com chave NFe duplicada                               │
+│  • 5 arquivos sem dados de emitente                                 │
+│                                                                      │
+│  [ Ver Detalhes ]  [ Baixar Relatório PDF ]  [ Ir para Resultados ] │
+│                                                                      │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 4. Arquitetura Técnica
+
+### 4.1 Processamento em Chunks
+
+```typescript
+// Estratégia de processamento
+const CHUNK_SIZE = 20;        // Arquivos por lote
+const PARALLEL_CHUNKS = 5;    // Lotes simultâneos
+const MAX_FILES = 1000;       // Limite total
+
+// Fases do processamento
+enum ProcessingPhase {
+  PREPARING = 'preparing',     // Validação e agrupamento
+  UPLOADING = 'uploading',     // Upload para Storage
+  PROCESSING = 'processing',   // Parsing e cálculo
+  ANALYZING = 'analyzing',     // Análise de créditos
+  COMPLETE = 'complete'
+}
+```
+
+### 4.2 Interface de Estado do Progresso
+
+```typescript
+interface ImportProgress {
+  phase: ProcessingPhase;
+  totalFiles: number;
+  processedFiles: number;
+  successCount: number;
+  errorCount: number;
+  currentFile?: string;
+  startTime: Date;
+  estimatedTimeRemaining?: number;
+  bytesUploaded: number;
+  totalBytes: number;
+}
+
+interface ImportSummary {
+  // Estatísticas gerais
+  totalProcessed: number;
+  totalErrors: number;
+  processingTimeMs: number;
+  
+  // Por período
+  byYear: {
+    year: number;
+    count: number;
+    totalValue: number;
+    currentTaxes: number;
+    reformTaxes: number;
+  }[];
+  
+  // Por tipo de documento
+  byType: {
+    type: 'NFe' | 'NFSe' | 'CTe';
+    count: number;
+    totalValue: number;
+  }[];
+  
+  // Top fornecedores
+  topSuppliers: {
+    name: string;
+    cnpj: string;
+    notesCount: number;
+    totalValue: number;
+  }[];
+  
+  // Créditos identificados
+  creditsFound: {
+    category: string;
+    potential: number;
+    confidence: 'high' | 'medium' | 'low';
+  }[];
+  
+  // Erros detalhados
+  errors: {
+    fileName: string;
+    errorType: string;
+    message: string;
+  }[];
+}
+```
+
+---
+
+## 5. Componentes a Criar/Modificar
+
+### 5.1 Novos Componentes
+
+| Componente | Descrição |
+|------------|-----------|
+| `ImportProgressBar.tsx` | Barra de progresso com fases e ETA |
+| `ImportSummaryCard.tsx` | Card de resumo pós-importação |
+| `ImportFilesByYear.tsx` | Agrupamento visual por ano |
+| `ImportErrorsList.tsx` | Lista detalhada de erros |
+
+### 5.2 Modificações
+
+| Arquivo | Mudanças |
+|---------|----------|
+| `ImportarXML.tsx` | Novo limite 1000, chunks, estados de fase |
+| `process-xml-batch/index.ts` | Retornar metadados para resumo |
+
+---
+
+## 6. Fluxo de Usuário Atualizado
+
+```text
+1. UPLOAD
+   └─► Usuário arrasta pasta com XMLs históricos
+   └─► Sistema detecta arquivos .xml e .zip
+   └─► Mostra preview agrupado por ano
+   
+2. VALIDAÇÃO
+   └─► Verifica duplicatas (chaves NFe já processadas)
+   └─► Mostra total de arquivos novos vs existentes
+   └─► Usuário confirma para iniciar
+   
+3. PROCESSAMENTO
+   └─► Fase 1: Upload para Storage (barra 0-25%)
+   └─► Fase 2: Processamento em lotes (barra 25-85%)
+       └─► Mostra arquivo atual
+       └─► Atualiza contador e ETA
+   └─► Fase 3: Análise de créditos (barra 85-100%)
+   
+4. RESUMO
+   └─► Exibe dashboard completo
+   └─► Estatísticas por ano
+   └─► Créditos identificados
+   └─► Lista de erros (se houver)
+   └─► Botões: Ver Resultados / Baixar PDF
+```
+
+---
+
+## 7. Estimativas de Tempo
+
+| Lote | Arquivos | Tempo Estimado |
+|------|----------|----------------|
+| Pequeno | 100 | ~30 segundos |
+| Médio | 250 | ~1 minuto |
+| Grande | 500 | ~2-3 minutos |
+| Muito Grande | 1000 | ~5-6 minutos |
+
+---
+
+## 8. Arquivos a Criar/Modificar
 
 | Arquivo | Ação | Descrição |
 |---------|------|-----------|
-| `supabase/functions/gov-data-api/index.ts` | CRIAR | Edge function unificada |
-| `supabase/config.toml` | MODIFICAR | Adicionar config gov-data-api |
-| `src/hooks/useCnpjLookup.ts` | CRIAR | Hook para consulta CNPJ |
-| `src/hooks/useMunicipios.ts` | CRIAR | Hook para listar municípios |
-| `src/components/common/CnpjInput.tsx` | CRIAR | Componente de input CNPJ |
-| `src/pages/Onboarding.tsx` | MODIFICAR | Adicionar auto-fill CNPJ |
-| `src/components/rtc/TaxCalculatorForm.tsx` | MODIFICAR | Municípios dinâmicos |
-| `src/components/rtc/rtcConstants.ts` | MODIFICAR | Remover lista estática |
+| `src/components/xml/ImportProgressBar.tsx` | CRIAR | Componente de progresso com fases |
+| `src/components/xml/ImportSummaryCard.tsx` | CRIAR | Resumo detalhado pós-importação |
+| `src/components/xml/ImportFilesByYear.tsx` | CRIAR | Agrupamento de arquivos por ano |
+| `src/components/xml/ImportErrorsList.tsx` | CRIAR | Lista de erros com detalhes |
+| `src/pages/ImportarXML.tsx` | MODIFICAR | Integrar novos componentes e lógica de chunks |
+| `supabase/functions/process-xml-batch/index.ts` | MODIFICAR | Adicionar metadados ao retorno |
 
 ---
 
-## 8. Cache e Performance
+## 9. Seção Técnica
 
-**Estratégia de Cache:**
-
-| Endpoint | Cache | Motivo |
-|----------|-------|--------|
-| CNPJ | Sem cache | Dados podem mudar |
-| Municípios | 24 horas | Lista raramente muda |
-| NCM | 7 dias | Tabela estável |
-| Bancos | 7 dias | Lista estável |
-
-**Implementação:**
-- Municípios: Cache em `sessionStorage` no frontend
-- NCM: Cache em `sessionStorage` (já implementado)
-- Edge Function: Headers `Cache-Control` apropriados
-
----
-
-## 9. Tratamento de Erros
-
-| Cenário | Comportamento |
-|---------|---------------|
-| CNPJ não encontrado | Mensagem amigável + permite preenchimento manual |
-| BrasilAPI offline | Fallback para OpenCNPJ / CNPJ.ws |
-| NCM inválido | Alerta mas não bloqueia cálculo |
-| Timeout | Retry automático (1x) + mensagem |
-
----
-
-## 10. Validações
-
-**CNPJ:**
-- Formato: 14 dígitos numéricos
-- Dígitos verificadores válidos
-- Não aceita CNPJs zerados ou sequenciais
-
-**CEP:**
-- Formato: 8 dígitos numéricos
-- Validação de range (01000-000 a 99999-999)
-
-**NCM:**
-- Exatamente 8 dígitos
-- Diferenciação de NBS (9 dígitos)
-
----
-
-## 11. Entregáveis
-
-1. **Edge Function `gov-data-api`** - Consultas unificadas a APIs públicas
-2. **Hook `useCnpjLookup`** - Busca e cache de dados CNPJ
-3. **Hook `useMunicipios`** - Lista dinâmica de municípios
-4. **Componente `CnpjInput`** - Input reutilizável com busca
-5. **Onboarding aprimorado** - Auto-fill via CNPJ
-6. **Calculadora RTC aprimorada** - Municípios dinâmicos
-
----
-
-## 12. Seção Técnica
-
-### Estrutura da Edge Function
+### Algoritmo de Processamento em Chunks
 
 ```typescript
-// supabase/functions/gov-data-api/index.ts
-const BRASIL_API_BASE = 'https://brasilapi.com.br/api';
-
-// Endpoints
-async function lookupCnpj(cnpj: string) {
-  const response = await fetch(`${BRASIL_API_BASE}/cnpj/v1/${cnpj}`);
-  if (!response.ok) {
-    // Fallback to OpenCNPJ
-    return await lookupCnpjFallback(cnpj);
+async function processInChunks(files: FileItem[], chunkSize: number) {
+  const chunks = [];
+  for (let i = 0; i < files.length; i += chunkSize) {
+    chunks.push(files.slice(i, i + chunkSize));
   }
-  return await response.json();
+  
+  let processed = 0;
+  const startTime = Date.now();
+  
+  // Processar 5 chunks em paralelo
+  for (let i = 0; i < chunks.length; i += 5) {
+    const parallelChunks = chunks.slice(i, i + 5);
+    
+    await Promise.all(
+      parallelChunks.map(async (chunk) => {
+        // Upload e processar chunk
+        const importIds = await uploadChunk(chunk);
+        await processChunk(importIds);
+        
+        processed += chunk.length;
+        updateProgress({
+          processedFiles: processed,
+          estimatedTimeRemaining: calculateETA(startTime, processed, files.length)
+        });
+      })
+    );
+  }
 }
 
-async function getMunicipios(uf: string) {
-  const response = await fetch(`${BRASIL_API_BASE}/ibge/municipios/v1/${uf}`);
-  return await response.json();
-}
-
-async function validateNcm(codigo: string) {
-  const response = await fetch(`${BRASIL_API_BASE}/ncm/v1/${codigo}`);
-  return await response.json();
+function calculateETA(startTime: number, processed: number, total: number): number {
+  const elapsed = Date.now() - startTime;
+  const rate = processed / elapsed; // arquivos por ms
+  const remaining = total - processed;
+  return remaining / rate; // ms restantes
 }
 ```
 
-### Formato de Resposta CNPJ
+### Estrutura de Retorno da Edge Function
 
-```json
+```typescript
+// Resposta atual expandida
 {
-  "cnpj": "00000000000191",
-  "razao_social": "BANCO DO BRASIL SA",
-  "nome_fantasia": "BANCO DO BRASIL",
-  "cnae_fiscal": 6422100,
-  "cnae_fiscal_descricao": "Bancos múltiplos",
-  "uf": "DF",
-  "municipio": "BRASILIA",
-  "situacao_cadastral": "ATIVA",
-  "porte": "DEMAIS"
+  success: true,
+  processed: 20,
+  errors: 2,
+  results: [...],
+  errorDetails: [...],
+  
+  // NOVOS CAMPOS
+  metadata: {
+    processingTimeMs: 1234,
+    byYear: {
+      "2024": { count: 8, totalValue: 125000, taxes: 12500 },
+      "2023": { count: 12, totalValue: 180000, taxes: 18000 }
+    },
+    byType: {
+      "NFe": { count: 18, totalValue: 280000 },
+      "CTe": { count: 2, totalValue: 25000 }
+    },
+    suppliers: [
+      { cnpj: "12345678000190", name: "Empresa ABC", count: 5, total: 50000 }
+    ]
+  },
+  creditAnalysis: {
+    creditsFound: 12,
+    totalPotential: 45200,
+    byCategory: [
+      { category: "PIS/COFINS", potential: 28000, count: 8 },
+      { category: "ICMS", potential: 17200, count: 4 }
+    ]
+  }
 }
 ```
 
-### Formato de Resposta Municípios
+### Cálculo de Agrupamento por Ano
 
-```json
-[
-  { "nome": "São Paulo", "codigo_ibge": "3550308" },
-  { "nome": "Guarulhos", "codigo_ibge": "3518800" }
-]
+```typescript
+function groupFilesByYear(files: FileItem[]): Map<number, FileItem[]> {
+  const groups = new Map<number, FileItem[]>();
+  
+  for (const file of files) {
+    // Tentar extrair ano do nome do arquivo ou metadata
+    const yearMatch = file.file.name.match(/(\d{4})/);
+    const year = yearMatch ? parseInt(yearMatch[1]) : new Date().getFullYear();
+    
+    if (!groups.has(year)) {
+      groups.set(year, []);
+    }
+    groups.get(year)!.push(file);
+  }
+  
+  return groups;
+}
 ```
+
