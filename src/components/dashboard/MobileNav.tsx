@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { 
   Menu, X, Home, Scale, Wallet, FileText, Users, Calendar, 
   Clock, Settings, Lock, Sparkles, Newspaper, Upload, Calculator,
-  Target, BarChart3, Trophy, Lightbulb, LayoutDashboard, MapPin, Briefcase
+  Target, BarChart3, Trophy, Lightbulb, LayoutDashboard, MapPin, Briefcase, ClipboardCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -35,6 +35,7 @@ const navGroups: NavGroup[] = [
   {
     title: 'GPS da Reforma',
     items: [
+      { label: 'Checklist de Prontidão', href: '/dashboard/checklist-reforma', icon: ClipboardCheck, requiredPlan: 'NAVIGATOR', badge: 'Novo' },
       { label: 'Notícias da Reforma', href: '/noticias', icon: Newspaper, requiredPlan: 'NAVIGATOR' },
       { label: 'Timeline 2026-2033', href: '/dashboard/timeline-reforma', icon: MapPin, requiredPlan: 'NAVIGATOR' },
     ]

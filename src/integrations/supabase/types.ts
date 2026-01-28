@@ -1399,6 +1399,90 @@ export type Database = {
         }
         Relationships: []
       }
+      reform_checklist_responses: {
+        Row: {
+          block_key: string
+          created_at: string | null
+          id: string
+          item_key: string
+          notes: string | null
+          response: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          block_key: string
+          created_at?: string | null
+          id?: string
+          item_key: string
+          notes?: string | null
+          response: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          block_key?: string
+          created_at?: string | null
+          id?: string
+          item_key?: string
+          notes?: string | null
+          response?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reform_checklist_summaries: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          nao_count: number | null
+          nao_sei_count: number | null
+          parcial_count: number | null
+          readiness_score: number | null
+          recommendations: Json | null
+          risk_level: string | null
+          sim_count: number | null
+          top_risks: Json | null
+          total_items: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          nao_count?: number | null
+          nao_sei_count?: number | null
+          parcial_count?: number | null
+          readiness_score?: number | null
+          recommendations?: Json | null
+          risk_level?: string | null
+          sim_count?: number | null
+          top_risks?: Json | null
+          total_items?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          nao_count?: number | null
+          nao_sei_count?: number | null
+          parcial_count?: number | null
+          readiness_score?: number | null
+          recommendations?: Json | null
+          risk_level?: string | null
+          sim_count?: number | null
+          top_risks?: Json | null
+          total_items?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       score_actions: {
         Row: {
           action_code: string
