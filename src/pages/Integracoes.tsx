@@ -181,6 +181,32 @@ export default function Integracoes() {
     },
   });
 
+  // Sync connection mutation
+  const syncMutation = useMutation({
+    mutationFn: async (connectionId: string) => {
+      const response = await supabase.functions.invoke("erp-sync", {
+        body: { connection_id: connectionId },
+      });
+      if (response.error) throw response.error;
+      return response.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["erp-connections"] });
+      toast({
+        title: data.success ? "Sincronização concluída" : "Sincronização parcial",
+        description: `${data.total_synced} registros sincronizados${data.total_failed > 0 ? `, ${data.total_failed} falharam` : ''}`,
+        variant: data.success ? "default" : "destructive",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro na sincronização",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleConnectERP = (erpType: string) => {
     setSelectedERP(erpType);
     setWizardOpen(true);
@@ -283,7 +309,9 @@ export default function Integracoes() {
                       connection={connection}
                       erpInfo={ERP_INFO[connection.erp_type]}
                       onDelete={() => deleteMutation.mutate(connection.id)}
+                      onSync={() => syncMutation.mutate(connection.id)}
                       isDeleting={deleteMutation.isPending}
+                      isSyncing={syncMutation.isPending}
                     />
                   ))}
                 </div>

@@ -54,7 +54,9 @@ interface ERPConnectionCardProps {
   connection: ERPConnection;
   erpInfo: ERPInfo;
   onDelete: () => void;
+  onSync: () => void;
   isDeleting: boolean;
+  isSyncing: boolean;
 }
 
 const STATUS_CONFIG = {
@@ -96,7 +98,9 @@ export function ERPConnectionCard({
   connection, 
   erpInfo, 
   onDelete,
-  isDeleting 
+  onSync,
+  isDeleting,
+  isSyncing 
 }: ERPConnectionCardProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   
@@ -185,9 +189,19 @@ export function ERPConnectionCard({
 
           {/* Actions */}
           <div className="flex gap-2 pt-2">
-            <Button variant="outline" size="sm" className="flex-1 gap-2" disabled>
-              <RefreshCw className="h-4 w-4" />
-              Sincronizar
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1 gap-2" 
+              onClick={onSync}
+              disabled={isSyncing}
+            >
+              {isSyncing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              {isSyncing ? 'Sincronizando...' : 'Sincronizar'}
             </Button>
             <Button variant="outline" size="sm" className="gap-2" disabled>
               <Settings className="h-4 w-4" />
@@ -197,7 +211,7 @@ export function ERPConnectionCard({
               size="sm" 
               className="text-destructive hover:text-destructive gap-2"
               onClick={() => setDeleteDialogOpen(true)}
-              disabled={isDeleting}
+              disabled={isDeleting || isSyncing}
             >
               {isDeleting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
