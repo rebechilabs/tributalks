@@ -1,202 +1,180 @@
 
-# Plano: Preparar TribuTalks para Integração com ERPs
+# Plano: Atualizar LP com Oportunidades e Integrações Nativas
 
-## Visão Geral
+## Resumo Executivo
 
-Criar uma camada de integração nativa com ERPs que permitirá alimentar automaticamente todas as ferramentas do TribuTalks. A arquitetura será modular, permitindo conectar múltiplos ERPs (Omie, Bling, Conta Azul, Tiny, Sankhya, TOTVS) de forma plug-and-play.
-
----
-
-## Mapeamento: Ferramentas vs Dados do ERP
-
-| Ferramenta TribuTalks | Dados Necessários | Endpoints ERP |
-|----------------------|-------------------|---------------|
-| **DRE Inteligente** | Vendas, Custos, Despesas, Receitas financeiras | Contas do DRE, Contas a Pagar/Receber, Plano de Contas |
-| **Radar de Créditos** | XMLs de NF-e (entrada e saída) | NF-e, Obter XML, Notas de Entrada |
-| **Score Tributário** | Faturamento, Débitos, Regime tributário | Empresa, Financeiro, Configurações fiscais |
-| **Calculadora RTC** | Produtos com NCM, Quantidade, Valor | Produtos, Tabela de Preços, NCM |
-| **CBS/IBS & NCM** | Catálogo de produtos, NCMs, CFOPs das operações | Produtos, Natureza de Operações, NCM |
-| **Perfil da Empresa** | CNPJ, CNAE, Faturamento, Setor, Regime | Dados da Empresa, Parâmetros fiscais |
-| **Oportunidades** | Perfil completo + histórico de operações | Combinação de todos acima |
-| **Painel Executivo** | KPIs consolidados de DRE, Score, Créditos | Agregação de tudo |
+Atualizar a Landing Page para refletir o número real de oportunidades tributárias (61+) e criar uma nova seção destacando as integrações nativas com ERPs brasileiros.
 
 ---
 
-## Arquitetura Proposta
+## 1. Atualizar Número de Oportunidades (37 → 61+)
 
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                    TRIBUTALKS FRONTEND                           │
-│  (Dashboard de Integrações + Status de Sincronização)           │
-└──────────────────────────┬──────────────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    EDGE FUNCTION: erp-sync                       │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │  ERP Adapter Layer (Pattern: Strategy)                    │   │
-│  │  ┌─────────┐ ┌─────────┐ ┌──────────┐ ┌─────────────────┐│   │
-│  │  │  OMIE   │ │  BLING  │ │CONTAAZUL │ │ TINY / SANKHYA ││   │
-│  │  └────┬────┘ └────┬────┘ └────┬─────┘ └────────┬────────┘│   │
-│  │       └───────────┴───────────┴────────────────┘          │   │
-│  │                         │                                  │   │
-│  │              Unified Data Schema                          │   │
-│  └──────────────────────────────────────────────────────────┘   │
-└──────────────────────────┬──────────────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    BANCO DE DADOS SUPABASE                       │
-│  erp_connections | erp_sync_logs | Tabelas existentes           │
-└─────────────────────────────────────────────────────────────────┘
+### Arquivos a Modificar
+
+**`src/components/landing/FeaturesSection.tsx`** (linha 80)
+```typescript
+// DE:
+description: "37+ benefícios fiscais por setor com match inteligente ao seu perfil de empresa."
+
+// PARA:
+description: "61+ benefícios fiscais por setor com match inteligente ao seu perfil de empresa."
+```
+
+**`src/components/landing/PricingSection.tsx`** (linha 88)
+```typescript
+// DE:
+{ text: "37+ Oportunidades Fiscais", included: true }
+
+// PARA:
+{ text: "61+ Oportunidades Fiscais", included: true }
 ```
 
 ---
 
-## Fase 1: Infraestrutura Base
+## 2. Nova Seção: Integrações Nativas
 
-### 1.1 Novas Tabelas no Banco
+### Criar Componente `IntegrationsSection.tsx`
 
-**Tabela `erp_connections`**
-- `id`, `user_id`, `erp_type` (omie, bling, contaazul, tiny, sankhya, totvs)
-- `credentials` (encrypted JSON com app_key, app_secret, token, etc.)
-- `status` (active, inactive, error)
-- `last_sync_at`, `next_sync_at`
-- `sync_config` (quais módulos sincronizar, frequência)
+**Localização:** `src/components/landing/IntegrationsSection.tsx`
 
-**Tabela `erp_sync_logs`**
-- `id`, `connection_id`, `sync_type` (nfe, financeiro, produtos, etc.)
-- `status` (success, error), `records_synced`, `error_message`
-- `started_at`, `completed_at`
+**Design:**
+- Título: "Conecte seu ERP em minutos"
+- Subtítulo: "Sincronização automática com os principais sistemas do Brasil"
+- Grid com logos/cards dos ERPs suportados
+- Destaque para os dados que são sincronizados
 
-### 1.2 Edge Function: `erp-connection`
+**ERPs a Exibir:**
+| ERP | Status | Ícone |
+|-----|--------|-------|
+| Omie | Disponível | Logo oficial ou ícone genérico |
+| Bling | Disponível | Logo oficial ou ícone genérico |
+| Conta Azul | Em breve | Badge "Em breve" |
+| Tiny/Olist | Em breve | Badge "Em breve" |
+| Sankhya | Em breve | Badge "Em breve" |
+| TOTVS | Em breve | Badge "Em breve" |
 
-Gerencia conexões:
-- POST: Criar/atualizar conexão (valida credenciais)
-- GET: Listar conexões do usuário
-- DELETE: Remover conexão
+**Dados Sincronizados (bullets):**
+- Notas Fiscais (NF-e, NFS-e, NFC-e)
+- Produtos com NCM
+- Contas a Pagar e Receber
+- DRE e Financeiro
+- Perfil da Empresa
 
-### 1.3 Edge Function: `erp-sync`
+### Estrutura do Componente
 
-Sincronização principal com adapters para cada ERP:
-- Extrai dados do ERP via API
-- Transforma para schema unificado
-- Insere/atualiza tabelas existentes (xml_imports, company_profile, etc.)
-
----
-
-## Fase 2: Adapters de ERP (Prioridade)
-
-### 2.1 Adapter OMIE (Prioridade 1)
-*Mais usado por PMEs brasileiras, API bem documentada*
-
-**Dados a extrair:**
-| Módulo OMIE | Endpoint | Destino TribuTalks |
-|-------------|----------|-------------------|
-| Clientes/Empresa | `/geral/empresas/` | `company_profile` |
-| NF-e XML | `/vendas/nfe/` | `xml_imports` + `identified_credits` |
-| DRE | `/financas/contasdre/` | `company_dre` |
-| Produtos + NCM | `/produtos/` | `company_ncm_analysis` |
-| Contas a Pagar | `/financas/contapagar/` | Alimenta DRE automaticamente |
-| Contas a Receber | `/financas/contareceber/` | Alimenta DRE automaticamente |
-
-### 2.2 Adapter BLING (Prioridade 2)
-*Popular em e-commerce, API v3 moderna*
-
-**Dados a extrair:**
-| Módulo BLING | Endpoint | Destino TribuTalks |
-|--------------|----------|-------------------|
-| NF-e | `/nfe` | `xml_imports` |
-| Produtos | `/produtos` | `company_ncm_analysis` |
-| Financeiro | `/contasapagar`, `/contasareceber` | `company_dre` |
-| Empresa | `/empresas` | `company_profile` |
-
-### 2.3 Adapter Conta Azul (Prioridade 3)
-*Foco em microempresas*
-
-### 2.4 Adapters Tiny/Sankhya/TOTVS (Fase posterior)
+```typescript
+// Layout proposto
+<section className="py-24 bg-secondary">
+  <Badge>Integrações Nativas</Badge>
+  <h2>Conecte seu ERP em minutos</h2>
+  <p>Sincronização automática com os principais sistemas do Brasil</p>
+  
+  <div className="grid md:grid-cols-3 lg:grid-cols-6">
+    {/* Cards dos ERPs */}
+  </div>
+  
+  <div className="mt-12">
+    <h3>Dados sincronizados automaticamente:</h3>
+    {/* Lista de dados */}
+  </div>
+</section>
+```
 
 ---
 
-## Fase 3: Interface do Usuário
+## 3. Atualizar Estrutura da LP
 
-### 3.1 Página: `/dashboard/integracoes`
+### Modificar `src/pages/Index.tsx`
 
-**Componentes:**
-1. **Lista de ERPs disponíveis** com cards visuais
-2. **Wizard de conexão** por ERP (credenciais específicas)
-3. **Status de sincronização** (última sync, próxima, erros)
-4. **Configuração de sync** (quais módulos, frequência)
-5. **Logs de sincronização** com filtros
-
-### 3.2 Indicadores nas Ferramentas
-
-Em cada ferramenta alimentada por ERP:
-- Badge "🔄 Dados do [ERP]" indicando origem
-- Data da última sincronização
-- Botão "Sincronizar agora"
-
----
-
-## Fase 4: Automações
-
-### 4.1 Sincronização Periódica
-- Cron job (via Supabase scheduled functions ou n8n)
-- Frequência configurável por módulo
-
-### 4.2 Webhooks (onde disponível)
-- Bling e Tiny suportam webhooks
-- Sincronização em tempo real para NF-e
-
-### 4.3 Triggers Automáticos
-Quando dados do ERP chegam:
-1. XMLs → Dispara `analyze-credits`
-2. Produtos → Dispara `analyze-ncm-from-xmls`
-3. Financeiro → Atualiza DRE e Score
+**Nova ordem das seções:**
+1. Header
+2. HeroSection
+3. RTCCalculatorSection
+4. FeaturesSection
+5. **IntegrationsSection** ← NOVA
+6. HowItWorksSection
+7. TestimonialsSection
+8. PricingSection
+9. ComingSoonSection (atualizar para remover "Integração Contábil")
+10. CredibilitySection
+11. FAQSection
+12. CTASection
+13. Footer
 
 ---
 
-## Entregáveis por Sprint
+## 4. Atualizar ComingSoonSection
 
-### Sprint 1 (Fundação) ✅ CONCLUÍDA
-- [x] Tabelas `erp_connections` e `erp_sync_logs`
-- [x] Edge Function `erp-connection` (CRUD)
-- [x] Página `/dashboard/integracoes` (UI completa com wizard)
+### Remover "Integração Contábil" (já não é "coming soon")
 
-### Sprint 2 (Omie)
-- [ ] Adapter Omie completo
-- [ ] Edge Function `erp-sync` com adapter Omie
-- [ ] Wizard de conexão Omie
-- [ ] Sync de NF-e e Produtos
+**`src/components/landing/ComingSoonSection.tsx`**
 
-### Sprint 3 (Omie completo + Bling)
-- [ ] Sync financeiro Omie → DRE
-- [ ] Adapter Bling
-- [ ] Indicadores "dados do ERP" nas ferramentas
-
-### Sprint 4 (Automação)
-- [ ] Sincronização periódica
-- [ ] Webhooks Bling
-- [ ] Triggers automáticos pós-sync
+```typescript
+// Manter apenas:
+const upcomingFeatures = [
+  { icon: LineChart, label: "Dashboard Analytics", description: "KPIs e gráficos avançados" },
+  { icon: Globe, label: "Multi-empresa", description: "Gerencie várias empresas" },
+  { icon: Smartphone, label: "App Mobile", description: "iOS e Android nativo" },
+];
+```
 
 ---
 
-## Considerações Técnicas
+## 5. Arquivos a Criar/Modificar
 
-1. **Segurança**: Credenciais criptografadas via Supabase Vault
-2. **Rate Limiting**: Respeitar limites de cada API de ERP
-3. **Idempotência**: Evitar duplicação de registros em syncs repetidas
-4. **Auditoria**: Logs detalhados para troubleshooting
-5. **Fallback**: Se API do ERP falhar, manter dados anteriores
+| Arquivo | Ação | Descrição |
+|---------|------|-----------|
+| `src/components/landing/IntegrationsSection.tsx` | CRIAR | Nova seção de integrações |
+| `src/components/landing/FeaturesSection.tsx` | MODIFICAR | 37 → 61+ |
+| `src/components/landing/PricingSection.tsx` | MODIFICAR | 37 → 61+ |
+| `src/components/landing/ComingSoonSection.tsx` | MODIFICAR | Remover "Integração Contábil" |
+| `src/pages/Index.tsx` | MODIFICAR | Adicionar IntegrationsSection |
 
 ---
 
-## Próximos Passos
+## 6. Design da Seção de Integrações
 
-1. Aprovar este plano
-2. Criar as tabelas de infraestrutura
-3. Implementar a página de integrações
-4. Desenvolver o primeiro adapter (Omie)
-5. Testar end-to-end com conta real
+**Visual:**
+- Background: `bg-secondary` (contraste com seções adjacentes)
+- Cards com efeito hover e borda `border-primary/50`
+- Logos dos ERPs em grayscale, coloridos no hover
+- Badge "Disponível" (verde) ou "Em breve" (amarelo/outline)
 
-Deseja que eu comece pela Sprint 1 (infraestrutura base)?
+**Copy sugerido:**
+```
+# Conecte seu ERP em minutos
+
+Importação automática de NF-e, produtos e financeiro.
+Seus dados sempre atualizados, sem digitação manual.
+
+[Grid de ERPs]
+
+✓ Notas Fiscais (NF-e, NFS-e)    ✓ Produtos com NCM
+✓ Contas a Pagar/Receber         ✓ DRE Automático
+✓ Perfil da Empresa              ✓ Sincronização diária
+```
+
+---
+
+## Entregáveis
+
+1. **IntegrationsSection.tsx** - Componente completo com grid de ERPs
+2. **FeaturesSection.tsx** - Número atualizado (61+)
+3. **PricingSection.tsx** - Número atualizado (61+)
+4. **ComingSoonSection.tsx** - Remover item duplicado
+5. **Index.tsx** - Incluir nova seção
+
+---
+
+## Sobre Documentação dos ERPs
+
+Sim, já tenho todas as informações técnicas necessárias para as integrações com base na pesquisa que você enviou:
+
+- **Omie**: App Key + App Secret, endpoints para NF-e, DRE, NCM, Financeiro
+- **Bling**: OAuth 2.0, API v3 moderna com Swagger
+- **Conta Azul**: OAuth 2.0, REST/JSON
+- **Tiny/Olist**: Token API, suporte a webhooks
+- **Sankhya**: API Gateway com AppKey + Token
+- **TOTVS**: Varia por produto (Protheus, RM, Datasul)
+
+A infraestrutura de banco (tabelas `erp_connections` e `erp_sync_logs`) e a Edge Function `erp-connection` já foram criadas na Sprint 1.
