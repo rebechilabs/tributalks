@@ -44,6 +44,7 @@ import CbsIbsNcm from "./pages/CbsIbsNcm";
 import TimelineReforma from "./pages/TimelineReforma";
 import AnalisadorDocumentos from "./pages/AnalisadorDocumentos";
 import WorkflowsGuiados from "./pages/WorkflowsGuiados";
+import ChecklistReforma from "./pages/ChecklistReforma";
 
 // Calculadoras
 import SplitPayment from "./pages/calculadora/SplitPayment";
@@ -287,6 +288,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <WorkflowsGuiados />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/checklist-reforma" 
+              element={
+                <ProtectedRoute>
+                  <ChecklistReforma />
                 </ProtectedRoute>
               } 
             />
