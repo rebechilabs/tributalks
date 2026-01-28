@@ -1,70 +1,83 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requireOnboarding?: boolean;
 }
 
+type AuthState = 'loading' | 'authenticated' | 'unauthenticated' | 'needs-onboarding';
+
 export const ProtectedRoute = ({ children, requireOnboarding = true }: ProtectedRouteProps) => {
-  const { user, loading } = useAuth();
   const location = useLocation();
-  const [checkState, setCheckState] = useState<'pending' | 'checking' | 'done'>('pending');
-  const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(null);
-
-  const checkProfile = useCallback(async (userId: string) => {
-    if (!requireOnboarding) {
-      setCheckState('done');
-      return;
-    }
-    
-    setCheckState('checking');
-    try {
-      const { data } = await supabase
-        .from('profiles')
-        .select('onboarding_complete')
-        .eq('user_id', userId)
-        .maybeSingle();
-      
-      setOnboardingComplete(data?.onboarding_complete ?? false);
-    } catch (error) {
-      console.error('Error checking profile:', error);
-      setOnboardingComplete(false);
-    } finally {
-      setCheckState('done');
-    }
-  }, [requireOnboarding]);
+  const [authState, setAuthState] = useState<AuthState>('loading');
 
   useEffect(() => {
-    if (loading) return;
-    
-    if (user) {
-      checkProfile(user.id);
-    } else {
-      setCheckState('done');
-    }
-  }, [user, loading, checkProfile]);
+    let mounted = true;
 
-  // Timeout separado - só executa uma vez no mount
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setCheckState(prev => {
-        if (prev !== 'done') {
-          console.warn('[ProtectedRoute] Force completing after timeout');
-          return 'done';
+    const checkAuth = async () => {
+      try {
+        console.log('[ProtectedRoute] Checking auth...');
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+        
+        if (!session?.user) {
+          console.log('[ProtectedRoute] No session, unauthenticated');
+          setAuthState('unauthenticated');
+          return;
         }
-        return prev;
-      });
-    }, 3000);
 
-    return () => clearTimeout(timeout);
-  }, []);
+        console.log('[ProtectedRoute] Session found:', session.user.id);
+
+        // If we don't require onboarding check, user is authenticated
+        if (!requireOnboarding) {
+          setAuthState('authenticated');
+          return;
+        }
+
+        // Check onboarding status
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('onboarding_complete')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+
+        if (!mounted) return;
+
+        console.log('[ProtectedRoute] Profile check:', profile?.onboarding_complete);
+
+        if (!profile?.onboarding_complete && location.pathname !== '/onboarding') {
+          setAuthState('needs-onboarding');
+        } else {
+          setAuthState('authenticated');
+        }
+      } catch (error) {
+        console.error('[ProtectedRoute] Error:', error);
+        if (mounted) setAuthState('unauthenticated');
+      }
+    };
+
+    checkAuth();
+
+    // Timeout safety
+    const timeout = setTimeout(() => {
+      if (mounted && authState === 'loading') {
+        console.warn('[ProtectedRoute] Force completing after timeout');
+        setAuthState('unauthenticated');
+      }
+    }, 5000);
+
+    return () => {
+      mounted = false;
+      clearTimeout(timeout);
+    };
+  }, [requireOnboarding, location.pathname]);
 
   // Loading state
-  if (loading || checkState !== 'done') {
+  if (authState === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -73,12 +86,12 @@ export const ProtectedRoute = ({ children, requireOnboarding = true }: Protected
   }
 
   // Not authenticated
-  if (!user) {
+  if (authState === 'unauthenticated') {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Redirect to onboarding if needed
-  if (requireOnboarding && onboardingComplete === false && location.pathname !== '/onboarding') {
+  if (authState === 'needs-onboarding') {
     return <Navigate to="/onboarding" replace />;
   }
 

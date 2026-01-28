@@ -77,16 +77,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Garantia absoluta: loading NUNCA fica preso mais que 3 segundos
     const forceLoadTimeout = setTimeout(() => {
       if (mounted) {
+        console.log('[Auth] Force completing after timeout');
         setLoading(false);
       }
     }, 3000);
 
     const initializeAuth = async () => {
       try {
+        console.log('[Auth] Initializing...');
         const { data: { session: initialSession } } = await supabase.auth.getSession();
         
         if (!mounted) return;
         
+        console.log('[Auth] Initial session:', !!initialSession?.user);
         setSession(initialSession);
         setUser(initialSession?.user ?? null);
         
@@ -108,17 +111,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     };
 
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
         if (!mounted) return;
         
+        console.log('[Auth] State change:', event, !!currentSession?.user);
+        
+        // Only handle specific events to avoid unnecessary re-renders
         if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
           setSession(currentSession);
           setUser(currentSession?.user ?? null);
           
           if (currentSession?.user) {
-            const profileData = await fetchProfile(currentSession.user.id);
-            if (mounted) setProfile(profileData);
+            // Use setTimeout to avoid potential deadlocks
+            setTimeout(async () => {
+              if (!mounted) return;
+              const profileData = await fetchProfile(currentSession.user.id);
+              if (mounted) setProfile(profileData);
+            }, 0);
           } else {
             setProfile(null);
           }
@@ -126,6 +137,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
+    // THEN initialize
     initializeAuth();
 
     return () => {
