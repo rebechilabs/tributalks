@@ -1,213 +1,202 @@
 
+# Plano: Preparar TribuTalks para Integração com ERPs
 
-# Plano: Atualização do Catálogo de Oportunidades Tributárias (2026)
+## Visão Geral
 
-## Contexto
-
-O usuário forneceu um documento atualizado de janeiro/2026 com mudanças significativas no cenário tributário brasileiro, especialmente em relação à LC 224/2025 e à implementação futura da Reforma Tributária (CBS/IBS). Este plano visa atualizar o sistema para refletir essas mudanças.
-
----
-
-## Resumo das Alterações
-
-### Novas Informações a Serem Armazenadas
-
-O documento traz **dois novos eixos de informação** que não existem na estrutura atual:
-
-1. **Status 2026 (LC 224/2025)**
-   - Indica se o benefício foi afetado pelo corte de 10%
-   - Status: `PROTEGIDO`, `AFETADO`, `CRÍTICO`, ou sem mudança
-
-2. **Futuro com a Reforma (Pós-2027)**
-   - O que acontecerá quando CBS/IBS entrarem em vigor
-   - Status: `MANTIDO`, `EXTINTO`, `SUBSTITUÍDO`, `EM_ADAPTACAO`
+Criar uma camada de integração nativa com ERPs que permitirá alimentar automaticamente todas as ferramentas do TribuTalks. A arquitetura será modular, permitindo conectar múltiplos ERPs (Omie, Bling, Conta Azul, Tiny, Sankhya, TOTVS) de forma plug-and-play.
 
 ---
 
-## Escopo Técnico
+## Mapeamento: Ferramentas vs Dados do ERP
 
-### 1. Alteração no Schema da Tabela `tax_opportunities`
-
-Adicionar 4 novas colunas:
-
-| Coluna | Tipo | Descrição |
-|--------|------|-----------|
-| `status_lc_224_2025` | `text` | Status em relação à LC 224/2025: `protegido`, `afetado`, `critico`, `neutro` |
-| `descricao_lc_224_2025` | `text` | Descrição do impacto em 2026 |
-| `futuro_reforma` | `text` | Status pós-reforma: `mantido`, `extinto`, `substituido`, `em_adaptacao` |
-| `descricao_reforma` | `text` | Explicação do que acontece com a Reforma |
-
-### 2. Atualização dos Registros Existentes
-
-Atualizar as oportunidades existentes com as novas informações do documento:
-
-**Incentivos a P&D:**
-- `INCENT_001` (Lei do Bem): `protegido` / `mantido`
-- `INCENT_002` (Lei de Informática): `afetado` / `extinto`
-- `INCENT_003` (SUDENE/SUDAM): `parcialmente_protegido` / `mantido`
-
-**Créditos e Exportação:**
-- `EXPORT_002` (Créditos PIS/COFINS): `neutro` / `substituido`
-- `EXPORT_003` (REINTEGRA): `neutro` / `extinto`
-
-**Monofásicos (8 registros):** `critico` / `extinto`
-
-**Regimes Especiais (por tipo):**
-- Lucro Presumido: `critico` / marcar como `inviavel_futuro`
-- Simples Nacional: `protegido` / `em_adaptacao`
-- ISS Fixo (Advogados): marcar como `extinto` gradualmente até 2033
-
-**Setoriais:**
-- RET Construção: `neutro` / `em_adaptacao`
-- Equiparação Hospitalar: `neutro` / `mantido`
-- Drawback/RECOF: `neutro` / `em_adaptacao`
-
-### 3. Inserir Novas Oportunidades
-
-Criar registros para oportunidades mencionadas no documento mas ausentes no banco:
-
-| Código | Nome | Categoria |
-|--------|------|-----------|
-| `INCENT_004` | MOVER / Rota 2030 | incentivo |
-| `EXPORT_004` | Drawback | credito |
-| `EXPORT_005` | RECOF | credito |
-| `REGIME_019` | ISS Fixo Sociedade de Advogados | regime_especial |
-| `SOLAR_006` | Isenção PIS/COFINS Equipamentos Solares | isencao |
-
-### 4. Atualização da Interface `OpportunityDetailCard`
-
-Adicionar exibição visual do status futuro:
-
-- Badge com ícone de status: ✅ Mantido | 🔴 Extinto | ⚠️ Em Adaptação
-- Tooltip ou expandable com explicação
-
-### 5. Atualização do PDF de Oportunidades
-
-Incluir nova seção "Tabela Resumo: Futuro das Oportunidades" conforme o documento original.
-
-### 6. Atualização do Modal de Detalhes
-
-Adicionar seção com:
-- **Atualização 2026:** O que mudou com a LC 224/2025
-- **Futuro Pós-2027:** O que acontece com a Reforma Tributária
+| Ferramenta TribuTalks | Dados Necessários | Endpoints ERP |
+|----------------------|-------------------|---------------|
+| **DRE Inteligente** | Vendas, Custos, Despesas, Receitas financeiras | Contas do DRE, Contas a Pagar/Receber, Plano de Contas |
+| **Radar de Créditos** | XMLs de NF-e (entrada e saída) | NF-e, Obter XML, Notas de Entrada |
+| **Score Tributário** | Faturamento, Débitos, Regime tributário | Empresa, Financeiro, Configurações fiscais |
+| **Calculadora RTC** | Produtos com NCM, Quantidade, Valor | Produtos, Tabela de Preços, NCM |
+| **CBS/IBS & NCM** | Catálogo de produtos, NCMs, CFOPs das operações | Produtos, Natureza de Operações, NCM |
+| **Perfil da Empresa** | CNPJ, CNAE, Faturamento, Setor, Regime | Dados da Empresa, Parâmetros fiscais |
+| **Oportunidades** | Perfil completo + histórico de operações | Combinação de todos acima |
+| **Painel Executivo** | KPIs consolidados de DRE, Score, Créditos | Agregação de tudo |
 
 ---
 
-## Sequência de Implementação
+## Arquitetura Proposta
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
-│  FASE 1: SCHEMA                                                  │
-│  Adicionar 4 novas colunas na tabela tax_opportunities          │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
+│                    TRIBUTALKS FRONTEND                           │
+│  (Dashboard de Integrações + Status de Sincronização)           │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │
+                           ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  FASE 2: DADOS                                                   │
-│  a) Atualizar oportunidades existentes com status 2026/reforma  │
-│  b) Inserir novas oportunidades (MOVER, Drawback, ISS Fixo)     │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
+│                    EDGE FUNCTION: erp-sync                       │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  ERP Adapter Layer (Pattern: Strategy)                    │   │
+│  │  ┌─────────┐ ┌─────────┐ ┌──────────┐ ┌─────────────────┐│   │
+│  │  │  OMIE   │ │  BLING  │ │CONTAAZUL │ │ TINY / SANKHYA ││   │
+│  │  └────┬────┘ └────┬────┘ └────┬─────┘ └────────┬────────┘│   │
+│  │       └───────────┴───────────┴────────────────┘          │   │
+│  │                         │                                  │   │
+│  │              Unified Data Schema                          │   │
+│  └──────────────────────────────────────────────────────────┘   │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │
+                           ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  FASE 3: INTERFACE                                               │
-│  a) Atualizar OpportunityDetailCard com badges de status        │
-│  b) Atualizar OpportunityDetailModal com seções LC/Reforma      │
-│  c) Atualizar tipos TypeScript para incluir novos campos        │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  FASE 4: DOCUMENTAÇÃO                                            │
-│  Atualizar OpportunitiesDocPdf com tabela-resumo do futuro      │
+│                    BANCO DE DADOS SUPABASE                       │
+│  erp_connections | erp_sync_logs | Tabelas existentes           │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Detalhes Técnicos
+## Fase 1: Infraestrutura Base
 
-### SQL de Migração (Schema)
+### 1.1 Novas Tabelas no Banco
 
-```sql
-ALTER TABLE tax_opportunities 
-ADD COLUMN IF NOT EXISTS status_lc_224_2025 text DEFAULT 'neutro',
-ADD COLUMN IF NOT EXISTS descricao_lc_224_2025 text,
-ADD COLUMN IF NOT EXISTS futuro_reforma text DEFAULT 'em_analise',
-ADD COLUMN IF NOT EXISTS descricao_reforma text;
+**Tabela `erp_connections`**
+- `id`, `user_id`, `erp_type` (omie, bling, contaazul, tiny, sankhya, totvs)
+- `credentials` (encrypted JSON com app_key, app_secret, token, etc.)
+- `status` (active, inactive, error)
+- `last_sync_at`, `next_sync_at`
+- `sync_config` (quais módulos sincronizar, frequência)
 
-COMMENT ON COLUMN tax_opportunities.status_lc_224_2025 IS 
-  'Status após LC 224/2025: protegido, afetado, critico, neutro';
-COMMENT ON COLUMN tax_opportunities.futuro_reforma IS 
-  'Status pós-reforma: mantido, extinto, substituido, em_adaptacao';
-```
+**Tabela `erp_sync_logs`**
+- `id`, `connection_id`, `sync_type` (nfe, financeiro, produtos, etc.)
+- `status` (success, error), `records_synced`, `error_message`
+- `started_at`, `completed_at`
 
-### Atualizações de Dados Principais
+### 1.2 Edge Function: `erp-connection`
 
-**Lei do Bem (INCENT_001):**
-```sql
-UPDATE tax_opportunities SET
-  status_lc_224_2025 = 'protegido',
-  descricao_lc_224_2025 = 'A Lei do Bem não foi afetada pelo corte de 10% da LC 224/2025.',
-  futuro_reforma = 'mantido',
-  descricao_reforma = 'Por ser benefício de IRPJ/CSLL, não é afetada pela CBS/IBS.'
-WHERE code = 'INCENT_001';
-```
+Gerencia conexões:
+- POST: Criar/atualizar conexão (valida credenciais)
+- GET: Listar conexões do usuário
+- DELETE: Remover conexão
 
-**Lei de Informática (INCENT_002):**
-```sql
-UPDATE tax_opportunities SET
-  status_lc_224_2025 = 'afetado',
-  descricao_lc_224_2025 = 'Pode sofrer corte adicional de 10% no IPI.',
-  futuro_reforma = 'extinto',
-  descricao_reforma = 'O IPI será extinto com a Reforma. A Lei de Informática deixará de existir.'
-WHERE code = 'INCENT_002';
-```
+### 1.3 Edge Function: `erp-sync`
 
-**Monofásicos (8 registros):**
-```sql
-UPDATE tax_opportunities SET
-  status_lc_224_2025 = 'critico',
-  descricao_lc_224_2025 = 'Oportunidade urgente: recuperação de valores dos últimos 5 anos.',
-  futuro_reforma = 'extinto',
-  descricao_reforma = 'O regime monofásico será extinto com a CBS. Janela de recuperação se fechando.'
-WHERE category = 'monofasico';
-```
-
-### Novos Componentes React
-
-**Badge de Status Reforma:**
-```tsx
-const REFORMA_STATUS = {
-  mantido: { icon: '✅', label: 'Mantido', color: 'text-green-600' },
-  extinto: { icon: '🔴', label: 'Extinto Gradualmente', color: 'text-red-500' },
-  substituido: { icon: '🔄', label: 'Substituído', color: 'text-yellow-600' },
-  em_adaptacao: { icon: '⚠️', label: 'Em Adaptação', color: 'text-orange-500' }
-};
-```
+Sincronização principal com adapters para cada ERP:
+- Extrai dados do ERP via API
+- Transforma para schema unificado
+- Insere/atualiza tabelas existentes (xml_imports, company_profile, etc.)
 
 ---
 
-## Arquivos a Serem Modificados
+## Fase 2: Adapters de ERP (Prioridade)
 
-| Arquivo | Tipo de Mudança |
-|---------|-----------------|
-| `supabase/migrations/` | Nova migration para schema |
-| `src/components/opportunities/OpportunityDetailCard.tsx` | Adicionar badge de status reforma |
-| `src/components/opportunities/OpportunityDetailModal.tsx` | Adicionar seções LC 224 e Reforma |
-| `src/pages/Oportunidades.tsx` | Atualizar interface para novos campos |
-| `src/components/docs/OpportunitiesDocPdf.tsx` | Adicionar tabela-resumo do futuro |
-| `supabase/functions/match-opportunities/index.ts` | Retornar novos campos no response |
+### 2.1 Adapter OMIE (Prioridade 1)
+*Mais usado por PMEs brasileiras, API bem documentada*
+
+**Dados a extrair:**
+| Módulo OMIE | Endpoint | Destino TribuTalks |
+|-------------|----------|-------------------|
+| Clientes/Empresa | `/geral/empresas/` | `company_profile` |
+| NF-e XML | `/vendas/nfe/` | `xml_imports` + `identified_credits` |
+| DRE | `/financas/contasdre/` | `company_dre` |
+| Produtos + NCM | `/produtos/` | `company_ncm_analysis` |
+| Contas a Pagar | `/financas/contapagar/` | Alimenta DRE automaticamente |
+| Contas a Receber | `/financas/contareceber/` | Alimenta DRE automaticamente |
+
+### 2.2 Adapter BLING (Prioridade 2)
+*Popular em e-commerce, API v3 moderna*
+
+**Dados a extrair:**
+| Módulo BLING | Endpoint | Destino TribuTalks |
+|--------------|----------|-------------------|
+| NF-e | `/nfe` | `xml_imports` |
+| Produtos | `/produtos` | `company_ncm_analysis` |
+| Financeiro | `/contasapagar`, `/contasareceber` | `company_dre` |
+| Empresa | `/empresas` | `company_profile` |
+
+### 2.3 Adapter Conta Azul (Prioridade 3)
+*Foco em microempresas*
+
+### 2.4 Adapters Tiny/Sankhya/TOTVS (Fase posterior)
 
 ---
 
-## Resultado Esperado
+## Fase 3: Interface do Usuário
 
-Após a implementação:
+### 3.1 Página: `/dashboard/integracoes`
 
-1. **Usuários verão** indicadores visuais claros sobre o futuro de cada oportunidade
-2. **O PDF** incluirá a tabela-resumo do documento original
-3. **O sistema** estará atualizado para janeiro/2026 com as mudanças da LC 224/2025
-4. **O matching** continuará funcionando normalmente, agora com informações de transição
-5. **Clara AI** poderá referenciar o status de cada oportunidade em suas respostas
+**Componentes:**
+1. **Lista de ERPs disponíveis** com cards visuais
+2. **Wizard de conexão** por ERP (credenciais específicas)
+3. **Status de sincronização** (última sync, próxima, erros)
+4. **Configuração de sync** (quais módulos, frequência)
+5. **Logs de sincronização** com filtros
 
+### 3.2 Indicadores nas Ferramentas
+
+Em cada ferramenta alimentada por ERP:
+- Badge "🔄 Dados do [ERP]" indicando origem
+- Data da última sincronização
+- Botão "Sincronizar agora"
+
+---
+
+## Fase 4: Automações
+
+### 4.1 Sincronização Periódica
+- Cron job (via Supabase scheduled functions ou n8n)
+- Frequência configurável por módulo
+
+### 4.2 Webhooks (onde disponível)
+- Bling e Tiny suportam webhooks
+- Sincronização em tempo real para NF-e
+
+### 4.3 Triggers Automáticos
+Quando dados do ERP chegam:
+1. XMLs → Dispara `analyze-credits`
+2. Produtos → Dispara `analyze-ncm-from-xmls`
+3. Financeiro → Atualiza DRE e Score
+
+---
+
+## Entregáveis por Sprint
+
+### Sprint 1 (Fundação)
+- [ ] Tabelas `erp_connections` e `erp_sync_logs`
+- [ ] Edge Function `erp-connection` (CRUD)
+- [ ] Página `/dashboard/integracoes` (UI básica)
+
+### Sprint 2 (Omie)
+- [ ] Adapter Omie completo
+- [ ] Edge Function `erp-sync` com adapter Omie
+- [ ] Wizard de conexão Omie
+- [ ] Sync de NF-e e Produtos
+
+### Sprint 3 (Omie completo + Bling)
+- [ ] Sync financeiro Omie → DRE
+- [ ] Adapter Bling
+- [ ] Indicadores "dados do ERP" nas ferramentas
+
+### Sprint 4 (Automação)
+- [ ] Sincronização periódica
+- [ ] Webhooks Bling
+- [ ] Triggers automáticos pós-sync
+
+---
+
+## Considerações Técnicas
+
+1. **Segurança**: Credenciais criptografadas via Supabase Vault
+2. **Rate Limiting**: Respeitar limites de cada API de ERP
+3. **Idempotência**: Evitar duplicação de registros em syncs repetidas
+4. **Auditoria**: Logs detalhados para troubleshooting
+5. **Fallback**: Se API do ERP falhar, manter dados anteriores
+
+---
+
+## Próximos Passos
+
+1. Aprovar este plano
+2. Criar as tabelas de infraestrutura
+3. Implementar a página de integrações
+4. Desenvolver o primeiro adapter (Omie)
+5. Testar end-to-end com conta real
+
+Deseja que eu comece pela Sprint 1 (infraestrutura base)?
