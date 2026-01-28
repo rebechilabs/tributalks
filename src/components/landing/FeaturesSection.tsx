@@ -61,7 +61,7 @@ const features = [
     icon: Target,
     title: "Radar Tributário: Créditos + IA preditiva",
     description:
-      "Quais são as oportunidades tributárias que você tem em seu arquivo?",
+      "Pode me trazer quais são as oportunidades fiscais?",
     badge: "Professional",
     badgeVariant: "outline" as const,
   },
