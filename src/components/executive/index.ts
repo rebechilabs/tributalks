@@ -5,3 +5,4 @@ export { ExecutiveReformImpact } from './ExecutiveReformImpact';
 export { ExecutiveRisks } from './ExecutiveRisks';
 export { ExecutiveReportPreview } from './ExecutiveReportPreview';
 export { ExecutiveNcmCard } from './ExecutiveNcmCard';
+export { ClaraReportGenerator } from './ClaraReportGenerator';

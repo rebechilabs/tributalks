@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Crown, ArrowRight, FileBarChart } from "lucide-react";
+import { Crown, ArrowRight, FileBarChart, Sparkles } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { 
   ExecutiveHeader,
@@ -8,7 +8,8 @@ import {
   ExecutiveProjects, 
   ExecutiveReformImpact, 
   ExecutiveRisks,
-  ExecutiveNcmCard
+  ExecutiveNcmCard,
+  ClaraReportGenerator
 } from "@/components/executive";
 import { ExecutiveReportPreview } from "@/components/executive/ExecutiveReportPreview";
 import { useExecutiveData } from "@/hooks/useExecutiveData";
@@ -30,6 +31,7 @@ export default function PainelExecutivo() {
   const hasPremiumAccess = userLevel >= PLAN_HIERARCHY['PREMIUM'];
 
   const [reportOpen, setReportOpen] = useState(false);
+  const [claraReportOpen, setClaraReportOpen] = useState(false);
 
   const {
     thermometerData,
@@ -110,14 +112,24 @@ export default function PainelExecutivo() {
             onRefresh={refresh} 
             loading={loading}
           />
-          <Button 
-            variant="default" 
-            onClick={handleGenerateReport}
-            className="gap-2 shrink-0"
-          >
-            <FileBarChart className="w-4 h-4" />
-            Gerar relatório do mês
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline"
+              onClick={() => setClaraReportOpen(true)}
+              className="gap-2 shrink-0"
+            >
+              <Sparkles className="w-4 h-4" />
+              Relatórios Clara AI
+            </Button>
+            <Button 
+              variant="default" 
+              onClick={handleGenerateReport}
+              className="gap-2 shrink-0"
+            >
+              <FileBarChart className="w-4 h-4" />
+              Gerar relatório do mês
+            </Button>
+          </div>
         </div>
 
         {/* Block 1 - Thermometer (full width) */}
@@ -147,6 +159,18 @@ export default function PainelExecutivo() {
       <ExecutiveReportPreview
         open={reportOpen}
         onOpenChange={setReportOpen}
+        thermometerData={thermometerData}
+        topProjects={topProjects}
+        reformData={reformData}
+        risks={risks}
+        companyName={profile?.empresa || undefined}
+        userId={user?.id}
+      />
+
+      {/* Clara AI Report Generator */}
+      <ClaraReportGenerator
+        open={claraReportOpen}
+        onOpenChange={setClaraReportOpen}
         thermometerData={thermometerData}
         topProjects={topProjects}
         reformData={reformData}
