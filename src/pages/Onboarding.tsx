@@ -57,9 +57,15 @@ const Onboarding = () => {
     };
   }, []);
 
-  // Pre-populate form when profile loads
+  // Pre-populate form when profile loads, and redirect if already complete
   useEffect(() => {
     if (profile) {
+      // If onboarding is already complete, redirect to dashboard
+      if (profile.onboarding_complete) {
+        window.location.href = '/dashboard';
+        return;
+      }
+      
       setFormData({
         empresa: profile.empresa || "",
         estado: profile.estado || "",
@@ -71,15 +77,15 @@ const Onboarding = () => {
     }
   }, [profile]);
 
-  // Navigate after successful save
+  // Navigate after successful save using full page redirect
   useEffect(() => {
     if (isSaved) {
       const timer = setTimeout(() => {
-        navigate('/dashboard', { replace: true });
+        window.location.href = '/dashboard';
       }, 800);
       return () => clearTimeout(timer);
     }
-  }, [isSaved, navigate]);
+  }, [isSaved]);
 
   const totalSteps = 4;
   const progress = (step / totalSteps) * 100;
