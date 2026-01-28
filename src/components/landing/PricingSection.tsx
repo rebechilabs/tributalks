@@ -101,7 +101,7 @@ const plans: Plan[] = [
     cnpjLimit: "Ilimitado",
     features: [
       { text: "Atendimento personalizado através do Rebechi & Silva Advogados Associados", included: true },
-      { text: "White Label", included: true, limitText: "Relatórios personalizados com a marca da sua empresa" },
+      { text: "White Label", included: true, limitText: "(seu logo, suas cores, seu domínio)" },
     ],
     ctaText: "Fale conosco",
     linkMonthly: CONFIG.STRIPE_PAYMENT_LINKS.ENTERPRISE,
