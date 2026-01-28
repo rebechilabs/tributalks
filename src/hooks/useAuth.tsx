@@ -1,8 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
-import { toast } from '@/hooks/use-toast';
 
 interface Profile {
   id: string;
@@ -50,18 +48,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
-    
-    if (error) {
-      console.error('Error fetching profile:', error);
+  const fetchProfile = async (userId: string): Promise<Profile | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('[Auth] Profile fetch error:', error);
+        return null;
+      }
+      return data as Profile | null;
+    } catch (err) {
+      console.error('[Auth] Profile fetch exception:', err);
       return null;
     }
-    return data as Profile | null;
   };
 
   const refreshProfile = async () => {
@@ -74,60 +77,60 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     let mounted = true;
     
-    // Garantia absoluta: loading NUNCA fica preso mais que 3 segundos
-    const forceLoadTimeout = setTimeout(() => {
-      if (mounted) {
+    // Force complete loading after 3s max
+    const forceTimeout = setTimeout(() => {
+      if (mounted && loading) {
         console.log('[Auth] Force completing after timeout');
         setLoading(false);
       }
     }, 3000);
 
-    const initializeAuth = async () => {
+    const initAuth = async () => {
       try {
         console.log('[Auth] Initializing...');
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
         
         if (!mounted) return;
         
-        console.log('[Auth] Initial session:', !!initialSession?.user);
-        setSession(initialSession);
-        setUser(initialSession?.user ?? null);
+        console.log('[Auth] Session:', !!currentSession?.user);
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
         
-        if (initialSession?.user) {
-          const profileData = await fetchProfile(initialSession.user.id);
+        if (currentSession?.user) {
+          const profileData = await fetchProfile(currentSession.user.id);
           if (mounted) setProfile(profileData);
         }
         
         if (mounted) {
-          clearTimeout(forceLoadTimeout);
+          clearTimeout(forceTimeout);
           setLoading(false);
         }
       } catch (error) {
-        console.error('[Auth] Error:', error);
+        console.error('[Auth] Init error:', error);
         if (mounted) {
-          clearTimeout(forceLoadTimeout);
+          clearTimeout(forceTimeout);
           setLoading(false);
         }
       }
     };
 
-    // Set up auth state listener FIRST
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
+      async (event, newSession) => {
         if (!mounted) return;
         
-        console.log('[Auth] State change:', event, !!currentSession?.user);
+        console.log('[Auth] State change:', event);
         
-        // Only handle specific events to avoid unnecessary re-renders
+        // Only update on meaningful events
         if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
-          setSession(currentSession);
-          setUser(currentSession?.user ?? null);
+          setSession(newSession);
+          setUser(newSession?.user ?? null);
           
-          if (currentSession?.user) {
-            // Use setTimeout to avoid potential deadlocks
+          if (newSession?.user) {
+            // Defer profile fetch to avoid blocking
             setTimeout(async () => {
               if (!mounted) return;
-              const profileData = await fetchProfile(currentSession.user.id);
+              const profileData = await fetchProfile(newSession.user.id);
               if (mounted) setProfile(profileData);
             }, 0);
           } else {
@@ -137,12 +140,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    // THEN initialize
-    initializeAuth();
+    initAuth();
 
     return () => {
       mounted = false;
-      clearTimeout(forceLoadTimeout);
+      clearTimeout(forceTimeout);
       subscription.unsubscribe();
     };
   }, []);

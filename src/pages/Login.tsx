@@ -3,66 +3,81 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Loader2, Eye, EyeOff, Mail, KeyRound, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import logoTributech from "@/assets/logo-tributech.png";
+
+type PageState = 'checking' | 'ready' | 'logging-in' | 'redirecting';
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [useMagicLink, setUseMagicLink] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
-  const [checkingSession, setCheckingSession] = useState(true);
-  const [loginSuccess, setLoginSuccess] = useState(false);
-  const redirectingRef = useRef(false);
+  const [pageState, setPageState] = useState<PageState>('checking');
 
   // Check if user is already logged in on mount
   useEffect(() => {
-    let mounted = true;
+    let cancelled = false;
 
-    const checkExistingSession = async () => {
+    const checkSession = async () => {
       try {
+        console.log('[Login] Checking existing session...');
         const { data: { session } } = await supabase.auth.getSession();
         
-        if (!mounted) return;
+        if (cancelled) return;
         
         if (session?.user) {
-          console.log('[Login] Existing session found, checking profile...');
-          redirectingRef.current = true;
+          console.log('[Login] Session found, user:', session.user.id);
+          setPageState('redirecting');
           
+          // Check profile for onboarding status
           const { data: profile } = await supabase
             .from('profiles')
             .select('onboarding_complete')
             .eq('user_id', session.user.id)
             .maybeSingle();
           
+          if (cancelled) return;
+          
           const destination = profile?.onboarding_complete ? '/dashboard' : '/onboarding';
-          console.log('[Login] Redirecting to:', destination);
-          window.location.replace(destination);
-          return;
+          console.log('[Login] Redirecting existing user to:', destination);
+          
+          // Force redirect with slight delay
+          setTimeout(() => {
+            window.location.href = destination;
+          }, 100);
+        } else {
+          console.log('[Login] No session, showing login form');
+          setPageState('ready');
         }
-        
-        setCheckingSession(false);
-      } catch (error) {
-        console.error('[Login] Session check error:', error);
-        if (mounted) setCheckingSession(false);
+      } catch (err) {
+        console.error('[Login] Session check error:', err);
+        if (!cancelled) setPageState('ready');
       }
     };
 
-    checkExistingSession();
+    checkSession();
+
+    // Safety timeout
+    const timeout = setTimeout(() => {
+      if (!cancelled && pageState === 'checking') {
+        console.log('[Login] Timeout, showing form');
+        setPageState('ready');
+      }
+    }, 3000);
 
     return () => {
-      mounted = false;
+      cancelled = true;
+      clearTimeout(timeout);
     };
   }, []);
 
-  const performRedirect = async (userId: string) => {
-    if (redirectingRef.current) return;
-    redirectingRef.current = true;
+  const redirectAfterLogin = async (userId: string) => {
+    console.log('[Login] Getting profile for redirect...');
     
     try {
       const { data: profile } = await supabase
@@ -72,78 +87,76 @@ const Login = () => {
         .maybeSingle();
       
       const destination = profile?.onboarding_complete ? '/dashboard' : '/onboarding';
-      console.log('[Login] Performing redirect to:', destination);
-      
-      // Use replace to prevent back button from returning to login
-      window.location.replace(destination);
-    } catch (error) {
-      console.error('[Login] Redirect error:', error);
-      // Fallback to onboarding if profile check fails
-      window.location.replace('/onboarding');
-    }
-  };
-
-  const handlePasswordLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isLoading || redirectingRef.current) return;
-    
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      console.log('[Login] Starting login...');
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (signInError) {
-        console.error('[Login] SignIn error:', signInError);
-        if (signInError.message === 'Invalid login credentials') {
-          setError('E-mail ou senha incorretos');
-        } else {
-          setError('Erro ao fazer login. Tente novamente.');
-        }
-        setIsLoading(false);
-        return;
-      }
-
-      if (!data.user || !data.session) {
-        setError('Erro ao fazer login. Tente novamente.');
-        setIsLoading(false);
-        return;
-      }
-
-      console.log('[Login] Login successful, preparing redirect...');
-      setLoginSuccess(true);
+      console.log('[Login] Redirecting to:', destination);
       
       toast({
         title: "Login realizado!",
         description: "Redirecionando...",
       });
       
-      // Wait for session to be fully persisted then redirect
+      // Use timeout to ensure session is persisted
       setTimeout(() => {
-        performRedirect(data.user.id);
-      }, 300);
+        window.location.href = destination;
+      }, 200);
+    } catch (err) {
+      console.error('[Login] Redirect error:', err);
+      // Fallback to onboarding
+      window.location.href = '/onboarding';
+    }
+  };
+
+  const handlePasswordLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pageState === 'logging-in' || pageState === 'redirecting') return;
+    
+    setPageState('logging-in');
+    setError(null);
+
+    try {
+      console.log('[Login] Attempting password login...');
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
+      if (signInError) {
+        console.error('[Login] SignIn error:', signInError.message);
+        if (signInError.message.includes('Invalid login credentials')) {
+          setError('E-mail ou senha incorretos');
+        } else {
+          setError('Erro ao fazer login. Tente novamente.');
+        }
+        setPageState('ready');
+        return;
+      }
+
+      if (!data.user || !data.session) {
+        setError('Erro ao fazer login. Tente novamente.');
+        setPageState('ready');
+        return;
+      }
+
+      console.log('[Login] Login successful, user:', data.user.id);
+      setPageState('redirecting');
+      await redirectAfterLogin(data.user.id);
       
-    } catch (error: any) {
-      console.error('[Login] Unexpected error:', error);
+    } catch (err: any) {
+      console.error('[Login] Unexpected error:', err);
       setError('Erro inesperado. Tente novamente.');
-      setIsLoading(false);
+      setPageState('ready');
     }
   };
 
   const handleMagicLinkLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLoading) return;
+    if (pageState === 'logging-in') return;
     
-    setIsLoading(true);
+    setPageState('logging-in');
     setError(null);
 
     try {
       const { error } = await supabase.auth.signInWithOtp({
-        email,
+        email: email.trim(),
         options: {
           emailRedirectTo: `${window.location.origin}/dashboard`,
         },
@@ -152,33 +165,34 @@ const Login = () => {
       if (error) throw error;
       
       setMagicLinkSent(true);
+      setPageState('ready');
       toast({
         title: "Link enviado!",
         description: "Verifique sua caixa de entrada e clique no link para entrar.",
       });
-    } catch (error: any) {
+    } catch (err: any) {
       setError('Erro ao enviar link. Verifique o e-mail e tente novamente.');
-    } finally {
-      setIsLoading(false);
+      setPageState('ready');
     }
   };
 
   const isPasswordFormValid = email.trim() !== "" && password.trim() !== "";
   const isMagicLinkFormValid = email.trim() !== "" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isLoading = pageState === 'logging-in';
 
-  // Show loading while checking session or after successful login
-  if (checkingSession || loginSuccess) {
+  // Loading states
+  if (pageState === 'checking' || pageState === 'redirecting') {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        {loginSuccess ? (
+        {pageState === 'redirecting' && (
           <>
             <CheckCircle className="w-12 h-12 text-primary" />
             <p className="text-lg font-medium text-foreground">Login realizado!</p>
           </>
-        ) : null}
+        )}
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
         <p className="text-muted-foreground">
-          {loginSuccess ? 'Redirecionando...' : 'Verificando sessão...'}
+          {pageState === 'redirecting' ? 'Redirecionando para o dashboard...' : 'Verificando sessão...'}
         </p>
       </div>
     );
@@ -386,7 +400,7 @@ const Login = () => {
             </form>
           )}
 
-          {/* Forgot Password Link - only show for password login */}
+          {/* Forgot Password Link */}
           {!useMagicLink && (
             <div className="mt-6 text-center">
               <span className="text-muted-foreground text-sm">Esqueceu a senha? </span>
