@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -18,10 +18,10 @@ import { Plus, Trash2, Search, Calculator, RotateCcw, Loader2 } from "lucide-rea
 import { NCMSearchModal } from "./NCMSearchModal";
 import {
   UF_OPTIONS,
-  MUNICIPIOS_PRINCIPAIS,
   CST_OPTIONS,
   UNIDADE_OPTIONS,
 } from "./rtcConstants";
+import { useMunicipios } from "@/hooks/useMunicipios";
 
 // Detecta automaticamente: NCM (8 dígitos para produtos) ou NBS (9 dígitos para serviços)
 const codigoSchema = z.string()
@@ -59,6 +59,10 @@ export function TaxCalculatorForm({ onSubmit, isLoading }: TaxCalculatorFormProp
   const [activeItemIndex, setActiveItemIndex] = useState<number | null>(null);
   const [selectedUf, setSelectedUf] = useState("");
   const [municipioNome, setMunicipioNome] = useState("");
+  const [municipioSearch, setMunicipioSearch] = useState("");
+  
+  // Fetch municipalities dynamically from API
+  const { municipios: allMunicipios, isLoading: municipiosLoading, error: municipiosError } = useMunicipios(selectedUf);
 
   const {
     register,
@@ -99,11 +103,20 @@ export function TaxCalculatorForm({ onSubmit, isLoading }: TaxCalculatorFormProp
       setSelectedUf(watchedUf);
       setValue("municipio", 0);
       setMunicipioNome("");
+      setMunicipioSearch("");
     }
   }, [watchedUf, selectedUf, setValue]);
 
-  const municipios = MUNICIPIOS_PRINCIPAIS[selectedUf] || [];
-
+  // Filter municipalities based on search
+  const filteredMunicipios = useMemo(() => {
+    if (!municipioSearch.trim()) return allMunicipios;
+    const searchLower = municipioSearch.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return allMunicipios.filter(m => 
+      m.nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(searchLower)
+    );
+  }, [allMunicipios, municipioSearch]);
+  // No longer needed - municipios come from useMunicipios hook
+  // const municipios = MUNICIPIOS_PRINCIPAIS[selectedUf] || [];
   const totalBase = watchedItens.reduce(
     (acc, item) => acc + (item.quantidade || 0) * (item.valorUnitario || 0),
     0
@@ -174,27 +187,64 @@ export function TaxCalculatorForm({ onSubmit, isLoading }: TaxCalculatorFormProp
 
             <div className="space-y-2">
               <Label htmlFor="municipio">Município</Label>
-              <Select
-                value={watch("municipio")?.toString() || ""}
-                onValueChange={(value) => {
-                  const codigo = parseInt(value);
-                  setValue("municipio", codigo);
-                  const mun = municipios.find((m) => m.codigo === codigo);
-                  setMunicipioNome(mun?.nome || "");
-                }}
-                disabled={!selectedUf}
-              >
-                <SelectTrigger className="bg-background border-border">
-                  <SelectValue placeholder="Selecione o município" />
-                </SelectTrigger>
-                <SelectContent>
-                  {municipios.map((mun) => (
-                    <SelectItem key={mun.codigo} value={mun.codigo.toString()}>
-                      {mun.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {municipiosLoading ? (
+                <div className="flex items-center gap-2 h-10 px-3 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Carregando municípios...
+                </div>
+              ) : municipiosError ? (
+                <p className="text-sm text-destructive">{municipiosError}</p>
+              ) : (
+                <>
+                  {/* Search input for large municipality lists */}
+                  {allMunicipios.length > 50 && (
+                    <Input
+                      type="text"
+                      placeholder="Filtrar municípios..."
+                      value={municipioSearch}
+                      onChange={(e) => setMunicipioSearch(e.target.value)}
+                      className="mb-2"
+                    />
+                  )}
+                  <Select
+                    value={watch("municipio")?.toString() || ""}
+                    onValueChange={(value) => {
+                      const codigo = parseInt(value);
+                      setValue("municipio", codigo);
+                      const mun = allMunicipios.find((m) => parseInt(m.codigo_ibge) === codigo);
+                      setMunicipioNome(mun?.nome || "");
+                    }}
+                    disabled={!selectedUf || allMunicipios.length === 0}
+                  >
+                    <SelectTrigger className="bg-background border-border">
+                      <SelectValue placeholder={
+                        !selectedUf 
+                          ? "Selecione o estado primeiro" 
+                          : allMunicipios.length === 0 
+                            ? "Nenhum município encontrado" 
+                            : "Selecione o município"
+                      } />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      {filteredMunicipios.slice(0, 100).map((mun) => (
+                        <SelectItem key={mun.codigo_ibge} value={mun.codigo_ibge}>
+                          {mun.nome}
+                        </SelectItem>
+                      ))}
+                      {filteredMunicipios.length > 100 && (
+                        <div className="px-2 py-1 text-xs text-muted-foreground text-center">
+                          Mostrando 100 de {filteredMunicipios.length} - use o filtro acima
+                        </div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  {allMunicipios.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      {allMunicipios.length} municípios disponíveis
+                    </p>
+                  )}
+                </>
+              )}
               {errors.municipio && (
                 <p className="text-sm text-destructive">
                   {errors.municipio.message}
