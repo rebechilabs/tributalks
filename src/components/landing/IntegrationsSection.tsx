@@ -16,12 +16,12 @@ interface ERPItem {
 }
 
 const erpList: ERPItem[] = [
-  { name: "Omie", available: false },
-  { name: "Bling", available: false },
-  { name: "Conta Azul", available: false },
-  { name: "Tiny/Olist", available: false },
-  { name: "Sankhya", available: false },
-  { name: "TOTVS", available: false },
+  { name: "Omie", available: true },
+  { name: "Bling", available: true },
+  { name: "Conta Azul", available: true },
+  { name: "Tiny/Olist", available: true },
+  { name: "Sankhya", available: true },
+  { name: "TOTVS", available: true },
 ];
 
 const syncedData = [
