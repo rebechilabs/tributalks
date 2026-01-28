@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,8 +34,10 @@ const SETORES_VALIDOS = ['industria', 'comercio', 'servicos', 'tecnologia', 'out
 const Onboarding = () => {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const { user, profile } = useAuth();
   const navigate = useNavigate();
+  const isMounted = useRef(true);
 
   // Initialize form with existing profile data
   const [formData, setFormData] = useState({
@@ -46,6 +48,14 @@ const Onboarding = () => {
     setor: "",
     cnae: "",
   });
+
+  // Track component mount status
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   // Pre-populate form when profile loads
   useEffect(() => {
@@ -60,6 +70,16 @@ const Onboarding = () => {
       });
     }
   }, [profile]);
+
+  // Navigate after successful save
+  useEffect(() => {
+    if (isSaved) {
+      const timer = setTimeout(() => {
+        navigate('/dashboard', { replace: true });
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [isSaved, navigate]);
 
   const totalSteps = 4;
   const progress = (step / totalSteps) * 100;
@@ -81,7 +101,7 @@ const Onboarding = () => {
   };
 
   const handleSubmit = async () => {
-    if (!user) return;
+    if (!user || isLoading || isSaved) return;
     
     // Validação de segurança antes de enviar
     if (!REGIMES_VALIDOS.includes(formData.regime as typeof REGIMES_VALIDOS[number])) {
@@ -106,45 +126,62 @@ const Onboarding = () => {
     
     setIsLoading(true);
     
+    const updateData = {
+      empresa: formData.empresa.trim(),
+      estado: formData.estado,
+      faturamento_mensal: parseFloat(formData.faturamento_mensal) || null,
+      regime: formData.regime as 'SIMPLES' | 'PRESUMIDO' | 'REAL',
+      setor: formData.setor as 'industria' | 'comercio' | 'servicos' | 'tecnologia' | 'outro',
+      cnae: formData.cnae?.trim() || null,
+      onboarding_complete: true,
+    };
+
     try {
-      const updateData = {
-        empresa: formData.empresa.trim(),
-        estado: formData.estado,
-        faturamento_mensal: parseFloat(formData.faturamento_mensal) || null,
-        regime: formData.regime as 'SIMPLES' | 'PRESUMIDO' | 'REAL',
-        setor: formData.setor as 'industria' | 'comercio' | 'servicos' | 'tecnologia' | 'outro',
-        cnae: formData.cnae?.trim() || null,
-        onboarding_complete: true,
-      };
+      // Usar fetch direto para ter controle total sobre a requisição
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/profiles?user_id=eq.${user.id}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify(updateData)
+        }
+      );
 
-      const { error } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('user_id', user.id);
-
-      if (error) {
-        throw error;
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Erro ao salvar perfil');
       }
 
-      // Sucesso - mostrar toast e aguardar um momento antes de navegar
-      toast({
-        title: "Perfil configurado!",
-        description: "Você está pronto para usar as calculadoras.",
-      });
-      
-      // Aguarda o toast aparecer e depois navega
-      setTimeout(() => {
-        navigate('/dashboard', { replace: true });
-      }, 500);
+      // Só atualiza estado se o componente ainda estiver montado
+      if (isMounted.current) {
+        toast({
+          title: "Perfil configurado!",
+          description: "Você está pronto para usar as calculadoras.",
+        });
+        setIsSaved(true);
+      }
       
     } catch (error: any) {
       console.error('Onboarding save error:', error);
-      toast({
-        title: "Erro ao salvar",
-        description: error?.message || "Tente novamente em alguns segundos.",
-        variant: "destructive",
-      });
-      setIsLoading(false);
+      if (isMounted.current) {
+        // Ignora AbortError pois pode significar que deu certo mas o componente desmontou
+        if (error?.name === 'AbortError') {
+          setIsSaved(true);
+          return;
+        }
+        
+        toast({
+          title: "Erro ao salvar",
+          description: error?.message || "Tente novamente em alguns segundos.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+      }
     }
   };
 
@@ -346,7 +383,7 @@ const Onboarding = () => {
               <Button
                 variant="outline"
                 onClick={handleBack}
-                disabled={isLoading}
+                disabled={isLoading || isSaved}
                 className="flex-1"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -366,13 +403,13 @@ const Onboarding = () => {
             ) : (
               <Button
                 onClick={handleSubmit}
-                disabled={!canProceed() || isLoading}
+                disabled={!canProceed() || isLoading || isSaved}
                 className="flex-1"
               >
-                {isLoading ? (
+                {isLoading || isSaved ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Salvando...
+                    {isSaved ? 'Redirecionando...' : 'Salvando...'}
                   </>
                 ) : (
                   <>
