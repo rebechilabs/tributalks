@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Check, X, Star, MessageCircle } from "lucide-react";
+import { Check, X, Star, MessageCircle, Crown, Diamond } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { CONFIG } from "@/config/site";
@@ -102,10 +102,11 @@ const plans: Plan[] = [
     features: [
       { text: "Clara AI ilimitada + Suporte prioritário", included: true },
       { text: "Tudo do Professional", included: true },
+      { text: "Atendimento personalizado pela Rebechi & Silva Advogados", included: true },
+      { text: "White Label", included: true, limitText: "Relatórios com sua marca" },
       { text: "Diagnóstico completo por especialista", included: true },
       { text: "Reuniões mensais de acompanhamento", included: true },
       { text: "Implementação guiada", included: true },
-      { text: "Análise personalizada por CNPJ", included: true },
       { text: "Success fee (ganho compartilhado)", included: true },
     ],
     ctaText: "Fale conosco",
@@ -232,27 +233,31 @@ export function PricingSection() {
                 <ul className="space-y-3 mb-6">
                   {plan.features.map((feature) => (
                     <li key={feature.text} className="flex items-start gap-2">
-                      {feature.included === true ? (
+                      {plan.isEnterprise && feature.included === true ? (
+                        <Diamond className="w-5 h-5 text-primary flex-shrink-0" />
+                      ) : feature.included === true ? (
                         <Check className="w-5 h-5 text-success flex-shrink-0" />
                       ) : feature.included === "limited" ? (
                         <Check className="w-5 h-5 text-warning flex-shrink-0" />
                       ) : (
                         <X className="w-5 h-5 text-muted-foreground/50 flex-shrink-0" />
                       )}
-                      <span
-                        className={
-                          feature.included
-                            ? "text-foreground"
-                            : "text-muted-foreground/50"
-                        }
-                      >
-                        {feature.text}
+                      <div className="flex flex-col">
+                        <span
+                          className={
+                            feature.included
+                              ? "text-foreground"
+                              : "text-muted-foreground/50"
+                          }
+                        >
+                          {feature.text}
+                        </span>
                         {feature.limitText && (
-                          <span className="text-xs text-warning ml-1">
-                            ({feature.limitText})
+                          <span className={`text-xs mt-0.5 ${plan.isEnterprise ? "text-muted-foreground" : "text-warning"}`}>
+                            {plan.isEnterprise ? feature.limitText : `(${feature.limitText})`}
                           </span>
                         )}
-                      </span>
+                      </div>
                     </li>
                   ))}
                 </ul>
