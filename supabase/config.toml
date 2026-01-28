@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.erp-sync]
 verify_jwt = false
+
+[functions.erp-auto-sync]
+verify_jwt = false

@@ -207,6 +207,62 @@ export default function Integracoes() {
     },
   });
 
+  // Toggle auto-sync mutation
+  const toggleAutoSyncMutation = useMutation({
+    mutationFn: async ({ connectionId, enabled }: { connectionId: string; enabled: boolean }) => {
+      const { data: connection, error: fetchError } = await supabase
+        .from('erp_connections')
+        .select('sync_config')
+        .eq('id', connectionId)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      if (!connection) throw new Error('Connection not found');
+
+      // Parse sync_config as object
+      const currentConfig = typeof connection.sync_config === 'object' && connection.sync_config !== null
+        ? connection.sync_config as Record<string, unknown>
+        : {};
+
+      const updatedConfig = {
+        ...currentConfig,
+        auto_sync: enabled,
+      };
+
+      // Calculate next_sync_at if enabling
+      const nextSyncAt = enabled 
+        ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+        : null;
+
+      const { error: updateError } = await supabase
+        .from('erp_connections')
+        .update({ 
+          sync_config: updatedConfig,
+          next_sync_at: nextSyncAt,
+        })
+        .eq('id', connectionId);
+
+      if (updateError) throw updateError;
+      return { enabled };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["erp-connections"] });
+      toast({
+        title: data.enabled ? "Sincronização automática ativada" : "Sincronização automática desativada",
+        description: data.enabled 
+          ? "Seus dados serão sincronizados automaticamente a cada 24 horas."
+          : "Você precisará sincronizar manualmente.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao alterar configuração",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleConnectERP = (erpType: string) => {
     setSelectedERP(erpType);
     setWizardOpen(true);
@@ -310,8 +366,9 @@ export default function Integracoes() {
                       erpInfo={ERP_INFO[connection.erp_type]}
                       onDelete={() => deleteMutation.mutate(connection.id)}
                       onSync={() => syncMutation.mutate(connection.id)}
+                      onToggleAutoSync={(enabled) => toggleAutoSyncMutation.mutate({ connectionId: connection.id, enabled })}
                       isDeleting={deleteMutation.isPending}
-                      isSyncing={syncMutation.isPending}
+                      isSyncing={syncMutation.isPending || toggleAutoSyncMutation.isPending}
                     />
                   ))}
                 </div>
