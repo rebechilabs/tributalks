@@ -59,9 +59,9 @@ const features = [
   },
   {
     icon: Target,
-    title: "Radar Tributário",
+    title: "Radar de Créditos + DRE Inteligente",
     description:
-      "Identifique créditos recuperáveis e projete sua exposição fiscal durante a transição.",
+      "Quais são as oportunidades tributárias que você tem em seu arquivo?",
     badge: "Professional",
     badgeVariant: "outline" as const,
   },
