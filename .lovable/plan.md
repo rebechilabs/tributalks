@@ -158,10 +158,10 @@ Quando dados do ERP chegam:
 
 ## Entregáveis por Sprint
 
-### Sprint 1 (Fundação)
-- [ ] Tabelas `erp_connections` e `erp_sync_logs`
-- [ ] Edge Function `erp-connection` (CRUD)
-- [ ] Página `/dashboard/integracoes` (UI básica)
+### Sprint 1 (Fundação) ✅ CONCLUÍDA
+- [x] Tabelas `erp_connections` e `erp_sync_logs`
+- [x] Edge Function `erp-connection` (CRUD)
+- [x] Página `/dashboard/integracoes` (UI completa com wizard)
 
 ### Sprint 2 (Omie)
 - [ ] Adapter Omie completo
