@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.erp-auto-sync]
 verify_jwt = false
+
+[functions.gov-data-api]
+verify_jwt = false

@@ -9,6 +9,8 @@ import { Calculator, ArrowLeft, ArrowRight, Building, DollarSign, FileText, Brie
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { CnpjInput } from "@/components/common/CnpjInput";
+import { CnpjData } from "@/hooks/useCnpjLookup";
 
 const ESTADOS = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 
@@ -41,6 +43,7 @@ const Onboarding = () => {
 
   // Initialize form with existing profile data
   const [formData, setFormData] = useState({
+    cnpj: "",
     empresa: "",
     estado: "",
     faturamento_mensal: "",
@@ -67,6 +70,7 @@ const Onboarding = () => {
       }
       
       setFormData({
+        cnpj: "",
         empresa: profile.empresa || "",
         estado: profile.estado || "",
         faturamento_mensal: profile.faturamento_mensal?.toString() || "",
@@ -94,6 +98,20 @@ const Onboarding = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  // Handle CNPJ data loaded from API
+  const handleCnpjDataLoaded = (data: CnpjData) => {
+    setFormData((prev) => ({
+      ...prev,
+      empresa: data.razao_social || prev.empresa,
+      estado: data.uf || prev.estado,
+      cnae: data.cnae_fiscal ? data.cnae_fiscal.toString() : prev.cnae,
+    }));
+    
+    toast({
+      title: "Dados carregados!",
+      description: `Empresa ${data.razao_social} encontrada.`,
+    });
+  };
   const handleNext = () => {
     if (step < totalSteps) {
       setStep(step + 1);
@@ -248,6 +266,14 @@ const Onboarding = () => {
                   <Building className="w-5 h-5" />
                   <span className="font-semibold">Sua Empresa</span>
                 </div>
+
+                <CnpjInput
+                  value={formData.cnpj}
+                  onChange={(cnpj) => handleChange("cnpj", cnpj)}
+                  onDataLoaded={handleCnpjDataLoaded}
+                  label="CNPJ (opcional - preenche dados automaticamente)"
+                  placeholder="00.000.000/0000-00"
+                />
 
                 <div className="space-y-2">
                   <Label htmlFor="empresa">Nome da empresa</Label>
