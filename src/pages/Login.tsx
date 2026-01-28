@@ -73,8 +73,8 @@ const Login = () => {
       const destination = freshProfile?.onboarding_complete ? '/dashboard' : '/onboarding';
       console.log('[Login] Navigating to:', destination);
       
-      // Navigate directly
-      navigate(destination, { replace: true });
+      // Use full page redirect for more reliable navigation after auth state change
+      window.location.href = destination;
       
     } catch (error: any) {
       console.error('[Login] Unexpected error:', error);
