@@ -17,7 +17,7 @@ const steps = [
     number: "3",
     icon: Trophy,
     title: "Receba seu Score",
-    description: "Diagnóstico fiscal completo",
+    description: "Avaliação fiscal em 5 dimensões",
   },
 ];
 
