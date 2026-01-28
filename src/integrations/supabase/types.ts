@@ -1702,6 +1702,8 @@ export type Database = {
           criterios: Json
           criterios_obrigatorios: Json | null
           criterios_pontuacao: Json | null
+          descricao_lc_224_2025: string | null
+          descricao_reforma: string | null
           description: string | null
           description_ceo: string | null
           destaque: boolean | null
@@ -1712,6 +1714,7 @@ export type Database = {
           economia_tipo: string | null
           exemplo_pratico: string | null
           faq: Json | null
+          futuro_reforma: string | null
           id: string
           is_active: boolean | null
           link_legislacao: string | null
@@ -1724,6 +1727,7 @@ export type Database = {
           requer_sistema: boolean | null
           risco_descricao: string | null
           risco_fiscal: string | null
+          status_lc_224_2025: string | null
           subcategory: string | null
           tempo_implementacao: string | null
           tempo_retorno: string | null
@@ -1743,6 +1747,8 @@ export type Database = {
           criterios?: Json
           criterios_obrigatorios?: Json | null
           criterios_pontuacao?: Json | null
+          descricao_lc_224_2025?: string | null
+          descricao_reforma?: string | null
           description?: string | null
           description_ceo?: string | null
           destaque?: boolean | null
@@ -1753,6 +1759,7 @@ export type Database = {
           economia_tipo?: string | null
           exemplo_pratico?: string | null
           faq?: Json | null
+          futuro_reforma?: string | null
           id?: string
           is_active?: boolean | null
           link_legislacao?: string | null
@@ -1765,6 +1772,7 @@ export type Database = {
           requer_sistema?: boolean | null
           risco_descricao?: string | null
           risco_fiscal?: string | null
+          status_lc_224_2025?: string | null
           subcategory?: string | null
           tempo_implementacao?: string | null
           tempo_retorno?: string | null
@@ -1784,6 +1792,8 @@ export type Database = {
           criterios?: Json
           criterios_obrigatorios?: Json | null
           criterios_pontuacao?: Json | null
+          descricao_lc_224_2025?: string | null
+          descricao_reforma?: string | null
           description?: string | null
           description_ceo?: string | null
           destaque?: boolean | null
@@ -1794,6 +1804,7 @@ export type Database = {
           economia_tipo?: string | null
           exemplo_pratico?: string | null
           faq?: Json | null
+          futuro_reforma?: string | null
           id?: string
           is_active?: boolean | null
           link_legislacao?: string | null
@@ -1806,6 +1817,7 @@ export type Database = {
           requer_sistema?: boolean | null
           risco_descricao?: string | null
           risco_fiscal?: string | null
+          status_lc_224_2025?: string | null
           subcategory?: string | null
           tempo_implementacao?: string | null
           tempo_retorno?: string | null
