@@ -1054,6 +1054,104 @@ export type Database = {
         }
         Relationships: []
       }
+      erp_connections: {
+        Row: {
+          connection_name: string
+          created_at: string
+          credentials: Json
+          erp_type: Database["public"]["Enums"]["erp_type"]
+          id: string
+          last_sync_at: string | null
+          metadata: Json | null
+          next_sync_at: string | null
+          status: Database["public"]["Enums"]["erp_connection_status"]
+          status_message: string | null
+          sync_config: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          connection_name: string
+          created_at?: string
+          credentials?: Json
+          erp_type: Database["public"]["Enums"]["erp_type"]
+          id?: string
+          last_sync_at?: string | null
+          metadata?: Json | null
+          next_sync_at?: string | null
+          status?: Database["public"]["Enums"]["erp_connection_status"]
+          status_message?: string | null
+          sync_config?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          connection_name?: string
+          created_at?: string
+          credentials?: Json
+          erp_type?: Database["public"]["Enums"]["erp_type"]
+          id?: string
+          last_sync_at?: string | null
+          metadata?: Json | null
+          next_sync_at?: string | null
+          status?: Database["public"]["Enums"]["erp_connection_status"]
+          status_message?: string | null
+          sync_config?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      erp_sync_logs: {
+        Row: {
+          completed_at: string | null
+          connection_id: string
+          details: Json | null
+          error_message: string | null
+          id: string
+          records_failed: number | null
+          records_synced: number | null
+          started_at: string
+          status: Database["public"]["Enums"]["erp_sync_status"]
+          sync_type: Database["public"]["Enums"]["erp_sync_type"]
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          connection_id: string
+          details?: Json | null
+          error_message?: string | null
+          id?: string
+          records_failed?: number | null
+          records_synced?: number | null
+          started_at?: string
+          status?: Database["public"]["Enums"]["erp_sync_status"]
+          sync_type: Database["public"]["Enums"]["erp_sync_type"]
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          connection_id?: string
+          details?: Json | null
+          error_message?: string | null
+          id?: string
+          records_failed?: number | null
+          records_synced?: number | null
+          started_at?: string
+          status?: Database["public"]["Enums"]["erp_sync_status"]
+          sync_type?: Database["public"]["Enums"]["erp_sync_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "erp_sync_logs_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "erp_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       executive_report_logs: {
         Row: {
           company_name: string | null
@@ -2199,6 +2297,16 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      erp_connection_status: "active" | "inactive" | "error" | "pending"
+      erp_sync_status: "running" | "success" | "error" | "cancelled"
+      erp_sync_type:
+        | "nfe"
+        | "nfse"
+        | "produtos"
+        | "financeiro"
+        | "empresa"
+        | "full"
+      erp_type: "omie" | "bling" | "contaazul" | "tiny" | "sankhya" | "totvs"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2327,6 +2435,17 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      erp_connection_status: ["active", "inactive", "error", "pending"],
+      erp_sync_status: ["running", "success", "error", "cancelled"],
+      erp_sync_type: [
+        "nfe",
+        "nfse",
+        "produtos",
+        "financeiro",
+        "empresa",
+        "full",
+      ],
+      erp_type: ["omie", "bling", "contaazul", "tiny", "sankhya", "totvs"],
     },
   },
 } as const

@@ -45,6 +45,7 @@ import TimelineReforma from "./pages/TimelineReforma";
 import AnalisadorDocumentos from "./pages/AnalisadorDocumentos";
 import WorkflowsGuiados from "./pages/WorkflowsGuiados";
 import ChecklistReforma from "./pages/ChecklistReforma";
+import Integracoes from "./pages/Integracoes";
 
 // Calculadoras
 import SplitPayment from "./pages/calculadora/SplitPayment";
@@ -299,7 +300,14 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
-
+            <Route 
+              path="/dashboard/integracoes" 
+              element={
+                <ProtectedRoute>
+                  <Integracoes />
+                </ProtectedRoute>
+              } 
+            />
             {/* Admin */}
             <Route 
               path="/admin" 
