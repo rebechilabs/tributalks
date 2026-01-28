@@ -1,9 +1,10 @@
 
-# Plano: Implementar Integrações Completas com ERPs
+
+# Plano: Implementar Sincronização Automática de ERPs
 
 ## Resumo Executivo
 
-Implementar os adapters de sincronização para todos os 6 ERPs suportados (Omie, Bling, Conta Azul, Tiny, Sankhya, TOTVS), criando uma Edge Function `erp-sync` robusta com arquitetura modular que permitirá alimentar automaticamente todas as ferramentas do TribuTalks.
+Criar um sistema de sincronização automática que executa a cada 24 horas para todas as conexões de ERP ativas, sincronizando NF-e, Produtos e Financeiro sem intervenção manual do usuário.
 
 ---
 
@@ -11,296 +12,214 @@ Implementar os adapters de sincronização para todos os 6 ERPs suportados (Omie
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
-│                       erp-sync Edge Function                     │
+│                    Cron Job (pg_cron + pg_net)                   │
+│                    Executa a cada 24 horas                       │
 ├─────────────────────────────────────────────────────────────────┤
-│  Orchestrator Layer                                              │
-│  - Recebe connection_id e módulos a sincronizar                  │
-│  - Gerencia logs e status                                        │
-│  - Dispara triggers pós-sync                                     │
+│                    erp-auto-sync Edge Function                   │
+│  - Busca todas conexões ativas com auto_sync = true              │
+│  - Executa sync para cada uma sequencialmente                    │
+│  - Atualiza next_sync_at após conclusão                          │
 ├─────────────────────────────────────────────────────────────────┤
-│  Adapter Layer (Strategy Pattern)                                │
-│  ┌──────────┬──────────┬────────────┬──────┬─────────┬───────┐  │
-│  │   OMIE   │  BLING   │ CONTA AZUL │ TINY │ SANKHYA │ TOTVS │  │
-│  └──────────┴──────────┴────────────┴──────┴─────────┴───────┘  │
-├─────────────────────────────────────────────────────────────────┤
-│  Unified Data Transformer                                        │
-│  - Normaliza dados para schema TribuTalks                        │
-│  - Valida e sanitiza inputs                                      │
+│                    erp-sync Edge Function                        │
+│  (Reutiliza adapters existentes)                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. Edge Function: `erp-sync`
+## 2. Nova Edge Function: `erp-auto-sync`
 
-### 2.1 Estrutura do Arquivo
+### Objetivo
+Endpoint dedicado para ser chamado pelo cron job, que processa todas as conexões ativas automaticamente.
 
-**Arquivo:** `supabase/functions/erp-sync/index.ts`
+### Fluxo de Execução
+1. Valida que a requisição vem do cron (Bearer token do anon key)
+2. Busca todas as conexões com `status = 'active'` e `sync_config.auto_sync = true`
+3. Para cada conexão:
+   - Cria log de sync com `sync_type = 'auto'`
+   - Chama a lógica do `erp-sync` internamente
+   - Atualiza `last_sync_at` e `next_sync_at`
+   - Trata erros individualmente (falha em uma não afeta outras)
+4. Retorna resumo de execução
 
-**Endpoints:**
-- `POST /` - Executa sincronização manual
-- `GET /?connection_id=xxx` - Status da última sync
+### Estrutura do Arquivo
 
-**Fluxo de Execução:**
-1. Valida autenticação e busca conexão no banco
-2. Seleciona adapter baseado no `erp_type`
-3. Executa módulos configurados (nfe, produtos, financeiro, empresa)
-4. Salva dados normalizados nas tabelas existentes
-5. Atualiza logs e status da conexão
-6. Dispara triggers automáticos (analyze-credits, match-opportunities)
-
----
-
-## 3. Adapters por ERP
-
-### 3.1 Adapter OMIE
-
-**API Base:** `https://app.omie.com.br/api/v1/`
-**Autenticação:** App Key + App Secret em cada requisição
-
-| Módulo | Endpoint Omie | Método API | Tabela Destino |
-|--------|---------------|------------|----------------|
-| Empresa | `/geral/empresas/` | `ListarEmpresas` | `company_profile` |
-| Produtos | `/geral/produtos/` | `ListarProdutos` | `company_ncm_analysis` |
-| NF-e | `/produtos/nfconsultar/` | `ListarNF` | `xml_imports` → `identified_credits` |
-| Contas a Pagar | `/financas/contapagar/` | `ListarContasPagar` | `company_dre` (despesas) |
-| Contas a Receber | `/financas/contareceber/` | `ListarContasReceber` | `company_dre` (receitas) |
-| DRE | `/geral/dre/` | `ListarDRE` | Referência para categorias |
-
-**Estrutura da Requisição Omie:**
-```json
-{
-  "call": "ListarNF",
-  "app_key": "{{app_key}}",
-  "app_secret": "{{app_secret}}",
-  "param": [{
-    "pagina": 1,
-    "registros_por_pagina": 50,
-    "apenas_importado_api": "N"
-  }]
-}
-```
-
----
-
-### 3.2 Adapter BLING
-
-**API Base:** `https://api.bling.com.br/Api/v3/`
-**Autenticação:** Bearer Token (OAuth 2.0)
-
-| Módulo | Endpoint Bling | Método HTTP | Tabela Destino |
-|--------|----------------|-------------|----------------|
-| Empresa | `/empresas` | GET | `company_profile` |
-| Produtos | `/produtos` | GET | `company_ncm_analysis` |
-| NF-e | `/nfe` | GET | `xml_imports` → `identified_credits` |
-| Contas a Pagar | `/contas/pagar` | GET | `company_dre` (despesas) |
-| Contas a Receber | `/contas/receber` | GET | `company_dre` (receitas) |
-
-**Headers Bling:**
-```javascript
-headers: {
-  "Authorization": "Bearer {{access_token}}",
-  "Accept": "application/json"
-}
-```
-
----
-
-### 3.3 Adapter CONTA AZUL
-
-**API Base:** `https://api.contaazul.com/v1/`
-**Autenticação:** OAuth 2.0 (Client ID + Secret + Access Token)
-
-| Módulo | Endpoint | Método HTTP | Tabela Destino |
-|--------|----------|-------------|----------------|
-| Empresa | `/companies` | GET | `company_profile` |
-| Produtos | `/products` | GET | `company_ncm_analysis` |
-| Vendas | `/sales` | GET | `company_dre` |
-| Compras | `/purchases` | GET | `company_dre` |
-
----
-
-### 3.4 Adapter TINY
-
-**API Base:** `https://api.tiny.com.br/api2/`
-**Autenticação:** Token API em query string
-
-| Módulo | Endpoint | Tabela Destino |
-|--------|----------|----------------|
-| Produtos | `produtos.pesquisa.php` | `company_ncm_analysis` |
-| Notas Fiscais | `notas.fiscais.pesquisa.php` | `xml_imports` |
-| Pedidos | `pedidos.pesquisa.php` | Referência |
-| Contas a Pagar | `contas.pagar.pesquisa.php` | `company_dre` |
-| Contas a Receber | `contas.receber.pesquisa.php` | `company_dre` |
-
-**Formato Tiny:**
-```
-GET /api2/produtos.pesquisa.php?token={{token}}&formato=json&pesquisa=
-```
-
----
-
-### 3.5 Adapter SANKHYA
-
-**API Base:** `https://api.sankhya.com.br/gateway/v1/`
-**Autenticação:** App Key + Sankhya ID + Token
-
-| Módulo | Endpoint | Tabela Destino |
-|--------|----------|----------------|
-| Empresa | `/mge/service.sbr?serviceName=CRUDServiceProvider.loadRecords&entityName=Empresa` | `company_profile` |
-| Produtos | `/mge/service.sbr?serviceName=CRUDServiceProvider.loadRecords&entityName=Produto` | `company_ncm_analysis` |
-| NF-e | `/mge/service.sbr?serviceName=SelecaoDocumentoSP.consultarDocumentos` | `xml_imports` |
-| Financeiro | `/mge/service.sbr?serviceName=CRUDServiceProvider.loadRecords&entityName=MovimentacaoFinanceira` | `company_dre` |
-
----
-
-### 3.6 Adapter TOTVS
-
-**API Base:** Variável por produto (Protheus, RM, Datasul)
-**Autenticação:** Username + Password (Basic Auth ou API Key)
-
-| Módulo | Endpoint Protheus | Tabela Destino |
-|--------|-------------------|----------------|
-| Empresa | `api/framework/v1/environment` | `company_profile` |
-| Produtos | `api/retaguarda/v1/products` | `company_ncm_analysis` |
-| NF-e | `api/fiscal/v1/invoices` | `xml_imports` |
-| Financeiro | `api/financeiro/v1/movements` | `company_dre` |
-
----
-
-## 4. Transformação de Dados
-
-### 4.1 Schema Unificado para Produtos/NCM
+**Arquivo:** `supabase/functions/erp-auto-sync/index.ts`
 
 ```typescript
-interface UnifiedProduct {
-  ncm_code: string;          // NCM de 8 dígitos
-  product_name: string;      // Descrição do produto
-  cfops_frequentes: string[]; // CFOPs mais usados
-  tipo_operacao: string;     // entrada | saida | misto
-  qtd_operacoes: number;     // Quantidade de operações
-  revenue_percentage: number; // % do faturamento
-}
+// Pseudo-código do fluxo
+Deno.serve(async (req) => {
+  // 1. Buscar conexões ativas
+  const { data: connections } = await supabase
+    .from('erp_connections')
+    .select('*')
+    .eq('status', 'active')
+    .filter('sync_config->>auto_sync', 'eq', 'true');
+
+  const results = [];
+  
+  for (const connection of connections) {
+    try {
+      // 2. Executar sync
+      const result = await syncConnection(connection);
+      
+      // 3. Atualizar timestamps
+      await supabase
+        .from('erp_connections')
+        .update({
+          last_sync_at: new Date().toISOString(),
+          next_sync_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        })
+        .eq('id', connection.id);
+      
+      results.push({ id: connection.id, success: true });
+    } catch (error) {
+      results.push({ id: connection.id, success: false, error: error.message });
+    }
+  }
+
+  return Response.json({ processed: results.length, results });
+});
 ```
 
-### 4.2 Schema Unificado para DRE
+---
+
+## 3. Configurar Cron Job no Supabase
+
+### Extensões Necessárias
+- `pg_cron` - Para agendar jobs
+- `pg_net` - Para fazer requisições HTTP
+
+### SQL para Criar o Cron Job
+
+```sql
+-- Habilitar extensões (se necessário)
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+CREATE EXTENSION IF NOT EXISTS pg_net;
+
+-- Criar cron job para rodar a cada 24 horas (meia-noite)
+SELECT cron.schedule(
+  'erp-auto-sync-daily',
+  '0 0 * * *',  -- Todos os dias à meia-noite UTC (21h Brasília)
+  $$
+  SELECT
+    net.http_post(
+      url := 'https://rhhzsmupixdhurricppk.supabase.co/functions/v1/erp-auto-sync',
+      headers := '{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoaHpzbXVwaXhkaHVycmljcHBrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkxOTQxMjMsImV4cCI6MjA4NDc3MDEyM30.YNT52SQJMynb9Lf9i_Tv74Wau5OJ7nPleJQpxV3901o"}'::jsonb,
+      body := '{"source": "cron"}'::jsonb
+    ) AS request_id;
+  $$
+);
+```
+
+---
+
+## 4. Atualizar UI para Mostrar Status de Auto-Sync
+
+### Modificações no `ERPConnectionCard.tsx`
+
+**Adicionar indicador visual:**
+- Badge mostrando se auto-sync está ativo
+- Próxima sincronização agendada (`next_sync_at`)
+- Checkbox para ativar/desativar auto-sync
 
 ```typescript
-interface UnifiedFinancial {
-  tipo: 'receita' | 'despesa';
-  categoria: string;
-  valor: number;
-  data: string;
-  descricao: string;
-}
+// Exemplo de UI
+{connection.sync_config.auto_sync && (
+  <Badge variant="outline" className="gap-1">
+    <Clock className="h-3 w-3" />
+    Próxima: {formatNextSync(connection.next_sync_at)}
+  </Badge>
+)}
 ```
 
 ---
 
-## 5. Triggers Automáticos Pós-Sync
-
-Após cada sincronização bem-sucedida:
-
-1. **Módulo NF-e:**
-   - Dispara `analyze-credits` para identificar créditos
-   - Atualiza `identified_credits`
-
-2. **Módulo Produtos:**
-   - Dispara `analyze-ncm-from-xmls` para classificação tributária
-   - Atualiza `company_ncm_analysis`
-
-3. **Módulo Financeiro:**
-   - Recalcula DRE automático
-   - Dispara `calculate-tax-score` para atualizar Score
-
-4. **Módulo Empresa:**
-   - Atualiza `company_profile`
-   - Dispara `match-opportunities` para novas oportunidades
-
----
-
-## 6. Arquivos a Criar/Modificar
+## 5. Arquivos a Criar/Modificar
 
 | Arquivo | Ação | Descrição |
 |---------|------|-----------|
-| `supabase/functions/erp-sync/index.ts` | CRIAR | Edge function principal |
-| `supabase/config.toml` | MODIFICAR | Adicionar config do erp-sync |
-| `src/components/integrations/ERPConnectionCard.tsx` | MODIFICAR | Adicionar botão "Sincronizar Agora" |
-| `src/pages/Integracoes.tsx` | MODIFICAR | Adicionar funcionalidade de sync manual |
-| `src/components/landing/IntegrationsSection.tsx` | MODIFICAR | Marcar ERPs como disponíveis após implementação |
+| `supabase/functions/erp-auto-sync/index.ts` | CRIAR | Edge function para sincronização automática |
+| `supabase/config.toml` | MODIFICAR | Adicionar config do erp-auto-sync |
+| `src/components/integrations/ERPConnectionCard.tsx` | MODIFICAR | Mostrar status de auto-sync e próxima execução |
+| SQL (via insert tool) | EXECUTAR | Criar cron job no pg_cron |
 
 ---
 
-## 7. Configuração de Rate Limiting
+## 6. Tratamento de Erros
 
-| ERP | Limite | Estratégia |
-|-----|--------|------------|
-| Omie | 60 req/min | Delay entre páginas |
-| Bling | 3 req/seg | Throttle com intervalo |
-| Conta Azul | 100 req/min | Batch requests |
-| Tiny | 30 req/min | Queue com delay |
-| Sankhya | Sem limite documentado | Monitorar erros 429 |
-| TOTVS | Variável | Respeitar X-Rate-Limit header |
+**Erros são isolados por conexão:**
+- Se a conexão A falhar, a B e C continuam
+- Cada erro é logado em `erp_sync_logs`
+- Status da conexão é atualizado para `error` se falhar
+- E-mail de alerta pode ser enviado (futuro)
 
----
-
-## 8. Tratamento de Erros
-
-```typescript
-interface SyncError {
-  code: string;
-  message: string;
-  retryable: boolean;
-  module: string;
-}
-
-// Erros comuns e ações
-const ERROR_HANDLERS = {
-  'AUTH_FAILED': { retryable: false, action: 'Verificar credenciais' },
-  'RATE_LIMITED': { retryable: true, action: 'Aguardar e tentar novamente' },
-  'NETWORK_ERROR': { retryable: true, action: 'Retry com backoff' },
-  'INVALID_DATA': { retryable: false, action: 'Log e pular registro' },
-};
-```
+**Retry automático:**
+- Se falhar, tenta novamente na próxima execução (24h)
+- Erros de autenticação marcam conexão como `error` para revisão manual
 
 ---
 
-## 9. Fluxo de Implementação
+## 7. Segurança
 
-```text
-Fase 1 (Este PR):
-├── Criar erp-sync Edge Function
-├── Implementar Adapter Omie (completo)
-├── Implementar Adapter Bling (completo)
-├── Implementar Adapter Tiny (completo)
-├── Implementar Adapter Conta Azul (completo)
-├── Implementar Adapter Sankhya (básico)
-├── Implementar Adapter TOTVS (básico)
-├── Adicionar botão Sync na UI
-└── Atualizar LP com ERPs disponíveis
-
-Fase 2 (Futuro):
-├── Webhooks para Bling e Tiny
-├── Sincronização automática agendada
-└── Dashboard de monitoramento avançado
-```
+- Cron job usa anon key (não expõe service role)
+- Edge function valida origem da requisição
+- Credenciais nunca são expostas em logs
+- Rate limiting respeitado por adapter
 
 ---
 
-## 10. Segurança
+## 8. Monitoramento
 
-- Credenciais armazenadas criptografadas no campo `credentials` (JSONB)
-- Validação de credenciais antes de salvar
-- Logs de auditoria em `erp_sync_logs`
-- RLS garantindo isolamento por usuário
-- Sem exposição de tokens em logs
+**Campos já existentes na tabela `erp_connections`:**
+- `last_sync_at` - Última sincronização
+- `next_sync_at` - Próxima sincronização agendada
+- `status` - active/inactive/error
+- `status_message` - Mensagem de erro se houver
+
+**Logs detalhados em `erp_sync_logs`:**
+- `sync_type` = 'auto' para diferenciar de manual
+- `started_at`, `completed_at`
+- `records_synced`, `records_failed`
 
 ---
 
 ## Entregáveis
 
-1. **Edge Function `erp-sync`** com 6 adapters completos
-2. **UI atualizada** com botão de sincronização manual
-3. **Landing Page** atualizada com ERPs disponíveis
-4. **Logs detalhados** de cada sincronização
-5. **Triggers automáticos** para análises pós-sync
+1. **Edge Function `erp-auto-sync`** - Orquestrador de sincronização automática
+2. **Cron Job configurado** - Execução diária à meia-noite
+3. **UI atualizada** - Indicadores visuais de auto-sync e próxima execução
+4. **Logs de auditoria** - Distinção entre sync manual e automático
+
+---
+
+## Cronograma de Sincronização
+
+| Horário (UTC) | Horário (Brasília) | Ação |
+|---------------|---------------------|------|
+| 00:00 | 21:00 | Execução do cron job |
+| 00:01-00:30 | 21:01-21:30 | Processamento das conexões |
+| Após sync | - | `next_sync_at` = T+24h |
+
+---
+
+## Dados Sincronizados
+
+Para cada conexão ativa, o sync automático processa:
+
+1. **NF-e** (últimos 90 dias)
+   - Importa para `xml_imports`
+   - Dispara `analyze-credits`
+
+2. **Produtos/NCM**
+   - Atualiza `company_ncm_analysis`
+   - Dispara `analyze-ncm-from-xmls`
+
+3. **Financeiro (DRE)**
+   - Atualiza `company_dre`
+   - Dispara `calculate-tax-score`
+
+4. **Perfil da Empresa**
+   - Atualiza `company_profile`
+   - Dispara `match-opportunities`
+
