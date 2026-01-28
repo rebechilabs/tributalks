@@ -1,8 +1,5 @@
 project_id = "rhhzsmupixdhurricppk"
 
-[functions.tributbot-chat]
-verify_jwt = false
-
 [functions.stripe-webhook]
 verify_jwt = false
 

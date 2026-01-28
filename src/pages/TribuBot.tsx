@@ -104,7 +104,7 @@ Como posso te ajudar hoje?`,
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
-      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tributbot-chat`, {
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/clara-assistant`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
