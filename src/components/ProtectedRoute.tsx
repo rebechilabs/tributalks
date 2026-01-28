@@ -15,17 +15,17 @@ export const ProtectedRoute = ({ children, requireOnboarding = true }: Protected
   const [authState, setAuthState] = useState<AuthState>('loading');
 
   useEffect(() => {
-    let mounted = true;
+    let cancelled = false;
 
     const checkAuth = async () => {
       try {
-        console.log('[ProtectedRoute] Checking auth...');
+        console.log('[ProtectedRoute] Checking auth for:', location.pathname);
         const { data: { session } } = await supabase.auth.getSession();
         
-        if (!mounted) return;
+        if (cancelled) return;
         
         if (!session?.user) {
-          console.log('[ProtectedRoute] No session, unauthenticated');
+          console.log('[ProtectedRoute] No session found');
           setAuthState('unauthenticated');
           return;
         }
@@ -39,39 +39,46 @@ export const ProtectedRoute = ({ children, requireOnboarding = true }: Protected
         }
 
         // Check onboarding status
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
           .from('profiles')
           .select('onboarding_complete')
           .eq('user_id', session.user.id)
           .maybeSingle();
 
-        if (!mounted) return;
+        if (cancelled) return;
 
-        console.log('[ProtectedRoute] Profile check:', profile?.onboarding_complete);
+        if (error) {
+          console.error('[ProtectedRoute] Profile error:', error);
+          setAuthState('authenticated'); // Allow access if profile check fails
+          return;
+        }
+
+        console.log('[ProtectedRoute] Profile:', profile);
 
         if (!profile?.onboarding_complete && location.pathname !== '/onboarding') {
+          console.log('[ProtectedRoute] Needs onboarding');
           setAuthState('needs-onboarding');
         } else {
           setAuthState('authenticated');
         }
       } catch (error) {
         console.error('[ProtectedRoute] Error:', error);
-        if (mounted) setAuthState('unauthenticated');
+        if (!cancelled) setAuthState('unauthenticated');
       }
     };
 
     checkAuth();
 
-    // Timeout safety
+    // Safety timeout
     const timeout = setTimeout(() => {
-      if (mounted && authState === 'loading') {
-        console.warn('[ProtectedRoute] Force completing after timeout');
+      if (!cancelled && authState === 'loading') {
+        console.warn('[ProtectedRoute] Timeout - forcing auth check');
         setAuthState('unauthenticated');
       }
     }, 5000);
 
     return () => {
-      mounted = false;
+      cancelled = true;
       clearTimeout(timeout);
     };
   }, [requireOnboarding, location.pathname]);
@@ -80,18 +87,23 @@ export const ProtectedRoute = ({ children, requireOnboarding = true }: Protected
   if (authState === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Verificando acesso...</p>
+        </div>
       </div>
     );
   }
 
   // Not authenticated
   if (authState === 'unauthenticated') {
+    console.log('[ProtectedRoute] Redirecting to login');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Redirect to onboarding if needed
   if (authState === 'needs-onboarding') {
+    console.log('[ProtectedRoute] Redirecting to onboarding');
     return <Navigate to="/onboarding" replace />;
   }
 
