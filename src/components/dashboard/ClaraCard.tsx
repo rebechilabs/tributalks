@@ -19,9 +19,14 @@ export function ClaraCard({ onOpenChat }: ClaraCardProps) {
   const [hoveredQuestion, setHoveredQuestion] = useState<string | null>(null);
 
   const handleQuestionClick = (question: string) => {
-    // Dispatch custom event to open Clara with a specific question
     window.dispatchEvent(new CustomEvent('openClaraWithQuestion', { 
       detail: { question } 
+    }));
+  };
+
+  const handleGettingStarted = () => {
+    window.dispatchEvent(new CustomEvent('openClaraWithWelcome', { 
+      detail: { type: 'getting-started' } 
     }));
   };
 
@@ -30,42 +35,53 @@ export function ClaraCard({ onOpenChat }: ClaraCardProps) {
       {/* Decorative gradient */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
       
-      <CardHeader className="pb-4">
+      <CardHeader className="pb-3">
         <div className="flex items-start gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shrink-0 shadow-lg shadow-primary/20">
-            <Sparkles className="w-7 h-7 text-primary-foreground" />
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shrink-0 shadow-lg shadow-primary/20">
+            <Sparkles className="w-6 h-6 sm:w-7 sm:h-7 text-primary-foreground" />
           </div>
-          <div className="flex-1">
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-0.5">
               TribuChat
             </p>
-            <CardTitle className="text-xl flex items-center gap-2">
+            <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
               Clara
               <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
                 IA
               </span>
             </CardTitle>
-            <CardDescription className="text-sm mt-1">
-              Sua consultora especializada em Reforma Tributária. Tire qualquer dúvida!
+            <CardDescription className="text-sm mt-0.5">
+              Sua consultora especializada em Reforma Tributária
             </CardDescription>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 pt-0">
+        {/* Primary CTA - Por onde começo */}
+        <Button 
+          onClick={handleGettingStarted} 
+          className="w-full gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md hover:shadow-lg transition-all group"
+          size="lg"
+        >
+          <Sparkles className="w-4 h-4" />
+          Por onde eu começo?
+          <ArrowRight className="w-4 h-4 ml-auto group-hover:translate-x-1 transition-transform" />
+        </Button>
+
         {/* Quick questions */}
         <div>
-          <p className="text-xs text-muted-foreground mb-3 font-medium uppercase tracking-wide">
-            Perguntas frequentes
+          <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wide">
+            Ou pergunte diretamente
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             {QUICK_QUESTIONS.map((q) => (
               <button
                 key={q.id}
                 onClick={() => handleQuestionClick(q.question)}
                 onMouseEnter={() => setHoveredQuestion(q.id)}
                 onMouseLeave={() => setHoveredQuestion(null)}
-                className={`text-sm px-3 py-1.5 rounded-full border transition-all ${
+                className={`text-xs sm:text-sm px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border transition-all ${
                   hoveredQuestion === q.id
                     ? "bg-primary text-primary-foreground border-primary"
                     : "bg-background border-border hover:border-primary/50"
@@ -77,14 +93,14 @@ export function ClaraCard({ onOpenChat }: ClaraCardProps) {
           </div>
         </div>
 
-        {/* CTA Button */}
+        {/* Secondary CTA - Chat direto */}
         <Button 
           onClick={onOpenChat} 
-          className="w-full gap-2 mt-2"
-          size="lg"
+          variant="outline"
+          className="w-full gap-2 border-primary/30 hover:bg-primary/5"
         >
           <MessageCircle className="w-4 h-4" />
-          Conversar com a Clara
+          Abrir chat livre
           <ArrowRight className="w-4 h-4 ml-auto" />
         </Button>
       </CardContent>

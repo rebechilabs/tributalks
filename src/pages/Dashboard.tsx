@@ -284,26 +284,9 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* TribuChat - Clara Card */}
-        <div className="mb-6">
-          <ClaraCard />
-        </div>
-
-        {/* Getting Started CTA - Opens Clara with personalized welcome */}
+        {/* TribuChat - Clara Card (integra o CTA "Por onde começo") */}
         <div className="mb-8">
-          <Button 
-            size="lg" 
-            className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground font-semibold py-6 text-lg shadow-lg hover:shadow-xl transition-all group"
-            onClick={() => {
-              window.dispatchEvent(new CustomEvent('openClaraWithWelcome', { 
-                detail: { type: 'getting-started' } 
-              }));
-            }}
-          >
-            <Sparkles className="w-5 h-5 mr-2" />
-            Por onde eu começo?
-            <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-          </Button>
+          <ClaraCard />
         </div>
 
         {/* GPS DA REFORMA - Section right after Clara */}
