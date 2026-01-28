@@ -276,7 +276,7 @@ export function TributechPitchPdf() {
       { name: "process-xml-batch", desc: "Parsing em lote de NF-e, NFS-e e CT-e" },
       { name: "analyze-credits", desc: "Identificação de créditos tributários não aproveitados" },
       { name: "analyze-ncm-from-xmls", desc: "Classificação de NCMs para adequação à reforma" },
-      { name: "tributbot-chat", desc: "Chat com IA tributária (Gemini) com contexto personalizado" },
+      { name: "clara-assistant", desc: "Chat com IA tributária (Gemini) com contexto personalizado" },
       { name: "process-news", desc: "Processamento de notícias com extração de insights por IA" },
       { name: "fetch-news", desc: "Coleta automatizada de fontes de notícias tributárias" },
       { name: "send-news-alerts", desc: "Envio de alertas de notícias por email" },

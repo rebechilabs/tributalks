@@ -29,7 +29,6 @@ import Perfil from "./pages/Perfil";
 import Historico from "./pages/Historico";
 import TribuBot from "./pages/TribuBot";
 import Comunidade from "./pages/Comunidade";
-import Consultorias from "./pages/Consultorias";
 import Configuracoes from "./pages/Configuracoes";
 import NoticiasReforma from "./pages/NoticiasReforma";
 import AdminNoticias from "./pages/AdminNoticias";
@@ -156,14 +155,6 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Comunidade />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/consultorias" 
-              element={
-                <ProtectedRoute>
-                  <Consultorias />
                 </ProtectedRoute>
               } 
             />
