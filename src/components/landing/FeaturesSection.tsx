@@ -59,7 +59,7 @@ const features = [
   },
   {
     icon: Target,
-    title: "Radar de Créditos + DRE Inteligente",
+    title: "Radar Tributário: Créditos + IA preditiva",
     description:
       "Quais são as oportunidades tributárias que você tem em seu arquivo?",
     badge: "Professional",
