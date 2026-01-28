@@ -55,7 +55,7 @@ const plans: Plan[] = [
     priceAnnual: 6970,
     cnpjLimit: "1 CNPJ",
     features: [
-      { text: "TribuBot (IA 24/7)", included: "limited", limitText: "10 msgs/dia" },
+      { text: "Clara AI (Copiloto)", included: "limited", limitText: "10 msgs/dia" },
       { text: "Score Tributário", included: true },
       { text: "Simulador Split Payment", included: true },
       { text: "Comparativo de Regimes", included: true },
@@ -77,7 +77,7 @@ const plans: Plan[] = [
     popular: true,
     cnpjLimit: "3 CNPJs",
     features: [
-      { text: "TribuBot ilimitado + Comunidade", included: true },
+      { text: "Clara AI ilimitada + Comunidade", included: true },
       { text: "Tudo do Navigator", included: true },
       { text: "4 Workflows Guiados:", included: true },
       { text: "  1. Diagnóstico Tributário Completo", included: true },
@@ -100,7 +100,7 @@ const plans: Plan[] = [
     isEnterprise: true,
     cnpjLimit: "Ilimitado",
     features: [
-      { text: "TribuBot ilimitado + Suporte prioritário", included: true },
+      { text: "Clara AI ilimitada + Suporte prioritário", included: true },
       { text: "Tudo do Professional", included: true },
       { text: "Diagnóstico completo por especialista", included: true },
       { text: "Reuniões mensais de acompanhamento", included: true },

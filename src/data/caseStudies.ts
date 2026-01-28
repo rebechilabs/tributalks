@@ -167,19 +167,19 @@ A empresa recuperou R$ 234.000 em créditos de energia e agora tem clareza total
     sector: "Tecnologia",
     sectorIcon: "Code",
     challenge: "Startup de software B2B com crescimento de 200% ao ano precisava entender a tributação de serviços digitais e preparar-se para a Reforma Tributária.",
-    solution: "Utilizamos o TribuBot para consultoria contínua e o Score Tributário para estabelecer uma baseline de saúde fiscal desde o início.",
+    solution: "Utilizamos a Clara AI para consultoria contínua e o Score Tributário para estabelecer uma baseline de saúde fiscal desde o início.",
     results: [
-      { metric: "Consultas Resolvidas", value: "127", description: "Dúvidas respondidas pelo TribuBot em 6 meses" },
+      { metric: "Consultas Resolvidas", value: "127", description: "Dúvidas respondidas pela Clara AI em 6 meses" },
       { metric: "Economia Identificada", value: "R$ 45.000/ano", description: "Com estruturação correta desde o início" },
       { metric: "Score Inicial", value: "B+", description: "Startup já nasce com boa saúde fiscal" },
     ],
     testimonial: {
-      quote: "Como founders técnicos, não entendíamos nada de tributação. O TribuBot virou nosso 'contador virtual' disponível 24/7.",
+      quote: "Como founders técnicos, não entendíamos nada de tributação. A Clara AI virou nosso 'contador virtual' disponível 24/7.",
       author: "Marina Costa",
       role: "CEO & Co-founder",
     },
     timeline: "Implementação contínua desde o mês 1",
-    toolsUsed: ["TribuBot", "Score Tributário", "Comparativo de Regimes", "Timeline 2026-2033"],
+    toolsUsed: ["Clara AI", "Score Tributário", "Comparativo de Regimes", "Timeline 2026-2033"],
     fullStory: `A TechFlow é uma startup de software B2B que oferece soluções de automação para empresas de médio porte, fundada em 2023 por dois engenheiros.
 
 **O Desafio**
@@ -188,7 +188,7 @@ Como founders sem background em gestão, Marina e seu sócio não entendiam as c
 
 **A Descoberta**
 
-O TribuBot ajudou a esclarecer:
+A Clara AI ajudou a esclarecer:
 - Como funciona a tributação de SaaS (ISS vs ICMS)
 - Quando faz sentido sair do Simples Nacional
 - Impactos específicos da Reforma Tributária para serviços digitais
@@ -197,7 +197,7 @@ O TribuBot ajudou a esclarecer:
 
 1. Setup inicial do Score Tributário para baseline
 2. Configuração de alertas de legislação relevante
-3. Acesso ilimitado ao TribuBot para dúvidas operacionais
+3. Acesso ilimitado à Clara AI para dúvidas operacionais
 4. Monitoramento via Timeline 2026-2033
 
 **Os Resultados**

@@ -406,7 +406,7 @@ const Perfil = () => {
                     Esta ação é <strong>irreversível</strong>. Todos os seus dados, incluindo:
                     <ul className="list-disc list-inside mt-2 space-y-1">
                       <li>Histórico de simulações</li>
-                      <li>Conversas com o TribuBot</li>
+                      <li>Conversas com a Clara AI</li>
                       <li>Configurações do perfil</li>
                     </ul>
                     <p className="mt-3">Serão permanentemente excluídos.</p>

@@ -101,9 +101,9 @@ const TOOL_CONTEXTS: Record<string, ToolContext> = {
       "Acompanhe o status de cada uma"
     ]
   },
-  "tribubot": {
-    toolName: "TribuBot",
-    toolDescription: "assistente de IA para dúvidas tributárias",
+  "clara": {
+    toolName: "Clara AI",
+    toolDescription: "copiloto de decisão tributária",
     stepByStep: [
       "Digite sua pergunta sobre tributação",
       "Aguarde a resposta personalizada",
@@ -441,7 +441,7 @@ Quer começar pela Timeline ou prefere ir direto ao Score Tributário?`,
 *Tempo estimado: 45 minutos | Resultado: Projeção de impacto financeiro*
 
 **FASE 4 - Tire Dúvidas Específicas**
-- **TribuBot (10 msgs/dia)** - Use a IA para esclarecer dúvidas específicas
+- **Clara AI (10 msgs/dia)** - Use a IA para esclarecer dúvidas específicas
 
 💡 **Minha recomendação de início:**
 Dedique 1 hora para completar:
@@ -485,7 +485,7 @@ Cálculo preciso com base nos seus XMLs reais de compra e venda.
 ✅ DRE Inteligente
 ✅ 37+ Oportunidades Fiscais
 ✅ Relatórios PDF Profissionais
-✅ TribuBot ilimitado + Comunidade
+✅ Clara AI ilimitada + Comunidade
 ✅ Alertas por Email
 
 💡 **Quick Start Recomendado (90 minutos):**
@@ -532,7 +532,7 @@ Por qual Workflow quer começar?`,
 - Todos os 4 Workflows Guiados (versão completa)
 - Importador de XMLs, Radar de Créditos, DRE Inteligente
 - 37+ Oportunidades Fiscais mapeadas
-- TribuBot ilimitado + Comunidade
+- Clara AI ilimitada + Comunidade
 - Relatórios PDF Profissionais
 
 🏆 **EXCLUSIVIDADES ENTERPRISE:**

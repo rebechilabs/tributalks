@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { 
-  Calculator, Wallet, Scale, FileText, Bot, Users, Calendar, 
+  Calculator, Wallet, Scale, FileText, Users, Calendar, 
   Lock, ArrowRight, Clock, Sparkles, Upload, Target, BarChart3,
   Trophy, Lightbulb, Newspaper
 } from "lucide-react";
@@ -135,13 +135,13 @@ const toolGroups: ToolGroup[] = [
   },
   {
     title: 'IA e Suporte',
-    icon: Bot,
+    icon: Sparkles,
     items: [
       { 
-        name: 'TribuBot', 
-        description: 'Assistente de IA tributária',
+        name: 'Clara AI', 
+        description: 'Copiloto de decisão tributária',
         href: '/tribubot', 
-        icon: Bot,
+        icon: Sparkles,
         badge: 'IA',
         requiredPlan: 'NAVIGATOR'
       },
