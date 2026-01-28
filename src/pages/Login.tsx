@@ -2,79 +2,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Loader2, Eye, EyeOff, Mail, KeyRound, CheckCircle } from "lucide-react";
-import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import logoTributech from "@/assets/logo-tributech.png";
 
-type PageState = 'checking' | 'ready' | 'logging-in' | 'redirecting';
+type PageState = 'ready' | 'logging-in' | 'redirecting';
 
 const Login = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [useMagicLink, setUseMagicLink] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
-  const [pageState, setPageState] = useState<PageState>('checking');
+  const [pageState, setPageState] = useState<PageState>('ready');
 
-  // Check if user is already logged in on mount
-  useEffect(() => {
-    let cancelled = false;
-
-    const checkSession = async () => {
-      try {
-        console.log('[Login] Checking existing session...');
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (cancelled) return;
-        
-        if (session?.user) {
-          console.log('[Login] Session found, user:', session.user.id);
-          setPageState('redirecting');
-          
-          // Check profile for onboarding status
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('onboarding_complete')
-            .eq('user_id', session.user.id)
-            .maybeSingle();
-          
-          if (cancelled) return;
-          
-          const destination = profile?.onboarding_complete ? '/dashboard' : '/onboarding';
-          console.log('[Login] Redirecting existing user to:', destination);
-          
-          // Force redirect with slight delay
-          setTimeout(() => {
-            window.location.href = destination;
-          }, 100);
-        } else {
-          console.log('[Login] No session, showing login form');
-          setPageState('ready');
-        }
-      } catch (err) {
-        console.error('[Login] Session check error:', err);
-        if (!cancelled) setPageState('ready');
-      }
-    };
-
-    checkSession();
-
-    // Safety timeout
-    const timeout = setTimeout(() => {
-      if (!cancelled && pageState === 'checking') {
-        console.log('[Login] Timeout, showing form');
-        setPageState('ready');
-      }
-    }, 3000);
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timeout);
-    };
-  }, []);
+  // A verificação de sessão existente é feita pelo PublicRoute
+  // Login.tsx apenas lida com o formulário de login
 
   const redirectAfterLogin = async (userId: string) => {
     console.log('[Login] Getting profile for redirect...');
@@ -94,14 +41,11 @@ const Login = () => {
         description: "Redirecionando...",
       });
       
-      // Use timeout to ensure session is persisted
-      setTimeout(() => {
-        window.location.href = destination;
-      }, 200);
+      // Usa React Router para navegação SPA (sem reload de página)
+      navigate(destination, { replace: true });
     } catch (err) {
       console.error('[Login] Redirect error:', err);
-      // Fallback to onboarding
-      window.location.href = '/onboarding';
+      navigate('/onboarding', { replace: true });
     }
   };
 
@@ -180,20 +124,14 @@ const Login = () => {
   const isMagicLinkFormValid = email.trim() !== "" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const isLoading = pageState === 'logging-in';
 
-  // Loading states
-  if (pageState === 'checking' || pageState === 'redirecting') {
+  // Estado de redirecionamento após login bem-sucedido
+  if (pageState === 'redirecting') {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        {pageState === 'redirecting' && (
-          <>
-            <CheckCircle className="w-12 h-12 text-primary" />
-            <p className="text-lg font-medium text-foreground">Login realizado!</p>
-          </>
-        )}
+        <CheckCircle className="w-12 h-12 text-primary" />
+        <p className="text-lg font-medium text-foreground">Login realizado!</p>
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="text-muted-foreground">
-          {pageState === 'redirecting' ? 'Redirecionando para o dashboard...' : 'Verificando sessão...'}
-        </p>
+        <p className="text-muted-foreground">Redirecionando para o dashboard...</p>
       </div>
     );
   }

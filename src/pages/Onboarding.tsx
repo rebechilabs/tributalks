@@ -60,9 +60,9 @@ const Onboarding = () => {
   // Pre-populate form when profile loads, and redirect if already complete
   useEffect(() => {
     if (profile) {
-      // If onboarding is already complete, redirect to dashboard
+      // If onboarding is already complete, redirect to dashboard via React Router
       if (profile.onboarding_complete) {
-        window.location.href = '/dashboard';
+        navigate('/dashboard', { replace: true });
         return;
       }
       
@@ -75,17 +75,17 @@ const Onboarding = () => {
         cnae: profile.cnae || "",
       });
     }
-  }, [profile]);
+  }, [profile, navigate]);
 
-  // Navigate after successful save using full page redirect
+  // Navigate after successful save via React Router (sem reload de página)
   useEffect(() => {
     if (isSaved) {
       const timer = setTimeout(() => {
-        window.location.href = '/dashboard';
+        navigate('/dashboard', { replace: true });
       }, 800);
       return () => clearTimeout(timer);
     }
-  }, [isSaved]);
+  }, [isSaved, navigate]);
 
   const totalSteps = 4;
   const progress = (step / totalSteps) * 100;
