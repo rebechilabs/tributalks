@@ -121,8 +121,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         console.log('[Auth] State change:', event);
         
-        // Only update on meaningful events
-        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+        // Update session on meaningful events
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
           setSession(newSession);
           setUser(newSession?.user ?? null);
           
@@ -135,6 +135,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }, 0);
           } else {
             setProfile(null);
+          }
+          
+          // Mark loading as complete
+          if (mounted) {
+            clearTimeout(forceTimeout);
+            setLoading(false);
           }
         }
       }
