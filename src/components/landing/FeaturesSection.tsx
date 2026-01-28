@@ -25,7 +25,7 @@ const features = [
     icon: Scale,
     title: "Comparativo de Regimes",
     description:
-      "Sistema atual vs reforma — descubra quanto vai pagar em cada cenário.",
+      "Sistema atual vs reforma — compare cenários e estime o impacto de cada um.",
   },
   {
     icon: Newspaper,

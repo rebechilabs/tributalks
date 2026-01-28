@@ -49,7 +49,7 @@ export function HeroSection() {
 
           {/* Subheading */}
           <p className="text-lg md:text-xl text-muted-foreground mb-6 max-w-2xl mx-auto animate-fade-in-up animation-delay-100">
-            Saiba exatamente quanto vai pagar, quando, e o que fazer para se preparar.{" "}
+            Simule cenários de impacto, acompanhe prazos, e receba orientações claras para cada fase.{" "}
             <span className="text-foreground font-medium">
               Diagnóstico automatizado + simuladores + conteúdo diário.
             </span>
