@@ -35,7 +35,7 @@ const TribuBot = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: `Olá! Sou o **TribuBot**, seu consultor tributário virtual. 🤖
+      content: `Olá! Sou a **Clara AI**, sua consultora tributária virtual. ✨
 
 Posso ajudar com dúvidas sobre:
 - Regimes tributários (Simples, Presumido, Real)
@@ -177,7 +177,7 @@ Como posso te ajudar hoje?`,
 
       setDailyCount((prev) => prev + 1);
     } catch (error) {
-      console.error("TribuBot error:", error);
+      console.error("Clara AI error:", error);
       toast({
         title: "Erro",
         description: error instanceof Error ? error.message : "Erro ao enviar mensagem",
@@ -216,7 +216,7 @@ Como posso te ajudar hoje?`,
 
   if (!hasAccess) {
     return (
-      <DashboardLayout title="TribuBot">
+      <DashboardLayout title="Clara AI">
         <div className="flex items-center justify-center min-h-[60vh] px-4">
           <Card className="max-w-md w-full">
             <CardContent className="pt-8 pb-8 text-center">
@@ -224,7 +224,7 @@ Como posso te ajudar hoje?`,
                 <Lock className="w-8 h-8 text-primary" />
               </div>
               <h2 className="text-xl font-bold text-foreground mb-2">
-                TribuBot — IA 24/7
+                Clara AI — IA 24/7
               </h2>
               <p className="text-muted-foreground mb-6">
                 Tire dúvidas tributárias em linguagem simples, a qualquer hora.
@@ -244,18 +244,18 @@ Como posso te ajudar hoje?`,
   }
 
   return (
-    <DashboardLayout title="TribuBot">
+    <DashboardLayout title="Clara AI">
       <div className="flex flex-col h-[calc(100vh-4rem)] max-w-4xl mx-auto">
         {/* Header */}
         <div className="px-4 sm:px-6 py-4 border-b border-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <Bot className="w-5 h-5 text-primary" />
+                <Sparkles className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h1 className="font-bold text-foreground">TribuBot</h1>
-                <p className="text-xs text-muted-foreground">Seu consultor tributário com IA</p>
+                <h1 className="font-bold text-foreground">Clara AI</h1>
+                <p className="text-xs text-muted-foreground">Sua consultora tributária com IA</p>
               </div>
             </div>
             

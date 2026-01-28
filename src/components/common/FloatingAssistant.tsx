@@ -149,7 +149,7 @@ Cálculo preciso com base nos seus XMLs reais de compra e venda.
 ✅ DRE Inteligente
 ✅ 37+ Oportunidades Fiscais
 ✅ Relatórios PDF Profissionais
-✅ TribuBot ilimitado
+✅ Clara AI ilimitada
 ✅ Comunidade exclusiva
 ✅ Alertas por Email
 
@@ -173,7 +173,7 @@ Por qual Workflow quer começar? Ou prefere que eu te ajude a importar seus XMLs
 - Todos os 4 Workflows Guiados (versão completa)
 - Importador de XMLs, Radar de Créditos, DRE Inteligente
 - 37+ Oportunidades Fiscais mapeadas
-- TribuBot ilimitado + Comunidade
+- Clara AI ilimitada + Comunidade
 - Relatórios PDF Profissionais
 
 🏆 **EXCLUSIVIDADES ENTERPRISE:**

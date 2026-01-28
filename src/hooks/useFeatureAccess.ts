@@ -52,7 +52,7 @@ export type FeatureKey =
   | 'oportunidades'         // PROFESSIONAL+
   | 'relatorios_pdf'        // PROFESSIONAL+
   // IA e Documentos
-  | 'tribubot'              // NAVIGATOR: 10 msg/dia, PROFESSIONAL+: ilimitado
+  | 'tribubot'              // Clara AI: NAVIGATOR: 10 msg/dia, PROFESSIONAL+: ilimitado
   | 'document_analyzer'     // NAVIGATOR+ (Analisador de Documentos)
   | 'workflows'             // NAVIGATOR+ (Workflows Guiados)
   // Extras
@@ -111,7 +111,7 @@ export const CNPJ_LIMITS: Record<UserPlan, number | 'unlimited'> = {
   'ENTERPRISE': 'unlimited',
 };
 
-// Limite de mensagens TribuBot/Clara por plano
+// Limite de mensagens Clara AI por plano
 export const TRIBUBOT_LIMITS: Record<UserPlan, number | 'unlimited'> = {
   'FREE': 3,        // 3 mensagens total
   'NAVIGATOR': 10,  // 10 mensagens/dia

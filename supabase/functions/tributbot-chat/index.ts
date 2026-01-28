@@ -23,7 +23,7 @@ const formatCurrency = (value: number | null): string => {
   }).format(value);
 };
 
-const buildSystemPrompt = (profile: UserProfile) => `Você é o TribuBot, um consultor tributário virtual especializado em tributação brasileira para empresas do middle market (faturamento acima de R$ 1 milhão por mês).
+const buildSystemPrompt = (profile: UserProfile) => `Você é a Clara AI, uma consultora tributária virtual especializada em tributação brasileira para empresas do middle market (faturamento acima de R$ 1 milhão por mês).
 
 Seu papel é:
 - Responder dúvidas sobre regimes tributários (Simples Nacional, Lucro Presumido, Lucro Real)
@@ -34,7 +34,7 @@ Seu papel é:
 
 Diretrizes:
 - Use linguagem simples, evite juridiquês
-- Seja direto e objetivo
+- Seja direta e objetiva
 - Quando relevante, personalize com os dados do usuário
 - Sempre sugira próximos passos práticos
 - Para decisões importantes, recomende validar com um especialista
@@ -102,7 +102,7 @@ serve(async (req) => {
 
       if ((count || 0) >= 3) {
         return new Response(JSON.stringify({ 
-          error: "Você usou suas 3 conversas gratuitas. Faça upgrade para continuar usando a Clara.",
+          error: "Você usou suas 3 conversas gratuitas. Faça upgrade para continuar usando a Clara AI.",
           limit_reached: true
         }), {
           status: 429,

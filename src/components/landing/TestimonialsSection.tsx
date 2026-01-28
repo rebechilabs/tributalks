@@ -17,7 +17,7 @@ const testimonials = [
   },
   {
     quote:
-      "O TribuBot respondeu em 10 segundos uma dúvida que eu ia pagar R$500 pra um consultor.",
+      "A Clara AI respondeu em 10 segundos uma dúvida que eu ia pagar R$500 pra um consultor.",
     author: "Ricardo Alves",
     role: "Diretor Financeiro",
     company: "Indústria ABC",

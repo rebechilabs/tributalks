@@ -32,7 +32,6 @@ import {
   Briefcase,
   ExternalLink,
   Calculator,
-  Bot,
   Bell,
   Filter,
   RefreshCw,
@@ -688,8 +687,8 @@ export default function Noticias() {
                   </Link>
                   <Link to="/tribubot">
                     <Button variant="outline" size="sm">
-                      <Bot className="w-4 h-4 mr-2" />
-                      Perguntar ao TribuBot
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Perguntar à Clara AI
                     </Button>
                   </Link>
                   {selectedNoticia.fonte_url && (

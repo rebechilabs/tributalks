@@ -56,7 +56,7 @@ const Consultorias = () => {
                   <MessageSquare className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium text-foreground text-sm">TribuBot Ilimitado</p>
+                  <p className="font-medium text-foreground text-sm">Clara AI Ilimitada</p>
                   <p className="text-xs text-muted-foreground">Tire dúvidas tributárias 24/7 com IA</p>
                 </div>
               </div>

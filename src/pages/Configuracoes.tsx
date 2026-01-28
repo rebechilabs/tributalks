@@ -289,7 +289,7 @@ const Configuracoes = () => {
                       <ul className="list-disc list-inside mt-2 space-y-1">
                         <li>Perfil e informações pessoais</li>
                         <li>Histórico de simulações</li>
-                        <li>Conversas com o TribuBot</li>
+                        <li>Conversas com a Clara AI</li>
                         <li>Agendamentos de consultorias</li>
                       </ul>
                       <p className="mt-3 text-foreground font-medium">
