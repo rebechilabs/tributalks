@@ -42,6 +42,8 @@ import {
   ExternalLink,
   Clock,
   TrendingUp,
+  AlertTriangle,
+  CalendarClock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -74,6 +76,10 @@ interface OpportunityDetail {
   passos_implementacao?: string[];
   requer_contador?: boolean;
   requer_advogado?: boolean;
+  status_lc_224_2025?: string;
+  descricao_lc_224_2025?: string;
+  futuro_reforma?: string;
+  descricao_reforma?: string;
 }
 
 interface OpportunityDetailModalProps {
@@ -112,6 +118,21 @@ const CATEGORY_LABELS: Record<string, string> = {
   credito: 'Crédito Tributário',
   exportacao: 'Exportação',
   pd: 'P&D / Inovação',
+};
+
+const REFORMA_STATUS: Record<string, { icon: string; label: string; color: string; bgColor: string }> = {
+  mantido: { icon: '✅', label: 'Mantido com a Reforma', color: 'text-green-700', bgColor: 'bg-green-50 border-green-200' },
+  extinto: { icon: '🔴', label: 'Extinto Gradualmente', color: 'text-red-700', bgColor: 'bg-red-50 border-red-200' },
+  substituido: { icon: '🔄', label: 'Substituído pela CBS/IBS', color: 'text-yellow-700', bgColor: 'bg-yellow-50 border-yellow-200' },
+  em_adaptacao: { icon: '⚠️', label: 'Em Adaptação', color: 'text-orange-700', bgColor: 'bg-orange-50 border-orange-200' },
+  em_analise: { icon: '🔍', label: 'Em Análise', color: 'text-gray-700', bgColor: 'bg-gray-50 border-gray-200' },
+};
+
+const LC_STATUS: Record<string, { icon: string; label: string; color: string; bgColor: string }> = {
+  protegido: { icon: '🛡️', label: 'Protegido da LC 224/2025', color: 'text-green-700', bgColor: 'bg-green-50 border-green-200' },
+  afetado: { icon: '⚠️', label: 'Afetado pela LC 224/2025', color: 'text-yellow-700', bgColor: 'bg-yellow-50 border-yellow-200' },
+  critico: { icon: '🚨', label: 'Crítico - Ação Urgente', color: 'text-red-700', bgColor: 'bg-red-50 border-red-200' },
+  neutro: { icon: '➖', label: 'Sem Alteração 2026', color: 'text-gray-600', bgColor: 'bg-gray-50 border-gray-200' },
 };
 
 export function OpportunityDetailModal({
@@ -460,6 +481,43 @@ export function OpportunityDetailModal({
             </section>
 
             <Separator />
+
+            {/* Status 2026 e Reforma Tributária */}
+            {(opportunity.futuro_reforma || opportunity.status_lc_224_2025) && (
+              <>
+                <section>
+                  <h3 className="font-semibold flex items-center gap-2 mb-3">
+                    <CalendarClock className="h-5 w-5 text-primary" />
+                    Cenário 2026 e Reforma Tributária
+                  </h3>
+                  <div className="space-y-3">
+                    {opportunity.status_lc_224_2025 && LC_STATUS[opportunity.status_lc_224_2025] && (
+                      <div className={cn("rounded-lg border p-3", LC_STATUS[opportunity.status_lc_224_2025].bgColor)}>
+                        <div className={cn("font-medium flex items-center gap-2 mb-1", LC_STATUS[opportunity.status_lc_224_2025].color)}>
+                          <span>{LC_STATUS[opportunity.status_lc_224_2025].icon}</span>
+                          {LC_STATUS[opportunity.status_lc_224_2025].label}
+                        </div>
+                        {opportunity.descricao_lc_224_2025 && (
+                          <p className="text-sm text-muted-foreground">{opportunity.descricao_lc_224_2025}</p>
+                        )}
+                      </div>
+                    )}
+                    {opportunity.futuro_reforma && REFORMA_STATUS[opportunity.futuro_reforma] && (
+                      <div className={cn("rounded-lg border p-3", REFORMA_STATUS[opportunity.futuro_reforma].bgColor)}>
+                        <div className={cn("font-medium flex items-center gap-2 mb-1", REFORMA_STATUS[opportunity.futuro_reforma].color)}>
+                          <span>{REFORMA_STATUS[opportunity.futuro_reforma].icon}</span>
+                          Pós-2027: {REFORMA_STATUS[opportunity.futuro_reforma].label}
+                        </div>
+                        {opportunity.descricao_reforma && (
+                          <p className="text-sm text-muted-foreground">{opportunity.descricao_reforma}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </section>
+                <Separator />
+              </>
+            )}
 
             {/* FAQ */}
             <section>

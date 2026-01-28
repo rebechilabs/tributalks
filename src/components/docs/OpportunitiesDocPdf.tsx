@@ -15,6 +15,8 @@ interface Opportunity {
   tempo_implementacao: string;
   complexidade: string;
   risco_fiscal: string;
+  status_lc_224_2025?: string;
+  futuro_reforma?: string;
 }
 
 const SECTOR_CONFIG: Record<string, { title: string; icon: string; color: [number, number, number] }> = {
@@ -477,6 +479,63 @@ export function OpportunitiesDocPdf() {
       addBullet('ERPs: Omie, Bling, Tiny, Sankhya (leitura automática de dados)');
       addBullet('SPED: Importação de EFD-Contribuições e EFD-ICMS/IPI');
       addBullet('Contabilidade: Conexão com sistemas contábeis para validação');
+
+      // ============================================
+      // TABELA RESUMO: FUTURO DAS OPORTUNIDADES
+      // ============================================
+      doc.addPage();
+      y = margin;
+
+      addTitle('📊 Tabela Resumo: Futuro das Oportunidades', 20);
+      addSpacer(8);
+
+      addParagraph('O cenário tributário de 2026 é um divisor de águas. Oportunidades ligadas a IRPJ/CSLL ganham força, enquanto aquelas baseadas em tributos sobre o consumo (PIS/COFINS, ICMS, ISS, IPI) estão em fase de transição ou extinção.');
+      addSpacer(6);
+
+      const reformaSummary = [
+        { opp: 'Lei do Bem (P&D)', status: '✅ MANTIDA', reason: 'Benefício de IRPJ/CSLL - não afetado' },
+        { opp: 'SUDENE/SUDAM', status: '✅ MANTIDA', reason: 'Benefício de IRPJ - não afetado' },
+        { opp: 'Equiparação Hospitalar', status: '✅ MANTIDA', reason: 'Benefício de IRPJ/CSLL' },
+        { opp: 'Lei de Informática', status: '🔴 EXTINTA', reason: 'IPI será extinto com a Reforma' },
+        { opp: 'Créditos PIS/COFINS', status: '🔄 SUBSTITUÍDA', reason: 'Sistema de crédito da CBS' },
+        { opp: 'PIS/COFINS Monofásico', status: '🔴 EXTINTO', reason: 'Regime eliminado com CBS' },
+        { opp: 'REINTEGRA', status: '🔴 PROVAVELMENTE EXTINTO', reason: 'Crédito amplo CBS elimina resíduos' },
+        { opp: 'ISS Fixo (Advogados)', status: '🔴 EXTINTO GRADUALMENTE', reason: 'ISS → IBS até 2033' },
+        { opp: 'RET (Construção)', status: '⚠️ EM ADAPTAÇÃO', reason: 'Redesenho necessário' },
+        { opp: 'Drawback / RECOF', status: '⚠️ EM ADAPTAÇÃO', reason: 'Regulamentação aguardada' },
+        { opp: 'Incentivos ICMS/ISS', status: '🔴 EXTINTOS GRADUALMENTE', reason: 'Até 2033' },
+        { opp: 'Lucro Presumido', status: '🔴 INVIÁVEL para muitos', reason: 'CBS cheia sem créditos' },
+        { opp: 'Simples Nacional', status: '⚠️ ADAPTADO', reason: 'Opção de CBS/IBS por fora' },
+      ];
+
+      reformaSummary.forEach((item) => {
+        addNewPageIfNeeded(12);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        
+        // Status color
+        if (item.status.includes('✅')) {
+          doc.setTextColor(34, 139, 34);
+        } else if (item.status.includes('🔴')) {
+          doc.setTextColor(220, 20, 60);
+        } else {
+          doc.setTextColor(255, 165, 0);
+        }
+        doc.text(item.status, margin, y);
+        
+        doc.setTextColor(40, 40, 40);
+        doc.text(item.opp, margin + 50, y);
+        
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(100, 100, 100);
+        doc.text(item.reason, margin + 100, y);
+        y += 6;
+      });
+
+      addSpacer(12);
+      addSubtitle('Conclusão');
+      addParagraph('A ação mais urgente para todas as empresas é revisar seu planejamento tributário à luz da Reforma e das mudanças recentes (LC 224/2025), com atenção especial à viabilidade do Lucro Presumido e às novas regras do Simples Nacional.');
 
       // ============================================
       // FONTES E BASE LEGAL
