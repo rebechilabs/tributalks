@@ -77,7 +77,7 @@ const features = [
     icon: Navigation,
     title: "Oportunidades Fiscais",
     description:
-      "37+ benefícios fiscais por setor com match inteligente ao seu perfil de empresa.",
+      "61+ benefícios fiscais por setor com match inteligente ao seu perfil de empresa.",
     badge: "Professional",
     badgeVariant: "outline" as const,
   },

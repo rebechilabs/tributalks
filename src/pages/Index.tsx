@@ -1,6 +1,7 @@
 import { Header } from "@/components/landing/Header";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
+import { IntegrationsSection } from "@/components/landing/IntegrationsSection";
 import { RTCCalculatorSection } from "@/components/landing/RTCCalculatorSection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
@@ -19,6 +20,7 @@ const Index = () => {
         <HeroSection />
         <RTCCalculatorSection />
         <FeaturesSection />
+        <IntegrationsSection />
         <HowItWorksSection />
         <TestimonialsSection />
         <PricingSection />
