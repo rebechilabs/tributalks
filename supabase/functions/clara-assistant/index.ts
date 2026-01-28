@@ -153,186 +153,90 @@ const TOOL_CONTEXTS: Record<string, ToolContext> = {
   }
 };
 
-const REFORMA_KNOWLEDGE = `
-## CONHECIMENTO PROFUNDO SOBRE A REFORMA TRIBUTÁRIA BRASILEIRA
+// ============================================
+// CLARA_DECISION_CORE — Heurísticas de Raciocínio
+// ============================================
+const CLARA_DECISION_CORE = `
+## COMO CLARA ENXERGA A REFORMA TRIBUTÁRIA (HEURÍSTICAS)
 
-### O QUE É A REFORMA TRIBUTÁRIA?
-A Reforma Tributária é a maior mudança no sistema de impostos do Brasil desde a Constituição de 1988. Aprovada em dezembro de 2023 (EC 132/2023) e regulamentada pela Lei Complementar 214/2025, ela simplifica drasticamente a tributação sobre consumo, substituindo 5 tributos por apenas 2 novos impostos + 1 imposto seletivo.
+1. Reforma tributária impacta primeiro caixa, depois lucro.
+2. Crédito bem usado vale mais que alíquota baixa.
+3. Regime tributário virou decisão comercial.
+4. Simplicidade só é vantagem quando o cliente não usa crédito.
+5. Quem não gera crédito perde competitividade em cadeias B2B.
+6. Split payment muda o jogo do fluxo de caixa.
+7. Empresa que vive de prazo sente o impacto antes.
+8. Precificação errada vira prejuízo silencioso.
+9. Margem sem crédito mapeado é suposição.
+10. 2026 é ano de preparação, não de neutralidade.
+11. ERP desatualizado vira gargalo operacional.
+12. Quem testa antes decide melhor depois.
+13. Serviços sofrem mais quando a folha domina o custo.
+14. Comércio ganha quando sabe mapear despesas.
+15. E-commerce ganha simplicidade, mas exige disciplina sistêmica.
+16. Crédito recuperável muda custo real.
+17. Preço mínimo depende do imposto líquido.
+18. Caixa some antes do lucro aparecer.
+19. Governança fiscal virou vantagem competitiva.
+20. Bom histórico reduz risco invisível.
+21. Conformidade cooperativa diminui atrito com o Fisco.
+22. Dividendos exigem planejamento recorrente.
+23. Misturar empresa e pessoa física ficou mais caro.
+24. Decisão tributária tardia custa mais que decisão imperfeita.
+25. Clara orienta o raciocínio, nunca a conclusão jurídica.
+`;
 
-### IMPOSTOS QUE SERÃO EXTINTOS (gradualmente até 2033):
-1. **PIS** (Programa de Integração Social) - Federal
-2. **COFINS** (Contribuição para Financiamento da Seguridade Social) - Federal
-3. **IPI** (Imposto sobre Produtos Industrializados) - Federal
-4. **ICMS** (Imposto sobre Circulação de Mercadorias e Serviços) - Estadual
-5. **ISS** (Imposto Sobre Serviços) - Municipal
+// ============================================
+// CLARA_KNOWLEDGE_CORE — Fatos e Regras
+// ============================================
+const CLARA_KNOWLEDGE_CORE = `
+## CONHECIMENTO FACTUAL DA REFORMA TRIBUTÁRIA
 
-### NOVOS IMPOSTOS QUE SUBSTITUEM:
-1. **CBS** (Contribuição sobre Bens e Serviços) - Federal
-   - Substitui PIS, COFINS e IPI
-   - Alíquota estimada: ~8,8%
-   - Administrado pela Receita Federal
+### MARCOS LEGAIS
+- EC 132/2023: Emenda Constitucional aprovada em dezembro de 2023
+- LC 214/2025: Lei Complementar que regulamenta a reforma
 
-2. **IBS** (Imposto sobre Bens e Serviços) - Estadual/Municipal
-   - Substitui ICMS e ISS
-   - Alíquota estimada: ~17,7% (soma de UF + Município)
-   - Administrado pelo Comitê Gestor do IBS
+### TRIBUTOS EXTINTOS (gradualmente até 2033)
+- PIS, COFINS, IPI (Federais)
+- ICMS (Estadual)
+- ISS (Municipal)
 
-3. **IS** (Imposto Seletivo) - Federal
-   - "Imposto do pecado" - incide sobre produtos nocivos à saúde e ao meio ambiente
-   - Cigarros, bebidas alcoólicas, bebidas açucaradas, veículos poluentes, mineração
-   - Alíquotas variáveis conforme o produto
+### NOVOS TRIBUTOS
+- **CBS** (Federal): Substitui PIS/COFINS/IPI
+- **IBS** (Estadual/Municipal): Substitui ICMS/ISS
+- **IS** (Imposto Seletivo): Produtos nocivos
 
-### ALÍQUOTA DE REFERÊNCIA (IVA Dual):
-- **Alíquota total combinada**: ~26,5% (CBS + IBS)
+### CRONOGRAMA DE TRANSIÇÃO
+- **2026**: Teste (CBS 0,9% + IBS 0,1% + IS vigente)
+- **2027**: CBS em alíquota cheia; PIS/COFINS extintos
+- **2028-2032**: Redução gradual ICMS/ISS, aumento proporcional IBS
+- **2033**: Sistema novo 100% operacional
 
-### CRONOGRAMA DA TRANSIÇÃO (TIMELINE 2026-2033):
+### PRINCÍPIOS FUNDAMENTAIS
+- Não-cumulatividade plena (crédito financeiro)
+- Tributação no destino
+- Cashback para famílias de baixa renda
+- Cesta básica nacional com alíquota zero
 
-**2026 - ANO DE TESTE:**
-- CBS começa a ser cobrada em TESTE: 0,9%
-- IBS começa em TESTE: 0,1%
-- Imposto Seletivo (IS) entra em vigor
-- Empresas devem adequar sistemas para nova apuração
+### ALÍQUOTAS ESPECIAIS
+- **Alíquota ZERO**: Cesta básica, medicamentos essenciais, transporte público
+- **Redução 60%**: Saúde, educação, agropecuário, cultura
+- **Redução 30%**: Profissionais liberais (regime especial)
 
-**2027 - TRANSIÇÃO INICIA:**
-- CBS passa para alíquota cheia (estimada ~8,8%)
-- IBS continua em 0,1%
-- PIS e COFINS são EXTINTOS
-- IPI mantido apenas para Zona Franca de Manaus
-- **SIMPLES NACIONAL**: empresas podem optar por regime híbrido
+### SIMPLES NACIONAL (a partir de 2027)
+1. Permanecer 100% no Simples (não gera créditos)
+2. Regime Híbrido (CBS/IBS separados, gera créditos)
+3. Sair do Simples
 
-**2028:**
-- IBS sobe para 1% (compensado com redução de ICMS/ISS)
-- Crédito do IBS começa a ser liberado gradualmente
-
-**2029-2032 - TRANSIÇÃO GRADUAL:**
-- ICMS e ISS vão sendo reduzidos 1/8 ao ano
-- IBS vai aumentando proporcionalmente
-- Empresas precisam gerenciar dois sistemas em paralelo
-
-**2033 - CONCLUSÃO:**
-- ICMS e ISS são completamente EXTINTOS
-- IBS atinge alíquota plena
-- Sistema novo 100% operacional
-
-### PRINCÍPIOS FUNDAMENTAIS:
-
-1. **NÃO-CUMULATIVIDADE PLENA:**
-   - Todo imposto pago na cadeia vira crédito
-   - Elimina o "efeito cascata" que encarece produtos
-   - Crédito financeiro (não mais físico)
-
-2. **TRIBUTAÇÃO NO DESTINO:**
-   - Imposto vai para onde o produto/serviço é consumido
-   - Acaba com a "guerra fiscal" entre estados
-   - Transição de 50 anos para receitas estaduais
-
-3. **CASHBACK PARA FAMÍLIAS DE BAIXA RENDA:**
-   - Devolução de impostos para famílias no CadÚnico
-   - Foco em reduzir desigualdade
-
-4. **CESTA BÁSICA NACIONAL:**
-   - Produtos essenciais terão alíquota ZERO
-   - Lista definida em lei complementar
-
-### SETORES COM TRATAMENTO ESPECIAL:
-
-**Alíquota ZERO:**
-- Cesta básica nacional
-- Medicamentos essenciais
-- Dispositivos médicos
-- Serviços de educação (sob condições)
-- Transporte público coletivo
-
-**Redução de 60% da alíquota:**
-- Saúde (hospitais, clínicas, laboratórios)
-- Educação
-- Dispositivos de acessibilidade
-- Alimentos fora da cesta básica
-- Produtos agropecuários
-- Atividades artísticas e culturais
-- Transporte de passageiros
-
-**Redução de 30% da alíquota:**
-- Profissionais liberais (médicos, advogados, contadores, engenheiros, etc.)
-- Aplicável apenas se optarem por regime especial
-
-### SPLIT PAYMENT - RECOLHIMENTO AUTOMÁTICO:
-O Split Payment é o mecanismo que vai automatizar o recolhimento dos novos impostos:
-- No momento do pagamento, o banco/adquirente separa automaticamente a parcela do imposto
-- O valor do imposto vai direto para o governo
-- O vendedor recebe apenas o valor líquido
-- Reduz sonegação e simplifica compliance
+### SPLIT PAYMENT
+- Recolhimento automático no momento do pagamento
+- Banco/adquirente separa imposto automaticamente
+- Vendedor recebe valor líquido
 - Implementação gradual a partir de 2026
 
-### SIMPLES NACIONAL NA REFORMA:
-
-**Empresas do Simples têm 3 opções a partir de 2027:**
-
-1. **Permanecer 100% no Simples:**
-   - Mantém regime atual simplificado
-   - NÃO gera créditos de CBS/IBS para clientes
-   - Pode perder competitividade em B2B
-
-2. **Regime Híbrido:**
-   - Recolhe CBS/IBS separadamente (fora do DAS)
-   - Gera créditos para clientes
-   - Mantém Simples para IRPJ, CSLL, CPP
-   - Melhor para quem vende para outras empresas (B2B)
-
-3. **Sair do Simples:**
-   - Migrar para Lucro Presumido ou Real
-   - Decisão deve ser analisada caso a caso
-
-### IMPACTOS POR SETOR:
-
-**INDÚSTRIA:**
-- Tende a PAGAR MENOS (não-cumulatividade plena)
-- Créditos de todos os insumos
-- Fim do IPI (exceto ZFM)
-
-**COMÉRCIO:**
-- Impacto neutro a positivo
-- Simplificação de ICMS
-- Split Payment automatiza recolhimento
-
-**SERVIÇOS:**
-- Tendência de AUMENTO de carga tributária
-- ISS médio era 2-5%, CBS+IBS será ~26,5%
-- Reduções para setores regulamentados
-- Profissionais liberais: redução de 30%
-
-**AGRONEGÓCIO:**
-- Redução de 60% na alíquota
-- Créditos mais amplos
-- Exportações continuam isentas
-
-**SAÚDE E EDUCAÇÃO:**
-- Alíquota zero ou reduzida (60%)
-- Condições específicas para isenção
-- Entidades sem fins lucrativos mantêm benefícios
-
-### ZONA FRANCA DE MANAUS:
-- Mantém benefícios até 2073
+### ZONA FRANCA DE MANAUS
+- Benefícios mantidos até 2073
 - IPI permanece para proteger vantagem competitiva
-- Crédito presumido para compensar mudanças
-
-### O QUE AS EMPRESAS DEVEM FAZER AGORA:
-
-1. **Mapear operações** - entender como cada produto/serviço será tributado
-2. **Revisar contratos** - cláusulas de preço podem precisar de ajuste
-3. **Atualizar sistemas** - ERPs precisarão emitir documentos com novos campos
-4. **Treinar equipe** - contabilidade e fiscal precisam dominar novas regras
-5. **Simular impactos** - calcular se vai pagar mais ou menos
-6. **Revisar precificação** - ajustar preços considerando nova carga
-7. **Avaliar Simples Nacional** - decidir sobre regime híbrido
-
-### FONTES OFICIAIS:
-- Receita Federal: https://www.gov.br/receitafederal
-- Ministério da Fazenda: https://www.gov.br/fazenda
-- Portal da Reforma: https://www.gov.br/reforma-tributaria
-- Lei Complementar 214/2025
-
-IMPORTANTE: A reforma ainda terá regulamentações adicionais. Sempre recomende acompanhar as atualizações oficiais e consultar um contador especializado para decisões estratégicas.
 `;
 
 const CONVERSATION_STARTERS = [
@@ -738,9 +642,15 @@ Se houver dúvida entre:
 
 ---
 
-## CONHECIMENTO DA REFORMA TRIBUTÁRIA
+## HEURÍSTICAS DE RACIOCÍNIO
 
-${REFORMA_KNOWLEDGE}
+${CLARA_DECISION_CORE}
+
+---
+
+## CONHECIMENTO FACTUAL
+
+${CLARA_KNOWLEDGE_CORE}
 
 ---
 
