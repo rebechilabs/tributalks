@@ -41,6 +41,8 @@ interface OpportunityDetailCardProps {
     quick_win: boolean;
     alto_impacto: boolean;
     tributos_afetados: string[];
+    status_lc_224_2025?: string;
+    futuro_reforma?: string;
   };
   onViewDetails?: (id: string) => void;
   onImplement?: (id: string) => void;
@@ -71,6 +73,21 @@ const CATEGORY_LABELS: Record<string, string> = {
   credito: 'Crédito Tributário',
   exportacao: 'Exportação',
   pd: 'P&D / Inovação',
+};
+
+const REFORMA_STATUS: Record<string, { icon: string; label: string; color: string }> = {
+  mantido: { icon: '✅', label: 'Mantido', color: 'text-green-600' },
+  extinto: { icon: '🔴', label: 'Extinto Gradualmente', color: 'text-red-500' },
+  substituido: { icon: '🔄', label: 'Substituído', color: 'text-yellow-600' },
+  em_adaptacao: { icon: '⚠️', label: 'Em Adaptação', color: 'text-orange-500' },
+  em_analise: { icon: '🔍', label: 'Em Análise', color: 'text-muted-foreground' },
+};
+
+const LC_STATUS: Record<string, { icon: string; label: string; color: string }> = {
+  protegido: { icon: '🛡️', label: 'Protegido', color: 'text-green-600' },
+  afetado: { icon: '⚠️', label: 'Afetado LC 224/2025', color: 'text-yellow-600' },
+  critico: { icon: '🚨', label: 'Crítico - Ação Urgente', color: 'text-red-500' },
+  neutro: { icon: '➖', label: 'Sem Alteração', color: 'text-muted-foreground' },
 };
 
 export function OpportunityDetailCard({ 
@@ -179,7 +196,7 @@ export function OpportunityDetailCard({
 
         {/* Meta info */}
         <div className="p-5 border-b">
-          <div className="flex items-center gap-6 text-sm">
+          <div className="flex flex-wrap items-center gap-4 text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Clock className="h-4 w-4" />
               <span>Implementação: <span className="text-foreground font-medium">{opportunity.tempo_implementacao || '2-4 semanas'}</span></span>
@@ -191,6 +208,26 @@ export function OpportunityDetailCard({
             </div>
           </div>
         </div>
+
+        {/* Status 2026 e Reforma */}
+        {(opportunity.futuro_reforma || opportunity.status_lc_224_2025) && (
+          <div className="p-4 border-b bg-muted/30">
+            <div className="flex flex-wrap gap-3 text-xs">
+              {opportunity.futuro_reforma && REFORMA_STATUS[opportunity.futuro_reforma] && (
+                <div className={cn("flex items-center gap-1.5 px-2 py-1 rounded-full bg-background border", REFORMA_STATUS[opportunity.futuro_reforma].color)}>
+                  <span>{REFORMA_STATUS[opportunity.futuro_reforma].icon}</span>
+                  <span>Reforma: {REFORMA_STATUS[opportunity.futuro_reforma].label}</span>
+                </div>
+              )}
+              {opportunity.status_lc_224_2025 && opportunity.status_lc_224_2025 !== 'neutro' && LC_STATUS[opportunity.status_lc_224_2025] && (
+                <div className={cn("flex items-center gap-1.5 px-2 py-1 rounded-full bg-background border", LC_STATUS[opportunity.status_lc_224_2025].color)}>
+                  <span>{LC_STATUS[opportunity.status_lc_224_2025].icon}</span>
+                  <span>{LC_STATUS[opportunity.status_lc_224_2025].label}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="p-4 flex items-center justify-between gap-3 bg-muted/30">

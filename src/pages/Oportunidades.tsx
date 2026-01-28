@@ -55,6 +55,10 @@ interface Opportunity {
   passos_implementacao?: string[];
   requer_contador?: boolean;
   requer_advogado?: boolean;
+  status_lc_224_2025?: string;
+  descricao_lc_224_2025?: string;
+  futuro_reforma?: string;
+  descricao_reforma?: string;
 }
 
 interface CategorySummary {
