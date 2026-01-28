@@ -88,16 +88,14 @@ const toolGroups: ToolGroup[] = [
         name: 'Comparativo de Regimes', 
         description: 'Compare Simples, Presumido e Real',
         href: '/calculadora/comparativo-regimes', 
-        icon: Scale,
-        requiredPlan: 'NAVIGATOR'
+        icon: Scale
       },
       { 
         name: 'Calculadora RTC', 
         description: 'Calcule CBS/IBS/IS da Reforma',
         href: '/calculadora/rtc', 
         icon: Calculator,
-        badge: 'API',
-        requiredPlan: 'NAVIGATOR'
+        badge: 'API'
       },
     ]
   },
