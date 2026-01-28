@@ -1,4 +1,4 @@
-import { Zap, LineChart, Globe, Smartphone, BrainCircuit } from "lucide-react";
+import { Zap, LineChart, Globe, Smartphone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const upcomingFeatures = [
@@ -21,11 +21,6 @@ const upcomingFeatures = [
     icon: Smartphone,
     label: "App Mobile",
     description: "iOS e Android nativo",
-  },
-  {
-    icon: BrainCircuit,
-    label: "IA Preditiva",
-    description: "Previsões de carga tributária",
   },
 ];
 
