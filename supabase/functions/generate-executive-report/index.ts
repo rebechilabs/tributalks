@@ -351,7 +351,7 @@ Deno.serve(async (req) => {
       .single();
 
     const plano = profile?.plano?.toUpperCase() || "FREE";
-    const allowedPlans = ["PROFESSIONAL", "PROFISSIONAL", "PREMIUM", "ENTERPRISE"];
+    const allowedPlans = ["NAVIGATOR", "BASICO", "PROFESSIONAL", "PROFISSIONAL", "PREMIUM", "ENTERPRISE"];
     
     if (!allowedPlans.includes(plano)) {
       return new Response(

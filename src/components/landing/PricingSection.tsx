@@ -65,6 +65,7 @@ const plans: Plan[] = [
       { text: "Newsletter Tributalks News", included: true },
       { text: "Timeline 2026-2033", included: true },
       { text: "Feed de Notícias + Pílula do Dia", included: true },
+      { text: "Relatórios PDF Clara AI", included: true },
     ],
     ctaText: "Assinar Navigator",
     linkMonthly: CONFIG.STRIPE_PAYMENT_LINKS.NAVIGATOR_MENSAL,
