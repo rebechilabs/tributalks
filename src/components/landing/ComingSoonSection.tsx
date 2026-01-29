@@ -1,4 +1,4 @@
-import { LineChart, Globe, Smartphone } from "lucide-react";
+import { LineChart, Globe, Smartphone, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const upcomingFeatures = [
@@ -16,6 +16,11 @@ const upcomingFeatures = [
     icon: Smartphone,
     label: "App Mobile",
     description: "iOS e Android nativo",
+  },
+  {
+    icon: Users,
+    label: "Comunidade Circle",
+    description: "Networking exclusivo para CFOs",
   },
 ];
 
