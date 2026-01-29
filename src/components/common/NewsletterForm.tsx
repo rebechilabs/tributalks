@@ -2,13 +2,14 @@ import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Mail, CheckCircle2, Loader2 } from "lucide-react";
+import { Mail, CheckCircle2, Loader2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlanAccess } from "@/hooks/useFeatureAccess";
+import { cn } from "@/lib/utils";
 
 const emailSchema = z.object({
   email: z
@@ -22,7 +23,12 @@ type EmailFormData = z.infer<typeof emailSchema>;
 
 type FormState = "idle" | "loading" | "success" | "error";
 
-export function NewsletterForm() {
+interface NewsletterFormProps {
+  variant?: "default" | "compact";
+  className?: string;
+}
+
+export function NewsletterForm({ variant = "default", className }: NewsletterFormProps) {
   const [formState, setFormState] = useState<FormState>("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const { user } = useAuth();
@@ -74,9 +80,73 @@ export function NewsletterForm() {
     }
   };
 
+  // Compact variant for sidebar
+  if (variant === "compact") {
+    if (formState === "success") {
+      return (
+        <div className={cn("flex items-center gap-2 text-primary text-sm", className)}>
+          <CheckCircle2 className="h-4 w-4" />
+          <span>Inscrito!</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className={cn("space-y-2", className)}>
+        <div className="flex items-center gap-2 text-foreground">
+          <Mail className="h-4 w-4 text-primary" />
+          <span className="text-xs font-medium">Tributalks News</span>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Toda terça às 07h07
+        </p>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <div className="flex gap-1">
+                      <Input
+                        type="email"
+                        placeholder="seu@email.com"
+                        className="h-8 text-xs"
+                        disabled={formState === "loading"}
+                        {...field}
+                      />
+                      <Button
+                        type="submit"
+                        size="sm"
+                        className="h-8 px-2"
+                        disabled={formState === "loading"}
+                      >
+                        {formState === "loading" ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Send className="h-3 w-3" />
+                        )}
+                      </Button>
+                    </div>
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+          </form>
+        </Form>
+        {formState === "error" && errorMessage && (
+          <p className="text-xs text-destructive">{errorMessage}</p>
+        )}
+      </div>
+    );
+  }
+
+  // Default variant for footer
   if (formState === "success") {
     return (
-      <div className="flex flex-col items-center gap-3 py-4">
+      <div className={cn("flex flex-col items-center gap-3 py-4", className)}>
         <div className="flex items-center gap-2 text-primary">
           <CheckCircle2 className="h-5 w-5" />
           <span className="font-medium">Inscrito com sucesso!</span>
@@ -89,7 +159,7 @@ export function NewsletterForm() {
   }
 
   return (
-    <div className="flex flex-col items-center gap-3 py-4 w-full max-w-md mx-auto">
+    <div className={cn("flex flex-col items-center gap-3 py-4 w-full max-w-md mx-auto", className)}>
       {/* Header */}
       <div className="flex items-center gap-2 text-foreground">
         <Mail className="h-5 w-5 text-primary" />
