@@ -7,6 +7,63 @@ const corsHeaders = {
 };
 
 // ============================================================================
+// AES-256-GCM Decryption Functions
+// ============================================================================
+
+async function getEncryptionKey(): Promise<CryptoKey> {
+  const keyString = Deno.env.get("ERP_ENCRYPTION_KEY");
+  if (!keyString || keyString.length < 32) {
+    throw new Error("ERP_ENCRYPTION_KEY não configurada");
+  }
+  
+  const keyData = new TextEncoder().encode(keyString.slice(0, 32));
+  
+  return crypto.subtle.importKey(
+    "raw",
+    keyData,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+}
+
+async function decryptCredentials(encryptedBase64: string): Promise<ERPCredentials> {
+  const key = await getEncryptionKey();
+  
+  // Base64 decode
+  const combined = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
+  
+  // Extract IV (first 12 bytes) and ciphertext (rest)
+  const iv = combined.slice(0, 12);
+  const ciphertext = combined.slice(12);
+  
+  const decrypted = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv },
+    key,
+    ciphertext
+  );
+  
+  const plaintext = new TextDecoder().decode(decrypted);
+  return JSON.parse(plaintext);
+}
+
+function isEncryptedCredentials(credentials: unknown): boolean {
+  // Encrypted credentials are stored as a base64 string
+  // Plain credentials are stored as a JSON object
+  return typeof credentials === 'string' && credentials.length > 20;
+}
+
+async function getDecryptedCredentials(storedCredentials: unknown): Promise<ERPCredentials> {
+  if (isEncryptedCredentials(storedCredentials)) {
+    // New format: encrypted base64 string
+    return await decryptCredentials(storedCredentials as string);
+  } else {
+    // Legacy format: plain JSON object (backward compatibility)
+    return storedCredentials as ERPCredentials;
+  }
+}
+
+// ============================================================================
 // Types & Interfaces
 // ============================================================================
 
@@ -1193,7 +1250,8 @@ serve(async (req) => {
 
       try {
         const adapter = getAdapter(connection.erp_type);
-        const credentials = connection.credentials as ERPCredentials;
+        // Decrypt credentials (supports both encrypted and legacy plain formats)
+        const credentials = await getDecryptedCredentials(connection.credentials);
         const modulesToSync = modules || connection.sync_config?.modules || ['nfe', 'produtos', 'financeiro', 'empresa'];
 
         // Sync Empresa

@@ -6,6 +6,48 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// ============================================================================
+// AES-256-GCM Encryption Functions
+// ============================================================================
+
+async function getEncryptionKey(): Promise<CryptoKey> {
+  const keyString = Deno.env.get("ERP_ENCRYPTION_KEY");
+  if (!keyString || keyString.length < 32) {
+    throw new Error("ERP_ENCRYPTION_KEY não configurada corretamente");
+  }
+  
+  // Use first 32 bytes for AES-256
+  const keyData = new TextEncoder().encode(keyString.slice(0, 32));
+  
+  return crypto.subtle.importKey(
+    "raw",
+    keyData,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+}
+
+async function encryptCredentials(data: Record<string, string>): Promise<string> {
+  const key = await getEncryptionKey();
+  const iv = crypto.getRandomValues(new Uint8Array(12)); // 12 bytes IV for AES-GCM
+  const plaintext = new TextEncoder().encode(JSON.stringify(data));
+  
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv },
+    key,
+    plaintext
+  );
+  
+  // Combine IV + ciphertext (includes auth tag)
+  const combined = new Uint8Array(iv.length + ciphertext.byteLength);
+  combined.set(iv, 0);
+  combined.set(new Uint8Array(ciphertext), iv.length);
+  
+  // Base64 encode
+  return btoa(String.fromCharCode(...combined));
+}
+
 // ERP API endpoints for validation
 const ERP_ENDPOINTS = {
   omie: "https://app.omie.com.br/api/v1/geral/empresas/",
@@ -53,7 +95,7 @@ async function validateOmieCredentials(appKey: string, appSecret: string): Promi
     const data = await response.json();
     
     if (data.faultstring) {
-      return { valid: false, message: data.faultstring };
+      return { valid: false, message: "Credenciais inválidas" };
     }
     
     return { 
@@ -62,8 +104,8 @@ async function validateOmieCredentials(appKey: string, appSecret: string): Promi
       data: data.empresas_cadastro?.[0] || null
     };
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-    return { valid: false, message: `Erro ao validar: ${errorMessage}` };
+    console.error("Omie validation error:", error);
+    return { valid: false, message: "Erro ao validar credenciais" };
   }
 }
 
@@ -78,8 +120,7 @@ async function validateBlingCredentials(accessToken: string): Promise<{ valid: b
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      return { valid: false, message: errorData.message || `Erro HTTP ${response.status}` };
+      return { valid: false, message: "Token de acesso inválido" };
     }
 
     const data = await response.json();
@@ -89,8 +130,8 @@ async function validateBlingCredentials(accessToken: string): Promise<{ valid: b
       data: data.data?.[0] || null
     };
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-    return { valid: false, message: `Erro ao validar: ${errorMessage}` };
+    console.error("Bling validation error:", error);
+    return { valid: false, message: "Erro ao validar credenciais" };
   }
 }
 
@@ -227,14 +268,26 @@ serve(async (req) => {
         );
       }
 
-      // Validate credentials
+      // Validate credentials BEFORE encrypting
       const validation = await validateCredentials(body.erp_type, body.credentials);
+      
+      // Encrypt credentials before storing
+      let encryptedCredentials: string;
+      try {
+        encryptedCredentials = await encryptCredentials(body.credentials);
+      } catch (encryptError) {
+        console.error("Encryption error:", encryptError);
+        return new Response(
+          JSON.stringify({ error: "Erro ao processar credenciais" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       
       const connectionData = {
         user_id: userId,
         erp_type: body.erp_type,
         connection_name: body.connection_name,
-        credentials: body.credentials,
+        credentials: encryptedCredentials, // Store encrypted string
         status: validation.valid ? "active" : "error",
         status_message: validation.message,
         sync_config: body.sync_config || {
@@ -266,9 +319,9 @@ serve(async (req) => {
           success: true,
           message: validation.valid 
             ? `Conexão com ${ERP_NAMES[body.erp_type]} criada com sucesso!` 
-            : `Conexão criada, mas com erro: ${validation.message}`,
+            : `Conexão criada, mas com erro de validação`,
           connection: data,
-          validation
+          validation: { valid: validation.valid, message: validation.message }
         }),
         { status: 201, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -289,7 +342,7 @@ serve(async (req) => {
       if (body.connection_name) updateData.connection_name = body.connection_name;
       if (body.sync_config) updateData.sync_config = body.sync_config;
       
-      // If credentials are being updated, revalidate
+      // If credentials are being updated, revalidate and re-encrypt
       if (body.credentials) {
         // First get the current connection to know the ERP type
         const { data: currentConn } = await supabase
@@ -301,7 +354,18 @@ serve(async (req) => {
 
         if (currentConn) {
           const validation = await validateCredentials(currentConn.erp_type, body.credentials);
-          updateData.credentials = body.credentials;
+          
+          // Encrypt new credentials
+          try {
+            updateData.credentials = await encryptCredentials(body.credentials);
+          } catch (encryptError) {
+            console.error("Encryption error:", encryptError);
+            return new Response(
+              JSON.stringify({ error: "Erro ao processar credenciais" }),
+              { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+          
           updateData.status = validation.valid ? "active" : "error";
           updateData.status_message = validation.message;
           if (validation.data) {
@@ -367,9 +431,9 @@ serve(async (req) => {
 
   } catch (error: unknown) {
     console.error("Error in erp-connection:", error);
-    const errorMessage = error instanceof Error ? error.message : "Erro interno do servidor";
+    // Sanitized error response - no technical details exposed
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "Ocorreu um erro ao processar sua solicitação. Tente novamente." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
