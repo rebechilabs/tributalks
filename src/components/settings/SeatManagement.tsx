@@ -247,7 +247,14 @@ export function SeatManagement() {
           
           {planConfig.canBuyExtra && (
             <Button variant="outline" size="sm" asChild>
-              <a href={CONFIG.WHATSAPP} target="_blank" rel="noopener noreferrer">
+              <a 
+                href={currentPlan === 'ENTERPRISE' 
+                  ? `${CONFIG.STRIPE_PAYMENT_LINKS.SEAT_ENTERPRISE}?prefilled_email=${encodeURIComponent(user?.email || '')}`
+                  : `${CONFIG.STRIPE_PAYMENT_LINKS.SEAT_PROFESSIONAL}?prefilled_email=${encodeURIComponent(user?.email || '')}`
+                } 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
                 <UserPlus className="w-4 h-4 mr-2" />
                 + Assento (R$ {planConfig.extraPrice}/mês)
               </a>

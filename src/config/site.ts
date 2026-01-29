@@ -14,6 +14,10 @@ export const CONFIG = {
     CREDITS_10: "https://buy.stripe.com/PLACEHOLDER_CREDITS_10",
     CREDITS_20: "https://buy.stripe.com/PLACEHOLDER_CREDITS_20",
     CREDITS_30: "https://buy.stripe.com/PLACEHOLDER_CREDITS_30",
+    // Extra seats for multi-user plans
+    // TODO: Replace with real Stripe Payment Links after creating seat products
+    SEAT_PROFESSIONAL: "https://buy.stripe.com/PLACEHOLDER_SEAT_PROFESSIONAL",
+    SEAT_ENTERPRISE: "https://buy.stripe.com/PLACEHOLDER_SEAT_ENTERPRISE",
     // Legacy - deprecated, mantendo para compatibilidade
     BASICO_MENSAL: "https://buy.stripe.com/PLACEHOLDER_BASICO_MENSAL",
     BASICO_ANUAL: "https://buy.stripe.com/PLACEHOLDER_BASICO_ANUAL",
