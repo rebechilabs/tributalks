@@ -292,9 +292,10 @@ serve(async (req) => {
     )
 
   } catch (error) {
+    // Log error internally for debugging, but return sanitized message
     console.error('Error in analyze-credits:', error)
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: String(error) }),
+      JSON.stringify({ error: 'Erro ao analisar créditos. Tente novamente.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
