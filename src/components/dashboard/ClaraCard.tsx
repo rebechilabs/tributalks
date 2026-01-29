@@ -42,7 +42,7 @@ export function ClaraCard({ onOpenChat }: ClaraCardProps) {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-0.5">
-              TribuChat
+              Assistente IA
             </p>
             <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
               Clara
