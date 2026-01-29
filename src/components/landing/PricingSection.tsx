@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Check, X, Star, MessageCircle, Crown, Diamond } from "lucide-react";
+import { Check, X, Star, MessageCircle, Crown, Diamond, Users } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { CONFIG } from "@/config/site";
@@ -75,9 +75,10 @@ const plans: Plan[] = [
     priceAnnual: 24970,
     highlighted: true,
     popular: true,
-    cnpjLimit: "3 CNPJs",
+    cnpjLimit: "3 CNPJs • 3 Usuários",
     features: [
       { text: "Clara AI ilimitada + Comunidade", included: true },
+      { text: "3 assentos inclusos (CEO, CFO, Contador)", included: true },
       { text: "Tudo do Navigator", included: true },
       { text: "4 Workflows Guiados:", included: true },
       { text: "  1. Diagnóstico Tributário Completo", included: true },
@@ -88,6 +89,7 @@ const plans: Plan[] = [
       { text: "61+ Oportunidades Fiscais", included: true },
       { text: "Estimativa de Valuation com impacto do compliance", included: true },
       { text: "Relatórios PDF Profissionais", included: true },
+      { text: "Assentos extras: +R$250/mês cada", included: "limited" },
     ],
     ctaText: "Assinar Professional",
     linkMonthly: CONFIG.STRIPE_PAYMENT_LINKS.PROFESSIONAL_MENSAL,
@@ -99,8 +101,11 @@ const plans: Plan[] = [
     priceMonthly: 0,
     priceAnnual: 0,
     isEnterprise: true,
-    cnpjLimit: "Ilimitado",
+    cnpjLimit: "Ilimitado • Usuários Ilimitados",
     features: [
+      { text: "Tudo do Professional", included: true },
+      { text: "10 assentos inclusos", included: true },
+      { text: "Assentos extras: +R$200/mês cada", included: "limited" },
       { text: "Atendimento personalizado através do Rebechi & Silva Advogados Associados", included: true },
       { text: "White Label", included: true, limitText: "(seu logo, suas cores, seu domínio)" },
     ],

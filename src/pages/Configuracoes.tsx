@@ -10,6 +10,7 @@ import { Settings, Bell, Shield, Download, AlertTriangle, Loader2, CheckCircle, 
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { SeatManagement } from "@/components/settings/SeatManagement";
 
 const Configuracoes = () => {
   const { user, profile, refreshProfile, signOut } = useAuth();
@@ -136,6 +137,9 @@ const Configuracoes = () => {
         </div>
 
         <div className="space-y-6">
+          {/* Seat Management - Multi-user access */}
+          <SeatManagement />
+
           {/* Notifications */}
           <Card>
             <CardHeader>
