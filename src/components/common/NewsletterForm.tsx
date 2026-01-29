@@ -7,8 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { usePlanAccess } from "@/hooks/useFeatureAccess";
 import { cn } from "@/lib/utils";
 
 const emailSchema = z.object({
@@ -31,8 +29,6 @@ interface NewsletterFormProps {
 export function NewsletterForm({ variant = "default", className }: NewsletterFormProps) {
   const [formState, setFormState] = useState<FormState>("idle");
   const [errorMessage, setErrorMessage] = useState("");
-  const { user } = useAuth();
-  const { isEnterprise } = usePlanAccess();
 
   const form = useForm<EmailFormData>({
     resolver: zodResolver(emailSchema),
