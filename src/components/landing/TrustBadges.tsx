@@ -1,9 +1,11 @@
-import { Shield, Lock, Cloud, Scale, CreditCard } from "lucide-react";
+import { Shield, Lock, Cloud, Scale } from "lucide-react";
+import stripeLogo from "@/assets/stripe-logo.png";
 
 interface TrustBadge {
   icon: React.ReactNode;
   title: string;
   description: string;
+  isImage?: boolean;
 }
 
 const badges: TrustBadge[] = [
@@ -28,9 +30,10 @@ const badges: TrustBadge[] = [
     description: "Backup diário",
   },
   {
-    icon: <CreditCard className="w-5 h-5" />,
+    icon: <img src={stripeLogo} alt="Stripe" className="h-5 w-auto" />,
     title: "Pagamento Seguro",
-    description: "Processado via Stripe",
+    description: "Powered by Stripe",
+    isImage: true,
   },
 ];
 
