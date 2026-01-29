@@ -86,6 +86,7 @@ const plans: Plan[] = [
       { text: "  4. Simulação de Preços", included: true },
       { text: "Radar de Créditos + DRE Inteligente", included: true },
       { text: "61+ Oportunidades Fiscais", included: true },
+      { text: "Estimativa de Valuation com impacto do compliance", included: true },
       { text: "Relatórios PDF Profissionais", included: true },
     ],
     ctaText: "Assinar Professional",
