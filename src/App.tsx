@@ -46,6 +46,7 @@ import AnalisadorDocumentos from "./pages/AnalisadorDocumentos";
 import WorkflowsGuiados from "./pages/WorkflowsGuiados";
 import ChecklistReforma from "./pages/ChecklistReforma";
 import Integracoes from "./pages/Integracoes";
+import Consultorias from "./pages/Consultorias";
 
 // Calculadoras
 import SplitPayment from "./pages/calculadora/SplitPayment";
@@ -305,6 +306,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Integracoes />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/consultorias" 
+              element={
+                <ProtectedRoute>
+                  <Consultorias />
                 </ProtectedRoute>
               } 
             />
