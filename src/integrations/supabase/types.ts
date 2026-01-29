@@ -1344,6 +1344,45 @@ export type Database = {
         }
         Relationships: []
       }
+      organization_seats: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          id: string
+          invited_at: string
+          member_email: string
+          member_user_id: string | null
+          owner_id: string
+          role: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          id?: string
+          invited_at?: string
+          member_email: string
+          member_user_id?: string | null
+          owner_id: string
+          role?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          id?: string
+          invited_at?: string
+          member_email?: string
+          member_user_id?: string | null
+          owner_id?: string
+          role?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pilulas_reforma: {
         Row: {
           ativo: boolean | null
@@ -1429,8 +1468,10 @@ export type Database = {
           email: string | null
           empresa: string | null
           estado: string | null
+          extra_seats_purchased: number | null
           faturamento_mensal: number | null
           id: string
+          max_seats: number | null
           nome: string | null
           notif_consultorias: boolean | null
           notif_legislacao: boolean | null
@@ -1453,8 +1494,10 @@ export type Database = {
           email?: string | null
           empresa?: string | null
           estado?: string | null
+          extra_seats_purchased?: number | null
           faturamento_mensal?: number | null
           id?: string
+          max_seats?: number | null
           nome?: string | null
           notif_consultorias?: boolean | null
           notif_legislacao?: boolean | null
@@ -1477,8 +1520,10 @@ export type Database = {
           email?: string | null
           empresa?: string | null
           estado?: string | null
+          extra_seats_purchased?: number | null
           faturamento_mensal?: number | null
           id?: string
+          max_seats?: number | null
           nome?: string | null
           notif_consultorias?: boolean | null
           notif_legislacao?: boolean | null
@@ -2292,6 +2337,14 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_org_member: {
+        Args: { _owner_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_seat_owner: {
+        Args: { _owner_id: string; _user_id: string }
         Returns: boolean
       }
     }
