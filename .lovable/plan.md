@@ -1,70 +1,106 @@
 
-# Remover checks dos sub-itens de Workflows
+# Substituir TribuTech por TribuTalks em toda a plataforma
 
 ## Objetivo
-Alterar a exibição dos 4 Workflows Guiados no plano Professional para que apareçam como sub-itens (sem check verde), indicando visualmente que eles são componentes do item pai "4 Workflows Guiados:".
+Unificar a marca da plataforma sob o nome "TribuTalks", removendo todas as referências a "TribuTech" (e variações como "Tributech", "TributechAI") em textos, metadados e documentos.
 
-## Mudança
+## Escopo da Mudança
 
-### Arquivo: `src/components/landing/PricingSection.tsx`
+### Arquivos de Configuração e Metadados (4 arquivos)
 
-Adicionar nova propriedade `isSubItem` na interface e nos dados:
+| Arquivo | Antes | Depois |
+|---------|-------|--------|
+| `index.html` | `<meta name="author" content="TribuTech" />` | `<meta name="author" content="TribuTalks" />` |
+| `index.html` | `<meta name="apple-mobile-web-app-title" content="TribuTech" />` | `<meta name="apple-mobile-web-app-title" content="TribuTalks" />` |
+| `vite.config.ts` | `name: "TribuTech - Inteligência Tributária"` | `name: "TribuTalks - Inteligência Tributária"` |
+| `vite.config.ts` | `short_name: "TribuTech"` | `short_name: "TribuTalks"` |
 
-```typescript
-interface PlanFeature {
-  text: string;
-  included: boolean | "limited";
-  limitText?: string;
-  isSubItem?: boolean;  // Nova propriedade
-}
-```
+### Landing Page e FAQ (5 arquivos)
 
-Marcar os 4 workflows como sub-itens:
+| Arquivo | Mudança |
+|---------|---------|
+| `src/components/landing/FAQSection.tsx` | "Para quem é o TribuTech?" → "Para quem é o TribuTalks?" + respostas |
+| `src/components/landing/Footer.tsx` | alt="TribuTech" → alt="TribuTalks", "© 2026 TribuTech" → "© 2026 TribuTalks" |
+| `src/components/landing/CredibilitySection.tsx` | "TribuTech é uma iniciativa da..." → "TribuTalks é uma iniciativa da..." |
+| `src/components/landing/ValuationImpactSection.tsx` | "Exclusivo TribuTech" → "Exclusivo TribuTalks" |
 
-| Antes | Depois |
-|-------|--------|
-| `{ text: "  1. Diagnóstico Tributário Completo", included: true }` | `{ text: "1. Diagnóstico Tributário Completo", included: true, isSubItem: true }` |
-| `{ text: "  2. Preparação para a Reforma", included: true }` | `{ text: "2. Preparação para a Reforma", included: true, isSubItem: true }` |
-| `{ text: "  3. Análise de Contratos Societários", included: true }` | `{ text: "3. Análise de Contratos Societários", included: true, isSubItem: true }` |
-| `{ text: "  4. Simulação de Preços", included: true }` | `{ text: "4. Simulação de Preços", included: true, isSubItem: true }` |
+### Dashboard e Navegação (4 arquivos)
 
-Atualizar a renderização para não exibir ícone quando for sub-item, apenas indentação:
+| Arquivo | Mudança |
+|---------|---------|
+| `src/components/dashboard/Sidebar.tsx` | alt="TribuTech" → alt="TribuTalks" |
+| `src/components/dashboard/MobileNav.tsx` | alt="TribuTech" → alt="TribuTalks" |
+| `src/components/dashboard/DashboardLayout.tsx` | alt="TribuTech" → alt="TribuTalks" (se existir) |
+| `src/components/landing/Header.tsx` | import renaming (se necessário) |
 
-```tsx
-<li key={feature.text} className="flex items-start gap-2">
-  {feature.isSubItem ? (
-    <span className="w-5 flex-shrink-0" /> {/* Espaço vazio para indentação */}
-  ) : plan.isEnterprise && feature.included === true ? (
-    <Diamond className="w-5 h-5 text-primary flex-shrink-0" />
-  ) : feature.included === true ? (
-    <Check className="w-5 h-5 text-success flex-shrink-0" />
-  ) : /* ... resto do código */}
-```
+### Páginas de Autenticação (4 arquivos)
 
-## Resultado Visual
+| Arquivo | Mudança |
+|---------|---------|
+| `src/pages/Login.tsx` | alt="TribuTech" → alt="TribuTalks" |
+| `src/pages/Cadastro.tsx` | alt e textos → TribuTalks |
+| `src/pages/RecuperarSenha.tsx` | alt="TribuTech" → alt="TribuTalks" |
+| `src/pages/RedefinirSenha.tsx` | alt="TribuTech" → alt="TribuTalks" |
 
-**Antes:**
-```
-✓ 4 Workflows Guiados:
-✓ 1. Diagnóstico Tributário Completo
-✓ 2. Preparação para a Reforma
-✓ 3. Análise de Contratos Societários
-✓ 4. Simulação de Preços
-```
+### Páginas Institucionais (3 arquivos)
 
-**Depois:**
-```
-✓ 4 Workflows Guiados:
-    1. Diagnóstico Tributário Completo
-    2. Preparação para a Reforma
-    3. Análise de Contratos Societários
-    4. Simulação de Preços
-```
+| Arquivo | Mudança |
+|---------|---------|
+| `src/pages/Termos.tsx` | alt e textos → TribuTalks |
+| `src/pages/Privacidade.tsx` | alt e textos → TribuTalks |
+| `src/pages/Contato.tsx` | alt e textos → TribuTalks |
+
+### Documentos PDF (4 arquivos)
+
+| Arquivo | Mudança |
+|---------|---------|
+| `src/components/docs/TributechPitchPdf.tsx` | "TRIBUTECH" → "TRIBUTALKS" (capa), textos internos |
+| `src/components/docs/OpportunitiesDocPdf.tsx` | "TribuTech" → "TribuTalks" em todas as ocorrências |
+| `src/components/cases/CaseStudyPdf.tsx` | "TributechAI" → "TribuTalks" |
+| `src/lib/pdfReportTemplate.ts` | "Tributech" → "TribuTalks" nos disclaimers |
+
+### Edge Functions (2 arquivos)
+
+| Arquivo | Mudança |
+|---------|---------|
+| `supabase/functions/send-daily-metrics/index.ts` | Logo, subject, textos → TribuTalks |
+| `supabase/functions/send-news-alerts/index.ts` | Subject, textos → TribuTalks |
+
+### Outros (4 arquivos)
+
+| Arquivo | Mudança |
+|---------|---------|
+| `src/pages/EstudosCaso.tsx` | "TributechAI" → "TribuTalks" |
+| `src/data/caseStudies.ts` | "TributechAI" → "TribuTalks" |
+| `src/pages/DocumentoOportunidades.tsx` | Footer → TribuTalks |
+| `src/components/executive/ExecutiveReportPreview.tsx` | alt → TribuTalks |
+
+### Renomeação de Assets
+
+O arquivo `src/assets/logo-tributech.png` será mantido (não é possível renomear automaticamente), mas todos os imports e alt texts serão atualizados para refletir "TribuTalks".
 
 ---
 
-## Detalhes Técnicos
+## Resumo
 
-- Arquivo modificado: `src/components/landing/PricingSection.tsx`
-- Impacto: Apenas visual, sem alteração de lógica ou dados
-- Linhas afetadas: ~10-14 (interface), ~89-92 (dados), ~236-245 (renderização)
+| Categoria | Arquivos Afetados |
+|-----------|-------------------|
+| Configuração/Metadados | 2 |
+| Landing Page | 4 |
+| Dashboard/Nav | 3 |
+| Auth Pages | 4 |
+| Páginas Institucionais | 3 |
+| PDFs | 4 |
+| Edge Functions | 2 |
+| Outros | 4 |
+| **Total** | **~26 arquivos** |
+
+## Resultado
+
+Após a implementação:
+- "Para quem é o TribuTech?" → "Para quem é o TribuTalks?"
+- Todos os alt texts de logo → "TribuTalks"
+- Copyright → "© 2026 TribuTalks"
+- PWA → "TribuTalks - Inteligência Tributária"
+- Documentos PDF → marca TribuTalks
+- Emails automáticos → remetente/assunto TribuTalks
