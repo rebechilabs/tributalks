@@ -9,7 +9,8 @@ import {
   ExecutiveReformImpact, 
   ExecutiveRisks,
   ExecutiveNcmCard,
-  ClaraReportGenerator
+  ClaraReportGenerator,
+  ExecutiveValuationCard
 } from "@/components/executive";
 import { ExecutiveReportPreview } from "@/components/executive/ExecutiveReportPreview";
 import { useExecutiveData } from "@/hooks/useExecutiveData";
@@ -31,6 +32,7 @@ export default function PainelExecutivo() {
     topProjects,
     reformData,
     risks,
+    valuationData,
     loading,
     lastUpdate,
     refresh,
@@ -144,7 +146,10 @@ export default function PainelExecutivo() {
           />
         </div>
 
-        {/* Block 5 - NCM/CBS/IBS Card */}
+        {/* Block 5 - Valuation Estimation (NEW) */}
+        <ExecutiveValuationCard data={valuationData} loading={loading} />
+
+        {/* Block 6 - NCM/CBS/IBS Card */}
         <ExecutiveNcmCard userId={user?.id} loading={loading} />
       </div>
 

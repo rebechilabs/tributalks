@@ -1,6 +1,6 @@
 import { 
   Scale, Wallet, Sparkles, FileText, Users, 
-  Calculator, Upload, Target, BarChart3, Trophy, Newspaper, Clock, Navigation, MapPin
+  Calculator, Upload, Target, BarChart3, Trophy, Newspaper, Clock, Navigation, MapPin, TrendingUp
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -94,6 +94,14 @@ const features = [
     title: "Relatórios PDF",
     description:
       "Gere PDFs profissionais para apresentar nas reuniões com sócios e diretoria.",
+  },
+  {
+    icon: TrendingUp,
+    title: "Impacto no Valuation",
+    description:
+      "Veja como seu compliance tributário afeta o valor da sua empresa em cenários de M&A.",
+    badge: "EXCLUSIVO",
+    badgeVariant: "default" as const,
   },
 ];
 

@@ -42,14 +42,54 @@ export interface RiskItem {
   scoreAtual: number;
 }
 
+export interface ValuationData {
+  valuationMin: number;
+  valuationMax: number;
+  multiploBase: number;
+  ajusteCompliance: number; // multiplier (e.g., 1.15 for +15%)
+  ajustePercentual: number; // percentage (e.g., 15 for +15%)
+  potencialMelhoria: number; // additional value if score improves to A
+  sectorName: string;
+  scoreGrade: string | null;
+  scoreTotal: number | null;
+  hasData: boolean;
+  missingData: ('ebitda' | 'score' | 'sector')[];
+}
+
 interface UseExecutiveDataReturn {
   thermometerData: ThermometerData | null;
   topProjects: ProjetoTributario[];
   reformData: ReformImpactData | null;
   risks: RiskItem[];
+  valuationData: ValuationData | null;
   loading: boolean;
   lastUpdate: Date | null;
   refresh: () => Promise<void>;
+}
+
+// Default sector multiples (used when no benchmark found)
+const DEFAULT_SECTOR_MULTIPLES: Record<string, { multiple: number; name: string }> = {
+  'tecnologia': { multiple: 7.0, name: 'Tecnologia' },
+  'servicos': { multiple: 4.8, name: 'Serviços Profissionais' },
+  'saude': { multiple: 5.5, name: 'Saúde' },
+  'varejo': { multiple: 4.0, name: 'Varejo' },
+  'industria': { multiple: 5.0, name: 'Indústria' },
+  'construcao': { multiple: 4.5, name: 'Construção' },
+  'agronegocio': { multiple: 5.5, name: 'Agronegócio' },
+  'financeiro': { multiple: 6.0, name: 'Financeiro' },
+  'educacao': { multiple: 5.0, name: 'Educação' },
+  'default': { multiple: 5.0, name: 'Mercado Geral' },
+};
+
+// Compliance adjustment based on tax score (0-1000)
+function getComplianceAdjustment(score: number | null): { multiplier: number; percentual: number } {
+  if (score === null) return { multiplier: 1.0, percentual: 0 };
+  
+  if (score >= 900) return { multiplier: 1.15, percentual: 15 };  // A+/A
+  if (score >= 750) return { multiplier: 1.05, percentual: 5 };   // B
+  if (score >= 600) return { multiplier: 1.0, percentual: 0 };    // C
+  if (score >= 400) return { multiplier: 0.85, percentual: -15 }; // D
+  return { multiplier: 0.70, percentual: -30 };                    // E
 }
 
 // Risk level from risco_autuacao (0-100 scale)
@@ -109,6 +149,7 @@ export function useExecutiveData(userId: string | undefined): UseExecutiveDataRe
   const [topProjects, setTopProjects] = useState<ProjetoTributario[]>([]);
   const [reformData, setReformData] = useState<ReformImpactData | null>(null);
   const [risks, setRisks] = useState<RiskItem[]>([]);
+  const [valuationData, setValuationData] = useState<ValuationData | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
@@ -129,15 +170,19 @@ export function useExecutiveData(userId: string | undefined): UseExecutiveDataRe
         creditSummaryResult,
         identifiedCreditsResult,
         actionsResult,
-        opportunitiesResult
+        opportunitiesResult,
+        companyProfileResult,
+        sectorBenchmarkResult
       ] = await Promise.all([
-        supabase.from('profiles').select('nome').eq('user_id', userId).maybeSingle(),
+        supabase.from('profiles').select('nome, setor, cnae').eq('user_id', userId).maybeSingle(),
         supabase.from('tax_score').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
         supabase.from('company_dre').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
         supabase.from('credit_analysis_summary').select('total_potential').eq('user_id', userId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
         supabase.from('identified_credits').select('potential_recovery').eq('user_id', userId),
         supabase.from('score_actions').select('*').eq('user_id', userId).eq('status', 'pending').order('priority', { ascending: true }).limit(3),
         supabase.from('company_opportunities').select('*, opportunity:opportunity_id(name, name_simples, description, description_ceo)').eq('user_id', userId).order('economia_anual_max', { ascending: false }).limit(3),
+        supabase.from('company_profile').select('setor, cnae_principal').eq('user_id', userId).maybeSingle(),
+        supabase.from('sector_benchmarks').select('sector_name, avg_ebitda_margin').limit(10),
       ]);
 
       // Extract data
@@ -315,6 +360,99 @@ export function useExecutiveData(userId: string | undefined): UseExecutiveDataRe
       }
 
       setRisks(riskItems.slice(0, 4));
+
+      // ========== VALUATION CALCULATION ==========
+      const ebitda = dre?.calc_ebitda ? Number(dre.calc_ebitda) : null;
+      const scoreTotal = taxScore?.score_total ? Number(taxScore.score_total) : null;
+      const scoreGrade = taxScore?.score_grade || null;
+      
+      // Get sector from company_profile or profiles
+      const sectorFromProfile = companyProfileResult.data?.setor || profileResult.data?.setor;
+      const cnaeFromProfile = companyProfileResult.data?.cnae_principal || profileResult.data?.cnae;
+      
+      // Determine sector multiple
+      let sectorKey = 'default';
+      let sectorName = 'Mercado Geral';
+      
+      if (sectorFromProfile) {
+        const normalizedSector = sectorFromProfile.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        
+        // Map sector to our predefined multiples
+        if (normalizedSector.includes('tecnologia') || normalizedSector.includes('software') || normalizedSector.includes('ti')) {
+          sectorKey = 'tecnologia';
+        } else if (normalizedSector.includes('saude') || normalizedSector.includes('medic') || normalizedSector.includes('hospital')) {
+          sectorKey = 'saude';
+        } else if (normalizedSector.includes('varejo') || normalizedSector.includes('comercio')) {
+          sectorKey = 'varejo';
+        } else if (normalizedSector.includes('industria') || normalizedSector.includes('manufatura')) {
+          sectorKey = 'industria';
+        } else if (normalizedSector.includes('construcao') || normalizedSector.includes('imobili')) {
+          sectorKey = 'construcao';
+        } else if (normalizedSector.includes('agro') || normalizedSector.includes('agricul')) {
+          sectorKey = 'agronegocio';
+        } else if (normalizedSector.includes('financ') || normalizedSector.includes('banco')) {
+          sectorKey = 'financeiro';
+        } else if (normalizedSector.includes('educa') || normalizedSector.includes('ensino')) {
+          sectorKey = 'educacao';
+        } else if (normalizedSector.includes('servic')) {
+          sectorKey = 'servicos';
+        }
+      }
+      
+      const sectorData = DEFAULT_SECTOR_MULTIPLES[sectorKey] || DEFAULT_SECTOR_MULTIPLES['default'];
+      sectorName = sectorData.name;
+      const baseMultiple = sectorData.multiple;
+
+      // Calculate valuation data
+      const missingData: ('ebitda' | 'score' | 'sector')[] = [];
+      if (!ebitda || ebitda <= 0) missingData.push('ebitda');
+      if (scoreTotal === null) missingData.push('score');
+      if (!sectorFromProfile && !cnaeFromProfile) missingData.push('sector');
+
+      const hasValuationData = ebitda !== null && ebitda > 0;
+
+      if (hasValuationData) {
+        const { multiplier, percentual } = getComplianceAdjustment(scoreTotal);
+        const adjustedMultiple = baseMultiple * multiplier;
+        const baseValuation = (ebitda * 12) * adjustedMultiple; // Annualized EBITDA × multiple
+        
+        // Calculate potential improvement (what if score goes to A = 900+)
+        const targetAdjustment = getComplianceAdjustment(900);
+        const targetMultiple = baseMultiple * targetAdjustment.multiplier;
+        const targetValuation = (ebitda * 12) * targetMultiple;
+        const potencialMelhoria = scoreTotal !== null && scoreTotal < 900 
+          ? Math.max(0, targetValuation - baseValuation)
+          : 0;
+
+        setValuationData({
+          valuationMin: baseValuation * 0.8, // -20% uncertainty
+          valuationMax: baseValuation * 1.2, // +20% uncertainty
+          multiploBase: adjustedMultiple,
+          ajusteCompliance: multiplier,
+          ajustePercentual: percentual,
+          potencialMelhoria,
+          sectorName,
+          scoreGrade,
+          scoreTotal,
+          hasData: true,
+          missingData,
+        });
+      } else {
+        setValuationData({
+          valuationMin: 0,
+          valuationMax: 0,
+          multiploBase: baseMultiple,
+          ajusteCompliance: 1,
+          ajustePercentual: 0,
+          potencialMelhoria: 0,
+          sectorName,
+          scoreGrade,
+          scoreTotal,
+          hasData: false,
+          missingData,
+        });
+      }
+
       setLastUpdate(new Date());
     } catch (error) {
       console.error('Error fetching executive data:', error);
@@ -332,6 +470,7 @@ export function useExecutiveData(userId: string | undefined): UseExecutiveDataRe
     topProjects,
     reformData,
     risks,
+    valuationData,
     loading,
     lastUpdate,
     refresh: fetchData,

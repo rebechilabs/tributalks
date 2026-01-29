@@ -11,6 +11,7 @@ import { CredibilitySection } from "@/components/landing/CredibilitySection";
 import { FAQSection } from "@/components/landing/FAQSection";
 import { CTASection } from "@/components/landing/CTASection";
 import { Footer } from "@/components/landing/Footer";
+import { ValuationImpactSection } from "@/components/landing/ValuationImpactSection";
 
 const Index = () => {
   return (
@@ -23,6 +24,7 @@ const Index = () => {
         <IntegrationsSection />
         <HowItWorksSection />
         <TestimonialsSection />
+        <ValuationImpactSection />
         <PricingSection />
         <ComingSoonSection />
         <CredibilitySection />

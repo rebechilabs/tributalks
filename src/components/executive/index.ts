@@ -6,3 +6,5 @@ export { ExecutiveRisks } from './ExecutiveRisks';
 export { ExecutiveReportPreview } from './ExecutiveReportPreview';
 export { ExecutiveNcmCard } from './ExecutiveNcmCard';
 export { ClaraReportGenerator } from './ClaraReportGenerator';
+export { ExecutiveValuationCard } from './ExecutiveValuationCard';
+export type { ValuationData } from './ExecutiveValuationCard';
