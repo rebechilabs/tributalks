@@ -1446,9 +1446,9 @@ serve(async (req) => {
             .eq('id', syncLog.id);
         }
 
+        // Log error internally, return sanitized message
         return new Response(JSON.stringify({ 
-          error: 'Erro na sincronização', 
-          details: String(error),
+          error: 'Erro na sincronização. Tente novamente.',
           results 
         }), {
           status: 500,
@@ -1463,8 +1463,9 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    // Log error internally for debugging, but return sanitized message
     console.error('Handler error:', error);
-    return new Response(JSON.stringify({ error: String(error) }), { 
+    return new Response(JSON.stringify({ error: 'Erro interno. Tente novamente.' }), { 
       status: 500, 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
     });

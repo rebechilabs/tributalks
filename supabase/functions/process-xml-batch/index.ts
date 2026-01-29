@@ -631,9 +631,10 @@ serve(async (req) => {
     );
 
   } catch (error) {
+    // Log error internally for debugging, but return sanitized message
     console.error('Error in process-xml-batch:', error);
     return new Response(
-      JSON.stringify({ success: false, error: String(error) }),
+      JSON.stringify({ success: false, error: 'Erro ao processar XMLs. Tente novamente.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

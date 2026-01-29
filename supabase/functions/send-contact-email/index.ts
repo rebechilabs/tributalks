@@ -15,6 +15,64 @@ interface ContactRequest {
   mensagem: string;
 }
 
+// ============================================================================
+// Rate Limiting - In-memory store (resets on function cold start)
+// ============================================================================
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+const RATE_LIMIT_MAX_REQUESTS = 3; // 3 requests per window
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+
+  if (!record || now > record.resetTime) {
+    // New window or expired
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+
+  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return true;
+  }
+
+  record.count++;
+  return false;
+}
+
+// ============================================================================
+// Input Validation & Sanitization
+// ============================================================================
+function sanitizeInput(input: string, maxLength: number): string {
+  if (typeof input !== 'string') return '';
+  
+  // Trim, remove null bytes, limit length
+  return input
+    .trim()
+    .replace(/\0/g, '')
+    .substring(0, maxLength);
+}
+
+function isValidEmail(email: string): boolean {
+  // RFC 5322 compliant regex (simplified)
+  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+  return emailRegex.test(email) && email.length <= 255;
+}
+
+function escapeHtml(text: string): string {
+  const htmlEntities: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#x27;',
+  };
+  return text.replace(/[&<>"']/g, char => htmlEntities[char] || char);
+}
+
+// ============================================================================
+// Email Sending
+// ============================================================================
 async function sendEmail(to: string[], subject: string, html: string, replyTo?: string) {
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -39,6 +97,9 @@ async function sendEmail(to: string[], subject: string, html: string, replyTo?: 
   return response.json();
 }
 
+// ============================================================================
+// Request Handler
+// ============================================================================
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -46,21 +107,80 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Rate limiting check
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() 
+      || req.headers.get("cf-connecting-ip") 
+      || "unknown";
+    
+    if (isRateLimited(clientIp)) {
+      console.warn(`Rate limit exceeded for IP: ${clientIp.substring(0, 10)}...`);
+      return new Response(
+        JSON.stringify({ error: "Limite de envios atingido. Tente novamente em alguns minutos." }),
+        {
+          status: 429,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
     if (!RESEND_API_KEY) {
-      throw new Error("RESEND_API_KEY not configured");
+      console.error("RESEND_API_KEY not configured");
+      return new Response(
+        JSON.stringify({ error: "Serviço temporariamente indisponível." }),
+        {
+          status: 503,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
 
-    const { nome, email, assunto, mensagem }: ContactRequest = await req.json();
+    const body = await req.json();
+    
+    // Sanitize and validate inputs
+    const nome = sanitizeInput(body.nome || '', 100);
+    const email = sanitizeInput(body.email || '', 255);
+    const assunto = sanitizeInput(body.assunto || '', 200);
+    const mensagem = sanitizeInput(body.mensagem || '', 2000);
 
-    // Validate required fields
-    if (!nome || !email || !assunto || !mensagem) {
-      throw new Error("Campos obrigatórios: nome, email, assunto, mensagem");
+    // Validation
+    if (!nome || nome.length < 2) {
+      return new Response(
+        JSON.stringify({ error: "Nome deve ter pelo menos 2 caracteres." }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
+
+    if (!isValidEmail(email)) {
+      return new Response(
+        JSON.stringify({ error: "E-mail inválido." }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (!assunto || assunto.length < 3) {
+      return new Response(
+        JSON.stringify({ error: "Assunto deve ter pelo menos 3 caracteres." }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (!mensagem || mensagem.length < 10) {
+      return new Response(
+        JSON.stringify({ error: "Mensagem deve ter pelo menos 10 caracteres." }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Escape HTML for email body
+    const safeNome = escapeHtml(nome);
+    const safeEmail = escapeHtml(email);
+    const safeAssunto = escapeHtml(assunto);
+    const safeMensagem = escapeHtml(mensagem);
 
     // Send email to support
     await sendEmail(
       ["suporte@tributalks.com.br"],
-      `[Contato] ${assunto}`,
+      `[Contato] ${safeAssunto}`,
       `
         <!DOCTYPE html>
         <html>
@@ -86,19 +206,19 @@ const handler = async (req: Request): Promise<Response> => {
             <div class="content">
               <div class="field">
                 <div class="label">👤 Nome:</div>
-                <div class="value">${nome}</div>
+                <div class="value">${safeNome}</div>
               </div>
               <div class="field">
                 <div class="label">📧 E-mail:</div>
-                <div class="value"><a href="mailto:${email}">${email}</a></div>
+                <div class="value"><a href="mailto:${safeEmail}">${safeEmail}</a></div>
               </div>
               <div class="field">
                 <div class="label">📋 Assunto:</div>
-                <div class="value">${assunto}</div>
+                <div class="value">${safeAssunto}</div>
               </div>
               <div class="field">
                 <div class="label">💬 Mensagem:</div>
-                <div class="value" style="white-space: pre-wrap;">${mensagem}</div>
+                <div class="value" style="white-space: pre-wrap;">${safeMensagem}</div>
               </div>
             </div>
             <div class="footer">
@@ -109,7 +229,7 @@ const handler = async (req: Request): Promise<Response> => {
         </body>
         </html>
       `,
-      email
+      email // reply_to uses original (validated) email
     );
 
     console.log("Contact email sent successfully to support");
@@ -117,7 +237,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Send confirmation to the user
     await sendEmail(
       [email],
-      `Recebemos sua mensagem - ${assunto}`,
+      `Recebemos sua mensagem - ${safeAssunto}`,
       `
         <!DOCTYPE html>
         <html>
@@ -137,8 +257,8 @@ const handler = async (req: Request): Promise<Response> => {
               <h1 style="margin: 0; font-size: 24px;">✅ Mensagem Recebida!</h1>
             </div>
             <div class="content">
-              <p>Olá <strong>${nome}</strong>,</p>
-              <p>Recebemos sua mensagem sobre "<strong>${assunto}</strong>" e nossa equipe entrará em contato em breve.</p>
+              <p>Olá <strong>${safeNome}</strong>,</p>
+              <p>Recebemos sua mensagem sobre "<strong>${safeAssunto}</strong>" e nossa equipe entrará em contato em breve.</p>
               <p>Tempo médio de resposta: <strong>até 24 horas úteis</strong>.</p>
               <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
               <p style="font-size: 14px; color: #6b7280;">
@@ -165,10 +285,11 @@ const handler = async (req: Request): Promise<Response> => {
         ...corsHeaders,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    // Log error internally for debugging, but return sanitized message
     console.error("Error in send-contact-email function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "Erro ao enviar mensagem. Tente novamente." }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
