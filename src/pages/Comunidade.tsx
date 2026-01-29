@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, Lock, Sparkles, ExternalLink, MessageCircle, Calendar, BookOpen } from "lucide-react";
+import { ContentLibrary } from "@/components/community/ContentLibrary";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Link } from "react-router-dom";
@@ -124,20 +125,18 @@ const Comunidade = () => {
           {/* Content Library */}
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-start gap-4">
+              <div className="flex items-start gap-4 mb-6">
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                   <BookOpen className="w-6 h-6 text-primary" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-foreground mb-1">Biblioteca de Conteúdos</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Acesse materiais exclusivos: guias, planilhas, checklists e mais.
+                  <p className="text-sm text-muted-foreground">
+                    Materiais exclusivos para membros: guias, templates, checklists e webinars.
                   </p>
-                  <Button variant="outline" disabled className="gap-2">
-                    Em breve
-                  </Button>
                 </div>
               </div>
+              <ContentLibrary />
             </CardContent>
           </Card>
         </div>
