@@ -11,6 +11,7 @@ interface PlanFeature {
   text: string;
   included: boolean | "limited";
   limitText?: string;
+  isSubItem?: boolean;
 }
 
 interface Plan {
@@ -86,10 +87,10 @@ const plans: Plan[] = [
       { text: "3 assentos inclusos (CEO, CFO, Contador)", included: true },
       { text: "Tudo do Navigator", included: true },
       { text: "4 Workflows Guiados:", included: true },
-      { text: "  1. Diagnóstico Tributário Completo", included: true },
-      { text: "  2. Preparação para a Reforma", included: true },
-      { text: "  3. Análise de Contratos Societários", included: true },
-      { text: "  4. Simulação de Preços", included: true },
+      { text: "1. Diagnóstico Tributário Completo", included: true, isSubItem: true },
+      { text: "2. Preparação para a Reforma", included: true, isSubItem: true },
+      { text: "3. Análise de Contratos Societários", included: true, isSubItem: true },
+      { text: "4. Simulação de Preços", included: true, isSubItem: true },
       { text: "Radar de Créditos + DRE Inteligente", included: true },
       { text: "61+ Oportunidades Fiscais", included: true },
       { text: "Estimativa de Valuation com impacto do compliance", included: true },
@@ -233,8 +234,10 @@ export function PricingSection() {
                 {/* Features */}
                 <ul className="space-y-3 mb-6">
                   {plan.features.map((feature) => (
-                    <li key={feature.text} className="flex items-start gap-2">
-                      {plan.isEnterprise && feature.included === true ? (
+                    <li key={feature.text} className={`flex items-start gap-2 ${feature.isSubItem ? "ml-4" : ""}`}>
+                      {feature.isSubItem ? (
+                        <span className="w-5 flex-shrink-0" />
+                      ) : plan.isEnterprise && feature.included === true ? (
                         <Diamond className="w-5 h-5 text-primary flex-shrink-0" />
                       ) : feature.included === true ? (
                         <Check className="w-5 h-5 text-success flex-shrink-0" />
