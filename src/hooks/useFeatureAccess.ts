@@ -114,7 +114,7 @@ export const CNPJ_LIMITS: Record<UserPlan, number | 'unlimited'> = {
 // Limite de mensagens Clara AI por plano
 export const TRIBUBOT_LIMITS: Record<UserPlan, number | 'unlimited'> = {
   'FREE': 3,        // 3 mensagens total
-  'NAVIGATOR': 10,  // 10 mensagens/dia
+  'NAVIGATOR': 30,  // 30 mensagens/dia
   'PROFESSIONAL': 'unlimited',
   'ENTERPRISE': 'unlimited',
 };
