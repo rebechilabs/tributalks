@@ -115,6 +115,23 @@ serve(async (req) => {
             console.error('Failed to update user subscription:', updateError)
           } else {
             console.log(`Updated user ${profiles[0].user_id} to plan ${plano}`)
+            
+            // Trigger referral processing asynchronously
+            try {
+              const supabaseUrl = Deno.env.get('SUPABASE_URL')
+              const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
+              if (supabaseUrl && anonKey) {
+                fetch(`${supabaseUrl}/functions/v1/process-referral-rewards`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${anonKey}`,
+                  },
+                }).catch(err => console.log('Referral processing triggered (async):', err?.message || 'ok'))
+              }
+            } catch (refErr) {
+              console.log('Could not trigger referral processing:', refErr)
+            }
           }
         }
         

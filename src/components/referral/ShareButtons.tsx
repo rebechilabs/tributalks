@@ -7,7 +7,7 @@ interface ShareButtonsProps {
 }
 
 export function ShareButtons({ referralLink, code }: ShareButtonsProps) {
-  const shareMessage = `Conheça o TribuTech! Use meu código ${code} e prepare sua empresa para a Reforma Tributária: ${referralLink}`;
+  const shareMessage = `Conheça o TribuTalks! Use meu código ${code} e prepare sua empresa para a Reforma Tributária: ${referralLink}`;
   
   const handleWhatsApp = () => {
     const url = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
@@ -20,9 +20,9 @@ export function ShareButtons({ referralLink, code }: ShareButtonsProps) {
   };
 
   const handleEmail = () => {
-    const subject = encodeURIComponent('Convite para o TribuTech - Reforma Tributária');
+    const subject = encodeURIComponent('Convite para o TribuTalks - Reforma Tributária');
     const body = encodeURIComponent(
-      `Olá!\n\nQuero te convidar para conhecer o TribuTech, a plataforma que está me ajudando a preparar minha empresa para a Reforma Tributária.\n\nUse meu código de indicação: ${code}\n\nAcesse: ${referralLink}\n\nAbraços!`
+      `Olá!\n\nQuero te convidar para conhecer o TribuTalks, a plataforma que está me ajudando a preparar minha empresa para a Reforma Tributária.\n\nUse meu código de indicação: ${code}\n\nAcesse: ${referralLink}\n\nAbraços!`
     );
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };

@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Find pending referrals where referred user has active subscription
+    // STEP 1: Find pending referrals to qualify (new signups with active subscription)
     const { data: pendingReferrals, error: fetchError } = await supabase
       .from("referrals")
       .select(`
@@ -102,18 +102,12 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to fetch pending referrals: ${fetchError.message}`);
     }
 
-    if (!pendingReferrals || pendingReferrals.length === 0) {
-      return new Response(
-        JSON.stringify({ message: "No pending referrals to process", processed: 0 }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const processedReferrals: string[] = [];
+    const qualifiedReferrals: string[] = [];
+    const rewardedReferrals: string[] = [];
     const rewards: ReferralReward[] = [];
 
-    for (const referral of pendingReferrals) {
-      // Check if referred user has active subscription
+    // Process pending → qualified
+    for (const referral of pendingReferrals || []) {
       const { data: referredProfile } = await supabase
         .from("profiles")
         .select("subscription_status, plano")
@@ -125,7 +119,7 @@ Deno.serve(async (req) => {
         referredProfile?.plano &&
         referredProfile.plano !== "FREE"
       ) {
-        // Mark referral as qualified
+        // Mark referral as qualified with timestamp
         const { error: updateError } = await supabase
           .from("referrals")
           .update({
@@ -136,85 +130,134 @@ Deno.serve(async (req) => {
           .eq("id", referral.id);
 
         if (!updateError) {
-          processedReferrals.push(referral.id);
+          qualifiedReferrals.push(referral.id);
 
-          // Update referral code successful count
-          await supabase.rpc("increment_referral_count", {
-            referrer_user_id: referral.referrer_id,
+          // Create notification for referrer about qualification
+          await supabase.from("notifications").insert({
+            user_id: referral.referrer_id,
+            title: "🎯 Indicação qualificada!",
+            message: "Sua indicação assinou um plano! Após 30 dias de assinatura ativa, seu desconto será aplicado.",
+            type: "info",
+            category: "indicacao",
+            action_url: "/indicar",
           });
+        }
+      }
+    }
 
-          // Get updated count for discount calculation
-          const { data: codeData } = await supabase
-            .from("referral_codes")
-            .select("successful_referrals")
+    // STEP 2: Find qualified referrals that are 30+ days old to reward
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const { data: qualifiedToReward, error: qualifiedError } = await supabase
+      .from("referrals")
+      .select(`
+        id,
+        referrer_id,
+        referred_id,
+        referral_code,
+        subscription_started_at
+      `)
+      .eq("status", "qualified")
+      .lt("subscription_started_at", thirtyDaysAgo.toISOString());
+
+    if (qualifiedError) {
+      console.error("Failed to fetch qualified referrals:", qualifiedError.message);
+    }
+
+    // Process qualified → rewarded
+    for (const referral of qualifiedToReward || []) {
+      // Verify referred user still has active subscription
+      const { data: referredProfile } = await supabase
+        .from("profiles")
+        .select("subscription_status, plano")
+        .eq("user_id", referral.referred_id)
+        .maybeSingle();
+
+      if (
+        referredProfile?.subscription_status !== "active" ||
+        !referredProfile?.plano ||
+        referredProfile.plano === "FREE"
+      ) {
+        // Subscription was cancelled, mark as expired
+        await supabase
+          .from("referrals")
+          .update({ status: "expired" })
+          .eq("id", referral.id);
+        continue;
+      }
+
+      // Increment successful referral count
+      const { data: codeData } = await supabase
+        .from("referral_codes")
+        .select("successful_referrals")
+        .eq("user_id", referral.referrer_id)
+        .maybeSingle();
+
+      if (codeData) {
+        const successfulCount = (codeData.successful_referrals || 0) + 1;
+        const tier = getDiscountTier(successfulCount);
+
+        // Update successful_referrals count
+        await supabase
+          .from("referral_codes")
+          .update({ successful_referrals: successfulCount })
+          .eq("user_id", referral.referrer_id);
+
+        let couponApplied = false;
+
+        if (tier) {
+          // Get referrer's profile to apply discount
+          const { data: referrerProfile } = await supabase
+            .from("profiles")
+            .select("stripe_subscription_id, stripe_customer_id, email")
             .eq("user_id", referral.referrer_id)
             .maybeSingle();
 
-          if (codeData) {
-            const successfulCount = (codeData.successful_referrals || 0) + 1;
-            const tier = getDiscountTier(successfulCount);
+          if (referrerProfile?.stripe_subscription_id) {
+            // Ensure coupon exists
+            await getOrCreateCoupon(stripe, tier);
 
-            // Update successful_referrals count
-            await supabase
-              .from("referral_codes")
-              .update({ successful_referrals: successfulCount })
-              .eq("user_id", referral.referrer_id);
-
-            let couponApplied = false;
-
-            if (tier) {
-              // Get referrer's profile to apply discount
-              const { data: referrerProfile } = await supabase
-                .from("profiles")
-                .select("stripe_subscription_id, stripe_customer_id, email")
-                .eq("user_id", referral.referrer_id)
-                .maybeSingle();
-
-              if (referrerProfile?.stripe_subscription_id) {
-                // Ensure coupon exists
-                await getOrCreateCoupon(stripe, tier);
-
-                // Apply discount to referrer's subscription
-                couponApplied = await applyDiscountToSubscription(
-                  stripe,
-                  referrerProfile.stripe_subscription_id,
-                  tier.couponId
-                );
-
-                if (couponApplied) {
-                  // Update referral with reward info
-                  await supabase
-                    .from("referrals")
-                    .update({
-                      discount_percentage: tier.percent,
-                      reward_applied_at: new Date().toISOString(),
-                    })
-                    .eq("id", referral.id);
-                }
-              }
-
-              rewards.push({
-                referrer_id: referral.referrer_id,
-                successful_count: successfulCount,
-                discount_percentage: tier.percent,
-                coupon_applied: couponApplied,
-              });
-
-              // Create notification for referrer
-              const notificationMessage = couponApplied
-                ? `Sua indicação assinou um plano! O desconto de ${tier.percent}% já foi aplicado na sua próxima renovação.`
-                : `Sua indicação assinou um plano! Você tem direito a ${tier.percent}% de desconto. Entre em contato para aplicar.`;
-
-              await supabase.from("notifications").insert({
-                user_id: referral.referrer_id,
-                title: "🎉 Indicação qualificada!",
-                message: notificationMessage,
-                type: "success",
-                category: "indicacao",
-                action_url: "/indicar",
-              });
-            }
+            // Apply discount to referrer's subscription
+            couponApplied = await applyDiscountToSubscription(
+              stripe,
+              referrerProfile.stripe_subscription_id,
+              tier.couponId
+            );
           }
+
+          // Mark as rewarded
+          await supabase
+            .from("referrals")
+            .update({
+              status: "rewarded",
+              discount_percentage: tier.percent,
+              reward_applied_at: new Date().toISOString(),
+            })
+            .eq("id", referral.id);
+
+          rewardedReferrals.push(referral.id);
+
+          rewards.push({
+            referrer_id: referral.referrer_id,
+            successful_count: successfulCount,
+            discount_percentage: tier.percent,
+            coupon_applied: couponApplied,
+          });
+
+          // Create notification for referrer about reward
+          const notificationMessage = couponApplied
+            ? `Parabéns! O desconto de ${tier.percent}% foi aplicado na sua assinatura. Total de ${successfulCount} indicações bem-sucedidas!`
+            : `Parabéns! Você tem direito a ${tier.percent}% de desconto. Entre em contato para aplicar.`;
+
+          await supabase.from("notifications").insert({
+            user_id: referral.referrer_id,
+            title: "🎉 Recompensa liberada!",
+            message: notificationMessage,
+            type: "success",
+            category: "indicacao",
+            action_url: "/indicar",
+          });
         }
       }
     }
@@ -222,7 +265,8 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         message: "Referrals processed successfully",
-        processed: processedReferrals.length,
+        qualified: qualifiedReferrals.length,
+        rewarded: rewardedReferrals.length,
         rewards,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
