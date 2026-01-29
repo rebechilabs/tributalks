@@ -51,17 +51,9 @@ const features = [
   },
   {
     icon: Upload,
-    title: "Importar XMLs",
+    title: "Radar Tributário + XMLs",
     description:
-      "Faça upload das suas notas fiscais e analise automaticamente oportunidades de crédito.",
-    badge: "Professional",
-    badgeVariant: "outline" as const,
-  },
-  {
-    icon: Target,
-    title: "Radar Tributário: Créditos + IA preditiva",
-    description:
-      "Pode me trazer quais são as oportunidades fiscais?",
+      "Importe suas notas fiscais e identifique automaticamente créditos recuperáveis com IA preditiva.",
     badge: "Professional",
     badgeVariant: "outline" as const,
   },
