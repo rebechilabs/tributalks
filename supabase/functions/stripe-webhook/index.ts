@@ -36,6 +36,12 @@ const PRICE_TO_CREDITS: Record<string, number> = {
   [Deno.env.get('STRIPE_PRICE_CREDITS_30') || 'price_credits_30']: 30,
 }
 
+// Map Stripe price IDs to seat purchases
+const PRICE_TO_SEATS: Record<string, { seats: number; plan: string }> = {
+  [Deno.env.get('STRIPE_PRICE_SEAT_PROFESSIONAL') || 'price_seat_professional']: { seats: 1, plan: 'PROFESSIONAL' },
+  [Deno.env.get('STRIPE_PRICE_SEAT_ENTERPRISE') || 'price_seat_enterprise']: { seats: 1, plan: 'ENTERPRISE' },
+}
+
 serve(async (req) => {
   const signature = req.headers.get('stripe-signature')
   
@@ -171,6 +177,45 @@ serve(async (req) => {
                 stripe_price_id: priceId,
                 status: 'completed',
               })
+          }
+          
+          // Handle seat purchase
+          const seatInfo = priceId ? PRICE_TO_SEATS[priceId] : null
+          if (seatInfo) {
+            // Find user by email
+            const { data: profiles, error: findError } = await supabaseAdmin
+              .from('profiles')
+              .select('user_id, extra_seats_purchased, plano')
+              .eq('email', session.customer_email)
+              .limit(1)
+
+            if (findError || !profiles?.length) {
+              console.error('User not found for seat purchase:', session.customer_email)
+              break
+            }
+
+            const userId = profiles[0].user_id
+            const currentSeats = profiles[0].extra_seats_purchased || 0
+
+            // Verify user has the correct plan for this seat type
+            if (profiles[0].plano !== seatInfo.plan) {
+              console.error(`User ${userId} tried to buy ${seatInfo.plan} seat but has plan ${profiles[0].plano}`)
+              break
+            }
+
+            // Add extra seat to profile
+            const { error: updateError } = await supabaseAdmin
+              .from('profiles')
+              .update({
+                extra_seats_purchased: currentSeats + seatInfo.seats,
+              })
+              .eq('user_id', userId)
+
+            if (updateError) {
+              console.error('Failed to add seat:', updateError)
+            } else {
+              console.log(`Added ${seatInfo.seats} seat(s) to user ${userId} (plan: ${seatInfo.plan})`)
+            }
           }
         }
         break
