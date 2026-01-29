@@ -41,10 +41,6 @@ export function NewsletterForm({ variant = "default", className }: NewsletterFor
     },
   });
 
-  // Hide for Enterprise users (only when logged in)
-  if (user && isEnterprise) {
-    return null;
-  }
 
   const onSubmit = async (data: EmailFormData) => {
     setFormState("loading");
