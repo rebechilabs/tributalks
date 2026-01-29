@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,14 +10,60 @@ interface ReferralReward {
   referrer_id: string;
   successful_count: number;
   discount_percentage: number;
+  coupon_applied: boolean;
 }
 
-function getDiscountPercentage(successfulReferrals: number): number {
-  if (successfulReferrals >= 10) return 20;
-  if (successfulReferrals >= 5) return 15;
-  if (successfulReferrals >= 3) return 10;
-  if (successfulReferrals >= 1) return 5;
-  return 0;
+// Discount tiers with Stripe coupon IDs (will be created if not exist)
+const DISCOUNT_TIERS = [
+  { min: 10, percent: 20, couponId: "REFERRAL_20" },
+  { min: 5, percent: 15, couponId: "REFERRAL_15" },
+  { min: 3, percent: 10, couponId: "REFERRAL_10" },
+  { min: 1, percent: 5, couponId: "REFERRAL_5" },
+];
+
+function getDiscountTier(successfulReferrals: number) {
+  for (const tier of DISCOUNT_TIERS) {
+    if (successfulReferrals >= tier.min) {
+      return tier;
+    }
+  }
+  return null;
+}
+
+async function getOrCreateCoupon(stripe: Stripe, tier: { percent: number; couponId: string }) {
+  try {
+    // Try to retrieve existing coupon
+    const coupon = await stripe.coupons.retrieve(tier.couponId);
+    return coupon;
+  } catch (error) {
+    // Coupon doesn't exist, create it
+    const coupon = await stripe.coupons.create({
+      id: tier.couponId,
+      percent_off: tier.percent,
+      duration: "once",
+      name: `Indicação TribuTalks - ${tier.percent}% OFF`,
+    });
+    console.log(`Created coupon: ${tier.couponId}`);
+    return coupon;
+  }
+}
+
+async function applyDiscountToSubscription(
+  stripe: Stripe,
+  subscriptionId: string,
+  couponId: string
+): Promise<boolean> {
+  try {
+    await stripe.subscriptions.update(subscriptionId, {
+      coupon: couponId,
+    });
+    console.log(`Applied coupon ${couponId} to subscription ${subscriptionId}`);
+    return true;
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error(`Failed to apply coupon to subscription: ${errorMessage}`);
+    return false;
+  }
 }
 
 Deno.serve(async (req) => {
@@ -25,6 +72,16 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) {
+      throw new Error("STRIPE_SECRET_KEY not configured");
+    }
+
+    const stripe = new Stripe(stripeKey, {
+      apiVersion: "2023-10-16",
+      httpClient: Stripe.createFetchHttpClient(),
+    });
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -95,7 +152,7 @@ Deno.serve(async (req) => {
 
           if (codeData) {
             const successfulCount = (codeData.successful_referrals || 0) + 1;
-            const discount = getDiscountPercentage(successfulCount);
+            const tier = getDiscountTier(successfulCount);
 
             // Update successful_referrals count
             await supabase
@@ -103,21 +160,60 @@ Deno.serve(async (req) => {
               .update({ successful_referrals: successfulCount })
               .eq("user_id", referral.referrer_id);
 
-            rewards.push({
-              referrer_id: referral.referrer_id,
-              successful_count: successfulCount,
-              discount_percentage: discount,
-            });
+            let couponApplied = false;
 
-            // Create notification for referrer
-            await supabase.from("notifications").insert({
-              user_id: referral.referrer_id,
-              title: "🎉 Indicação qualificada!",
-              message: `Sua indicação assinou um plano! Você agora tem ${discount}% de desconto na sua próxima renovação.`,
-              type: "success",
-              category: "indicacao",
-              action_url: "/indicar",
-            });
+            if (tier) {
+              // Get referrer's profile to apply discount
+              const { data: referrerProfile } = await supabase
+                .from("profiles")
+                .select("stripe_subscription_id, stripe_customer_id, email")
+                .eq("user_id", referral.referrer_id)
+                .maybeSingle();
+
+              if (referrerProfile?.stripe_subscription_id) {
+                // Ensure coupon exists
+                await getOrCreateCoupon(stripe, tier);
+
+                // Apply discount to referrer's subscription
+                couponApplied = await applyDiscountToSubscription(
+                  stripe,
+                  referrerProfile.stripe_subscription_id,
+                  tier.couponId
+                );
+
+                if (couponApplied) {
+                  // Update referral with reward info
+                  await supabase
+                    .from("referrals")
+                    .update({
+                      discount_percentage: tier.percent,
+                      reward_applied_at: new Date().toISOString(),
+                    })
+                    .eq("id", referral.id);
+                }
+              }
+
+              rewards.push({
+                referrer_id: referral.referrer_id,
+                successful_count: successfulCount,
+                discount_percentage: tier.percent,
+                coupon_applied: couponApplied,
+              });
+
+              // Create notification for referrer
+              const notificationMessage = couponApplied
+                ? `Sua indicação assinou um plano! O desconto de ${tier.percent}% já foi aplicado na sua próxima renovação.`
+                : `Sua indicação assinou um plano! Você tem direito a ${tier.percent}% de desconto. Entre em contato para aplicar.`;
+
+              await supabase.from("notifications").insert({
+                user_id: referral.referrer_id,
+                title: "🎉 Indicação qualificada!",
+                message: notificationMessage,
+                type: "success",
+                category: "indicacao",
+                action_url: "/indicar",
+              });
+            }
           }
         }
       }
