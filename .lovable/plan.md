@@ -1,80 +1,73 @@
 
 
-## Plano: Liberar Relatórios para o Plano Navigator
+# Plano: Exibir Dia, Horário e Fonte nas Notícias
 
-### Objetivo
-Habilitar o acesso aos relatórios executivos (Clara AI Reports e PDF) para usuários do plano Navigator, que atualmente estão restritos ao plano Professional e superiores.
+## Objetivo
+Adicionar informações completas de **dia**, **horário** e **fonte** diretamente nos cards de notícias, facilitando a identificação da origem e atualidade de cada notícia.
 
-### Situação Atual
-| Local | Estado | Necessita Mudança? |
-|-------|--------|-------------------|
-| `useFeatureAccess.ts` | `relatorios_pdf: { minPlan: 'NAVIGATOR' }` | Já correto |
-| Edge Function | `allowedPlans = ["PROFESSIONAL", ...]` | **Sim** |
-| Landing Page | Relatórios listados só no Professional | **Sim** |
+## Situação Atual
+- **No card da lista**: Mostra apenas horário relativo ("Há 2h", "Agora") sem fonte
+- **No modal expandido**: Já mostra fonte e data completa, mas o usuário precisa clicar para ver
 
-### Alterações Necessárias
+## Mudanças Propostas
 
-#### 1. Edge Function `generate-executive-report/index.ts`
-
-Adicionar `NAVIGATOR` e `BASICO` (legado) à lista de planos permitidos na linha 354.
+### 1. Atualizar Card de Notícia na Lista
+Adicionar a **fonte** e melhorar o formato de **data/hora** no card para mostrar:
+- Nome da fonte (ex: "Migalhas", "Receita Federal")
+- Link para a fonte original
+- Data formatada com dia/mês e horário (ex: "29/01 às 11:00")
 
 **De:**
-```typescript
-const allowedPlans = ["PROFESSIONAL", "PROFISSIONAL", "PREMIUM", "ENTERPRISE"];
+```
+⏰ Há 2h
 ```
 
 **Para:**
+```
+📰 Migalhas  •  29/01 às 11:00  🔗
+```
+
+### 2. Aplicar Timezone de Brasília
+Utilizar as funções de `dateUtils.ts` já existentes para garantir que todos os horários sejam exibidos no fuso de Brasília (GMT-3), conforme padrão do sistema.
+
+### 3. Layout Proposto
+
+```
+┌─────────────────────────────────────────────────────┐
+│ [Alta relevância]                 📰 Migalhas 🔗    │
+│                                   29/01 às 11:00    │
+│ Título da Notícia                                   │
+│ Resumo executivo da notícia...                      │
+│ 💼 Serviços, Comércio                               │
+└─────────────────────────────────────────────────────┘
+```
+
+## Arquivos a Modificar
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/pages/NoticiasReforma.tsx` | Atualizar função `formatDate()` para usar Brasília e adicionar exibição da fonte no card |
+
+## Detalhes Técnicos
+
+### Atualização da função formatDate
 ```typescript
-const allowedPlans = ["NAVIGATOR", "BASICO", "PROFESSIONAL", "PROFISSIONAL", "PREMIUM", "ENTERPRISE"];
+// Usar dateUtils.ts para timezone Brasília
+import { formatBrasilia, formatDistanceBrasilia } from "@/lib/dateUtils";
+
+const formatDate = (dateString: string) => {
+  return formatBrasilia(dateString, "dd/MM 'às' HH:mm");
+};
 ```
 
-#### 2. Landing Page `PricingSection.tsx`
+### Novo layout do card (linhas 545-570)
+- Mover o relógio para baixo da fonte
+- Adicionar nome da fonte com ícone
+- Adicionar link externo se disponível
 
-Adicionar o item "Relatórios PDF Clara AI" na lista de features do plano Navigator (após linha 68).
-
-**Adicionar:**
-```typescript
-{ text: "Relatórios PDF Clara AI", included: true },
-```
-
-### Estrutura Visual Final
-
-```text
-┌────────────────────────────────────────────────────────────┐
-│ NAVIGATOR (R$ 697/mês)                                     │
-│ ─────────────────────────────────────────────────────────  │
-│ ✅ Clara AI (Copiloto) - 10 msgs/dia                       │
-│ ✅ Score Tributário                                        │
-│ ✅ Simulador Split Payment                                 │
-│ ✅ Comparativo de Regimes                                  │
-│ ✅ Calculadora RTC (CBS/IBS/IS)                            │
-│ ✅ Calculadora NBS (Serviços)                              │
-│ ✅ Newsletter Tributalks News                              │
-│ ✅ Timeline 2026-2033                                      │
-│ ✅ Feed de Notícias + Pílula do Dia                        │
-│ ✅ Relatórios PDF Clara AI  ← NOVO                         │
-└────────────────────────────────────────────────────────────┘
-```
-
-### Arquivos a Modificar
-
-| Arquivo | Ação | Linhas |
-|---------|------|--------|
-| `supabase/functions/generate-executive-report/index.ts` | Adicionar NAVIGATOR aos planos permitidos | 354 |
-| `src/components/landing/PricingSection.tsx` | Adicionar feature de relatórios | 68-69 |
-
-### Detalhes Técnicos
-
-**Edge Function:**
-- A verificação de plano usa normalização para nomenclaturas legadas (`BASICO` → `NAVIGATOR`)
-- Após a mudança, usuários Navigator terão acesso imediato aos 5 tipos de relatórios:
-  - Relatório Executivo Mensal
-  - Análise da DRE
-  - Radar de Créditos
-  - Impacto da Reforma
-  - Mapa de Oportunidades
-
-**Frontend:**
-- O hook `useFeatureAccess` já tem `relatorios_pdf` configurado para `NAVIGATOR`
-- O componente `ClaraReportGenerator` não precisa de alteração (usa a Edge Function)
+## Resultado Esperado
+O usuário poderá ver imediatamente:
+- Qual veículo publicou a notícia
+- Quando foi publicada (dia e horário em Brasília)
+- Link direto para a fonte original
 
