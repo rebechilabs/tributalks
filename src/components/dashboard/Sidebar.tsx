@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import logoTributech from "@/assets/logo-tributech.png";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
+import { NewsletterForm } from "@/components/common/NewsletterForm";
 
 interface NavItem {
   label: string;
@@ -228,6 +229,11 @@ export function Sidebar() {
           );
         })}
       </nav>
+
+      {/* Newsletter Signup */}
+      <div className="px-4 pb-2">
+        <NewsletterForm variant="compact" />
+      </div>
 
       {/* Plan Badge */}
       <div className="p-4 border-t border-border">
