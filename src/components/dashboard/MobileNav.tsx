@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { 
   Menu, X, Home, Scale, Wallet, FileText, Users, Calendar, 
   Clock, Settings, Lock, Sparkles, Newspaper, Upload, Calculator,
-  Target, BarChart3, Trophy, Lightbulb, LayoutDashboard, MapPin, Briefcase, ClipboardCheck
+  Target, BarChart3, Trophy, Lightbulb, LayoutDashboard, MapPin, Briefcase, ClipboardCheck, Gift
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -64,6 +64,7 @@ const navGroups: NavGroup[] = [
     items: [
       { label: 'Clara AI', href: '/tribubot', icon: Sparkles, requiredPlan: 'NAVIGATOR', badge: 'IA' },
       { label: 'Comunidade', href: '/comunidade', icon: Users, requiredPlan: 'PROFESSIONAL' },
+      { label: 'Indicar Amigos', href: '/indicar', icon: Gift, badge: 'Novo' },
     ]
   },
   {
