@@ -14,21 +14,14 @@ import {
 import { ExecutiveReportPreview } from "@/components/executive/ExecutiveReportPreview";
 import { useExecutiveData } from "@/hooks/useExecutiveData";
 import { useAuth } from "@/hooks/useAuth";
+import { usePlanAccess } from "@/hooks/useFeatureAccess";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-const PLAN_HIERARCHY = {
-  'FREE': 0,
-  'BASICO': 1,
-  'PROFISSIONAL': 2,
-  'PREMIUM': 3,
-};
-
 export default function PainelExecutivo() {
   const { user, profile } = useAuth();
-  const currentPlan = profile?.plano || 'FREE';
-  const userLevel = PLAN_HIERARCHY[currentPlan as keyof typeof PLAN_HIERARCHY] || 0;
-  const hasPremiumAccess = userLevel >= PLAN_HIERARCHY['PREMIUM'];
+  const { isProfessional } = usePlanAccess();
+  const hasPremiumAccess = isProfessional;
 
   const [reportOpen, setReportOpen] = useState(false);
   const [claraReportOpen, setClaraReportOpen] = useState(false);
