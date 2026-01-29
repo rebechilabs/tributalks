@@ -7,13 +7,13 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, User, Edit, LogOut, Calculator } from "lucide-react";
+import { ChevronDown, User, Edit, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Sidebar } from "./Sidebar";
 import { MobileNav } from "./MobileNav";
 import { FloatingAssistant } from "@/components/common/FloatingAssistant";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import logoTributech from "@/assets/logo-tributech.png";
-
 interface DashboardLayoutProps {
   children: React.ReactNode;
   title?: string;
@@ -51,6 +51,9 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
               </h1>
             )}
           </div>
+
+          {/* Notification Bell */}
+          <NotificationBell />
 
           {/* User Dropdown */}
           <DropdownMenu>

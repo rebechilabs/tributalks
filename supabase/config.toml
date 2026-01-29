@@ -53,3 +53,9 @@ verify_jwt = false
 
 [functions.subscribe-newsletter]
 verify_jwt = false
+
+[functions.process-referral-rewards]
+verify_jwt = false
+
+[functions.send-daily-metrics]
+verify_jwt = false
