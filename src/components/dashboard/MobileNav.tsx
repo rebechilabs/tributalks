@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
 import logoTributech from "@/assets/logo-tributech.png";
 import { cn } from "@/lib/utils";
+import { NewsletterForm } from "@/components/common/NewsletterForm";
 
 interface NavItem {
   label: string;
@@ -196,6 +197,13 @@ export function MobileNav() {
               <div className="space-y-1">
                 {group.items.map(renderNavItem)}
               </div>
+              
+              {/* Newsletter após o grupo "IA e Suporte" */}
+              {group.title === 'IA e Suporte' && (
+                <div className="mt-2 mx-1 p-2 rounded-lg bg-muted/30 border border-border/50">
+                  <NewsletterForm variant="compact" />
+                </div>
+              )}
             </div>
           ))}
         </nav>
