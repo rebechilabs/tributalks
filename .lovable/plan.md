@@ -1,114 +1,81 @@
 
-# Plano: Corrigir Acesso ao Painel Executivo para Plano Enterprise
+# Plano: Reload Automático do PWA
 
-## Problema Identificado
+## Objetivo
+Quando uma nova versão do app for publicada, a página será recarregada automaticamente sem que o usuário precise fechar e reabrir a aba.
 
-O componente `PainelExecutivo.tsx` usa uma hierarquia de planos **duplicada e desatualizada** que não reconhece o plano `ENTERPRISE`. Isso faz com que usuários Enterprise vejam o prompt de upgrade mesmo tendo acesso total.
+## Como Funciona Hoje
+O PWA está configurado com `registerType: "autoUpdate"` no Vite, mas não existe código que monitore atualizações nem que force o reload. O Service Worker detecta a nova versão, mas aguarda o fechamento de todas as abas para ativar.
 
-**Código problemático (linhas 20-31):**
-```typescript
-const PLAN_HIERARCHY = {
-  'FREE': 0,
-  'BASICO': 1,
-  'PROFISSIONAL': 2,
-  'PREMIUM': 3,  // ENTERPRISE não existe aqui!
-};
-// ...
-const userLevel = PLAN_HIERARCHY[currentPlan] || 0; // ENTERPRISE retorna 0!
-```
+## Solucao
 
-## Solução
+### 1. Criar Hook de Registro do PWA
+Criar um componente que utilize o hook `useRegisterSW` do `vite-plugin-pwa/react` para:
+- Detectar quando há uma nova versão (`needRefresh`)
+- Chamar `updateServiceWorker()` automaticamente
+- Forçar `window.location.reload()` para aplicar a atualização
 
-Substituir a lógica duplicada pelo hook `usePlanAccess()` que já existe e tem a hierarquia correta com mapeamento de planos legados.
+### 2. Integrar no App Principal
+Adicionar o componente no `main.tsx` para garantir que rode em todas as páginas desde o início da aplicação.
 
 ---
 
-## Mudanças Técnicas
+## Detalhes Tecnicos
 
-### Arquivo: `src/pages/PainelExecutivo.tsx`
-
-**1. Remover hierarquia duplicada (linhas 20-25)**
-
-Excluir completamente:
+### Arquivo: `src/components/PWAUpdater.tsx` (novo)
 ```typescript
-const PLAN_HIERARCHY = {
-  'FREE': 0,
-  'BASICO': 1,
-  'PROFISSIONAL': 2,
-  'PREMIUM': 3,
-};
+import { useEffect } from 'react';
+import { useRegisterSW } from 'virtual:pwa-register/react';
+
+export function PWAUpdater() {
+  const {
+    needRefresh: [needRefresh],
+    updateServiceWorker,
+  } = useRegisterSW({
+    onRegisteredSW(swUrl, registration) {
+      // Verifica atualizações a cada 1 minuto
+      if (registration) {
+        setInterval(() => {
+          registration.update();
+        }, 60 * 1000);
+      }
+    },
+  });
+
+  useEffect(() => {
+    if (needRefresh) {
+      // Atualiza o Service Worker e recarrega
+      updateServiceWorker(true);
+    }
+  }, [needRefresh, updateServiceWorker]);
+
+  return null; // Componente invisivel
+}
 ```
 
-**2. Substituir import do useAuth pelo usePlanAccess**
-
-Antes:
+### Arquivo: `src/main.tsx` (modificar)
 ```typescript
-import { useAuth } from "@/hooks/useAuth";
+import { PWAUpdater } from './components/PWAUpdater';
+
+createRoot(document.getElementById("root")!).render(
+  <>
+    <PWAUpdater />
+    <App />
+  </>
+);
 ```
 
-Depois:
+### Arquivo: `src/vite-env.d.ts` (adicionar tipagem)
 ```typescript
-import { useAuth } from "@/hooks/useAuth";
-import { usePlanAccess } from "@/hooks/useFeatureAccess";
-```
-
-**3. Simplificar lógica de acesso**
-
-Antes:
-```typescript
-const { user, profile } = useAuth();
-const currentPlan = profile?.plano || 'FREE';
-const userLevel = PLAN_HIERARCHY[currentPlan as keyof typeof PLAN_HIERARCHY] || 0;
-const hasPremiumAccess = userLevel >= PLAN_HIERARCHY['PREMIUM'];
-```
-
-Depois:
-```typescript
-const { user, profile } = useAuth();
-const { isProfessional } = usePlanAccess();
-const hasPremiumAccess = isProfessional; // Professional+ tem acesso
-```
-
-**Nota:** Segundo a matriz de planos, o Painel Executivo é para `PROFESSIONAL+` (não apenas PREMIUM/ENTERPRISE). O hook `usePlanAccess` já trata corretamente isso.
-
----
-
-## Hierarquia Correta (já existe em useFeatureAccess.ts)
-
-```typescript
-const LEGACY_PLAN_MAP = {
-  'FREE': 'FREE',
-  'BASICO': 'NAVIGATOR',
-  'PROFISSIONAL': 'PROFESSIONAL',
-  'PREMIUM': 'ENTERPRISE',     // ← Mapeia legado
-  'NAVIGATOR': 'NAVIGATOR',
-  'PROFESSIONAL': 'PROFESSIONAL',
-  'ENTERPRISE': 'ENTERPRISE',  // ← Seu plano!
-};
-
-const PLAN_HIERARCHY = {
-  'FREE': 0,
-  'NAVIGATOR': 1,
-  'PROFESSIONAL': 2,
-  'ENTERPRISE': 3,  // ← Reconhece ENTERPRISE
-};
+/// <reference types="vite-plugin-pwa/react" />
 ```
 
 ---
 
-## Resultado Esperado
+## Comportamento Final
+1. Usuario esta usando o app
+2. Voce publica uma atualizacao
+3. Em ate 1 minuto, o Service Worker detecta a nova versao
+4. O app recarrega automaticamente
+5. Usuario ve a versao atualizada sem precisar fechar a aba
 
-| Plano | Antes | Depois |
-|-------|-------|--------|
-| FREE | Bloqueado | Bloqueado |
-| NAVIGATOR | Bloqueado | Bloqueado |
-| PROFESSIONAL | Bloqueado | **Acesso total** |
-| ENTERPRISE | **Bloqueado (BUG)** | **Acesso total** |
-
----
-
-## Verificação Pós-Implementação
-
-1. Acessar `/dashboard/executivo` com usuário ENTERPRISE
-2. Confirmar que o painel completo é exibido (Termômetro, Projetos, etc.)
-3. Testar geração de relatórios PDF e Clara AI
