@@ -57,12 +57,50 @@ export function SeatManagement() {
   const [isInviting, setIsInviting] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isBuyDialogOpen, setIsBuyDialogOpen] = useState(false);
+  const [seatQuantity, setSeatQuantity] = useState(1);
+  const [isRequestingSeats, setIsRequestingSeats] = useState(false);
 
   const planConfig = SEAT_CONFIG[currentPlan] || SEAT_CONFIG.FREE;
   const extraSeats = (profile as any)?.extra_seats_purchased || 0;
   const maxSeats = planConfig.included + extraSeats;
   const activeSeats = seats.filter(s => s.status !== 'revoked').length;
   const availableSeats = maxSeats - activeSeats - 1; // -1 for owner
+
+  const handleRequestSeats = async () => {
+    if (!user || seatQuantity < 1) return;
+
+    setIsRequestingSeats(true);
+    try {
+      // Create a contact/request entry for admin to process
+      const { error } = await supabase
+        .from('contatos')
+        .insert({
+          nome: profile?.nome || 'Usuário',
+          email: user.email || '',
+          assunto: `Solicitação de ${seatQuantity} assento(s) extra - ${currentPlan}`,
+          mensagem: `Usuário ${user.email} (Plano: ${currentPlan}) solicitou ${seatQuantity} assento(s) adicional(is) a R$ ${planConfig.extraPrice}/mês cada.\n\nTotal mensal: R$ ${seatQuantity * (planConfig.extraPrice || 0)}\n\nUser ID: ${user.id}`,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Solicitação enviada!",
+        description: `Sua solicitação de ${seatQuantity} assento(s) foi registrada. Entraremos em contato em breve.`,
+      });
+
+      setIsBuyDialogOpen(false);
+      setSeatQuantity(1);
+    } catch (error: any) {
+      toast({
+        title: "Erro ao solicitar",
+        description: "Não foi possível enviar sua solicitação. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRequestingSeats(false);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -246,16 +284,66 @@ export function SeatManagement() {
           </div>
           
           {planConfig.canBuyExtra && (
-            <Button variant="outline" size="sm" asChild>
-              <a 
-                href={`${CONFIG.WHATSAPP}?text=${encodeURIComponent(`Olá! Gostaria de contratar assento(s) extra para o plano ${currentPlan}. Email: ${user?.email || ''}`)}`}
-                target="_blank" 
-                rel="noopener noreferrer"
-              >
-                <UserPlus className="w-4 h-4 mr-2" />
-                + Assento (R$ {planConfig.extraPrice}/mês)
-              </a>
-            </Button>
+            <Dialog open={isBuyDialogOpen} onOpenChange={setIsBuyDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  + Assento (R$ {planConfig.extraPrice}/mês)
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Adicionar assentos extras</DialogTitle>
+                  <DialogDescription>
+                    Cada assento adicional permite convidar mais um membro da equipe.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="quantity">Quantidade de assentos</Label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      min={1}
+                      max={10}
+                      value={seatQuantity}
+                      onChange={(e) => setSeatQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                    />
+                  </div>
+                  <div className="p-4 bg-muted/50 rounded-lg space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Preço por assento:</span>
+                      <span>R$ {planConfig.extraPrice}/mês</span>
+                    </div>
+                    <div className="flex justify-between font-medium">
+                      <span>Total mensal:</span>
+                      <span>R$ {seatQuantity * (planConfig.extraPrice || 0)}/mês</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Após a confirmação, nossa equipe entrará em contato para processar o pagamento e ativar os assentos.
+                  </p>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsBuyDialogOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleRequestSeats} disabled={isRequestingSeats}>
+                    {isRequestingSeats ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Enviando...
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Solicitar {seatQuantity} assento(s)
+                      </>
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           )}
         </div>
 
