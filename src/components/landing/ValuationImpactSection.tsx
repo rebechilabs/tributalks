@@ -19,7 +19,7 @@ export function ValuationImpactSection() {
           {/* Header */}
           <div className="text-center mb-16">
             <Badge variant="outline" className="mb-4 text-primary border-primary">
-              Exclusivo TribuTech
+              Exclusivo TribuTalks
             </Badge>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Compliance Tributário = 

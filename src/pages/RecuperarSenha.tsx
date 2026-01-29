@@ -54,7 +54,7 @@ const RecuperarSenha = () => {
         <div className="bg-card rounded-xl border border-border p-8 shadow-lg">
           {/* Logo */}
           <div className="flex justify-center mb-6">
-            <img src={logoTributech} alt="TribuTech" className="h-16 w-auto" />
+            <img src={logoTributech} alt="TribuTalks" className="h-16 w-auto" />
           </div>
 
           {!emailSent ? (

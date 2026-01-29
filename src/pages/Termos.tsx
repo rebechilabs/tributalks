@@ -9,7 +9,7 @@ export default function Termos() {
       <header className="border-b border-border/50">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="TribuTech" className="h-8" />
+            <img src={logo} alt="TribuTalks" className="h-8" />
           </Link>
           <Link 
             to="/" 
@@ -33,7 +33,7 @@ export default function Termos() {
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-4">1. DEFINIÇÕES</h2>
-            <p><strong>1.1.</strong> "TribuTech" ou "Plataforma": refere-se ao site, aplicativo e serviços disponibilizados pela Rebechi & Silva Produções, inscrita no CNPJ sob nº 47.706.144/0001-21, com sede na Avenida Marquês de São Vicente, 1619 - conjunto 2712 - Barra Funda - São Paulo - SP.</p>
+            <p><strong>1.1.</strong> "TribuTalks" ou "Plataforma": refere-se ao site, aplicativo e serviços disponibilizados pela Rebechi & Silva Produções, inscrita no CNPJ sob nº 47.706.144/0001-21, com sede na Avenida Marquês de São Vicente, 1619 - conjunto 2712 - Barra Funda - São Paulo - SP.</p>
             <p><strong>1.2.</strong> "Usuário": qualquer pessoa física ou jurídica que acessa ou utiliza a Plataforma.</p>
             <p><strong>1.3.</strong> "Conteúdo": todas as informações, textos, gráficos, simulações, cálculos, notícias e materiais disponibilizados na Plataforma.</p>
             <p><strong>1.4.</strong> "Serviços": as funcionalidades oferecidas pela Plataforma, incluindo calculadoras tributárias, Clara AI (copiloto de decisão tributária), notícias tributárias, comunidade e consultorias.</p>
@@ -51,7 +51,7 @@ export default function Termos() {
             <p><strong>3.1.</strong> Para acessar determinadas funcionalidades, é necessário criar uma conta fornecendo informações verdadeiras, completas e atualizadas.</p>
             <p><strong>3.2.</strong> Você é responsável por manter a confidencialidade de suas credenciais de acesso e por todas as atividades realizadas em sua conta.</p>
             <p><strong>3.3.</strong> Você deve notificar imediatamente a TribuTech sobre qualquer uso não autorizado de sua conta.</p>
-            <p><strong>3.4.</strong> A TribuTech reserva-se o direito de suspender ou cancelar contas que violem estes Termos ou que apresentem informações falsas.</p>
+            <p><strong>3.4.</strong> A TribuTalks reserva-se o direito de suspender ou cancelar contas que violem estes Termos ou que apresentem informações falsas.</p>
           </section>
 
           <section>
@@ -61,12 +61,12 @@ export default function Termos() {
             <p><strong>4.3.</strong> As assinaturas são renovadas automaticamente ao final de cada período, salvo cancelamento prévio pelo Usuário.</p>
             <p><strong>4.4.</strong> O cancelamento pode ser realizado a qualquer momento através do painel do usuário. O acesso aos recursos pagos será mantido até o final do período já pago.</p>
             <p><strong>4.5.</strong> Não há reembolso de valores já pagos, exceto em casos previstos no Código de Defesa do Consumidor.</p>
-            <p><strong>4.6.</strong> A TribuTech reserva-se o direito de alterar os preços dos planos, mediante aviso prévio de 30 (trinta) dias.</p>
+            <p><strong>4.6.</strong> A TribuTalks reserva-se o direito de alterar os preços dos planos, mediante aviso prévio de 30 (trinta) dias.</p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-4">5. NATUREZA DOS SERVIÇOS — ISENÇÃO DE RESPONSABILIDADE</h2>
-            <p><strong>5.1.</strong> A TribuTech é uma plataforma de inteligência tributária com fins EXCLUSIVAMENTE EDUCATIVOS E INFORMATIVOS.</p>
+            <p><strong>5.1.</strong> A TribuTalks é uma plataforma de inteligência tributária com fins EXCLUSIVAMENTE EDUCATIVOS E INFORMATIVOS.</p>
             <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 my-4">
               <p className="text-destructive font-medium mb-2">5.2. AS SIMULAÇÕES, CÁLCULOS, COMPARATIVOS E INFORMAÇÕES FORNECIDAS PELA PLATAFORMA NÃO CONSTITUEM:</p>
               <ul className="list-disc list-inside space-y-1 text-destructive/80">
@@ -81,7 +81,7 @@ export default function Termos() {
             <div className="bg-warning/10 border border-warning/20 rounded-lg p-4 my-4">
               <p className="text-warning font-medium">5.5. ANTES DE TOMAR QUALQUER DECISÃO TRIBUTÁRIA, CONTÁBIL OU FINANCEIRA, O USUÁRIO DEVE CONSULTAR UM PROFISSIONAL HABILITADO (contador, advogado tributarista ou consultor financeiro).</p>
             </div>
-            <p><strong>5.6.</strong> A TribuTech, seus sócios, colaboradores e parceiros NÃO SE RESPONSABILIZAM por decisões tomadas com base nas informações da Plataforma, nem por eventuais prejuízos, perdas, multas, autuações ou danos de qualquer natureza.</p>
+            <p><strong>5.6.</strong> A TribuTalks, seus sócios, colaboradores e parceiros NÃO SE RESPONSABILIZAM por decisões tomadas com base nas informações da Plataforma, nem por eventuais prejuízos, perdas, multas, autuações ou danos de qualquer natureza.</p>
           </section>
 
           <section>
@@ -95,7 +95,7 @@ export default function Termos() {
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-4">7. PROPRIEDADE INTELECTUAL</h2>
-            <p><strong>7.1.</strong> Todo o conteúdo da Plataforma, incluindo mas não limitado a textos, gráficos, logos, ícones, imagens, software, código-fonte e compilações de dados, é de propriedade exclusiva da TribuTech ou de seus licenciadores.</p>
+            <p><strong>7.1.</strong> Todo o conteúdo da Plataforma, incluindo mas não limitado a textos, gráficos, logos, ícones, imagens, software, código-fonte e compilações de dados, é de propriedade exclusiva da TribuTalks ou de seus licenciadores.</p>
             <p><strong>7.2.</strong> É vedado ao Usuário:</p>
             <ul className="list-disc list-inside space-y-1 ml-4">
               <li>Reproduzir, copiar, modificar ou distribuir o conteúdo da Plataforma;</li>
@@ -128,16 +128,16 @@ export default function Termos() {
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-4">9. DISPONIBILIDADE E SUPORTE</h2>
-            <p><strong>9.1.</strong> A TribuTech se esforça para manter a Plataforma disponível 24 horas por dia, 7 dias por semana, mas não garante disponibilidade ininterrupta.</p>
+            <p><strong>9.1.</strong> A TribuTalks se esforça para manter a Plataforma disponível 24 horas por dia, 7 dias por semana, mas não garante disponibilidade ininterrupta.</p>
             <p><strong>9.2.</strong> Manutenções programadas serão comunicadas com antecedência quando possível.</p>
-            <p><strong>9.3.</strong> A TribuTech não se responsabiliza por interrupções causadas por fatores externos, como falhas de internet, ataques cibernéticos ou força maior.</p>
+            <p><strong>9.3.</strong> A TribuTalks não se responsabiliza por interrupções causadas por fatores externos, como falhas de internet, ataques cibernéticos ou força maior.</p>
             <p><strong>9.4.</strong> O suporte ao usuário é oferecido por e-mail (suporte@tributalks.com.br) com prazo de resposta de até 48 horas úteis para planos Básico e Profissional, e prioritário para o plano Premium.</p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-4">10. LIMITAÇÃO DE RESPONSABILIDADE</h2>
             <div className="bg-muted/50 border border-border rounded-lg p-4 my-4">
-              <p className="font-medium mb-2">10.1. NA MÁXIMA EXTENSÃO PERMITIDA POR LEI, A TRIBUTECH NÃO SERÁ RESPONSÁVEL POR:</p>
+              <p className="font-medium mb-2">10.1. NA MÁXIMA EXTENSÃO PERMITIDA POR LEI, A TRIBUTALKS NÃO SERÁ RESPONSÁVEL POR:</p>
               <ul className="list-disc list-inside space-y-1">
                 <li>Danos indiretos, incidentais, especiais ou consequentes;</li>
                 <li>Perda de lucros, receitas, dados ou oportunidades de negócio;</li>
@@ -146,13 +146,13 @@ export default function Termos() {
                 <li>Ações de terceiros ou falhas em serviços de terceiros.</li>
               </ul>
             </div>
-            <p><strong>10.2.</strong> A responsabilidade total da TribuTech, em qualquer hipótese, estará limitada ao valor pago pelo Usuário nos últimos 12 (doze) meses.</p>
+            <p><strong>10.2.</strong> A responsabilidade total da TribuTalks, em qualquer hipótese, estará limitada ao valor pago pelo Usuário nos últimos 12 (doze) meses.</p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-4">11. RESCISÃO</h2>
             <p><strong>11.1.</strong> O Usuário pode encerrar sua conta a qualquer momento através do painel de configurações.</p>
-            <p><strong>11.2.</strong> A TribuTech pode suspender ou encerrar a conta do Usuário em caso de:</p>
+            <p><strong>11.2.</strong> A TribuTalks pode suspender ou encerrar a conta do Usuário em caso de:</p>
             <ul className="list-disc list-inside space-y-1 ml-4">
               <li>Violação destes Termos;</li>
               <li>Uso fraudulento ou abusivo da Plataforma;</li>
@@ -167,7 +167,7 @@ export default function Termos() {
             <p><strong>12.1.</strong> Estes Termos constituem o acordo integral entre as partes e substituem quaisquer acordos anteriores.</p>
             <p><strong>12.2.</strong> A tolerância quanto ao descumprimento de qualquer disposição não implica renúncia ao direito de exigir o cumprimento.</p>
             <p><strong>12.3.</strong> Se qualquer disposição for considerada inválida, as demais permanecerão em pleno vigor.</p>
-            <p><strong>12.4.</strong> A TribuTech pode ceder ou transferir seus direitos e obrigações sem consentimento prévio do Usuário.</p>
+            <p><strong>12.4.</strong> A TribuTalks pode ceder ou transferir seus direitos e obrigações sem consentimento prévio do Usuário.</p>
           </section>
 
           <section>
@@ -180,7 +180,7 @@ export default function Termos() {
             <h2 className="text-xl font-semibold text-foreground mb-4">14. CONTATO</h2>
             <p>Para dúvidas, sugestões ou reclamações sobre estes Termos:</p>
             <div className="bg-card border border-border rounded-lg p-4 mt-4">
-              <p className="font-medium text-foreground">TribuTech — Uma iniciativa Rebechi & Silva Produções</p>
+              <p className="font-medium text-foreground">TribuTalks — Uma iniciativa Rebechi & Silva Produções</p>
               <p>E-mail: suporte@tributalks.com.br</p>
               <p>Endereço: Avenida Marquês de São Vicente, 1619 - conjunto 2712 - Barra Funda - São Paulo - SP</p>
               <p>Telefone: +55 11 91452-3971</p>
@@ -198,7 +198,7 @@ export default function Termos() {
       {/* Footer */}
       <footer className="border-t border-border/50 py-6">
         <div className="max-w-4xl mx-auto px-6 flex items-center justify-between text-sm text-muted-foreground">
-          <span>© 2026 TribuTech. Todos os direitos reservados.</span>
+          <span>© 2026 TribuTalks. Todos os direitos reservados.</span>
           <div className="flex items-center gap-4">
             <Link to="/privacidade" className="hover:text-foreground transition-colors">
               Política de Privacidade

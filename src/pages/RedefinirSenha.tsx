@@ -80,7 +80,7 @@ const RedefinirSenha = () => {
         <div className="w-full max-w-md">
           <div className="bg-card rounded-xl border border-border p-8 shadow-lg text-center">
             <div className="flex justify-center mb-6">
-              <img src={logoTributech} alt="TribuTech" className="h-16 w-auto" />
+              <img src={logoTributech} alt="TribuTalks" className="h-16 w-auto" />
             </div>
             <h1 className="text-2xl font-bold text-foreground mb-4">
               Link inválido ou expirado
@@ -109,7 +109,7 @@ const RedefinirSenha = () => {
         <div className="bg-card rounded-xl border border-border p-8 shadow-lg">
           {/* Logo */}
           <div className="flex justify-center mb-6">
-            <img src={logoTributech} alt="TribuTech" className="h-16 w-auto" />
+            <img src={logoTributech} alt="TribuTalks" className="h-16 w-auto" />
           </div>
 
           {!success ? (

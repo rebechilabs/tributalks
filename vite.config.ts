@@ -20,8 +20,8 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "robots.txt"],
       manifest: {
-        name: "TribuTech - Inteligência Tributária",
-        short_name: "TribuTech",
+        name: "TribuTalks - Inteligência Tributária",
+        short_name: "TribuTalks",
         description: "Calculadoras, IA e especialistas que mostram o impacto real das decisões tributárias no seu caixa.",
         theme_color: "#0A0A0A",
         background_color: "#0a0a0a",

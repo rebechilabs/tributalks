@@ -140,7 +140,7 @@ Deno.serve(async (req) => {
       // Preparar conteúdo do e-mail
       const emailContent = {
         to: profile.email,
-        subject: `📰 ${noticiasParaUsuario.length} nova(s) notícia(s) tributária(s) - Tributech`,
+        subject: `📰 ${noticiasParaUsuario.length} nova(s) notícia(s) tributária(s) - TribuTalks`,
         html: gerarEmailHTML(profile.nome || "Usuário", noticiasParaUsuario),
       };
 
@@ -203,7 +203,7 @@ function gerarEmailHTML(nome: string, noticias: Noticia[]): string {
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #ffffff;">
       <div style="text-align: center; margin-bottom: 32px;">
         <h1 style="color: #1a1a1a; font-size: 24px; margin: 0;">
-          📰 Tributech News
+          📰 TribuTalks News
         </h1>
         <p style="color: #666; margin: 8px 0 0 0;">
           Seu resumo de notícias tributárias

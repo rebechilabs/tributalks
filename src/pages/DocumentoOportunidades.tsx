@@ -203,7 +203,7 @@ export default function DocumentoOportunidades() {
 
         {/* Footer */}
         <div className="text-center text-sm text-muted-foreground py-4">
-          <p>TribuTech - Inteligência Tributária para Empresas que Crescem</p>
+          <p>TribuTalks - Inteligência Tributária para Empresas que Crescem</p>
           <p className="mt-1">Documento atualizado em Janeiro/2026</p>
         </div>
       </div>

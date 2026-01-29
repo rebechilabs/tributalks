@@ -123,8 +123,8 @@ const Cadastro = () => {
       toast({
         title: "Conta criada com sucesso!",
         description: validRefCode 
-          ? "Você foi indicado por um amigo! Bem-vindo ao TribuTech." 
-          : "Bem-vindo ao TribuTech. Vamos configurar seu perfil.",
+          ? "Você foi indicado por um amigo! Bem-vindo ao TribuTalks." 
+          : "Bem-vindo ao TribuTalks. Vamos configurar seu perfil.",
       });
       navigate('/onboarding');
     } catch (error: any) {
@@ -169,7 +169,7 @@ const Cadastro = () => {
         <div className="bg-card rounded-xl border border-border p-8 shadow-lg">
           {/* Logo */}
           <div className="flex justify-center mb-6">
-            <img src={logoTributech} alt="TribuTech" className="h-16 w-auto" />
+            <img src={logoTributech} alt="TribuTalks" className="h-16 w-auto" />
           </div>
 
           {/* Heading */}

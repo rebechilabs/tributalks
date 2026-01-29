@@ -11,7 +11,7 @@ export function Footer() {
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className="flex flex-col items-center text-center gap-6">
           {/* Logo */}
-          <img src={logoTributech} alt="TribuTech" className="h-10 w-auto" />
+          <img src={logoTributech} alt="TribuTalks" className="h-10 w-auto" />
 
           {/* Description */}
           <p className="text-muted-foreground text-sm">
@@ -84,7 +84,7 @@ export function Footer() {
 
           {/* Copyright */}
           <div className="text-muted-foreground text-xs">
-            © 2026 TribuTech. Todos os direitos reservados.
+            © 2026 TribuTalks. Todos os direitos reservados.
           </div>
         </div>
       </div>

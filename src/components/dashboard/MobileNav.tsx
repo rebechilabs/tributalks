@@ -174,7 +174,7 @@ export function MobileNav() {
       <SheetContent side="left" className="w-72 p-0">
         {/* Header */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-border">
-          <img src={logoTributech} alt="TribuTech" className="h-8 w-auto" />
+          <img src={logoTributech} alt="TribuTalks" className="h-8 w-auto" />
           <Button variant="ghost" size="icon" onClick={() => setOpen(false)}>
             <X className="w-5 h-5" />
           </Button>

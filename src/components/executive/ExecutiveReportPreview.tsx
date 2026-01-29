@@ -208,7 +208,7 @@ export function ExecutiveReportPreview({
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <div className="flex items-center gap-3">
-              <img src={logoTributech} alt="Tributech" className="h-10 w-auto" />
+              <img src={logoTributech} alt="TribuTalks" className="h-10 w-auto" />
             </div>
             <div className="text-right">
               <h1 className="text-lg font-bold text-gray-900">
@@ -367,7 +367,7 @@ export function ExecutiveReportPreview({
           {/* Footer */}
           <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg">
             <p className="text-xs text-gray-400 text-center">
-              Relatório gerado automaticamente pela plataforma Tributech · {currentDate}
+              Relatório gerado automaticamente pela plataforma TribuTalks · {currentDate}
             </p>
           </div>
         </div>

@@ -27,7 +27,7 @@ export function CredibilitySection() {
             Quem está por trás
           </h2>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-            TribuTech é uma iniciativa da{" "}
+            TribuTalks é uma iniciativa da{" "}
             <span className="text-primary font-medium">
               Rebechi & Silva Advogados
             </span>

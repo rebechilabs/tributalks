@@ -157,7 +157,7 @@ export default function Contato() {
       <header className="border-b border-border/50">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="TribuTech" className="h-8" />
+            <img src={logo} alt="TribuTalks" className="h-8" />
           </Link>
           <Link
             to="/"
@@ -432,7 +432,7 @@ export default function Contato() {
       {/* Footer */}
       <footer className="border-t border-border/50 py-6 mt-12">
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between text-sm text-muted-foreground">
-          <span>© 2026 TribuTech. Todos os direitos reservados.</span>
+          <span>© 2026 TribuTalks. Todos os direitos reservados.</span>
           <div className="flex items-center gap-4">
             <Link to="/termos" className="hover:text-foreground transition-colors">
               Termos de Uso

@@ -7,9 +7,9 @@ import {
 
 const faqs = [
   {
-    question: "Para quem é o TribuTech?",
+    question: "Para quem é o TribuTalks?",
     answer:
-      "TribuTech é ideal para empresários, CFOs e gestores financeiros de empresas com faturamento acima de R$1 milhão por mês. Se você precisa tomar decisões tributárias com base em dados reais e não em achismos, o TribuTech é para você.",
+      "TribuTalks é ideal para empresários, CFOs e gestores financeiros de empresas com faturamento acima de R$1 milhão por mês. Se você precisa tomar decisões tributárias com base em dados reais e não em achismos, o TribuTalks é para você.",
   },
   {
     question: "Preciso de cartão para começar?",

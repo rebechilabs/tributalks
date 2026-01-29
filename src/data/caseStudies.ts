@@ -38,7 +38,7 @@ export const caseStudies: CaseStudy[] = [
       { metric: "Tempo Economizado", value: "40 horas/mês", description: "Antes gastas em análises manuais" },
     ],
     testimonial: {
-      quote: "O TributechAI transformou nossa gestão fiscal. Em 3 meses recuperamos o investimento de 2 anos de assinatura.",
+      quote: "O TribuTalks transformou nossa gestão fiscal. Em 3 meses recuperamos o investimento de 2 anos de assinatura.",
       author: "Carlos Mendes",
       role: "Diretor Financeiro",
     },
