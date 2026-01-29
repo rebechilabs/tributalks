@@ -230,8 +230,8 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Newsletter Signup */}
-      <div className="px-4 pb-2">
+      {/* Newsletter Signup - destacado com fundo */}
+      <div className="px-3 py-3 border-t border-border bg-muted/30">
         <NewsletterForm variant="compact" />
       </div>
 
