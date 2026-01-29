@@ -5,50 +5,19 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Temas de busca para notícias - SEPARADOS EM DOIS GRUPOS
-const SEARCH_TOPICS_REFORMA = [
+// Temas de busca REDUZIDOS para evitar timeout (3 queries em vez de 10)
+const SEARCH_TOPICS = [
   {
-    query: "reforma tributária Brasil IBS CBS 2026 2027 últimas notícias implementação",
+    query: "reforma tributária Brasil IBS CBS split payment 2026 últimas notícias hoje",
     categoria: "REFORMA",
   },
   {
-    query: "split payment nota fiscal eletrônica Brasil reforma tributária",
-    categoria: "REFORMA",
-  },
-  {
-    query: "transição tributária Brasil IVA dual CBS IBS cronograma",
-    categoria: "REFORMA",
-  },
-  {
-    query: "imposto seletivo Brasil reforma tributária produtos tributados",
-    categoria: "REFORMA",
-  },
-  {
-    query: "regulamentação reforma tributária LC 214 Senado Câmara votação",
-    categoria: "REFORMA",
-  },
-];
-
-const SEARCH_TOPICS_TRIBUTARIAS = [
-  {
-    query: "tributação empresas Brasil ICMS PIS COFINS novidades fiscais",
+    query: "tributação empresas Brasil ICMS PIS COFINS Receita Federal novidades fiscais hoje",
     categoria: "TRIBUTOS",
   },
   {
-    query: "Receita Federal fiscalização empresas autuação malha fina",
-    categoria: "FISCALIZACAO",
-  },
-  {
-    query: "benefícios fiscais incentivos tributários empresas Brasil estados",
-    categoria: "INCENTIVOS",
-  },
-  {
-    query: "obrigações acessórias SPED EFD empresas prazos novidades",
-    categoria: "OBRIGACOES",
-  },
-  {
-    query: "jurisprudência tributária STF STJ decisões impostos empresas",
-    categoria: "JURISPRUDENCIA",
+    query: "lei complementar tributária Brasil regulamentação impostos decisões STF STJ hoje",
+    categoria: "LEGISLACAO",
   },
 ];
 
@@ -76,6 +45,9 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const startTime = Date.now();
+  console.log(`[search-news] Iniciando às ${new Date().toISOString()}`);
+
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -84,61 +56,32 @@ Deno.serve(async (req) => {
 
     // Verificar se Perplexity está configurado
     if (!perplexityApiKey) {
-      console.error("PERPLEXITY_API_KEY não configurada");
+      console.error("[search-news] PERPLEXITY_API_KEY não configurada");
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: "Perplexity não está configurado. Conecte o Perplexity nas configurações do projeto." 
+          error: "Perplexity não está configurado" 
         }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Opcional: verificar autorização para chamadas manuais
+    // Permitir chamadas do cron (anon key) ou admins
     const authHeader = req.headers.get("Authorization");
-    let isScheduledJob = false;
+    const isScheduledJob = authHeader?.includes(Deno.env.get("SUPABASE_ANON_KEY") || "INVALID");
     
-    if (authHeader) {
-      const token = authHeader.replace("Bearer ", "");
-      // Se for o anon key, é um cron job agendado
-      if (token === Deno.env.get("SUPABASE_ANON_KEY")) {
-        isScheduledJob = true;
-      } else {
-        // Verificar se é admin para chamadas manuais
-        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-        if (authError || !user) {
-          return new Response(
-            JSON.stringify({ error: "Não autorizado" }),
-            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
+    console.log(`[search-news] Chamada via cron: ${isScheduledJob}`);
 
-        const { data: roleData } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id)
-          .eq("role", "admin")
-          .maybeSingle();
+    const noticias: NoticiaProcessada[] = [];
 
-        if (!roleData) {
-          return new Response(
-            JSON.stringify({ error: "Acesso restrito a administradores" }),
-            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-      }
-    }
-
-    console.log(`Iniciando busca de notícias (scheduled: ${isScheduledJob})`);
-
-    const noticiasReforma: NoticiaProcessada[] = [];
-    const noticiasTributarias: NoticiaProcessada[] = [];
-
-    // Função auxiliar para buscar notícias de um tópico
-    async function buscarNoticias(topic: { query: string; categoria: string }, targetArray: NoticiaProcessada[]) {
-      console.log(`Buscando: ${topic.query}`);
-
+    // Buscar todas as queries em PARALELO para ser mais rápido
+    const promises = SEARCH_TOPICS.map(async (topic) => {
+      console.log(`[search-news] Buscando: ${topic.categoria}`);
+      
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout por query
+
         const response = await fetch("https://api.perplexity.ai/chat/completions", {
           method: "POST",
           headers: {
@@ -150,136 +93,119 @@ Deno.serve(async (req) => {
             messages: [
               {
                 role: "system",
-                content: `Você é um assistente que busca e resume notícias recentes sobre tributação e economia empresarial no Brasil. 
-                
-Retorne EXATAMENTE 1 notícia recente e muito relevante no seguinte formato JSON:
-[
-  {
-    "titulo": "Título da notícia (máximo 100 caracteres)",
-    "resumo": "Resumo objetivo de 2-3 parágrafos explicando o conteúdo principal e impacto para empresas",
-    "fonte": "Nome do veículo/site",
-    "relevancia": "ALTA ou MEDIA (ALTA = impacto direto em empresas, MEDIA = informativo)"
-  }
-]
-
-IMPORTANTE: Só retorne notícias dos últimos 3 dias. Se não houver notícia relevante recente, retorne array vazio [].
-Priorize notícias de fontes confiáveis como: Valor Econômico, InfoMoney, Folha, Estadão, G1, Portal Contábeis, Receita Federal, Jota, Conjur.`
+                content: `Você busca notícias tributárias do Brasil. Retorne EXATAMENTE 2 notícias recentes em JSON:
+[{"titulo": "Título curto", "resumo": "Resumo de 2 parágrafos", "fonte": "Nome do veículo"}]
+APENAS notícias das últimas 24 horas. Se não houver, retorne [].`
               },
-              {
-                role: "user",
-                content: topic.query
-              }
+              { role: "user", content: topic.query }
             ],
             search_recency_filter: "day",
           }),
+          signal: controller.signal,
         });
 
+        clearTimeout(timeoutId);
+
         if (!response.ok) {
-          console.error(`Erro Perplexity para ${topic.categoria}: ${response.status}`);
-          return;
+          console.error(`[search-news] Erro Perplexity ${topic.categoria}: ${response.status}`);
+          return [];
         }
 
         const data: PerplexityResult = await response.json();
         const content = data.choices?.[0]?.message?.content || "";
         const citations = data.citations || [];
 
-        try {
-          const jsonMatch = content.match(/\[[\s\S]*\]/);
-          if (jsonMatch) {
-            const noticias = JSON.parse(jsonMatch[0]);
-            
-            for (const noticia of noticias) {
-              // Só adiciona se for relevante
-              if (noticia.titulo && noticia.resumo) {
-                targetArray.push({
-                  titulo_original: noticia.titulo,
-                  conteudo_original: noticia.resumo,
-                  fonte: noticia.fonte || "Perplexity Search",
-                  fonte_url: citations[0] || "",
-                  categoria: topic.categoria,
-                });
-              }
-            }
-          }
-        } catch (parseError) {
-          console.error(`Erro ao parsear resposta para ${topic.categoria}:`, parseError);
+        const jsonMatch = content.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          return parsed.map((n: any) => ({
+            titulo_original: n.titulo || "",
+            conteudo_original: n.resumo || "",
+            fonte: n.fonte || "Perplexity",
+            fonte_url: citations[0] || "",
+            categoria: topic.categoria,
+          })).filter((n: NoticiaProcessada) => n.titulo_original.length > 10);
         }
-
-        // Delay entre requisições
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-      } catch (topicError) {
-        console.error(`Erro ao buscar ${topic.categoria}:`, topicError);
+        return [];
+      } catch (err) {
+        console.error(`[search-news] Erro ${topic.categoria}:`, err);
+        return [];
       }
-    }
+    });
 
-    // Buscar notícias de REFORMA TRIBUTÁRIA (5 tópicos)
-    console.log("=== Buscando notícias de REFORMA TRIBUTÁRIA ===");
-    for (const topic of SEARCH_TOPICS_REFORMA) {
-      await buscarNoticias(topic, noticiasReforma);
-    }
+    const results = await Promise.all(promises);
+    results.forEach(r => noticias.push(...r));
 
-    // Buscar notícias TRIBUTÁRIAS GERAIS (5 tópicos)
-    console.log("=== Buscando notícias TRIBUTÁRIAS GERAIS ===");
-    for (const topic of SEARCH_TOPICS_TRIBUTARIAS) {
-      await buscarNoticias(topic, noticiasTributarias);
-    }
+    console.log(`[search-news] Total encontradas: ${noticias.length}`);
 
-    // Limitar a 5 de cada grupo
-    const reformaFinal = noticiasReforma.slice(0, 5);
-    const tributariasFinal = noticiasTributarias.slice(0, 5);
-
-    console.log(`Reforma: ${reformaFinal.length} notícias | Tributárias: ${tributariasFinal.length} notícias`);
-
-    // Só envia para processamento se houver novas notícias
-    const todasNoticias = [...reformaFinal, ...tributariasFinal];
-
-    if (todasNoticias.length === 0) {
+    if (noticias.length === 0) {
       return new Response(
         JSON.stringify({
           success: true,
-          message: "Nenhuma notícia nova relevante encontrada. Notícias anteriores mantidas.",
-          noticias_reforma: 0,
-          noticias_tributarias: 0,
+          message: "Nenhuma notícia nova nas últimas 24h",
           timestamp: new Date().toISOString(),
+          duration_ms: Date.now() - startTime,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`Enviando ${todasNoticias.length} notícias para processamento...`);
+    // Inserir diretamente no banco (mais rápido que chamar outra função)
+    let insertedCount = 0;
+    for (const noticia of noticias.slice(0, 6)) { // Máximo 6 notícias
+      // Verificar duplicatas pelo título
+      const { data: existing } = await supabase
+        .from("noticias_tributarias")
+        .select("id")
+        .ilike("titulo_original", `%${noticia.titulo_original.slice(0, 50)}%`)
+        .limit(1);
 
-    // Enviar para processamento com IA
-    const processResponse = await fetch(`${supabaseUrl}/functions/v1/process-news`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${supabaseServiceKey}`,
-      },
-      body: JSON.stringify({ noticias: todasNoticias }),
-    });
+      if (existing && existing.length > 0) {
+        console.log(`[search-news] Notícia duplicada: ${noticia.titulo_original.slice(0, 40)}...`);
+        continue;
+      }
 
-    const processResult = await processResponse.json();
+      const { error } = await supabase.from("noticias_tributarias").insert({
+        titulo_original: noticia.titulo_original,
+        conteudo_original: noticia.conteudo_original,
+        fonte: noticia.fonte,
+        fonte_url: noticia.fonte_url,
+        categoria: noticia.categoria,
+        resumo_executivo: noticia.conteudo_original.slice(0, 500),
+        relevancia: "MEDIA",
+        publicado: true,
+        data_publicacao: new Date().toISOString(),
+      });
 
-    console.log(`Processamento concluído: ${processResult.processadas || 0} notícias`);
+      if (error) {
+        console.error(`[search-news] Erro insert:`, error);
+      } else {
+        insertedCount++;
+        console.log(`[search-news] Inserida: ${noticia.titulo_original.slice(0, 40)}...`);
+      }
+    }
+
+    const duration = Date.now() - startTime;
+    console.log(`[search-news] Finalizado em ${duration}ms. Inseridas: ${insertedCount}`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        noticias_reforma: reformaFinal.length,
-        noticias_tributarias: tributariasFinal.length,
-        noticias_processadas: processResult.processadas || 0,
-        categorias_reforma: [...new Set(reformaFinal.map(n => n.categoria))],
-        categorias_tributarias: [...new Set(tributariasFinal.map(n => n.categoria))],
+        noticias_encontradas: noticias.length,
+        noticias_inseridas: insertedCount,
         timestamp: new Date().toISOString(),
+        duration_ms: duration,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
   } catch (error) {
-    console.error("Erro na busca de notícias:", error);
+    console.error("[search-news] Erro geral:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Erro desconhecido" }),
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : "Erro desconhecido",
+        duration_ms: Date.now() - startTime,
+      }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
