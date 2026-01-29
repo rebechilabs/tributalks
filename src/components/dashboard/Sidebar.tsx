@@ -201,6 +201,13 @@ export function Sidebar() {
             <div className="space-y-1">
               {group.items.map(renderNavItem)}
             </div>
+            
+            {/* Newsletter após o grupo "IA e Documentos" */}
+            {group.title === 'IA e Documentos' && (
+              <div className="mt-2 mx-1 p-2 rounded-lg bg-muted/30 border border-border/50">
+                <NewsletterForm variant="compact" />
+              </div>
+            )}
           </div>
         ))}
 
@@ -230,10 +237,6 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Newsletter Signup - destacado com fundo */}
-      <div className="px-3 py-3 border-t border-border bg-muted/30">
-        <NewsletterForm variant="compact" />
-      </div>
 
       {/* Plan Badge */}
       <div className="p-4 border-t border-border">
