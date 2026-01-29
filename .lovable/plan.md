@@ -1,397 +1,143 @@
 
-# Plano: Importador de XMLs para Lotes Históricos (5 Anos)
+
+# Plano: Configurar Stripe Payment Links para Produção
 
 ## Resumo Executivo
 
-Aprimorar o importador de XMLs existente para suportar upload em massa de arquivos históricos (5 anos de notas fiscais), com processamento em lotes, barra de progresso detalhada em tempo real, estimativa de tempo restante, e resumo completo da importação incluindo estatísticas por período, tipo de documento, fornecedores e análise de créditos identificados.
+Configurar a integração completa do Stripe para aceitar assinaturas pagas. Isso envolve adicionar os secrets necessários no backend e substituir os Payment Links de teste pelos links de produção.
 
 ---
 
-## 1. Limitações Atuais Identificadas
+## 1. Status Atual
 
-| Limitação | Impacto |
-|-----------|---------|
-| Limite de 100 arquivos por vez | Insuficiente para 5 anos de histórico |
-| Processamento sequencial | Timeout em lotes grandes |
-| Progresso geral apenas | Usuário não sabe qual arquivo está processando |
-| Sem estimativa de tempo | Incerteza sobre duração |
-| Resumo básico | Só mostra total/erros, sem análise de período |
-| Sem suporte a ZIP | Usuário precisa extrair manualmente |
+| Item | Estado | Ação |
+|------|--------|------|
+| Payment Links de teste | Configurados | Substituir por produção |
+| Webhook `stripe-webhook` | Pronto | Falta configurar secrets |
+| `STRIPE_SECRET_KEY` | Não configurado | Adicionar |
+| `STRIPE_WEBHOOK_SECRET` | Não configurado | Adicionar |
+| Price IDs | Placeholders | Adicionar |
 
 ---
 
-## 2. Melhorias Propostas
+## 2. Secrets Necessários
 
-### 2.1 Capacidade Ampliada
+Você precisará fornecer os seguintes valores do seu painel do Stripe:
+
+| Secret | Onde encontrar |
+|--------|----------------|
+| `STRIPE_SECRET_KEY` | Dashboard Stripe → Developers → API Keys → Secret key |
+| `STRIPE_WEBHOOK_SECRET` | Dashboard Stripe → Developers → Webhooks → Signing secret |
+| `STRIPE_PRICE_NAVIGATOR_MONTHLY` | ID do preço mensal Navigator (ex: `price_1ABC...`) |
+| `STRIPE_PRICE_NAVIGATOR_ANNUAL` | ID do preço anual Navigator |
+| `STRIPE_PRICE_PROFESSIONAL_MONTHLY` | ID do preço mensal Professional |
+| `STRIPE_PRICE_PROFESSIONAL_ANNUAL` | ID do preço anual Professional |
+| `STRIPE_PRICE_CREDITS_10` | ID do pacote de 10 créditos |
+| `STRIPE_PRICE_CREDITS_20` | ID do pacote de 20 créditos |
+| `STRIPE_PRICE_CREDITS_30` | ID do pacote de 30 créditos |
+
+---
+
+## 3. Passos no Painel do Stripe
+
+### 3.1 Criar Produtos e Preços
+
+No Dashboard do Stripe (https://dashboard.stripe.com/products):
+
+**Produto 1: Plano Navigator**
+- Nome: "Tributech Navigator"
+- Preço Mensal: R$ 697,00/mês (recorrente)
+- Preço Anual: R$ 6.970,00/ano (recorrente)
+
+**Produto 2: Plano Professional**
+- Nome: "Tributech Professional"
+- Preço Mensal: R$ 2.497,00/mês (recorrente)
+- Preço Anual: R$ 24.970,00/ano (recorrente)
+
+**Produto 3: Pacotes de Créditos** (pagamento único)
+- 10 Créditos: R$ 29,90
+- 20 Créditos: R$ 54,90
+- 30 Créditos: R$ 74,90
+
+### 3.2 Gerar Payment Links
+
+Para cada preço criado, gerar um Payment Link:
+1. Vá em Products → Selecione o produto
+2. Clique no preço → "Create payment link"
+3. Copie a URL gerada (formato: `https://buy.stripe.com/...`)
+
+### 3.3 Configurar Webhook
+
+No Dashboard do Stripe → Developers → Webhooks:
+
+1. Clique em "Add endpoint"
+2. URL: `https://rhhzsmupixdhurricppk.supabase.co/functions/v1/stripe-webhook`
+3. Eventos a escutar:
+   - `checkout.session.completed`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+   - `invoice.payment_failed`
+4. Copie o "Signing secret" (começa com `whsec_`)
+
+---
+
+## 4. Implementação
+
+### 4.1 Adicionar Secrets no Backend
+
+Solicitar que o usuário insira os secrets via ferramenta de adição de secrets.
+
+### 4.2 Atualizar Payment Links
+
+Atualizar `src/config/site.ts` com os Payment Links de produção fornecidos pelo usuário.
+
+---
+
+## 5. Arquivos a Modificar
+
+| Arquivo | Mudança |
+|---------|---------|
+| `src/config/site.ts` | Substituir URLs de teste por produção |
+| Backend Secrets | Adicionar 9 secrets do Stripe |
+
+---
+
+## 6. Fluxo de Assinatura (já implementado)
 
 ```text
-┌─────────────────────────────────────────────────────────────────────┐
-│                    ANTES          →          DEPOIS                  │
-├─────────────────────────────────────────────────────────────────────┤
-│  100 arquivos/vez              →    1.000 arquivos/vez              │
-│  Apenas .xml                   →    .xml + .zip (extração auto)     │
-│  Barra única                   →    Progresso por fase              │
-│  Sem tempo estimado            →    ETA calculado dinamicamente     │
-│  Lista simples de arquivos     →    Agrupamento por ano/período     │
-│  Resumo: X processados         →    Resumo completo com insights    │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-### 2.2 Processamento em Lotes (Chunked)
-
-```text
-┌────────────────────────────────────────────────────────────────────┐
-│                      FLUXO DE PROCESSAMENTO                         │
-├────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│   Arquivos      Lotes de 20       Edge Function       Resultado    │
-│   Selecionados  ───────────►    process-xml-batch   ───────────►   │
-│   (500 XMLs)    25 chamadas      (paralelas 5x)       Consolidado  │
-│                                                                     │
-│   FASE 1: Upload Storage (25%)                                      │
-│   FASE 2: Processamento (60%)                                       │
-│   FASE 3: Análise de Créditos (15%)                                │
-│                                                                     │
-└────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 3. Nova Interface do Importador
-
-### 3.1 Barra de Progresso Aprimorada
-
-**Elementos visuais:**
-- Indicador de fase atual (Upload / Processamento / Análise)
-- Barra de progresso principal com porcentagem
-- Contador de arquivos: "Processando 127/500"
-- Tempo estimado restante: "~3 min restantes"
-- Arquivo atual sendo processado
-- Velocidade média: "~8 arquivos/seg"
-
-### 3.2 Agrupamento por Período
-
-**Antes do processamento:**
-```text
-┌──────────────────────────────────────────────────────────┐
-│  📁 Arquivos por Ano                                      │
-├──────────────────────────────────────────────────────────┤
-│  ▸ 2024 (142 arquivos)         ████████████░░░ 28%       │
-│  ▸ 2023 (156 arquivos)         ██████████████░ 31%       │
-│  ▸ 2022 (98 arquivos)          ███████░░░░░░░░ 20%       │
-│  ▸ 2021 (67 arquivos)          ████░░░░░░░░░░░ 13%       │
-│  ▸ 2020 (37 arquivos)          ██░░░░░░░░░░░░░  8%       │
-│                                                          │
-│  Total: 500 arquivos • ~12 MB                            │
-└──────────────────────────────────────────────────────────┘
-```
-
-### 3.3 Resumo Detalhado Pós-Importação
-
-**Componente de Resumo (novo):**
-
-```text
-┌─────────────────────────────────────────────────────────────────────┐
-│                    RESUMO DA IMPORTAÇÃO                              │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  ✅ 487 processados    ❌ 13 com erro    ⏱️ 4min 23s                │
-│                                                                      │
-├──────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  📊 ESTATÍSTICAS POR PERÍODO                                         │
-│  ┌────────────────────────────────────────────────────────────────┐ │
-│  │  Ano   │ Notas │ Valor Total  │ Tributos Atuais │ Com Reforma  │ │
-│  ├────────┼───────┼──────────────┼─────────────────┼──────────────┤ │
-│  │  2024  │  142  │ R$ 2.3M      │ R$ 310K         │ R$ 285K ↓    │ │
-│  │  2023  │  156  │ R$ 2.8M      │ R$ 378K         │ R$ 352K ↓    │ │
-│  │  2022  │   98  │ R$ 1.9M      │ R$ 256K         │ R$ 271K ↑    │ │
-│  │  2021  │   67  │ R$ 1.2M      │ R$ 162K         │ R$ 158K ↓    │ │
-│  │  2020  │   37  │ R$ 0.8M      │ R$ 108K         │ R$ 112K ↑    │ │
-│  └────────────────────────────────────────────────────────────────┘ │
-│                                                                      │
-│  💰 CRÉDITOS IDENTIFICADOS                                           │
-│  ┌────────────────────────────────────────────────────────────────┐ │
-│  │  PIS/COFINS sobre frete        R$ 45.200    Alta confiança     │ │
-│  │  ICMS energia industrial       R$ 28.900    Média confiança    │ │
-│  │  IPI ativo imobilizado         R$ 12.500    Alta confiança     │ │
-│  │                                ─────────                        │ │
-│  │  TOTAL POTENCIAL              R$ 86.600                        │ │
-│  └────────────────────────────────────────────────────────────────┘ │
-│                                                                      │
-│  📈 TOP 5 FORNECEDORES                                               │
-│  1. Distribuidora ABC Ltda (87 notas - R$ 1.2M)                     │
-│  2. Indústria XYZ S/A (56 notas - R$ 890K)                          │
-│  3. Transportes Rápido (43 notas - R$ 320K)                         │
-│  ...                                                                 │
-│                                                                      │
-│  ❌ ERROS ENCONTRADOS                                                │
-│  • 5 arquivos com estrutura XML inválida                            │
-│  • 3 arquivos com chave NFe duplicada                               │
-│  • 5 arquivos sem dados de emitente                                 │
-│                                                                      │
-│  [ Ver Detalhes ]  [ Baixar Relatório PDF ]  [ Ir para Resultados ] │
-│                                                                      │
-└──────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 4. Arquitetura Técnica
-
-### 4.1 Processamento em Chunks
-
-```typescript
-// Estratégia de processamento
-const CHUNK_SIZE = 20;        // Arquivos por lote
-const PARALLEL_CHUNKS = 5;    // Lotes simultâneos
-const MAX_FILES = 1000;       // Limite total
-
-// Fases do processamento
-enum ProcessingPhase {
-  PREPARING = 'preparing',     // Validação e agrupamento
-  UPLOADING = 'uploading',     // Upload para Storage
-  PROCESSING = 'processing',   // Parsing e cálculo
-  ANALYZING = 'analyzing',     // Análise de créditos
-  COMPLETE = 'complete'
-}
-```
-
-### 4.2 Interface de Estado do Progresso
-
-```typescript
-interface ImportProgress {
-  phase: ProcessingPhase;
-  totalFiles: number;
-  processedFiles: number;
-  successCount: number;
-  errorCount: number;
-  currentFile?: string;
-  startTime: Date;
-  estimatedTimeRemaining?: number;
-  bytesUploaded: number;
-  totalBytes: number;
-}
-
-interface ImportSummary {
-  // Estatísticas gerais
-  totalProcessed: number;
-  totalErrors: number;
-  processingTimeMs: number;
-  
-  // Por período
-  byYear: {
-    year: number;
-    count: number;
-    totalValue: number;
-    currentTaxes: number;
-    reformTaxes: number;
-  }[];
-  
-  // Por tipo de documento
-  byType: {
-    type: 'NFe' | 'NFSe' | 'CTe';
-    count: number;
-    totalValue: number;
-  }[];
-  
-  // Top fornecedores
-  topSuppliers: {
-    name: string;
-    cnpj: string;
-    notesCount: number;
-    totalValue: number;
-  }[];
-  
-  // Créditos identificados
-  creditsFound: {
-    category: string;
-    potential: number;
-    confidence: 'high' | 'medium' | 'low';
-  }[];
-  
-  // Erros detalhados
-  errors: {
-    fileName: string;
-    errorType: string;
-    message: string;
-  }[];
-}
-```
-
----
-
-## 5. Componentes a Criar/Modificar
-
-### 5.1 Novos Componentes
-
-| Componente | Descrição |
-|------------|-----------|
-| `ImportProgressBar.tsx` | Barra de progresso com fases e ETA |
-| `ImportSummaryCard.tsx` | Card de resumo pós-importação |
-| `ImportFilesByYear.tsx` | Agrupamento visual por ano |
-| `ImportErrorsList.tsx` | Lista detalhada de erros |
-
-### 5.2 Modificações
-
-| Arquivo | Mudanças |
-|---------|----------|
-| `ImportarXML.tsx` | Novo limite 1000, chunks, estados de fase |
-| `process-xml-batch/index.ts` | Retornar metadados para resumo |
-
----
-
-## 6. Fluxo de Usuário Atualizado
-
-```text
-1. UPLOAD
-   └─► Usuário arrasta pasta com XMLs históricos
-   └─► Sistema detecta arquivos .xml e .zip
-   └─► Mostra preview agrupado por ano
+1. Usuário clica em "Assinar Navigator" ou "Assinar Professional"
+   └─► Redireciona para Stripe Checkout (Payment Link)
    
-2. VALIDAÇÃO
-   └─► Verifica duplicatas (chaves NFe já processadas)
-   └─► Mostra total de arquivos novos vs existentes
-   └─► Usuário confirma para iniciar
+2. Usuário completa pagamento
+   └─► Stripe envia evento `checkout.session.completed`
    
-3. PROCESSAMENTO
-   └─► Fase 1: Upload para Storage (barra 0-25%)
-   └─► Fase 2: Processamento em lotes (barra 25-85%)
-       └─► Mostra arquivo atual
-       └─► Atualiza contador e ETA
-   └─► Fase 3: Análise de créditos (barra 85-100%)
+3. Webhook processa evento
+   └─► Busca usuário por email
+   └─► Atualiza `profiles.plano` para NAVIGATOR/PROFESSIONAL
+   └─► Salva `stripe_customer_id` e `stripe_subscription_id`
    
-4. RESUMO
-   └─► Exibe dashboard completo
-   └─► Estatísticas por ano
-   └─► Créditos identificados
-   └─► Lista de erros (se houver)
-   └─► Botões: Ver Resultados / Baixar PDF
+4. Renovação automática
+   └─► Stripe cobra automaticamente
+   └─► Webhook atualiza `subscription_period_end`
+   
+5. Cancelamento
+   └─► Evento `subscription.deleted`
+   └─► Webhook reverte plano para FREE
 ```
 
 ---
 
-## 7. Estimativas de Tempo
+## 7. Próximos Passos
 
-| Lote | Arquivos | Tempo Estimado |
-|------|----------|----------------|
-| Pequeno | 100 | ~30 segundos |
-| Médio | 250 | ~1 minuto |
-| Grande | 500 | ~2-3 minutos |
-| Muito Grande | 1000 | ~5-6 minutos |
+1. **Você precisa criar os produtos no Stripe** seguindo as instruções do passo 3.1
+2. **Gerar os Payment Links** para cada preço
+3. **Configurar o webhook** e copiar o signing secret
+4. **Me fornecer**:
+   - Os 4 Payment Links de produção (Navigator mensal/anual, Professional mensal/anual)
+   - Os 3 Payment Links de créditos (10, 20, 30)
+   - STRIPE_SECRET_KEY (sk_live_...)
+   - STRIPE_WEBHOOK_SECRET (whsec_...)
+   - Os 7 Price IDs (price_...)
 
----
-
-## 8. Arquivos a Criar/Modificar
-
-| Arquivo | Ação | Descrição |
-|---------|------|-----------|
-| `src/components/xml/ImportProgressBar.tsx` | CRIAR | Componente de progresso com fases |
-| `src/components/xml/ImportSummaryCard.tsx` | CRIAR | Resumo detalhado pós-importação |
-| `src/components/xml/ImportFilesByYear.tsx` | CRIAR | Agrupamento de arquivos por ano |
-| `src/components/xml/ImportErrorsList.tsx` | CRIAR | Lista de erros com detalhes |
-| `src/pages/ImportarXML.tsx` | MODIFICAR | Integrar novos componentes e lógica de chunks |
-| `supabase/functions/process-xml-batch/index.ts` | MODIFICAR | Adicionar metadados ao retorno |
-
----
-
-## 9. Seção Técnica
-
-### Algoritmo de Processamento em Chunks
-
-```typescript
-async function processInChunks(files: FileItem[], chunkSize: number) {
-  const chunks = [];
-  for (let i = 0; i < files.length; i += chunkSize) {
-    chunks.push(files.slice(i, i + chunkSize));
-  }
-  
-  let processed = 0;
-  const startTime = Date.now();
-  
-  // Processar 5 chunks em paralelo
-  for (let i = 0; i < chunks.length; i += 5) {
-    const parallelChunks = chunks.slice(i, i + 5);
-    
-    await Promise.all(
-      parallelChunks.map(async (chunk) => {
-        // Upload e processar chunk
-        const importIds = await uploadChunk(chunk);
-        await processChunk(importIds);
-        
-        processed += chunk.length;
-        updateProgress({
-          processedFiles: processed,
-          estimatedTimeRemaining: calculateETA(startTime, processed, files.length)
-        });
-      })
-    );
-  }
-}
-
-function calculateETA(startTime: number, processed: number, total: number): number {
-  const elapsed = Date.now() - startTime;
-  const rate = processed / elapsed; // arquivos por ms
-  const remaining = total - processed;
-  return remaining / rate; // ms restantes
-}
-```
-
-### Estrutura de Retorno da Edge Function
-
-```typescript
-// Resposta atual expandida
-{
-  success: true,
-  processed: 20,
-  errors: 2,
-  results: [...],
-  errorDetails: [...],
-  
-  // NOVOS CAMPOS
-  metadata: {
-    processingTimeMs: 1234,
-    byYear: {
-      "2024": { count: 8, totalValue: 125000, taxes: 12500 },
-      "2023": { count: 12, totalValue: 180000, taxes: 18000 }
-    },
-    byType: {
-      "NFe": { count: 18, totalValue: 280000 },
-      "CTe": { count: 2, totalValue: 25000 }
-    },
-    suppliers: [
-      { cnpj: "12345678000190", name: "Empresa ABC", count: 5, total: 50000 }
-    ]
-  },
-  creditAnalysis: {
-    creditsFound: 12,
-    totalPotential: 45200,
-    byCategory: [
-      { category: "PIS/COFINS", potential: 28000, count: 8 },
-      { category: "ICMS", potential: 17200, count: 4 }
-    ]
-  }
-}
-```
-
-### Cálculo de Agrupamento por Ano
-
-```typescript
-function groupFilesByYear(files: FileItem[]): Map<number, FileItem[]> {
-  const groups = new Map<number, FileItem[]>();
-  
-  for (const file of files) {
-    // Tentar extrair ano do nome do arquivo ou metadata
-    const yearMatch = file.file.name.match(/(\d{4})/);
-    const year = yearMatch ? parseInt(yearMatch[1]) : new Date().getFullYear();
-    
-    if (!groups.has(year)) {
-      groups.set(year, []);
-    }
-    groups.get(year)!.push(file);
-  }
-  
-  return groups;
-}
-```
+Após você me fornecer esses dados, eu configuro tudo automaticamente no sistema.
 
