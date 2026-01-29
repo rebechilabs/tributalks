@@ -108,9 +108,6 @@ const plans: Plan[] = [
     isEnterprise: true,
     cnpjLimit: "Ilimitado • Usuários Ilimitados",
     features: [
-      { text: "Tudo do Professional", included: true },
-      { text: "10 assentos inclusos", included: true },
-      { text: "Assentos extras: +R$200/mês cada", included: "limited" },
       { text: "Atendimento personalizado através do Rebechi & Silva Advogados Associados", included: true },
       { text: "White Label", included: true, limitText: "(seu logo, suas cores, seu domínio)" },
     ],
