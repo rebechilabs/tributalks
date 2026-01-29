@@ -1,62 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Users, Lock, Sparkles, ExternalLink, MessageCircle, Calendar, BookOpen } from "lucide-react";
 import { ContentLibrary } from "@/components/community/ContentLibrary";
-import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Link } from "react-router-dom";
+import { usePlanAccess, PLAN_LABELS } from "@/hooks/useFeatureAccess";
 
 const COMMUNITY_URL = "https://chat.whatsapp.com/BbdIWJqap2FHmj90zfz5l3";
 
 const Comunidade = () => {
-  const { profile } = useAuth();
-  const currentPlan = profile?.plano || "FREE";
-  const hasAccess = ["PROFESSIONAL", "PROFISSIONAL", "PREMIUM", "ENTERPRISE"].includes(currentPlan.toUpperCase());
-
-  if (!hasAccess) {
-    return (
-      <DashboardLayout title="Comunidade">
-        <div className="flex items-center justify-center min-h-[60vh] px-4">
-          <Card className="max-w-md w-full">
-            <CardContent className="pt-8 pb-8 text-center">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Lock className="w-8 h-8 text-primary" />
-              </div>
-              <h2 className="text-xl font-bold text-foreground mb-2">
-                Comunidade Exclusiva
-              </h2>
-              <p className="text-muted-foreground mb-4">
-                Networking com empresários e CFOs que faturam acima de R$1M/mês.
-              </p>
-              <div className="bg-muted/50 rounded-lg p-4 mb-6 text-left space-y-2">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <MessageCircle className="w-4 h-4 text-primary" />
-                  <span>Grupo exclusivo no WhatsApp</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Calendar className="w-4 h-4 text-primary" />
-                  <span>Webinars mensais com especialistas</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <BookOpen className="w-4 h-4 text-primary" />
-                  <span>Conteúdos exclusivos sobre tributação</span>
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground mb-6">
-                Disponível a partir do plano <strong>Profissional</strong>.
-              </p>
-              <Link to="/#planos">
-                <Button className="gap-2">
-                  <Sparkles className="w-4 h-4" />
-                  Fazer upgrade
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  const { isNavigator } = usePlanAccess();
 
   return (
     <DashboardLayout title="Comunidade">
@@ -67,25 +21,28 @@ const Comunidade = () => {
               <Users className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Comunidade Exclusiva</h1>
+              <h1 className="text-2xl font-bold text-foreground">Comunidade</h1>
               <p className="text-muted-foreground">Networking com empresários e CFOs</p>
             </div>
           </div>
         </div>
 
         <div className="grid gap-6">
-          {/* WhatsApp Group */}
+          {/* WhatsApp Group - Disponível para TODOS */}
           <Card className="border-primary/20">
             <CardContent className="pt-6">
               <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
+                <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
                   <MessageCircle className="w-6 h-6 text-secondary" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-foreground mb-1">Grupo WhatsApp</h3>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-semibold text-foreground">Grupo WhatsApp</h3>
+                    <Badge variant="outline" className="text-xs">Aberto</Badge>
+                  </div>
                   <p className="text-sm text-muted-foreground mb-4">
                     Conecte-se com outros empresários do middle market. Compartilhe experiências, 
-                    tire dúvidas e faça networking.
+                    tire dúvidas e faça networking básico com a comunidade.
                   </p>
                   <Button asChild className="gap-2">
                     <a href={COMMUNITY_URL} target="_blank" rel="noopener noreferrer">
@@ -98,51 +55,150 @@ const Comunidade = () => {
             </CardContent>
           </Card>
 
-          {/* Webinars */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                  <Calendar className="w-6 h-6 text-primary" />
+          {/* Circle Community - NAVIGATOR+ (Em breve) */}
+          {isNavigator ? (
+            <Card className="border-primary/20">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <Users className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-foreground">Comunidade Circle</h3>
+                      <Badge variant="outline">Em breve</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Networking exclusivo para CFOs e gestores financeiros. 
+                      Discussões aprofundadas, mentorias em grupo e conexões estratégicas.
+                    </p>
+                    <Button disabled className="gap-2">
+                      Aguardando lançamento
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-foreground mb-1">Webinars Mensais</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Participe de sessões ao vivo com especialistas em tributação.
-                    Próximos temas incluem Split Payment, Reforma Tributária e mais.
-                  </p>
-                  <div className="bg-muted/50 rounded-lg p-4">
-                    <p className="text-sm text-foreground font-medium">Próximo webinar:</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <LockedFeatureCard
+              icon={<Users className="w-6 h-6 text-muted-foreground" />}
+              title="Comunidade Circle"
+              description="Networking exclusivo para CFOs e gestores financeiros. Discussões aprofundadas, mentorias em grupo e conexões estratégicas."
+              minPlan="NAVIGATOR"
+              comingSoon
+            />
+          )}
+
+          {/* Webinars - NAVIGATOR+ */}
+          {isNavigator ? (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <Calendar className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-foreground">Webinars Mensais</h3>
+                      <Badge variant="secondary" className="text-xs">{PLAN_LABELS.NAVIGATOR}+</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Participe de sessões ao vivo com especialistas em tributação.
+                      Próximos temas incluem Split Payment, Reforma Tributária e mais.
+                    </p>
+                    <div className="bg-muted/50 rounded-lg p-4">
+                      <p className="text-sm text-foreground font-medium">Próximo webinar:</p>
+                      <p className="text-sm text-muted-foreground">
+                        "Preparando seu caixa para o Split Payment" — Em breve
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <LockedFeatureCard
+              icon={<Calendar className="w-6 h-6 text-muted-foreground" />}
+              title="Webinars Mensais"
+              description="Sessões ao vivo exclusivas com especialistas em tributação. Temas como Split Payment, Reforma Tributária e estratégias de planejamento."
+              minPlan="NAVIGATOR"
+            />
+          )}
+
+          {/* Content Library - NAVIGATOR+ */}
+          {isNavigator ? (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-4 mb-6">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <BookOpen className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-foreground">Biblioteca de Conteúdos</h3>
+                      <Badge variant="secondary" className="text-xs">{PLAN_LABELS.NAVIGATOR}+</Badge>
+                    </div>
                     <p className="text-sm text-muted-foreground">
-                      "Preparando seu caixa para o Split Payment" — Em breve
+                      Materiais exclusivos para membros: guias, templates, checklists e webinars gravados.
                     </p>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Content Library */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-4 mb-6">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                  <BookOpen className="w-6 h-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-foreground mb-1">Biblioteca de Conteúdos</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Materiais exclusivos para membros: guias, templates, checklists e webinars.
-                  </p>
-                </div>
-              </div>
-              <ContentLibrary />
-            </CardContent>
-          </Card>
+                <ContentLibrary />
+              </CardContent>
+            </Card>
+          ) : (
+            <LockedFeatureCard
+              icon={<BookOpen className="w-6 h-6 text-muted-foreground" />}
+              title="Biblioteca de Conteúdos"
+              description="Materiais premium: guias práticos, templates de planilhas, checklists de compliance e gravações de webinars anteriores."
+              minPlan="NAVIGATOR"
+            />
+          )}
         </div>
       </div>
     </DashboardLayout>
   );
 };
+
+// Componente para cards bloqueados
+interface LockedFeatureCardProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  minPlan: 'NAVIGATOR' | 'PROFESSIONAL' | 'ENTERPRISE';
+  comingSoon?: boolean;
+}
+
+const LockedFeatureCard = ({ icon, title, description, minPlan, comingSoon }: LockedFeatureCardProps) => (
+  <Card className="border-muted bg-muted/30">
+    <CardContent className="pt-6">
+      <div className="flex items-start gap-4">
+        <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center shrink-0">
+          {icon}
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="font-semibold text-muted-foreground">{title}</h3>
+            <Lock className="w-4 h-4 text-muted-foreground" />
+            {comingSoon && (
+              <Badge variant="outline">Em breve</Badge>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground/80 mb-4">
+            {description}
+          </p>
+          <div className="flex items-center gap-3">
+            <Link to="/#planos">
+              <Button size="sm" className="gap-2">
+                <Sparkles className="w-4 h-4" />
+                Upgrade para {PLAN_LABELS[minPlan]}
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
 
 export default Comunidade;
