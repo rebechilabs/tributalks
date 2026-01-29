@@ -90,6 +90,16 @@ export function ExecutiveReportPreview({
   const currentMonth = formatBrasilia(nowBrasilia(), "MMMM 'de' yyyy");
   const currentDate = formatBrasilia(nowBrasilia(), "dd/MM/yyyy");
 
+  // Safely handle null thermometerData with defaults
+  const safeThermometerData = thermometerData ?? {
+    scoreGrade: null,
+    scoreTotal: null,
+    caixaPotencialMin: null,
+    caixaPotencialMax: null,
+    cargaEfetivaPercent: null,
+    riscoNivel: null,
+    userName: null,
+  };
   const handleDownloadPdf = () => {
     // TODO: Implement PDF generation with jsPDF
     toast({
@@ -209,10 +219,10 @@ export function ExecutiveReportPreview({
           </div>
 
           {/* Company Info */}
-          {(companyName || thermometerData?.userName) && (
+          {(companyName || safeThermometerData.userName) && (
             <div className="px-6 py-3 bg-gray-50 border-b border-gray-200">
               <p className="text-sm text-gray-600">
-                <span className="font-medium">Empresa:</span> {companyName || `Empresa de ${thermometerData?.userName}`}
+                <span className="font-medium">Empresa:</span> {companyName || `Empresa de ${safeThermometerData.userName}`}
               </p>
               <p className="text-xs text-gray-400">Gerado em {currentDate}</p>
             </div>
@@ -226,17 +236,17 @@ export function ExecutiveReportPreview({
             </h2>
             
             {/* Score Badge */}
-            {thermometerData?.scoreGrade && (
+            {safeThermometerData.scoreGrade && (
               <div className="flex items-center gap-3 mb-4">
                 <div className={cn(
                   "flex items-center justify-center w-14 h-14 rounded-full bg-gray-100 text-2xl font-bold",
-                  gradeColors[thermometerData.scoreGrade] || 'text-gray-600'
+                  gradeColors[safeThermometerData.scoreGrade] || 'text-gray-600'
                 )}>
-                  {thermometerData.scoreGrade}
+                  {safeThermometerData.scoreGrade}
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-900">Nota Tributária</p>
-                  <p className="text-xs text-gray-500">{thermometerData.scoreTotal}/1000 pontos</p>
+                  <p className="text-xs text-gray-500">{safeThermometerData.scoreTotal}/1000 pontos</p>
                 </div>
               </div>
             )}
@@ -253,11 +263,11 @@ export function ExecutiveReportPreview({
               Projetos de caixa recomendados
             </h2>
 
-            {thermometerData?.caixaPotencialMin !== null && thermometerData?.caixaPotencialMax !== null ? (
+            {safeThermometerData.caixaPotencialMin !== null && safeThermometerData.caixaPotencialMax !== null ? (
               <div className="bg-emerald-50 rounded-lg p-4 mb-4">
                 <p className="text-sm text-gray-600">Caixa tributário em jogo nos próximos 12 meses:</p>
                 <p className="text-2xl font-bold text-emerald-700">
-                  {formatCurrency(thermometerData.caixaPotencialMin)} – {formatCurrency(thermometerData.caixaPotencialMax)}
+                  {formatCurrency(safeThermometerData.caixaPotencialMin)} – {formatCurrency(safeThermometerData.caixaPotencialMax)}
                 </p>
               </div>
             ) : (
