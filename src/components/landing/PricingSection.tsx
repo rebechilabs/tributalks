@@ -52,8 +52,8 @@ const plans: Plan[] = [
   {
     name: "NAVIGATOR",
     description: "Para monitorar a reforma",
-    priceMonthly: 697,
-    priceAnnual: 6970,
+    priceMonthly: 997,
+    priceAnnual: 9970,
     cnpjLimit: "1 CNPJ • 2 Usuários",
     features: [
       { text: "Clara AI (Copiloto)", included: "limited", limitText: "10 msgs/dia" },

@@ -1,7 +1,7 @@
 export const CONFIG = {
   STRIPE_PAYMENT_LINKS: {
     FREE: "/cadastro",
-    // Navigator - R$697/mês ou R$6.970/ano (2 meses grátis)
+    // Navigator - R$997/mês ou R$9.970/ano (2 meses grátis)
     NAVIGATOR_MENSAL: "https://buy.stripe.com/test_aFa8wI3V8e9U7PR9iSbo403",
     NAVIGATOR_ANUAL: "https://buy.stripe.com/test_fZu9AM63g2rcc67gLkbo404",
     // Professional - R$2.497/mês ou R$24.970/ano (2 meses grátis)
