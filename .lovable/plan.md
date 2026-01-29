@@ -1,144 +1,164 @@
 
 
-# Plano: Proteção Máxima do Sistema TribuTalks
+# Plano: Implementação Final - Criptografia ERP + Hardening BD
 
-## Análise de Segurança Atual
+## Resumo do Status Atual
 
-Após inspeção completa do código e configurações, identifiquei os seguintes pontos:
+### ✅ Já Implementado (Mensagem Anterior)
+| Item | Status |
+|------|--------|
+| Sanitização de erros em `clara-assistant` | Concluído |
+| Sanitização de erros em `analyze-credits` | Concluído |
+| Sanitização de erros em `process-xml-batch` | Concluído |
+| Sanitização de erros em `erp-sync` | Concluído |
+| Rate limiting em `send-contact-email` | Concluído |
+| Validação de input em `send-contact-email` | Concluído |
+| Secret `ERP_ENCRYPTION_KEY` | Adicionada |
 
-### O Que Já Está Bem Protegido
-| Componente | Status |
-|------------|--------|
-| RLS em todas as tabelas | Implementado corretamente |
-| Função `has_role()` SECURITY DEFINER | Configurada |
-| Autenticação em Edge Functions principais | Clara, ERP-Sync, Process-XML, Analyze-Credits |
-| Roles separadas em tabela dedicada (`user_roles`) | Padrão seguro |
-| Validação de token via `getUser()` | Implementado |
-| Stripe webhook com verificação de assinatura | Ativo |
-
-### Vulnerabilidades Identificadas (Prioridade por Risco)
-
-| Prioridade | Vulnerabilidade | Risco |
-|------------|-----------------|-------|
-| CRÍTICA | Credenciais ERP armazenadas em texto plano (JSONB) | Alto - Vazamento de senhas de ERPs |
-| ALTA | Mensagens de erro verbosas em edge functions | Médio - Reconhecimento para ataques |
-| ALTA | Leaked Password Protection desativada | Médio - Senhas comprometidas |
-| MÉDIA | Formulário de contato sem rate limiting | Médio - Spam/DoS |
-| MÉDIA | Regras de crédito público expondo algoritmos proprietários | Baixo - Propriedade intelectual |
-| BAIXA | Extensão em schema público | Baixo - Boa prática |
+### ⏳ Pendente de Implementação
+| Item | Descrição |
+|------|-----------|
+| Criptografia AES-GCM | Encrypt/decrypt de credenciais ERP |
+| `erp-connection` | Criptografar ao salvar, sanitizar erros |
+| `erp-sync` | Descriptografar ao usar credenciais |
+| Migration SQL | Restringir `credit_rules` a usuários autenticados |
 
 ---
 
-## Implementação - 5 Camadas de Proteção
+## Implementação Detalhada
 
-### 1. Criptografia de Credenciais ERP (CRÍTICO)
+### 1. Funções de Criptografia (Utilitário Compartilhado)
+
+Criar funções helper para encrypt/decrypt usando Web Crypto API nativa do Deno:
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│                    FUNÇÕES CRYPTO                           │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  encryptCredentials(data, key)                              │
+│    → IV aleatório (12 bytes)                                │
+│    → AES-256-GCM encrypt                                    │
+│    → Retorna: base64(IV + ciphertext + authTag)             │
+│                                                             │
+│  decryptCredentials(encrypted, key)                         │
+│    → Extrai IV, ciphertext, authTag                         │
+│    → AES-256-GCM decrypt                                    │
+│    → Retorna: objeto JSON original                          │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 2. Modificações em `erp-connection/index.ts`
+
+**Arquivo:** `supabase/functions/erp-connection/index.ts`
+
+**Alterações:**
+- Adicionar funções de criptografia
+- Criptografar credenciais antes de salvar no banco (POST/PUT)
+- Sanitizar mensagens de erro no catch final
+- Manter validação de credenciais ANTES de criptografar
+
+### 3. Modificações em `erp-sync/index.ts`
 
 **Arquivo:** `supabase/functions/erp-sync/index.ts`
 
-Criar funções de encrypt/decrypt para proteger credenciais usando AES-GCM nativo do Deno.
+**Alterações:**
+- Adicionar funções de descriptografia
+- Descriptografar credenciais ao carregar conexão
+- Verificar se credenciais estão criptografadas (compatibilidade retroativa)
 
-**Nova Secret necessária:** `ERP_ENCRYPTION_KEY` (32 caracteres)
+### 4. Migration SQL - Hardening `credit_rules`
 
-### 2. Sanitização de Mensagens de Erro
+**Objetivo:** Remover acesso anônimo às regras de crédito (proteger algoritmos proprietários)
 
-**Arquivos afetados:**
-- `supabase/functions/clara-assistant/index.ts`
-- `supabase/functions/process-xml-batch/index.ts`
-- `supabase/functions/erp-sync/index.ts`
-- `supabase/functions/analyze-credits/index.ts`
+**SQL:**
+```sql
+-- Revogar acesso anônimo às regras de crédito
+DROP POLICY IF EXISTS "Credit rules are readable by authenticated users" ON public.credit_rules;
 
-Substituir mensagens de erro verbosas por mensagens genéricas, mantendo logs internos para debugging.
+-- Nova política: apenas usuários autenticados podem ler
+CREATE POLICY "Credit rules readable by authenticated only"
+  ON public.credit_rules
+  FOR SELECT
+  TO authenticated
+  USING (true);
 
-### 3. Rate Limiting no Formulário de Contato
+-- Garantir que anon não tem acesso
+REVOKE ALL ON public.credit_rules FROM anon;
+```
 
-**Arquivo:** `supabase/functions/send-contact-email/index.ts`
+---
 
-Limitar a 3 submissões por IP a cada 10 minutos para evitar spam/DoS.
+## Compatibilidade Retroativa
 
-### 4. Restringir Acesso às Regras de Crédito
+O sistema detecta automaticamente se as credenciais estão criptografadas:
+- Se for string Base64 → descriptografa
+- Se for objeto JSON → usa diretamente (credenciais antigas)
 
-**Migration SQL:** Tornar `credit_rules` acessível apenas para usuários autenticados.
-
-### 5. Validação de Input no Contato
-
-**Arquivo:** `supabase/functions/send-contact-email/index.ts`
-
-Adicionar sanitização rigorosa e validação de email.
+Isso permite que conexões existentes continuem funcionando até serem atualizadas.
 
 ---
 
 ## Arquivos a Modificar
 
-| Arquivo | Alterações |
-|---------|------------|
-| `supabase/functions/clara-assistant/index.ts` | Sanitizar mensagens de erro |
-| `supabase/functions/process-xml-batch/index.ts` | Sanitizar mensagens de erro |
-| `supabase/functions/erp-sync/index.ts` | Criptografia de credenciais + sanitizar erros |
-| `supabase/functions/send-contact-email/index.ts` | Rate limiting + validação de input |
-| `supabase/functions/analyze-credits/index.ts` | Sanitizar mensagens de erro |
-| **Nova secret:** `ERP_ENCRYPTION_KEY` | Chave de 32 caracteres para AES-256 |
-| **Migration SQL** | Restringir credit_rules a authenticated |
-
----
-
-## Resultado Esperado
-
-Após implementação:
-
-- Credenciais de ERP criptografadas em repouso
-- Zero vazamento de informações técnicas para usuários
-- Proteção contra spam no formulário de contato
-- Algoritmos proprietários protegidos
-- Validação rigorosa de todos os inputs
+| Arquivo | Alteração |
+|---------|-----------|
+| `supabase/functions/erp-connection/index.ts` | Adicionar criptografia + sanitizar erros |
+| `supabase/functions/erp-sync/index.ts` | Adicionar descriptografia |
+| **Migration SQL** | Restringir `credit_rules` |
 
 ---
 
 ## Seção Técnica
 
-### Criptografia AES-GCM para Credenciais ERP
+### Formato de Dados Criptografados
+
+```text
+Base64 encoded:
+┌────────────┬─────────────────────┬────────────┐
+│  IV (12B)  │   Ciphertext (var)  │  Tag (16B) │
+└────────────┴─────────────────────┴────────────┘
+```
+
+### Validação de Chave
+
+A chave `ERP_ENCRYPTION_KEY` deve ter exatamente 32 caracteres (256 bits para AES-256).
+
+### Fluxo de Conexão ERP
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
-│                    FLUXO DE CRIPTOGRAFIA                    │
+│              FLUXO DE CRIAÇÃO DE CONEXÃO                    │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  Credenciais JSON  ──► AES-GCM Encrypt ──► Base64 String   │
-│       (input)              (key)              (stored)      │
+│  1. Usuário envia credenciais (POST)                        │
+│  2. Valida credenciais com API do ERP                       │
+│  3. Se válidas → criptografa → salva no banco               │
+│  4. Retorna sucesso (sem expor credenciais)                 │
 │                                                             │
-│  Base64 String ──► AES-GCM Decrypt ──► Credenciais JSON    │
-│    (stored)            (key)              (output)          │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│              FLUXO DE SINCRONIZAÇÃO                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  1. Carrega conexão do banco                                │
+│  2. Descriptografa credenciais                              │
+│  3. Usa credenciais para chamar API do ERP                  │
+│  4. Processa dados e atualiza banco                         │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Padrão de Sanitização de Erros
-
-```text
-ANTES (vulnerável):
-  catch (e) → return { error: e.message }  // Expõe stack trace
-
-DEPOIS (seguro):
-  catch (e) → console.error(e)             // Log interno
-            → return { error: "Erro genérico" }  // Resposta segura
-```
-
-### Rate Limiting
-
-```text
-┌─────────────────────────────────────────┐
-│  IP Request → Check Map → Allow/Deny   │
-│                                         │
-│  Limite: 3 requests / 10 minutos / IP  │
-│  Status 429 se exceder                  │
-└─────────────────────────────────────────┘
-```
-
 ---
 
-## Prioridade de Implementação
+## Resultado Final
 
-1. **Imediato:** Sanitização de mensagens de erro (todas as edge functions)
-2. **Curto prazo:** Rate limiting e validação no contato
-3. **Médio prazo:** Criptografia de credenciais ERP (requer migration de dados existentes)
-4. **Paralelo:** Solicitar Leaked Password Protection ao suporte
+Após esta implementação:
+
+- Credenciais de ERP protegidas com AES-256-GCM
+- Algoritmos de crédito protegidos de acesso anônimo
+- Sistema retrocompatível com conexões existentes
+- Zero informação técnica exposta em erros
 
