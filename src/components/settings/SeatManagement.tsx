@@ -248,10 +248,7 @@ export function SeatManagement() {
           {planConfig.canBuyExtra && (
             <Button variant="outline" size="sm" asChild>
               <a 
-                href={currentPlan === 'ENTERPRISE' 
-                  ? `${CONFIG.STRIPE_PAYMENT_LINKS.SEAT_ENTERPRISE}?prefilled_email=${encodeURIComponent(user?.email || '')}`
-                  : `${CONFIG.STRIPE_PAYMENT_LINKS.SEAT_PROFESSIONAL}?prefilled_email=${encodeURIComponent(user?.email || '')}`
-                } 
+                href={`${CONFIG.WHATSAPP}?text=${encodeURIComponent(`Olá! Gostaria de contratar assento(s) extra para o plano ${currentPlan}. Email: ${user?.email || ''}`)}`}
                 target="_blank" 
                 rel="noopener noreferrer"
               >
