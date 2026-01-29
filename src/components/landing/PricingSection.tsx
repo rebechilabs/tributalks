@@ -34,7 +34,7 @@ const plans: Plan[] = [
     description: "Para experimentar",
     priceMonthly: 0,
     priceAnnual: 0,
-    cnpjLimit: "1 CNPJ",
+    cnpjLimit: "1 CNPJ • 1 Usuário",
     features: [
       { text: "Clara IA (Assistente)", included: "limited", limitText: "3 conversas" },
       { text: "Score Tributário", included: "limited", limitText: "1x" },
@@ -54,9 +54,11 @@ const plans: Plan[] = [
     description: "Para monitorar a reforma",
     priceMonthly: 697,
     priceAnnual: 6970,
-    cnpjLimit: "1 CNPJ",
+    cnpjLimit: "1 CNPJ • 2 Usuários",
     features: [
       { text: "Clara AI (Copiloto)", included: "limited", limitText: "10 msgs/dia" },
+      { text: "2 assentos inclusos", included: true },
+      { text: "Comunidade Tributalks", included: true },
       { text: "Score Tributário", included: true },
       { text: "Simulador Split Payment", included: true },
       { text: "Comparativo de Regimes", included: true },
@@ -80,7 +82,7 @@ const plans: Plan[] = [
     popular: true,
     cnpjLimit: "3 CNPJs • 3 Usuários",
     features: [
-      { text: "Clara AI ilimitada + Comunidade", included: true },
+      { text: "Clara AI ilimitada", included: true },
       { text: "3 assentos inclusos (CEO, CFO, Contador)", included: true },
       { text: "Tudo do Navigator", included: true },
       { text: "4 Workflows Guiados:", included: true },

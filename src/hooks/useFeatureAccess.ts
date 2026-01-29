@@ -95,7 +95,7 @@ export const FEATURE_CONFIG: Record<FeatureKey, FeatureConfig> = {
   workflows: { minPlan: 'NAVIGATOR' },
   
   // Extras
-  comunidade: { minPlan: 'PROFESSIONAL' },
+  comunidade: { minPlan: 'NAVIGATOR' },
   
   // Serviço Humano - ENTERPRISE
   diagnostico_humano: { minPlan: 'ENTERPRISE' },
