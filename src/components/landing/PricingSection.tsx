@@ -71,8 +71,8 @@ const plans: Plan[] = [
   {
     name: "PROFESSIONAL",
     description: "Plataforma completa + IA ilimitada",
-    priceMonthly: 2497,
-    priceAnnual: 24970,
+    priceMonthly: 2997,
+    priceAnnual: 29970,
     highlighted: true,
     popular: true,
     cnpjLimit: "3 CNPJs • 3 Usuários",
