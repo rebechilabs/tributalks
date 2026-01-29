@@ -1,42 +1,49 @@
 
-## Plano: Exibir Newsletter para Usuários Enterprise
 
-### Problema Identificado
-O formulário de newsletter está corretamente integrado no sidebar (linha 233-236 de `Sidebar.tsx`), porém **não aparece** porque você está logado com uma conta do plano **ENTERPRISE**.
+## Plano: Posicionar Newsletter Próximo à Comunidade
 
-A lógica atual em `NewsletterForm.tsx` (linha 42-44) oculta o formulário para usuários Enterprise:
-```typescript
-if (user && isEnterprise) {
-  return null;
-}
+### Objetivo
+Mover o formulário de newsletter para ficar próximo ao item "Comunidade" no menu de navegação, tanto no desktop (Sidebar) quanto no mobile (MobileNav).
+
+### Alterações Necessárias
+
+#### 1. Sidebar.tsx (Desktop)
+- **Remover** a seção atual da newsletter do final (linhas 233-236)
+- **Adicionar** a newsletter logo abaixo do item "Comunidade", dentro do grupo "IA e Documentos"
+- A newsletter aparecerá como um elemento destacado dentro da navegação
+
+#### 2. MobileNav.tsx (Mobile)
+- **Adicionar** a newsletter também dentro do grupo "IA e Suporte", logo após o item "Comunidade"
+- Garantir consistência visual entre desktop e mobile
+
+### Estrutura Visual Final
+
+```text
+┌─────────────────────────┐
+│ ...                     │
+│ IA e Documentos         │
+│   ├─ Clara AI           │
+│   ├─ Analisador Docs    │
+│   ├─ Workflows          │
+│   ├─ Comunidade         │
+│   └─ ┌──────────────┐   │
+│       │ Newsletter  │   │ ← Posição nova
+│       └──────────────┘   │
+│ Integrações             │
+│ ...                     │
+└─────────────────────────┘
 ```
 
-### Solução Proposta
-Remover a restrição que oculta o formulário para usuários Enterprise, permitindo que todos os planos vejam a newsletter no sidebar.
+### Detalhes Técnicos
 
-### Alteração Necessária
+| Arquivo | Ação | Linhas Afetadas |
+|---------|------|-----------------|
+| `Sidebar.tsx` | Mover newsletter de linhas 233-236 para após renderizar o grupo "IA e Documentos" | 200-204, 233-236 |
+| `MobileNav.tsx` | Adicionar import do `NewsletterForm` e inserir após "Comunidade" | 1-13, 196-200 |
 
-**Arquivo**: `src/components/common/NewsletterForm.tsx`
+### Lógica de Implementação
 
-**Linhas 42-44** - Remover:
-```typescript
-// REMOVER ESTE BLOCO:
-if (user && isEnterprise) {
-  return null;
-}
-```
+1. Identificar quando o grupo "IA e Documentos" (Sidebar) ou "IA e Suporte" (MobileNav) termina de renderizar
+2. Adicionar o `NewsletterForm variant="compact"` logo após os itens do grupo
+3. Remover a seção duplicada do final do Sidebar
 
-### Impacto
-
-| Plano | Antes | Depois |
-|-------|-------|--------|
-| FREE | Visível | Visível |
-| NAVIGATOR | Visível | Visível |
-| PROFESSIONAL | Visível | Visível |
-| ENTERPRISE | **Oculto** | **Visível** |
-
-### Localização no Sidebar
-Após a alteração, o formulário aparecerá:
-- Abaixo do menu de navegação (Histórico/Configurações)
-- Acima do badge "Seu plano"
-- Com fundo destacado (`bg-muted/30`)
