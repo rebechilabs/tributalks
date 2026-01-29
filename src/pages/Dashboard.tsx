@@ -104,18 +104,12 @@ const toolGroups: ToolGroup[] = [
     icon: Target,
     items: [
       { 
-        name: 'Importar XMLs', 
-        description: 'Importe notas fiscais para análise',
-        href: '/dashboard/importar-xml', 
-        icon: Upload,
-        requiredPlan: 'PROFESSIONAL'
-      },
-      { 
-        name: 'Radar de Créditos', 
-        description: 'Identifique créditos recuperáveis',
-        href: '/dashboard/radar-creditos', 
-        icon: Target,
-        requiredPlan: 'PROFESSIONAL'
+        name: 'Análise de Notas Fiscais', 
+        description: 'XMLs + Créditos + Exposição',
+        href: '/dashboard/analise-notas', 
+        icon: FileText,
+        requiredPlan: 'PROFESSIONAL',
+        badge: 'Novo'
       },
       { 
         name: 'DRE Inteligente', 
