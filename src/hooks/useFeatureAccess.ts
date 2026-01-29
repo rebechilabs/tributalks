@@ -87,7 +87,7 @@ export const FEATURE_CONFIG: Record<FeatureKey, FeatureConfig> = {
   radar_creditos: { minPlan: 'PROFESSIONAL' },
   dre_inteligente: { minPlan: 'PROFESSIONAL' },
   oportunidades: { minPlan: 'PROFESSIONAL' },
-  relatorios_pdf: { minPlan: 'PROFESSIONAL' },
+  relatorios_pdf: { minPlan: 'NAVIGATOR' },
   
   // IA e Documentos
   tribubot: { minPlan: 'FREE', limit: 3, usageKey: 'tribubot_messages_total' },
