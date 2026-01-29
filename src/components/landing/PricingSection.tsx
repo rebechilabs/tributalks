@@ -94,7 +94,6 @@ const plans: Plan[] = [
       { text: "61+ Oportunidades Fiscais", included: true },
       { text: "Estimativa de Valuation com impacto do compliance", included: true },
       { text: "Relatórios PDF Profissionais", included: true },
-      { text: "Assentos extras: +R$250/mês cada", included: true },
     ],
     ctaText: "Assinar Professional",
     linkMonthly: CONFIG.STRIPE_PAYMENT_LINKS.PROFESSIONAL_MENSAL,
