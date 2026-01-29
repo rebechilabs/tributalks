@@ -1,51 +1,42 @@
 
+## Plano: Exibir Newsletter para Usuários Enterprise
 
-## Plano: Liberar Relatórios PDF para Navigator
+### Problema Identificado
+O formulário de newsletter está corretamente integrado no sidebar (linha 233-236 de `Sidebar.tsx`), porém **não aparece** porque você está logado com uma conta do plano **ENTERPRISE**.
 
-### Objetivo
-Alterar o plano mínimo da feature `relatorios_pdf` de **PROFESSIONAL** para **NAVIGATOR**, permitindo que usuários do plano Navigator gerem relatórios PDF profissionais.
+A lógica atual em `NewsletterForm.tsx` (linha 42-44) oculta o formulário para usuários Enterprise:
+```typescript
+if (user && isEnterprise) {
+  return null;
+}
+```
 
----
+### Solução Proposta
+Remover a restrição que oculta o formulário para usuários Enterprise, permitindo que todos os planos vejam a newsletter no sidebar.
 
 ### Alteração Necessária
 
-**Arquivo**: `src/hooks/useFeatureAccess.ts`
+**Arquivo**: `src/components/common/NewsletterForm.tsx`
 
-**Linha 90** - Alterar:
+**Linhas 42-44** - Remover:
 ```typescript
-// DE:
-relatorios_pdf: { minPlan: 'PROFESSIONAL' },
-
-// PARA:
-relatorios_pdf: { minPlan: 'NAVIGATOR' },
+// REMOVER ESTE BLOCO:
+if (user && isEnterprise) {
+  return null;
+}
 ```
-
----
 
 ### Impacto
 
 | Plano | Antes | Depois |
 |-------|-------|--------|
-| FREE | Bloqueado | Bloqueado |
-| NAVIGATOR | Bloqueado | **Liberado** |
-| PROFESSIONAL | Liberado | Liberado |
-| ENTERPRISE | Liberado | Liberado |
+| FREE | Visível | Visível |
+| NAVIGATOR | Visível | Visível |
+| PROFESSIONAL | Visível | Visível |
+| ENTERPRISE | **Oculto** | **Visível** |
 
----
-
-### Componentes Afetados
-
-Os seguintes componentes que utilizam `FeatureGate feature="relatorios_pdf"` passarão a exibir conteúdo desbloqueado para Navigator:
-
-- Score Tributário (PDF)
-- Radar de Créditos (PDF)
-- Checklist da Reforma (PDF)
-- DRE Inteligente (PDF)
-- Relatórios Executivos
-
----
-
-### Atualização na Landing Page (Opcional)
-
-Se desejar atualizar a seção de planos para refletir essa mudança, será necessário adicionar "Relatórios PDF" na lista de features do plano Navigator em `src/components/landing/PricingSection.tsx`.
-
+### Localização no Sidebar
+Após a alteração, o formulário aparecerá:
+- Abaixo do menu de navegação (Histórico/Configurações)
+- Acima do badge "Seu plano"
+- Com fundo destacado (`bg-muted/30`)
