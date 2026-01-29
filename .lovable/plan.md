@@ -1,49 +1,80 @@
 
 
-## Plano: Posicionar Newsletter Próximo à Comunidade
+## Plano: Liberar Relatórios para o Plano Navigator
 
 ### Objetivo
-Mover o formulário de newsletter para ficar próximo ao item "Comunidade" no menu de navegação, tanto no desktop (Sidebar) quanto no mobile (MobileNav).
+Habilitar o acesso aos relatórios executivos (Clara AI Reports e PDF) para usuários do plano Navigator, que atualmente estão restritos ao plano Professional e superiores.
+
+### Situação Atual
+| Local | Estado | Necessita Mudança? |
+|-------|--------|-------------------|
+| `useFeatureAccess.ts` | `relatorios_pdf: { minPlan: 'NAVIGATOR' }` | Já correto |
+| Edge Function | `allowedPlans = ["PROFESSIONAL", ...]` | **Sim** |
+| Landing Page | Relatórios listados só no Professional | **Sim** |
 
 ### Alterações Necessárias
 
-#### 1. Sidebar.tsx (Desktop)
-- **Remover** a seção atual da newsletter do final (linhas 233-236)
-- **Adicionar** a newsletter logo abaixo do item "Comunidade", dentro do grupo "IA e Documentos"
-- A newsletter aparecerá como um elemento destacado dentro da navegação
+#### 1. Edge Function `generate-executive-report/index.ts`
 
-#### 2. MobileNav.tsx (Mobile)
-- **Adicionar** a newsletter também dentro do grupo "IA e Suporte", logo após o item "Comunidade"
-- Garantir consistência visual entre desktop e mobile
+Adicionar `NAVIGATOR` e `BASICO` (legado) à lista de planos permitidos na linha 354.
+
+**De:**
+```typescript
+const allowedPlans = ["PROFESSIONAL", "PROFISSIONAL", "PREMIUM", "ENTERPRISE"];
+```
+
+**Para:**
+```typescript
+const allowedPlans = ["NAVIGATOR", "BASICO", "PROFESSIONAL", "PROFISSIONAL", "PREMIUM", "ENTERPRISE"];
+```
+
+#### 2. Landing Page `PricingSection.tsx`
+
+Adicionar o item "Relatórios PDF Clara AI" na lista de features do plano Navigator (após linha 68).
+
+**Adicionar:**
+```typescript
+{ text: "Relatórios PDF Clara AI", included: true },
+```
 
 ### Estrutura Visual Final
 
 ```text
-┌─────────────────────────┐
-│ ...                     │
-│ IA e Documentos         │
-│   ├─ Clara AI           │
-│   ├─ Analisador Docs    │
-│   ├─ Workflows          │
-│   ├─ Comunidade         │
-│   └─ ┌──────────────┐   │
-│       │ Newsletter  │   │ ← Posição nova
-│       └──────────────┘   │
-│ Integrações             │
-│ ...                     │
-└─────────────────────────┘
+┌────────────────────────────────────────────────────────────┐
+│ NAVIGATOR (R$ 697/mês)                                     │
+│ ─────────────────────────────────────────────────────────  │
+│ ✅ Clara AI (Copiloto) - 10 msgs/dia                       │
+│ ✅ Score Tributário                                        │
+│ ✅ Simulador Split Payment                                 │
+│ ✅ Comparativo de Regimes                                  │
+│ ✅ Calculadora RTC (CBS/IBS/IS)                            │
+│ ✅ Calculadora NBS (Serviços)                              │
+│ ✅ Newsletter Tributalks News                              │
+│ ✅ Timeline 2026-2033                                      │
+│ ✅ Feed de Notícias + Pílula do Dia                        │
+│ ✅ Relatórios PDF Clara AI  ← NOVO                         │
+└────────────────────────────────────────────────────────────┘
 ```
+
+### Arquivos a Modificar
+
+| Arquivo | Ação | Linhas |
+|---------|------|--------|
+| `supabase/functions/generate-executive-report/index.ts` | Adicionar NAVIGATOR aos planos permitidos | 354 |
+| `src/components/landing/PricingSection.tsx` | Adicionar feature de relatórios | 68-69 |
 
 ### Detalhes Técnicos
 
-| Arquivo | Ação | Linhas Afetadas |
-|---------|------|-----------------|
-| `Sidebar.tsx` | Mover newsletter de linhas 233-236 para após renderizar o grupo "IA e Documentos" | 200-204, 233-236 |
-| `MobileNav.tsx` | Adicionar import do `NewsletterForm` e inserir após "Comunidade" | 1-13, 196-200 |
+**Edge Function:**
+- A verificação de plano usa normalização para nomenclaturas legadas (`BASICO` → `NAVIGATOR`)
+- Após a mudança, usuários Navigator terão acesso imediato aos 5 tipos de relatórios:
+  - Relatório Executivo Mensal
+  - Análise da DRE
+  - Radar de Créditos
+  - Impacto da Reforma
+  - Mapa de Oportunidades
 
-### Lógica de Implementação
-
-1. Identificar quando o grupo "IA e Documentos" (Sidebar) ou "IA e Suporte" (MobileNav) termina de renderizar
-2. Adicionar o `NewsletterForm variant="compact"` logo após os itens do grupo
-3. Remover a seção duplicada do final do Sidebar
+**Frontend:**
+- O hook `useFeatureAccess` já tem `relatorios_pdf` configurado para `NAVIGATOR`
+- O componente `ClaraReportGenerator` não precisa de alteração (usa a Edge Function)
 
