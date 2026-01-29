@@ -32,9 +32,8 @@ import Comunidade from "./pages/Comunidade";
 import Configuracoes from "./pages/Configuracoes";
 import NoticiasReforma from "./pages/NoticiasReforma";
 import AdminNoticias from "./pages/AdminNoticias";
-import ImportarXML from "./pages/ImportarXML";
+import AnaliseNotasFiscais from "./pages/AnaliseNotasFiscais";
 import XMLResultados from "./pages/XMLResultados";
-import RadarCreditos from "./pages/RadarCreditos";
 import DRE from "./pages/DRE";
 import DREResultados from "./pages/DREResultados";
 import ScoreTributario from "./pages/ScoreTributario";
@@ -204,12 +203,29 @@ const App = () => (
               } 
             />
             
-            {/* XML Import */}
+            {/* Análise de Notas Fiscais (unificado) */}
+            <Route 
+              path="/dashboard/analise-notas" 
+              element={
+                <ProtectedRoute>
+                  <AnaliseNotasFiscais />
+                </ProtectedRoute>
+              } 
+            />
+            {/* Rotas legadas - redirect para a nova */}
             <Route 
               path="/dashboard/importar-xml" 
               element={
                 <ProtectedRoute>
-                  <ImportarXML />
+                  <AnaliseNotasFiscais />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/radar-creditos" 
+              element={
+                <ProtectedRoute>
+                  <AnaliseNotasFiscais />
                 </ProtectedRoute>
               } 
             />
@@ -218,14 +234,6 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <XMLResultados />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/dashboard/radar-creditos" 
-              element={
-                <ProtectedRoute>
-                  <RadarCreditos />
                 </ProtectedRoute>
               } 
             />

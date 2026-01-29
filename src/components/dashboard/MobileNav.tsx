@@ -54,8 +54,7 @@ const navGroups: NavGroup[] = [
   {
     title: 'Diagnóstico',
     items: [
-      { label: 'Importar XMLs', href: '/dashboard/importar-xml', icon: Upload, requiredPlan: 'PROFESSIONAL' },
-      { label: 'Radar de Créditos', href: '/dashboard/radar-creditos', icon: Target, requiredPlan: 'PROFESSIONAL' },
+      { label: 'Análise de Notas Fiscais', href: '/dashboard/analise-notas', icon: FileText, requiredPlan: 'PROFESSIONAL', badge: 'Novo' },
       { label: 'DRE Inteligente', href: '/dashboard/dre', icon: BarChart3, requiredPlan: 'PROFESSIONAL' },
       { label: 'Oportunidades', href: '/dashboard/oportunidades', icon: Lightbulb, requiredPlan: 'PROFESSIONAL' },
     ]
