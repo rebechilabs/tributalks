@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Lock, Sparkles, ExternalLink, MessageCircle, Calendar, BookOpen } from "lucide-react";
+import { Users, Lock, Sparkles, ExternalLink, MessageCircle, Calendar, BookOpen, Shield } from "lucide-react";
 import { ContentLibrary } from "@/components/community/ContentLibrary";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Link } from "react-router-dom";
@@ -23,6 +23,23 @@ const Comunidade = () => {
             <div>
               <h1 className="text-2xl font-bold text-foreground">Comunidade</h1>
               <p className="text-muted-foreground">Networking com empresários e CFOs</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Chatham House Rule Banner */}
+        <div className="mb-6 p-4 rounded-lg border border-primary/20 bg-primary/5">
+          <div className="flex items-start gap-3">
+            <Shield className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-foreground mb-1">
+                Chatham House Rule
+              </p>
+              <p className="text-sm text-muted-foreground">
+                "O que é compartilhado aqui, fica aqui." Informações podem ser 
+                usadas livremente, mas a identidade de quem compartilhou deve 
+                ser preservada.
+              </p>
             </div>
           </div>
         </div>
