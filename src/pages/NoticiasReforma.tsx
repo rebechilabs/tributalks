@@ -37,10 +37,12 @@ import {
   RefreshCw,
   Lightbulb,
   Calendar,
-  ArrowRight
+  ArrowRight,
+  Globe
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { formatBrasilia } from "@/lib/dateUtils";
 
 interface Noticia {
   id: string;
@@ -265,19 +267,7 @@ export default function Noticias() {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffHours < 1) return 'Agora';
-    if (diffHours < 24) return `Há ${diffHours}h`;
-    
-    return date.toLocaleDateString('pt-BR', { 
-      day: '2-digit', 
-      month: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return formatBrasilia(dateString, "dd/MM 'às' HH:mm");
   };
 
   const getDaysUntil = (dateStr: string) => {
@@ -550,9 +540,27 @@ export default function Noticias() {
                       <Icon className="w-3.5 h-3.5" />
                       {config.label}
                     </div>
-                    <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
-                      <Clock className="w-3.5 h-3.5" />
-                      {formatDate(noticia.data_publicacao)}
+                    <div className="text-right">
+                      <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
+                        <Globe className="w-3.5 h-3.5" />
+                        <span className="font-medium">{noticia.fonte}</span>
+                        {noticia.fonte_url && (
+                          <a
+                            href={noticia.fonte_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-primary hover:text-primary/80 transition-colors"
+                            title="Abrir fonte original"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-muted-foreground text-xs mt-0.5 justify-end">
+                        <Clock className="w-3 h-3" />
+                        {formatDate(noticia.data_publicacao)}
+                      </div>
                     </div>
                   </div>
 
