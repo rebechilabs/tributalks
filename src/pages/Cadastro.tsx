@@ -2,14 +2,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { ArrowLeft, Loader2, Eye, EyeOff, Gift } from "lucide-react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import logoTributech from "@/assets/logo-tributech.png";
+import { supabase } from "@/integrations/supabase/client";
 
 const Cadastro = () => {
+  const [searchParams] = useSearchParams();
+  const refCode = searchParams.get('ref');
+  
   const [formData, setFormData] = useState({
     nome: "",
     email: "",
@@ -22,8 +26,28 @@ const Cadastro = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
+  const [validRefCode, setValidRefCode] = useState<string | null>(null);
   const { signUp } = useAuth();
   const navigate = useNavigate();
+
+  // Valida código de indicação ao carregar
+  useEffect(() => {
+    const validateRef = async () => {
+      if (!refCode) return;
+      
+      const { data } = await supabase
+        .from('referral_codes')
+        .select('code')
+        .eq('code', refCode.toUpperCase())
+        .maybeSingle();
+      
+      if (data) {
+        setValidRefCode(data.code);
+      }
+    };
+    
+    validateRef();
+  }, [refCode]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -62,9 +86,45 @@ const Cadastro = () => {
 
     try {
       await signUp(formData.email, formData.senha, formData.nome);
+      
+      // Registra a indicação se houver código válido
+      if (validRefCode) {
+        // Busca o usuário recém-criado
+        const { data: { user: newUser } } = await supabase.auth.getUser();
+        
+        if (newUser) {
+          // Busca o indicador
+          const { data: refData } = await supabase
+            .from('referral_codes')
+            .select('user_id, total_referrals')
+            .eq('code', validRefCode)
+            .single();
+          
+          if (refData && refData.user_id !== newUser.id) {
+            // Insere a indicação
+            await supabase
+              .from('referrals')
+              .insert({
+                referrer_id: refData.user_id,
+                referred_id: newUser.id,
+                referral_code: validRefCode,
+                status: 'pending',
+              });
+            
+            // Incrementa contador
+            await supabase
+              .from('referral_codes')
+              .update({ total_referrals: (refData.total_referrals || 0) + 1 })
+              .eq('user_id', refData.user_id);
+          }
+        }
+      }
+      
       toast({
         title: "Conta criada com sucesso!",
-        description: "Bem-vindo ao TribuTech. Vamos configurar seu perfil.",
+        description: validRefCode 
+          ? "Você foi indicado por um amigo! Bem-vindo ao TribuTech." 
+          : "Bem-vindo ao TribuTech. Vamos configurar seu perfil.",
       });
       navigate('/onboarding');
     } catch (error: any) {
@@ -113,9 +173,19 @@ const Cadastro = () => {
           </div>
 
           {/* Heading */}
-          <h1 className="text-2xl font-bold text-foreground text-center mb-6">
+          <h1 className="text-2xl font-bold text-foreground text-center mb-2">
             Crie sua conta
           </h1>
+          
+          {/* Referral Badge */}
+          {validRefCode && (
+            <div className="mb-6 p-3 rounded-lg bg-primary/10 border border-primary/20 flex items-center gap-2 justify-center">
+              <Gift className="w-5 h-5 text-primary" />
+              <span className="text-sm font-medium text-primary">
+                Indicado por um amigo!
+              </span>
+            </div>
+          )}
 
           {/* General Error Message */}
           {generalError && (

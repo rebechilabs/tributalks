@@ -1542,6 +1542,96 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          successful_referrals: number
+          total_referrals: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          successful_referrals?: number
+          total_referrals?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          successful_referrals?: number
+          total_referrals?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          discount_percentage: number | null
+          id: string
+          qualified_at: string | null
+          referral_code: string
+          referred_at: string
+          referred_id: string
+          referrer_id: string
+          reward_applied_at: string | null
+          status: string
+          subscription_started_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          discount_percentage?: number | null
+          id?: string
+          qualified_at?: string | null
+          referral_code: string
+          referred_at?: string
+          referred_id: string
+          referrer_id: string
+          reward_applied_at?: string | null
+          status?: string
+          subscription_started_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          discount_percentage?: number | null
+          id?: string
+          qualified_at?: string | null
+          referral_code?: string
+          referred_at?: string
+          referred_id?: string
+          referrer_id?: string
+          reward_applied_at?: string | null
+          status?: string
+          subscription_started_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_referrals_code"
+            columns: ["referral_code"]
+            isOneToOne: false
+            referencedRelation: "referral_codes"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "fk_referrals_referrer"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "referral_codes"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       reform_checklist_responses: {
         Row: {
           block_key: string
@@ -2338,6 +2428,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_referral_count: {
+        Args: { referrer_user_id: string }
+        Returns: undefined
       }
       is_org_member: {
         Args: { _owner_id: string; _user_id: string }

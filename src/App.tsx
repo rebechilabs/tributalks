@@ -46,6 +46,7 @@ import WorkflowsGuiados from "./pages/WorkflowsGuiados";
 import ChecklistReforma from "./pages/ChecklistReforma";
 import Integracoes from "./pages/Integracoes";
 import Consultorias from "./pages/Consultorias";
+import Indicar from "./pages/Indicar";
 
 // Calculadoras
 import SplitPayment from "./pages/calculadora/SplitPayment";
@@ -157,6 +158,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Comunidade />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/indicar" 
+              element={
+                <ProtectedRoute>
+                  <Indicar />
                 </ProtectedRoute>
               } 
             />

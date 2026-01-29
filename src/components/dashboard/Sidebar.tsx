@@ -3,7 +3,7 @@ import {
   Home, Scale, Wallet, Bot, FileText, Users, Calendar, 
   Clock, Settings, Lock, Sparkles, Newspaper,
   Upload, Calculator, Target, BarChart3, Trophy, Lightbulb, LayoutDashboard,
-  MapPin, ShieldCheck, FileSearch, Route, Briefcase, ClipboardCheck, Plug
+  MapPin, ShieldCheck, FileSearch, Route, Briefcase, ClipboardCheck, Plug, Gift
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import logoTributech from "@/assets/logo-tributech.png";
@@ -64,6 +64,7 @@ const navGroups: NavGroup[] = [
       { label: 'Analisador de Documentos', href: '/dashboard/analisador-documentos', icon: FileSearch, requiredPlan: 'NAVIGATOR', badge: 'Novo' },
       { label: 'Workflows', href: '/dashboard/workflows', icon: Route, requiredPlan: 'NAVIGATOR', badge: 'Novo' },
       { label: 'Comunidade', href: '/comunidade', icon: Users, requiredPlan: 'PROFESSIONAL' },
+      { label: 'Indicar Amigos', href: '/indicar', icon: Gift, badge: 'Novo' },
     ]
   },
   {
