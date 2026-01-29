@@ -28,7 +28,7 @@ export default function Privacidade() {
 
         <div className="prose prose-invert prose-sm max-w-none space-y-8 text-muted-foreground">
           <p>
-            A TribuTech, operada pela Rebechi & Silva Produções, está comprometida com a proteção da sua privacidade. Esta Política descreve como coletamos, usamos, armazenamos e protegemos seus dados pessoais, em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).
+            A TribuTalks, operada pela Rebechi & Silva Produções, está comprometida com a proteção da sua privacidade. Esta Política descreve como coletamos, usamos, armazenamos e protegemos seus dados pessoais, em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).
           </p>
 
           <section>
@@ -218,7 +218,7 @@ export default function Privacidade() {
               <p className="font-medium text-foreground">Encarregado de Proteção de Dados (DPO)</p>
               <p>E-mail: privacidade@tributalks.com.br</p>
               <div className="mt-4 pt-4 border-t border-border">
-                <p className="font-medium text-foreground">TribuTech — Uma iniciativa Rebechi & Silva Produções</p>
+                <p className="font-medium text-foreground">TribuTalks — Uma iniciativa Rebechi & Silva Produções</p>
                 <p>Endereço: Avenida Marquês de São Vicente, 1619 - conjunto 2712 - Barra Funda - São Paulo - SP</p>
                 <p>Telefone: +55 11 91452-3971</p>
               </div>
@@ -236,7 +236,7 @@ export default function Privacidade() {
       {/* Footer */}
       <footer className="border-t border-border/50 py-6">
         <div className="max-w-4xl mx-auto px-6 flex items-center justify-between text-sm text-muted-foreground">
-          <span>© 2026 TribuTech. Todos os direitos reservados.</span>
+          <span>© 2026 TribuTalks. Todos os direitos reservados.</span>
           <div className="flex items-center gap-4">
             <Link to="/termos" className="hover:text-foreground transition-colors">
               Termos de Uso
