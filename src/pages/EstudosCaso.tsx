@@ -27,7 +27,7 @@ export default function EstudosCaso() {
             </h1>
             <p className="text-lg text-muted-foreground">
               Conheça histórias reais de empresas que transformaram sua gestão tributária 
-              com o TributechAI e alcançaram resultados mensuráveis.
+              com o TribuTalks e alcançaram resultados mensuráveis.
             </p>
           </div>
         </section>

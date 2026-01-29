@@ -34,7 +34,7 @@ export async function CaseStudyPdf(caseStudy: CaseStudy): Promise<void> {
   doc.setTextColor(255, 193, 7);
   doc.setFontSize(24);
   doc.setFont("helvetica", "bold");
-  addText("TributechAI", margin, 20);
+  addText("TribuTalks", margin, 20);
   
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(10);
@@ -165,7 +165,7 @@ export async function CaseStudyPdf(caseStudy: CaseStudy): Promise<void> {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
-  addText("TributechAI - GPS da Reforma Tributária", margin, pageHeight - 10);
+  addText("TribuTalks - GPS da Reforma Tributária", margin, pageHeight - 10);
   addText("tributechai.lovable.app", pageWidth - margin - 40, pageHeight - 10);
 
   // Save

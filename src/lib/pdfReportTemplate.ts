@@ -168,7 +168,7 @@ export function addFooter(doc: jsPDF, date: Date): void {
   doc.setTextColor(PDF_COLORS.textLight.r, PDF_COLORS.textLight.g, PDF_COLORS.textLight.b);
   
   // Texto à esquerda
-  doc.text(`Gerado por Tributech em ${formatDate(date)}`, margin, yPos);
+  doc.text(`Gerado por TribuTalks em ${formatDate(date)}`, margin, yPos);
   
   // Texto à direita
   doc.text('Este relatório é informativo e não substitui consultoria profissional.', pageWidth - margin, yPos, { align: 'right' });

@@ -180,7 +180,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="h-16 flex items-center px-6 border-b border-border">
         <Link to="/dashboard" className="flex items-center gap-2">
-          <img src={logoTributech} alt="TribuTech" className="h-8 w-auto" />
+          <img src={logoTributech} alt="TribuTalks" className="h-8 w-auto" />
         </Link>
       </div>
 

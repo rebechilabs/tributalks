@@ -169,7 +169,7 @@ export function OpportunitiesDocPdf() {
       // Footer
       doc.setFontSize(11);
       doc.setTextColor(120, 120, 120);
-      doc.text('TribuTech - Inteligência Tributária', pageWidth / 2, 260, { align: 'center' });
+      doc.text('TribuTalks - Inteligência Tributária', pageWidth / 2, 260, { align: 'center' });
       doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')}`, pageWidth / 2, 270, { align: 'center' });
 
       // ============================================
@@ -181,7 +181,7 @@ export function OpportunitiesDocPdf() {
       addTitle('📊 Resumo Executivo', 20);
       addSpacer(10);
 
-      addParagraph('O Motor de Oportunidades Tributárias da TribuTech identifica automaticamente benefícios fiscais aplicáveis à sua empresa com base no perfil cadastrado. São mais de 50 oportunidades de economia tributária organizadas por setor de atuação.');
+      addParagraph('O Motor de Oportunidades Tributárias da TribuTalks identifica automaticamente benefícios fiscais aplicáveis à sua empresa com base no perfil cadastrado. São mais de 50 oportunidades de economia tributária organizadas por setor de atuação.');
       addSpacer(8);
 
       // Summary table

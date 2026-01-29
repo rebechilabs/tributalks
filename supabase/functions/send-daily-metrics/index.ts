@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
 <body>
   <div class="container">
     <div class="header">
-      <div class="logo">🤖 TribuTech</div>
+      <div class="logo">🤖 TribuTalks</div>
       <div class="date">Relatório Diário · ${dateStr}</div>
     </div>
     
@@ -161,7 +161,7 @@ Deno.serve(async (req) => {
     </table>
     
     <div class="footer">
-      Este email é enviado automaticamente pela plataforma TribuTech.
+      Este email é enviado automaticamente pela plataforma TribuTalks.
     </div>
   </div>
 </body>
@@ -170,9 +170,9 @@ Deno.serve(async (req) => {
 
     // Send email
     const emailResponse = await resend.emails.send({
-      from: "TribuTech <suporte@tributalks.com.br>",
+      from: "TribuTalks <suporte@tributalks.com.br>",
       to: [ADMIN_EMAIL],
-      subject: `📊 Métricas Diárias TribuTech - ${new Date().toLocaleDateString("pt-BR")}`,
+      subject: `📊 Métricas Diárias TribuTalks - ${new Date().toLocaleDateString("pt-BR")}`,
       html: htmlContent,
     });
 

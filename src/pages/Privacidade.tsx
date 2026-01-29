@@ -9,7 +9,7 @@ export default function Privacidade() {
       <header className="border-b border-border/50">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="TribuTech" className="h-8" />
+            <img src={logo} alt="TribuTalks" className="h-8" />
           </Link>
           <Link 
             to="/" 

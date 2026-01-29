@@ -70,7 +70,7 @@ export function TributechPitchPdf() {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(28);
     doc.setTextColor(234, 179, 8);
-    doc.text("TRIBUTECH", margin, 35);
+    doc.text("TRIBUTALKS", margin, 35);
     
     doc.setFont("helvetica", "normal");
     doc.setFontSize(12);
@@ -91,7 +91,7 @@ export function TributechPitchPdf() {
 
     // ===== VISÃO GERAL =====
     addTitle("1. Visão Geral", 16);
-    addParagraph("A Tributech é uma plataforma SaaS de inteligência tributária desenvolvida para empresários, CFOs e contadores de empresas brasileiras com faturamento mensal superior a R$1.000.000.");
+    addParagraph("A TribuTalks é uma plataforma SaaS de inteligência tributária desenvolvida para empresários, CFOs e contadores de empresas brasileiras com faturamento mensal superior a R$1.000.000.");
     addParagraph("O objetivo central é transformar a complexidade do sistema tributário brasileiro em decisões claras e acionáveis, entregando economia real e compliance através de automação e IA.");
     
     addSpacer(4);
@@ -237,7 +237,7 @@ export function TributechPitchPdf() {
     y = 20;
     
     addTitle("3. Arquitetura Técnica", 16);
-    addParagraph("A Tributech é construída sobre uma stack moderna e escalável:");
+    addParagraph("A TribuTalks é construída sobre uma stack moderna e escalável:");
 
     addSubtitle("Frontend");
     addBullet("React 18 com TypeScript para type-safety");
@@ -301,7 +301,7 @@ export function TributechPitchPdf() {
 
     // ===== PAPEL DA IA =====
     addTitle("5. O Papel da Inteligência Artificial", 16);
-    addParagraph("A IA é um componente central da Tributech, utilizada em múltiplas camadas:");
+    addParagraph("A IA é um componente central da TribuTalks, utilizada em múltiplas camadas:");
 
     addSubtitle("TribuBot — Assistente Conversacional");
     addBullet("Modelo: Google Gemini 3 Flash (via Lovable AI Gateway)");
@@ -331,7 +331,7 @@ export function TributechPitchPdf() {
 
     // ===== PLANOS =====
     addTitle("6. Modelo de Negócio", 16);
-    addParagraph("A Tributech opera em modelo SaaS com 4 níveis de assinatura:");
+    addParagraph("A TribuTalks opera em modelo SaaS com 4 níveis de assinatura:");
 
     const plans = [
       { name: "FREE", price: "R$0/mês", features: "1 simulação/mês, só Comparativo de Regimes + Calculadora RTC" },
