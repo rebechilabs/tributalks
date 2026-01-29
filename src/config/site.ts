@@ -10,25 +10,14 @@ export const CONFIG = {
     // Enterprise - Sob consulta (WhatsApp direto)
     ENTERPRISE: "https://wa.me/5511914523971",
     // Credit packages for Navigator users (TribuBot extra credits)
-    // TODO: Replace with real Stripe Payment Links after creating products
-    CREDITS_10: "https://buy.stripe.com/PLACEHOLDER_CREDITS_10",
-    CREDITS_20: "https://buy.stripe.com/PLACEHOLDER_CREDITS_20",
-    CREDITS_30: "https://buy.stripe.com/PLACEHOLDER_CREDITS_30",
-    // Extra seats for multi-user plans
-    // TODO: Replace with real Stripe Payment Links after creating seat products
+    // TODO: Criar produtos no Stripe e substituir pelos Payment Links reais
+    CREDITS_10: "https://buy.stripe.com/PLACEHOLDER_CREDITS_10", // R$ 29,90 - 10 créditos
+    CREDITS_20: "https://buy.stripe.com/PLACEHOLDER_CREDITS_20", // R$ 54,90 - 20 créditos
+    CREDITS_30: "https://buy.stripe.com/PLACEHOLDER_CREDITS_30", // R$ 74,90 - 30 créditos
+    // Extra seats for multi-user plans (opcional para MVP)
     SEAT_PROFESSIONAL: "https://buy.stripe.com/PLACEHOLDER_SEAT_PROFESSIONAL",
     SEAT_ENTERPRISE: "https://buy.stripe.com/PLACEHOLDER_SEAT_ENTERPRISE",
-    // Legacy - deprecated, mantendo para compatibilidade
-    BASICO_MENSAL: "https://buy.stripe.com/PLACEHOLDER_BASICO_MENSAL",
-    BASICO_ANUAL: "https://buy.stripe.com/PLACEHOLDER_BASICO_ANUAL",
-    PROFISSIONAL_MENSAL: "https://buy.stripe.com/PLACEHOLDER_PRO_MENSAL",
-    PROFISSIONAL_ANUAL: "https://buy.stripe.com/PLACEHOLDER_PRO_ANUAL",
-    PREMIUM_MENSAL: "https://buy.stripe.com/PLACEHOLDER_PREMIUM_MENSAL",
-    PREMIUM_ANUAL: "https://buy.stripe.com/PLACEHOLDER_PREMIUM_ANUAL",
   },
-  // Legacy - keeping for compatibility
-  STRIPE_PAYMENT_LINK: "https://buy.stripe.com/PLACEHOLDER_PRO_MENSAL",
-  STRIPE_ANNUAL_LINK: "https://buy.stripe.com/PLACEHOLDER_PRO_ANUAL",
   // Contact Info
   CONTACT_EMAIL: "suporte@tributalks.com.br",
   COMMERCIAL_EMAIL: "comercial@tributalks.com.br",
@@ -44,5 +33,6 @@ export const CONFIG = {
   },
   // Social
   LINKEDIN: "https://www.linkedin.com/company/tributalks/",
-  CALENDLY_LINK: "https://calendly.com/PLACEHOLDER",
+  // Calendly - substituir pelo link real após configurar
+  CALENDLY_LINK: "https://calendly.com/tributalks/consultoria",
 };
