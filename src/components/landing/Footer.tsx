@@ -2,7 +2,8 @@ import { Link } from "react-router-dom";
 import { CONFIG } from "@/config/site";
 import logoTributech from "@/assets/logo-tributech.png";
 import { TrustBadges } from "./TrustBadges";
-import { Linkedin, Phone, Mail, MapPin } from "lucide-react";
+import { Linkedin, Phone, Mail } from "lucide-react";
+import { NewsletterForm } from "@/components/common/NewsletterForm";
 
 export function Footer() {
   return (
@@ -16,6 +17,9 @@ export function Footer() {
           <p className="text-muted-foreground text-sm">
             Uma iniciativa Rebechi & Silva Produções
           </p>
+
+          {/* Newsletter Form */}
+          <NewsletterForm />
 
           {/* Contact Info */}
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">

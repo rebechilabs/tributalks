@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.gov-data-api]
 verify_jwt = false
+
+[functions.subscribe-newsletter]
+verify_jwt = false
