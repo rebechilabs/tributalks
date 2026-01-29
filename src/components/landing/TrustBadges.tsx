@@ -1,4 +1,4 @@
-import { Shield, Lock, Cloud, Scale } from "lucide-react";
+import { Shield, Lock, Cloud, Scale, CreditCard } from "lucide-react";
 
 interface TrustBadge {
   icon: React.ReactNode;
@@ -27,6 +27,11 @@ const badges: TrustBadge[] = [
     title: "Dados Protegidos",
     description: "Backup diário",
   },
+  {
+    icon: <CreditCard className="w-5 h-5" />,
+    title: "Pagamento Seguro",
+    description: "Processado via Stripe",
+  },
 ];
 
 interface TrustBadgesProps {
@@ -54,7 +59,7 @@ export function TrustBadges({ variant = "compact", className = "" }: TrustBadges
   }
 
   return (
-    <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 ${className}`}>
+    <div className={`grid grid-cols-2 md:grid-cols-5 gap-4 ${className}`}>
       {badges.map((badge) => (
         <div
           key={badge.title}
