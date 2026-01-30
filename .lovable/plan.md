@@ -1,53 +1,47 @@
 
-# Correção de Preços dos Planos
+# Correção de Preço do Plano Starter Mensal
 
 ## Objetivo
-Atualizar os valores incorretos de preços no código para refletir os valores reais configurados no Mercado Pago.
+Atualizar o valor do plano Starter Mensal de R$ 297,00 para R$ 397,00, refletindo o preço real configurado no Mercado Pago.
 
 ## Alterações Necessárias
 
-### 1. src/config/site.ts
-**Atualizar comentários documentais:**
-- Linha 4: Mudar de `R$2.970/ano` para `R$3.970/ano`
-- Linha 10: Mudar de `R$1.997/mês` para `R$2.997/mês`
+### 1. src/components/landing/PricingSection.tsx
+**Corrigir valor do plano Starter Mensal:**
+- Linha 37: Mudar `priceMonthly: 297` para `priceMonthly: 397`
 
-### 2. src/components/landing/PricingSection.tsx
-**Corrigir valor do plano Starter Anual:**
-- Linha 38: Mudar `priceAnnual: 2970` para `priceAnnual: 3970`
+### 2. src/config/site.ts
+**Atualizar comentário documental:**
+- Linha 4: Mudar de `R$297/mês` para `R$397/mês`
 
 ## Impacto Visual
-Quando o usuário selecionar a opção "Anual" na seção de preços:
-- O plano Starter mostrará **R$331/mês** (3970÷12) em vez de R$247/mês
-- A nota abaixo mostrará **"R$3.970 cobrado anualmente"**
+Na seção de preços da landing page:
+- O plano Starter mostrará **R$397/mês** quando a opção "Mensal" estiver selecionada (antes mostrava R$297)
 
 ## Seção Técnica
 
 ```typescript
+// src/components/landing/PricingSection.tsx - linha 37
+// Antes:
+priceMonthly: 297,
+
+// Depois:
+priceMonthly: 397,
+```
+
+```typescript
 // src/config/site.ts - linha 4
 // Antes:
-// Starter - R$297/mês ou R$2.970/ano (7 dias grátis)
-
-// Depois:
 // Starter - R$297/mês ou R$3.970/ano (7 dias grátis)
-```
-
-```typescript
-// src/config/site.ts - linha 10
-// Antes:
-// Professional - R$1.997/mês (anual não disponível por enquanto)
 
 // Depois:
-// Professional - R$2.997/mês (anual não disponível por enquanto)
+// Starter - R$397/mês ou R$3.970/ano (7 dias grátis)
 ```
 
-```typescript
-// src/components/landing/PricingSection.tsx - linha 38
-// Antes:
-priceAnnual: 2970,
+## Observação sobre Desconto Anual
+Com o novo preço mensal de R$ 397 e o anual de R$ 3.970:
+- 12 meses × R$ 397 = R$ 4.764
+- Plano anual = R$ 3.970
+- **Economia de R$ 794** (~2 meses grátis ✓)
 
-// Depois:
-priceAnnual: 3970,
-```
-
-## Observação
-Com o preço anual de R$3.970, o desconto oferecido no plano anual Starter equivale a aproximadamente **1 mês grátis** (comparado aos R$3.564 de 12×R$297). Se você deseja manter a comunicação de "2 meses grátis" no banner, o preço anual deveria ser R$2.970. Posso ajustar a comunicação se necessário.
+A comunicação de "2 meses grátis" no toggle anual agora está matematicamente correta!
