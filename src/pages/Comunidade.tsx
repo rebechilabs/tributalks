@@ -88,7 +88,7 @@ const Comunidade = () => {
                     </div>
                     <p className="text-sm text-muted-foreground mb-4">
                       Networking exclusivo para CFOs e gestores financeiros. 
-                      Discussões aprofundadas, mentorias em grupo e conexões estratégicas.
+                      Discussões aprofundadas e conexões estratégicas.
                     </p>
                     <Button asChild className="gap-2">
                       <a href={CONFIG.CIRCLE_COMMUNITY} target="_blank" rel="noopener noreferrer">
@@ -104,7 +104,7 @@ const Comunidade = () => {
             <LockedFeatureCard
               icon={<Users className="w-6 h-6 text-muted-foreground" />}
               title="Comunidade Circle"
-              description="Networking exclusivo para CFOs e gestores financeiros. Discussões aprofundadas, mentorias em grupo e conexões estratégicas."
+              description="Networking exclusivo para CFOs e gestores financeiros. Discussões aprofundadas e conexões estratégicas."
               minPlan="NAVIGATOR"
             />
           )}
