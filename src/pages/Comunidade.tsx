@@ -11,7 +11,7 @@ import { CONFIG } from "@/config/site";
 const COMMUNITY_URL = "https://chat.whatsapp.com/BbdIWJqap2FHmj90zfz5l3";
 
 const Comunidade = () => {
-  const { isNavigator } = usePlanAccess();
+  const { isNavigator, isProfessional } = usePlanAccess();
 
   return (
     <DashboardLayout title="Comunidade">
@@ -46,24 +46,24 @@ const Comunidade = () => {
         </div>
 
         <div className="grid gap-6">
-          {/* WhatsApp Group - Apenas para usuários sem NAVIGATOR */}
-          {!isNavigator && (
+          {/* WhatsApp Group - Apenas para NAVIGATOR (não PROFESSIONAL+) */}
+          {isNavigator && !isProfessional ? (
             <Card className="border-primary/20">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
-                    <MessageCircle className="w-6 h-6 text-secondary" />
+                  <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0">
+                    <MessageCircle className="w-6 h-6 text-green-600" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold text-foreground">Grupo WhatsApp</h3>
-                      <Badge variant="outline" className="text-xs">Aberto</Badge>
+                      <Badge variant="secondary" className="text-xs">{PLAN_LABELS.NAVIGATOR}</Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mb-4">
                       Conecte-se com outros empresários do middle market. Compartilhe experiências, 
-                      tire dúvidas e faça networking básico com a comunidade.
+                      tire dúvidas e faça networking com a comunidade.
                     </p>
-                    <Button asChild className="gap-2">
+                    <Button asChild className="gap-2 bg-green-600 hover:bg-green-700">
                       <a href={COMMUNITY_URL} target="_blank" rel="noopener noreferrer">
                         Entrar no grupo
                         <ExternalLink className="w-4 h-4" />
@@ -73,10 +73,17 @@ const Comunidade = () => {
                 </div>
               </CardContent>
             </Card>
-          )}
+          ) : !isNavigator ? (
+            <LockedFeatureCard
+              icon={<MessageCircle className="w-6 h-6 text-muted-foreground" />}
+              title="Grupo WhatsApp"
+              description="Conecte-se com outros empresários do middle market. Compartilhe experiências, tire dúvidas e faça networking com a comunidade."
+              minPlan="NAVIGATOR"
+            />
+          ) : null}
 
-          {/* Circle Community - NAVIGATOR+ */}
-          {isNavigator ? (
+          {/* Circle Community - PROFESSIONAL+ */}
+          {isProfessional ? (
             <Card className="border-primary/20">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-4">
@@ -86,12 +93,18 @@ const Comunidade = () => {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold text-foreground">Comunidade Circle</h3>
-                      <Badge variant="secondary" className="text-xs">{PLAN_LABELS.NAVIGATOR}+</Badge>
+                      <Badge variant="secondary" className="text-xs">{PLAN_LABELS.PROFESSIONAL}+</Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-4">
+                    <p className="text-sm text-muted-foreground mb-2">
                       Networking exclusivo para CFOs e gestores financeiros. 
                       Discussões aprofundadas e conexões estratégicas.
                     </p>
+                    <div className="p-3 rounded-lg bg-muted/50 border border-border mb-4">
+                      <p className="text-xs text-muted-foreground">
+                        <strong>Primeiro acesso?</strong> Use o mesmo email da sua conta TribuTalks 
+                        para criar sua conta no Circle — a aprovação é automática para assinantes.
+                      </p>
+                    </div>
                     <Button asChild className="gap-2">
                       <a href={CONFIG.CIRCLE_COMMUNITY} target="_blank" rel="noopener noreferrer">
                         Acessar comunidade
@@ -107,7 +120,7 @@ const Comunidade = () => {
               icon={<Users className="w-6 h-6 text-muted-foreground" />}
               title="Comunidade Circle"
               description="Networking exclusivo para CFOs e gestores financeiros. Discussões aprofundadas e conexões estratégicas."
-              minPlan="NAVIGATOR"
+              minPlan="PROFESSIONAL"
             />
           )}
 

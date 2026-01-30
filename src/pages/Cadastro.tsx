@@ -20,6 +20,7 @@ const Cadastro = () => {
     senha: "",
     confirmarSenha: "",
     aceitaTermos: false,
+    aceitaNewsletter: false,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
@@ -117,6 +118,17 @@ const Cadastro = () => {
               .update({ total_referrals: (refData.total_referrals || 0) + 1 })
               .eq('user_id', refData.user_id);
           }
+        }
+      }
+      
+      // Inscrição na newsletter (silenciosa, não bloqueia fluxo)
+      if (formData.aceitaNewsletter) {
+        try {
+          await supabase.functions.invoke('subscribe-newsletter', {
+            body: { email: formData.email }
+          });
+        } catch (e) {
+          console.error('Newsletter subscription failed:', e);
         }
       }
       
@@ -300,6 +312,19 @@ const Cadastro = () => {
                 <Link to="/privacidade" className="text-primary hover:underline">
                   Política de Privacidade
                 </Link>
+              </Label>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="newsletter"
+                checked={formData.aceitaNewsletter}
+                onCheckedChange={(checked) => handleChange("aceitaNewsletter", checked as boolean)}
+                disabled={isLoading}
+                className="mt-0.5 border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+              />
+              <Label htmlFor="newsletter" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
+                Quero receber a TribuTalks News (novidades e dicas tributárias)
               </Label>
             </div>
 
