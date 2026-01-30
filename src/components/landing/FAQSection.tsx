@@ -24,7 +24,7 @@ const faqs = [
   {
     question: "As novas ferramentas serão cobradas à parte?",
     answer:
-      "Não. Todas as novas ferramentas e funcionalidades que lançarmos estão inclusas na sua assinatura, sem custo adicional. Radar Legislativo, Score Tributário, Biblioteca de Perguntas — tudo incluído.",
+      "Para assinantes do plano Professional ou superior, não. Todas as novas ferramentas e funcionalidades que lançarmos estão inclusas na sua assinatura, sem custo adicional. Radar Legislativo, Score Tributário, Biblioteca de Perguntas — tudo incluído.",
   },
 ];
 
