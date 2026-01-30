@@ -80,3 +80,6 @@ verify_jwt = false
 
 [functions.process-dctf]
 verify_jwt = false
+
+[functions.cross-analyze-fiscal]
+verify_jwt = false

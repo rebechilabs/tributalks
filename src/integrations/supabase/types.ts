@@ -1313,6 +1313,99 @@ export type Database = {
         }
         Relationships: []
       }
+      fiscal_cross_analysis: {
+        Row: {
+          ano: number
+          created_at: string | null
+          dctf_cofins_declarado: number | null
+          dctf_csll_declarado: number | null
+          dctf_id: string | null
+          dctf_irpj_declarado: number | null
+          dctf_pis_declarado: number | null
+          divergencia_cofins: number | null
+          divergencia_pis: number | null
+          divergencia_total: number | null
+          id: string
+          mes: number
+          nivel_risco: string | null
+          observacoes: string | null
+          periodo_referencia: string
+          sped_cofins_credito: number | null
+          sped_cofins_debito: number | null
+          sped_id: string | null
+          sped_pis_credito: number | null
+          sped_pis_debito: number | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ano: number
+          created_at?: string | null
+          dctf_cofins_declarado?: number | null
+          dctf_csll_declarado?: number | null
+          dctf_id?: string | null
+          dctf_irpj_declarado?: number | null
+          dctf_pis_declarado?: number | null
+          divergencia_cofins?: number | null
+          divergencia_pis?: number | null
+          divergencia_total?: number | null
+          id?: string
+          mes: number
+          nivel_risco?: string | null
+          observacoes?: string | null
+          periodo_referencia: string
+          sped_cofins_credito?: number | null
+          sped_cofins_debito?: number | null
+          sped_id?: string | null
+          sped_pis_credito?: number | null
+          sped_pis_debito?: number | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ano?: number
+          created_at?: string | null
+          dctf_cofins_declarado?: number | null
+          dctf_csll_declarado?: number | null
+          dctf_id?: string | null
+          dctf_irpj_declarado?: number | null
+          dctf_pis_declarado?: number | null
+          divergencia_cofins?: number | null
+          divergencia_pis?: number | null
+          divergencia_total?: number | null
+          id?: string
+          mes?: number
+          nivel_risco?: string | null
+          observacoes?: string | null
+          periodo_referencia?: string
+          sped_cofins_credito?: number | null
+          sped_cofins_debito?: number | null
+          sped_id?: string | null
+          sped_pis_credito?: number | null
+          sped_pis_debito?: number | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_cross_analysis_dctf_id_fkey"
+            columns: ["dctf_id"]
+            isOneToOne: false
+            referencedRelation: "dctf_declaracoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiscal_cross_analysis_sped_id_fkey"
+            columns: ["sped_id"]
+            isOneToOne: false
+            referencedRelation: "sped_contribuicoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       identified_credits: {
         Row: {
           accountant_notes: string | null
