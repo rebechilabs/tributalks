@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -22,6 +22,7 @@ import { NextStepRecommendation } from "@/components/dashboard/NextStepRecommend
 import { LastActivityCard } from "@/components/dashboard/LastActivityCard";
 import { InProgressWorkflows } from "@/components/dashboard/InProgressWorkflows";
 import { NextRelevantDeadline } from "@/components/dashboard/NextRelevantDeadline";
+import { ClaraContextualSuggestion } from "@/components/common/ClaraContextualSuggestion";
 import { useExecutiveData } from "@/hooks/useExecutiveData";
 import { useUserProgress } from "@/hooks/useUserProgress";
 
@@ -203,6 +204,7 @@ function ExecutiveSummaryCardWrapper({ currentPlan, userId }: { currentPlan: str
 
 const Dashboard = () => {
   const { user, profile } = useAuth();
+  const location = useLocation();
   const [simulations, setSimulations] = useState<Simulation[]>([]);
   const [simulationsThisMonth, setSimulationsThisMonth] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -330,6 +332,9 @@ const Dashboard = () => {
         
         {/* Próximo Prazo Relevante */}
         <NextRelevantDeadline />
+
+        {/* Sugestão Contextual da Clara */}
+        <ClaraContextualSuggestion currentRoute={location.pathname} className="mb-6" />
 
         {/* Resumo Executivo - Semáforo do CEO/CFO */}
         <ExecutiveSummaryCardWrapper currentPlan={currentPlan} userId={user?.id} />

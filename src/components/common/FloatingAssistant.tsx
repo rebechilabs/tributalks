@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
-import { MessageCircle, X, Sparkles, Send, Loader2, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
+import { MessageCircle, X, Sparkles, Send, Loader2, Mic, MicOff, Volume2, VolumeX, Command } from "lucide-react";
+import { useClaraShortcut } from "@/hooks/useKeyboardShortcuts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -226,9 +227,13 @@ export function FloatingAssistant() {
   const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
   const [autoSpeak, setAutoSpeak] = useState(false);
   const [isGettingStarted, setIsGettingStarted] = useState(false);
+  const [isProcessingCommand, setIsProcessingCommand] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const location = useLocation();
+
+  // Global keyboard shortcut (Cmd+K / Ctrl+K)
+  useClaraShortcut();
 
   // Voice hooks
   const { 
@@ -415,6 +420,43 @@ export function FloatingAssistant() {
     }
   };
 
+  // Handle slash commands
+  const handleSlashCommand = useCallback(async (command: string): Promise<string | null> => {
+    const cmd = command.toLowerCase().trim();
+    
+    if (cmd === "/resumo" || cmd === "/summary") {
+      setIsProcessingCommand(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("generate-executive-report", {
+          body: { format: "text" },
+        });
+        
+        if (error) throw error;
+        
+        return data?.summary || "Não foi possível gerar o resumo executivo. Verifique se você tem dados de DRE, Score ou XMLs na plataforma.";
+      } catch (err) {
+        console.error("Error generating summary:", err);
+        return "Erro ao gerar resumo. Tente novamente em alguns instantes.";
+      } finally {
+        setIsProcessingCommand(false);
+      }
+    }
+    
+    if (cmd === "/ajuda" || cmd === "/help") {
+      return `**Comandos disponíveis:**
+
+- \`/resumo\` - Gera um resumo executivo da sua situação tributária
+- \`/ajuda\` - Mostra esta lista de comandos
+
+**Atalho de teclado:**
+- \`Cmd+K\` ou \`Ctrl+K\` - Abre a Clara rapidamente
+
+Você também pode me fazer qualquer pergunta sobre a Reforma Tributária!`;
+    }
+    
+    return null; // Not a command
+  }, []);
+
   const sendMessage = async (messageText?: string) => {
     const userMessage = messageText || input.trim();
     if (!userMessage || isLoading) return;
@@ -424,6 +466,16 @@ export function FloatingAssistant() {
     setIsLoading(true);
 
     try {
+      // Check for slash commands first
+      if (userMessage.startsWith("/")) {
+        const commandResponse = await handleSlashCommand(userMessage);
+        if (commandResponse) {
+          setMessages(prev => [...prev, { role: "assistant", content: commandResponse }]);
+          setIsLoading(false);
+          return;
+        }
+      }
+
       const { data, error } = await supabase.functions.invoke("clara-assistant", {
         body: { 
           messages: [...messages, { role: "user", content: userMessage }],
@@ -612,11 +664,11 @@ export function FloatingAssistant() {
               <div className="flex gap-2">
                 <Input
                   ref={inputRef}
-                  placeholder={isListening ? "Escutando..." : "Pergunte sobre a Reforma Tributária..."}
+                  placeholder={isListening ? "Escutando..." : "Pergunte ou use /ajuda..."}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  disabled={isLoading || isListening}
+                  disabled={isLoading || isListening || isProcessingCommand}
                   className={`text-sm transition-all duration-300 ${isListening ? 'border-primary ring-2 ring-primary/30' : ''}`}
                 />
                 
@@ -673,6 +725,10 @@ export function FloatingAssistant() {
             <p className="text-sm font-medium text-foreground flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-primary animate-pulse" />
               Tire suas dúvidas aqui!
+            </p>
+            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+              <Command className="w-3 h-3" />
+              <span>+K para abrir</span>
             </p>
           </div>
           {/* Arrow pointing down */}
