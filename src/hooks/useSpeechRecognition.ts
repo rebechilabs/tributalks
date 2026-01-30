@@ -53,6 +53,50 @@ declare global {
   }
 }
 
+// Convert spoken digits to numbers (e.g., "um dois três" -> "123")
+const convertSpokenDigits = (text: string): string => {
+  const digitMap: Record<string, string> = {
+    'zero': '0',
+    'um': '1',
+    'uma': '1',
+    'dois': '2',
+    'duas': '2',
+    'três': '3',
+    'tres': '3',
+    'quatro': '4',
+    'cinco': '5',
+    'seis': '6',
+    'meia': '6', // "meia" is commonly used for 6
+    'sete': '7',
+    'oito': '8',
+    'nove': '9',
+  };
+
+  // Split by spaces and convert consecutive number words to digits
+  const words = text.toLowerCase().split(/\s+/);
+  const result: string[] = [];
+  let digitBuffer = '';
+
+  for (const word of words) {
+    const cleanWord = word.replace(/[.,]/g, '');
+    if (digitMap[cleanWord] !== undefined) {
+      digitBuffer += digitMap[cleanWord];
+    } else {
+      if (digitBuffer) {
+        result.push(digitBuffer);
+        digitBuffer = '';
+      }
+      result.push(word);
+    }
+  }
+  
+  if (digitBuffer) {
+    result.push(digitBuffer);
+  }
+
+  return result.join(' ');
+};
+
 export function useSpeechRecognition(): UseSpeechRecognitionReturn {
   const [transcript, setTranscript] = useState("");
   const [isListening, setIsListening] = useState(false);
@@ -82,7 +126,10 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
           }
         }
 
-        setTranscript(finalTranscript || interimTranscript);
+        // Convert spoken digits to numbers
+        const rawTranscript = finalTranscript || interimTranscript;
+        const convertedTranscript = convertSpokenDigits(rawTranscript);
+        setTranscript(convertedTranscript);
       };
 
       recognition.onend = () => {
