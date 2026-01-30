@@ -35,6 +35,7 @@ import {
 } from "@/components/xml";
 import { CreditRadar } from "@/components/credits/CreditRadar";
 import { ExposureProjection } from "@/components/credits/ExposureProjection";
+import { SavingsSummaryCard } from "@/components/credits/SavingsSummaryCard";
 
 // XMLs de teste do ciclo comercial
 import xmlCompra from "../../test-xml/ciclo-comercial/01-compra-mercadoria.xml?raw";
@@ -522,6 +523,9 @@ export default function AnaliseNotasFiscais() {
             Importe XMLs, identifique créditos recuperáveis e projete sua exposição tributária
           </p>
         </div>
+
+        {/* Savings Summary Card */}
+        <SavingsSummaryCard />
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="space-y-6">
