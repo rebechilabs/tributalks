@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import logoTributech from "@/assets/logo-tributech.png";
+import logoTributalks from "@/assets/logo-tributalks.png";
 import type { ThermometerData, ProjetoTributario, ReformImpactData, RiskItem } from "@/hooks/useExecutiveData";
 
 interface ExecutiveReportPreviewProps {
@@ -208,7 +208,7 @@ export function ExecutiveReportPreview({
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <div className="flex items-center gap-3">
-              <img src={logoTributech} alt="TribuTalks" className="h-10 w-auto" />
+              <img src={logoTributalks} alt="TribuTalks" className="h-10 w-auto" />
             </div>
             <div className="text-right">
               <h1 className="text-lg font-bold text-gray-900">

@@ -281,6 +281,37 @@ serve(async (req) => {
       console.error('Error inserting summary:', summaryError)
     }
 
+    // 6. Create notification for the user if credits were found
+    if (identifiedCredits.length > 0) {
+      const formatCurrency = (value: number) => 
+        new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
+      
+      const highConfidenceCredits = identifiedCredits.filter(c => c.confidence_level === 'high')
+      const notificationTitle = identifiedCredits.length === 1 
+        ? '💰 1 crédito tributário identificado!'
+        : `💰 ${identifiedCredits.length} créditos tributários identificados!`
+      
+      let notificationMessage = `Potencial de recuperação: ${formatCurrency(summary.total_potential)}.`
+      
+      if (highConfidenceCredits.length > 0) {
+        notificationMessage += ` ${highConfidenceCredits.length} com alta confiança (${formatCurrency(summary.high_confidence)}).`
+      }
+      
+      notificationMessage += ' Clique para ver detalhes no Radar de Créditos.'
+
+      await supabaseAdmin
+        .from('notifications')
+        .insert({
+          user_id: userId,
+          title: notificationTitle,
+          message: notificationMessage,
+          type: 'success',
+          category: 'sistema',
+          action_url: '/analise-notas-fiscais',
+          read: false
+        })
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 

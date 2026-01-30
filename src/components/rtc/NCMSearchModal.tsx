@@ -22,7 +22,7 @@ interface NCMSearchModalProps {
   onSelect: (ncm: string, descricao: string) => void;
 }
 
-const STORAGE_KEY = "tributech_ncm_recentes";
+const STORAGE_KEY = "tributalks_ncm_recentes";
 const MAX_RECENTES = 5;
 
 export function NCMSearchModal({ open, onOpenChange, onSelect }: NCMSearchModalProps) {

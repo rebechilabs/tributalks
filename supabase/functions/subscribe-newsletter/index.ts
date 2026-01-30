@@ -110,7 +110,7 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           email: sanitizedEmail,
-          utm_source: 'tributech_website',
+          utm_source: 'tributalks_website',
           reactivate_existing: true,
         }),
       }

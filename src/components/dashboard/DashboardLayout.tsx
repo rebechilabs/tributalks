@@ -13,7 +13,8 @@ import { Sidebar } from "./Sidebar";
 import { MobileNav } from "./MobileNav";
 import { FloatingAssistant } from "@/components/common/FloatingAssistant";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
-import logoTributech from "@/assets/logo-tributech.png";
+import logoTributalks from "@/assets/logo-tributalks.png";
+
 interface DashboardLayoutProps {
   children: React.ReactNode;
   title?: string;
@@ -41,7 +42,7 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
             
             {/* Mobile Logo */}
             <Link to="/dashboard" className="lg:hidden flex items-center gap-2">
-              <img src={logoTributech} alt="TribuTech" className="h-8 w-auto" />
+              <img src={logoTributalks} alt="TribuTalks" className="h-8 w-auto" />
             </Link>
 
             {/* Page Title (Desktop) */}
