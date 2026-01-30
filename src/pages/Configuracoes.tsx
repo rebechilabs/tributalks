@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { SeatManagement } from "@/components/settings/SeatManagement";
+import { CnpjGroupManager } from "@/components/profile/CnpjGroupManager";
 
 const Configuracoes = () => {
   const { user, profile, refreshProfile, signOut } = useAuth();
@@ -19,11 +20,37 @@ const Configuracoes = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   
+  // CNPJ Group state
+  const [cnpjPrincipal, setCnpjPrincipal] = useState<string | null>(null);
+  const [cnpjsGrupo, setCnpjsGrupo] = useState<string[]>([]);
+  const [companyProfileLoaded, setCompanyProfileLoaded] = useState(false);
+  
   const [notifications, setNotifications] = useState({
     novidades: profile?.notif_novidades ?? true,
     legislacao: profile?.notif_legislacao ?? true,
     consultorias: profile?.notif_consultorias ?? true,
   });
+
+  // Load company profile for CNPJ data
+  useEffect(() => {
+    const loadCompanyProfile = async () => {
+      if (!user?.id) return;
+      
+      const { data } = await supabase
+        .from('company_profile')
+        .select('cnpj_principal, cnpjs_grupo')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (data) {
+        setCnpjPrincipal(data.cnpj_principal);
+        setCnpjsGrupo(data.cnpjs_grupo || []);
+      }
+      setCompanyProfileLoaded(true);
+    };
+    
+    loadCompanyProfile();
+  }, [user?.id]);
 
   useEffect(() => {
     setNotifications({
@@ -137,6 +164,20 @@ const Configuracoes = () => {
         </div>
 
         <div className="space-y-6">
+          {/* CNPJ Group Management */}
+          {user && companyProfileLoaded && (
+            <CnpjGroupManager
+              userId={user.id}
+              userPlan={profile?.plano || 'FREE'}
+              cnpjPrincipal={cnpjPrincipal}
+              cnpjsGrupo={cnpjsGrupo}
+              onUpdate={(principal, grupo) => {
+                setCnpjPrincipal(principal);
+                setCnpjsGrupo(grupo);
+              }}
+            />
+          )}
+
           {/* Seat Management - Multi-user access */}
           <SeatManagement />
 
