@@ -2334,6 +2334,39 @@ export type Database = {
         }
         Relationships: []
       }
+      workflow_progress: {
+        Row: {
+          completed_at: string | null
+          completed_steps: string[]
+          current_step_index: number
+          id: string
+          started_at: string
+          updated_at: string
+          user_id: string
+          workflow_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_steps?: string[]
+          current_step_index?: number
+          id?: string
+          started_at?: string
+          updated_at?: string
+          user_id: string
+          workflow_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          completed_steps?: string[]
+          current_step_index?: number
+          id?: string
+          started_at?: string
+          updated_at?: string
+          user_id?: string
+          workflow_id?: string
+        }
+        Relationships: []
+      }
       xml_analysis: {
         Row: {
           analysis_data: Json | null

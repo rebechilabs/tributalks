@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { 
   ArrowLeft, 
@@ -7,12 +6,16 @@ import {
   Circle, 
   Clock,
   ExternalLink,
-  Target
+  Target,
+  Loader2,
+  RotateCcw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import type { Workflow, WorkflowStep } from "@/pages/WorkflowsGuiados";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useWorkflowProgress } from "@/hooks/useWorkflowProgress";
+import type { Workflow } from "@/pages/WorkflowsGuiados";
 
 interface WorkflowRunnerProps {
   workflow: Workflow;
@@ -20,28 +23,51 @@ interface WorkflowRunnerProps {
 }
 
 export function WorkflowRunner({ workflow, onBack }: WorkflowRunnerProps) {
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
+  const {
+    currentStepIndex,
+    completedSteps,
+    loading,
+    saving,
+    setCurrentStep,
+    markStepComplete,
+    resetProgress,
+  } = useWorkflowProgress(workflow.id, workflow.steps.length);
 
   const currentStep = workflow.steps[currentStepIndex];
   const progress = (completedSteps.size / workflow.steps.length) * 100;
 
-  const markAsComplete = () => {
-    const newCompleted = new Set(completedSteps);
-    newCompleted.add(currentStep.id);
-    setCompletedSteps(newCompleted);
+  const handleMarkComplete = () => {
+    markStepComplete(currentStep.id);
     
+    // Auto-advance to next step
     if (currentStepIndex < workflow.steps.length - 1) {
-      setCurrentStepIndex(currentStepIndex + 1);
+      setCurrentStep(currentStepIndex + 1);
     }
   };
 
   const goToStep = (index: number) => {
-    setCurrentStepIndex(index);
+    setCurrentStep(index);
   };
 
-  const isCompleted = completedSteps.has(currentStep.id);
+  const isCompleted = completedSteps.has(currentStep?.id);
   const allCompleted = completedSteps.size === workflow.steps.length;
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-6 w-24" />
+        </div>
+        <Skeleton className="h-32 w-full rounded-xl" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Skeleton className="h-64 rounded-xl" />
+          <Skeleton className="lg:col-span-2 h-64 rounded-xl" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -51,20 +77,39 @@ export function WorkflowRunner({ workflow, onBack }: WorkflowRunnerProps) {
           <ArrowLeft className="w-4 h-4" />
           Voltar para Workflows
         </Button>
-        <Badge variant="outline" className="gap-1">
-          <Clock className="w-3 h-3" />
-          {workflow.estimatedTime}
-        </Badge>
+        <div className="flex items-center gap-2">
+          {saving && (
+            <Badge variant="secondary" className="gap-1">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              Salvando...
+            </Badge>
+          )}
+          <Badge variant="outline" className="gap-1">
+            <Clock className="w-3 h-3" />
+            {workflow.estimatedTime}
+          </Badge>
+        </div>
       </div>
 
       {/* Title & Progress */}
       <div className="bg-card border border-border rounded-xl p-6">
         <div className="flex items-center gap-3 mb-4">
           <Target className="w-8 h-8 text-primary" />
-          <div>
+          <div className="flex-1">
             <h2 className="text-xl font-bold text-foreground">{workflow.title}</h2>
             <p className="text-sm text-muted-foreground">{workflow.description}</p>
           </div>
+          {completedSteps.size > 0 && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={resetProgress}
+              className="text-muted-foreground hover:text-destructive"
+            >
+              <RotateCcw className="w-4 h-4 mr-1" />
+              Reiniciar
+            </Button>
+          )}
         </div>
 
         <div className="flex items-center gap-4">
@@ -129,9 +174,15 @@ export function WorkflowRunner({ workflow, onBack }: WorkflowRunnerProps) {
               <p className="text-muted-foreground mb-6">
                 Você completou todas as etapas do {workflow.title}.
               </p>
-              <Button onClick={onBack}>
-                Ver outros workflows
-              </Button>
+              <div className="flex items-center justify-center gap-3">
+                <Button variant="outline" onClick={resetProgress}>
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Refazer workflow
+                </Button>
+                <Button onClick={onBack}>
+                  Ver outros workflows
+                </Button>
+              </div>
             </div>
           ) : (
             <>
@@ -179,10 +230,12 @@ export function WorkflowRunner({ workflow, onBack }: WorkflowRunnerProps) {
                 </Link>
                 <Button 
                   variant="outline" 
-                  onClick={markAsComplete}
-                  disabled={isCompleted}
+                  onClick={handleMarkComplete}
+                  disabled={isCompleted || saving}
                 >
-                  {isCompleted ? (
+                  {saving ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : isCompleted ? (
                     <>
                       <CheckCircle2 className="w-4 h-4 mr-2 text-success" />
                       Concluída
