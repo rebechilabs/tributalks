@@ -22,11 +22,6 @@ const faqs = [
       "Sim. Não existe fidelidade ou multa por cancelamento. Você pode cancelar sua assinatura a qualquer momento diretamente no painel, e continuará tendo acesso até o fim do período pago.",
   },
   {
-    question: "Como funcionam as consultorias do Premium?",
-    answer:
-      "No plano Premium, você tem direito a 2 sessões de 30 minutos por mês com um especialista tributário da Rebechi & Silva Advogados. As sessões são agendadas via Calendly e podem ser usadas para tirar dúvidas específicas sobre sua operação.",
-  },
-  {
     question: "As novas ferramentas serão cobradas à parte?",
     answer:
       "Não. Todas as novas ferramentas e funcionalidades que lançarmos estão inclusas na sua assinatura, sem custo adicional. Radar Legislativo, Score Tributário, Biblioteca de Perguntas — tudo incluído.",
