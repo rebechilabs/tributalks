@@ -1,114 +1,141 @@
 
 
-# Plano: Destaque para Campanha de Indicação
+# Plano: Notificação Automática de Novo Nível de Desconto
 
-## Resumo
+## Objetivo
 
-Mover a campanha "Indicar Amigos" para uma posição de destaque no topo do Sidebar, logo após o Dashboard, com visual diferenciado para chamar atenção.
+Criar uma notificação automática quando o usuário atinge um novo nível de desconto no programa de indicação (5% -> 10% -> 15% -> 20%).
+
+---
+
+## Análise do Sistema Atual
+
+O sistema já possui:
+- Edge Function `process-referral-rewards` que processa indicações
+- Notificações quando indicação é qualificada
+- Notificações quando recompensa é liberada
+- **Falta**: Detecção de mudança de nível e notificação específica
+
+### Níveis de Desconto
+| Indicações | Desconto |
+|------------|----------|
+| 1+         | 5%       |
+| 3+         | 10%      |
+| 5+         | 15%      |
+| 10+        | 20%      |
 
 ---
 
 ## Mudanças Propostas
 
-### Arquivo: `src/components/dashboard/Sidebar.tsx`
+### Arquivo: `supabase/functions/process-referral-rewards/index.ts`
 
-#### 1. Criar Card de Destaque para Indicação
-Adicionar um card promocional visualmente destacado logo abaixo do logo, antes da navegação principal:
+#### 1. Adicionar função para detectar mudança de nível
+
+```typescript
+function getDiscountPercent(successfulReferrals: number): number {
+  if (successfulReferrals >= 10) return 20;
+  if (successfulReferrals >= 5) return 15;
+  if (successfulReferrals >= 3) return 10;
+  if (successfulReferrals >= 1) return 5;
+  return 0;
+}
+
+function checkLevelUp(previousCount: number, newCount: number): { leveledUp: boolean; newPercent: number; previousPercent: number } {
+  const previousPercent = getDiscountPercent(previousCount);
+  const newPercent = getDiscountPercent(newCount);
+  return {
+    leveledUp: newPercent > previousPercent,
+    newPercent,
+    previousPercent,
+  };
+}
+```
+
+#### 2. Modificar o fluxo de processamento
+
+Na seção onde incrementamos `successful_referrals` (aproximadamente linha 197-206), adicionar:
+
+```typescript
+const previousCount = codeData.successful_referrals || 0;
+const successfulCount = previousCount + 1;
+
+// Verifica se subiu de nível
+const levelCheck = checkLevelUp(previousCount, successfulCount);
+
+if (levelCheck.leveledUp) {
+  // Notificação especial de novo nível
+  await supabase.from("notifications").insert({
+    user_id: referral.referrer_id,
+    title: "🚀 Novo Nível Desbloqueado!",
+    message: `Parabéns! Você subiu para ${levelCheck.newPercent}% de desconto! Continue indicando para aumentar ainda mais.`,
+    type: "success",
+    category: "indicacao",
+    action_url: "/indicar",
+  });
+}
+```
+
+---
+
+## Fluxo Visual
 
 ```text
-┌─────────────────────────────┐
-│  🎁 Indique e Ganhe!        │
-│  Ganhe até 20% de desconto  │
-│  [Indicar Agora]            │
-└─────────────────────────────┘
-```
-
-**Características visuais:**
-- Background com gradiente dourado/primário
-- Ícone de presente animado (pulse suave)
-- Texto de benefício claro
-- CTA destacado
-- Badge "Novo" ou contador de indicações pendentes
-
-#### 2. Remover do Grupo "IA e Documentos"
-- Remover o item `{ label: 'Indicar Amigos', href: '/indicar', icon: Gift, badge: 'Novo' }` da lista atual
-- Evitar duplicação no menu
-
-#### 3. Adicionar Indicador de Progresso (Opcional)
-Se o usuário já tiver indicações, mostrar o nível atual de desconto:
-- "Você tem 5% de desconto" com barra de progresso para o próximo nível
-
----
-
-## Código Proposto
-
-### Novo Componente: Card de Indicação
-
-```tsx
-{/* Referral Highlight Card - Logo abaixo do logo */}
-<div className="mx-3 mb-4 p-3 rounded-lg bg-gradient-to-br from-amber-500/20 via-primary/20 to-amber-500/10 border border-amber-500/30">
-  <Link to="/indicar" className="block group">
-    <div className="flex items-center gap-2 mb-1">
-      <Gift className="w-5 h-5 text-amber-500 animate-pulse" />
-      <span className="text-sm font-bold text-foreground">Indique e Ganhe!</span>
-      <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500 text-white font-medium">
-        Novo
-      </span>
-    </div>
-    <p className="text-xs text-muted-foreground mb-2">
-      Ganhe até 20% de desconto na sua mensalidade
-    </p>
-    <div className="flex items-center justify-center gap-2 py-1.5 px-3 rounded-md bg-amber-500 text-white text-xs font-semibold group-hover:bg-amber-600 transition-colors">
-      <Sparkles className="w-3 h-3" />
-      Indicar Agora
-    </div>
-  </Link>
-</div>
+┌──────────────────────────────────────────────────────────────┐
+│                    PROCESSAMENTO DE INDICAÇÃO                 │
+├──────────────────────────────────────────────────────────────┤
+│                                                               │
+│  1. Indicação qualificada (30 dias)                          │
+│     └─> Notificação: "Indicação qualificada!"                │
+│                                                               │
+│  2. Incrementa successful_referrals                          │
+│     └─> Verifica: subiu de nível?                            │
+│          │                                                    │
+│          ├─> SIM: Notificação especial de novo nível         │
+│          │        "🚀 Novo Nível Desbloqueado!"              │
+│          │        "Você subiu para X% de desconto!"          │
+│          │                                                    │
+│          └─> NÃO: Continua normalmente                       │
+│                                                               │
+│  3. Aplica cupom no Stripe (se aplicável)                    │
+│     └─> Notificação: "Recompensa liberada!"                  │
+│                                                               │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Estrutura Final do Sidebar
+## Mensagens de Notificação por Nível
 
-```text
-┌─────────────────────────────┐
-│  [Logo TribuTalks]          │
-├─────────────────────────────┤
-│  🎁 INDIQUE E GANHE!        │  ← NOVO: Card destacado
-│  Ganhe até 20% de desconto  │
-│  [Indicar Agora]            │
-├─────────────────────────────┤
-│  • Dashboard                │
-├─────────────────────────────┤
-│  1️⃣ Entender               │
-│  • Score Tributário         │
-│  • Clara AI                 │
-├─────────────────────────────┤
-│  2️⃣ Simular                │
-│  • Split Payment            │
-│  • (...)                    │
-├─────────────────────────────┤
-│  (... resto do menu ...)    │
-└─────────────────────────────┘
-```
+| Transição | Título | Mensagem |
+|-----------|--------|----------|
+| 0% -> 5%  | 🎉 Primeiro Desconto! | Parabéns! Você conquistou 5% de desconto na mensalidade! |
+| 5% -> 10% | 🚀 Nível 2 Desbloqueado! | Você subiu para 10% de desconto! Continue indicando! |
+| 10% -> 15% | ⭐ Nível 3 Desbloqueado! | Incrível! Agora você tem 15% de desconto! Faltam 5 para o máximo! |
+| 15% -> 20% | 🏆 Nível Máximo! | Você atingiu o desconto máximo de 20%! Você é um embaixador top! |
 
 ---
 
-## Impacto
+## Detalhes Técnicos
 
-| Aspecto | Antes | Depois |
-|---------|-------|--------|
-| Posição | 7º grupo (IA e Docs) | Topo, logo após o logo |
-| Visibilidade | Item comum no menu | Card promocional destacado |
-| Estilo | Texto simples | Gradiente + animação + CTA |
-| Ação | Click para navegar | CTA claro "Indicar Agora" |
+### Modificação na Edge Function
+
+**Localização**: `supabase/functions/process-referral-rewards/index.ts`
+
+**Linhas afetadas**: ~190-260 (seção de processamento qualified -> rewarded)
+
+**Lógica**:
+1. Antes de incrementar, guardar o count anterior
+2. Após incrementar, comparar os níveis de desconto
+3. Se houve mudança, criar notificação com mensagem customizada por nível
+4. Manter as notificações existentes de qualificação e recompensa
 
 ---
 
 ## Benefícios
 
-- **Maior conversão**: Posição de destaque aumenta cliques
-- **Visual atrativo**: Gradiente dourado chama atenção sem ser invasivo
-- **CTA claro**: "Indicar Agora" incentiva ação imediata
-- **Não polui o menu**: Remove duplicação do grupo "IA e Documentos"
+- **Feedback imediato**: Usuário sabe quando subiu de nível
+- **Gamificação reforçada**: Cada marco é celebrado
+- **Incentivo a continuar**: Mensagens mostram progresso até o próximo nível
+- **Sem duplicação**: Notificação de nível é distinta da notificação de recompensa
 
