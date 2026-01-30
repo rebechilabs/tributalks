@@ -1,64 +1,91 @@
 
-# Plano: Correção do Mapeamento de Planos Legados e Preços
+# Plano: Atualizar Pacotes de Créditos Clara
 
-## Problema Identificado
+## Resumo
 
-1. **Mapeamento Incorreto**: O plano legado `BASICO` está mapeando para `NAVIGATOR` quando deveria mapear para `STARTER`
-2. **Preços Desatualizados**: Os preços em `PLAN_PRICES` não refletem os valores corretos
-
----
-
-## Arquivo: `src/hooks/useFeatureAccess.ts`
-
-### Correção 1: Mapeamento Legado (Linha 8)
-
-| De | Para |
-|----|------|
-| `'BASICO': 'NAVIGATOR'` | `'BASICO': 'STARTER'` |
-
-### Correção 2: Preços (Linhas 33-39)
-
-| Plano | Atual | Correto |
-|-------|-------|---------|
-| FREE | R$ 0 | ✅ Mantém |
-| STARTER | R$ 297/mês | ✅ Mantém |
-| NAVIGATOR | R$ 1.997/mês | **R$ 697/mês** |
-| PROFESSIONAL | R$ 2.997/mês | **R$ 1.997/mês** |
-| ENTERPRISE | Sob consulta | ✅ Mantém |
+Atualizar os pacotes de créditos da Clara AI de (10, 20, 30) para os novos valores (30, 50, 100) com os preços informados.
 
 ---
 
-## Código Atualizado
+## Novos Pacotes de Créditos
 
-### LEGACY_PLAN_MAP (linha 6-15)
+| Pacote | Créditos | Preço | Preço/Crédito |
+|--------|----------|-------|---------------|
+| Básico | 30 | R$ 74,90 | R$ 2,50 |
+| Intermediário | 50 | R$ 109,90 | R$ 2,20 |
+| Premium | 100 | R$ 199,90 | R$ 2,00 |
+
+**Regra**: 1 crédito = 1 conversa com a Clara
+
+---
+
+## Arquivos a Modificar
+
+### 1. `src/hooks/useUserCredits.ts`
+
+Atualizar a função `getCreditPackages()`:
+
 ```typescript
-const LEGACY_PLAN_MAP: Record<string, UserPlan> = {
-  'FREE': 'FREE',
-  'BASICO': 'STARTER',        // ← Corrigido
-  'PROFISSIONAL': 'PROFESSIONAL',
-  'PREMIUM': 'ENTERPRISE',
-  'STARTER': 'STARTER',
-  'NAVIGATOR': 'NAVIGATOR',
-  'PROFESSIONAL': 'PROFESSIONAL',
-  'ENTERPRISE': 'ENTERPRISE',
-};
+export function getCreditPackages(): CreditPackage[] {
+  return [
+    {
+      id: 'credits_30',
+      credits: 30,
+      price: 74.90,
+      priceFormatted: 'R$ 74,90',
+      paymentLink: CONFIG.PAYMENT_LINKS.CREDITS_30 || '',
+    },
+    {
+      id: 'credits_50',
+      credits: 50,
+      price: 109.90,
+      priceFormatted: 'R$ 109,90',
+      paymentLink: CONFIG.PAYMENT_LINKS.CREDITS_50 || '',
+    },
+    {
+      id: 'credits_100',
+      credits: 100,
+      price: 199.90,
+      priceFormatted: 'R$ 199,90',
+      paymentLink: CONFIG.PAYMENT_LINKS.CREDITS_100 || '',
+    },
+  ];
+}
 ```
 
-### PLAN_PRICES (linha 33-39)
+### 2. `src/config/site.ts`
+
+Atualizar as chaves de links de pagamento:
+
 ```typescript
-export const PLAN_PRICES: Record<UserPlan, string> = {
-  'FREE': 'R$ 0',
-  'STARTER': 'R$ 297/mês',
-  'NAVIGATOR': 'R$ 697/mês',       // ← Corrigido
-  'PROFESSIONAL': 'R$ 1.997/mês',  // ← Corrigido
-  'ENTERPRISE': 'Sob consulta',
-};
+PAYMENT_LINKS: {
+  // ... planos existentes ...
+  
+  // Pacotes de créditos Clara (1 crédito = 1 conversa)
+  CREDITS_30: "/cadastro",   // R$ 74,90 - 30 créditos
+  CREDITS_50: "/cadastro",   // R$ 109,90 - 50 créditos  
+  CREDITS_100: "/cadastro",  // R$ 199,90 - 100 créditos
+  
+  // ... restante ...
+}
 ```
 
 ---
 
-## Impacto
+## Correção Adicional
 
-- Usuários com plano legado `BASICO` terão acesso correto às features do **STARTER** (não Navigator)
-- Mensagens de upgrade exibirão os preços corretos em toda a aplicação
-- Consistência com a Landing Page já corrigida
+No arquivo `useUserCredits.ts`, também corrigir o mapeamento legado duplicado (linha 53):
+
+```typescript
+// Atual (incorreto - duplicado do useFeatureAccess.ts)
+'BASICO': 'NAVIGATOR'
+
+// Correto (deve manter consistência)
+'BASICO': 'STARTER'
+```
+
+---
+
+## Próximo Passo
+
+Após aprovação, você poderá fornecer os **preference-ids do Mercado Pago** para cada pacote, e eu configurarei os links de pagamento reais.
