@@ -157,7 +157,7 @@ const toolGroups: ToolGroup[] = [
       },
       { 
         name: 'Comunidade', 
-        description: 'Grupo exclusivo + webinars',
+        description: 'Network com empresários',
         href: '/comunidade', 
         icon: Users,
         requiredPlan: 'PROFESSIONAL'
