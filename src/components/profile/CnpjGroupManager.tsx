@@ -34,8 +34,8 @@ import {
 // Limits per plan
 const CNPJ_LIMITS: Record<string, number> = {
   'FREE': 1,
-  'NAVIGATOR': 3,
-  'PROFESSIONAL': 10,
+  'NAVIGATOR': 2,
+  'PROFESSIONAL': 5,
   'ENTERPRISE': 999,
 };
 
@@ -257,7 +257,7 @@ export function CnpjGroupManager({
           <div>
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />
-              CNPJs do Grupo
+              CNPJs do Grupo Empresarial
             </CardTitle>
             <CardDescription>
               {allCnpjs.length} de {limit} CNPJs cadastrados
@@ -274,7 +274,7 @@ export function CnpjGroupManager({
           <div className="text-center py-8 text-muted-foreground">
             <Building2 className="h-12 w-12 mx-auto mb-3 opacity-50" />
             <p>Nenhum CNPJ cadastrado</p>
-            <p className="text-sm">Adicione o primeiro CNPJ do seu grupo</p>
+            <p className="text-sm">Adicione o primeiro CNPJ do seu grupo empresarial</p>
           </div>
         ) : (
           <div className="space-y-3">
