@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Check, X, Star, MessageCircle, Crown, Diamond, Users } from "lucide-react";
+import { Check, X, Star, MessageCircle, Diamond, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { CONFIG } from "@/config/site";
@@ -22,6 +22,7 @@ interface Plan {
   highlighted?: boolean;
   popular?: boolean;
   isEnterprise?: boolean;
+  trialDays?: number;
   features: PlanFeature[];
   ctaText: string;
   linkMonthly: string;
@@ -31,44 +32,44 @@ interface Plan {
 
 const plans: Plan[] = [
   {
-    name: "GRÁTIS",
-    description: "Para experimentar",
-    priceMonthly: 0,
-    priceAnnual: 0,
+    name: "STARTER",
+    description: "Para começar com segurança",
+    priceMonthly: 297,
+    priceAnnual: 2970,
+    trialDays: 7,
     cnpjLimit: "1 CNPJ • 1 Usuário",
     features: [
-      { text: "Clara IA (Assistente)", included: "limited", limitText: "3 conversas" },
-      { text: "Score Tributário", included: "limited", limitText: "1x" },
-      { text: "Simulador Split Payment", included: "limited", limitText: "1x" },
-      { text: "Comparativo de Regimes", included: "limited", limitText: "1x" },
-      { text: "Calculadora RTC (CBS/IBS/IS)", included: "limited", limitText: "1x" },
+      { text: "Clara AI (Assistente)", included: "limited", limitText: "30 msgs/dia" },
+      { text: "Score Tributário", included: true, limitText: "Ilimitado" },
+      { text: "Simulador Split Payment", included: true, limitText: "Ilimitado" },
+      { text: "Comparativo de Regimes", included: true, limitText: "Ilimitado" },
+      { text: "Calculadora RTC (CBS/IBS/IS)", included: true },
+      { text: "Timeline 2026-2033", included: true },
       { text: "Newsletter Tributalks News", included: true },
-      { text: "Timeline 2026-2033", included: false },
-      { text: "Feed de Notícias da Reforma", included: false },
+      { text: "Compra de créditos Clara", included: true },
     ],
-    ctaText: "Começar grátis",
-    linkMonthly: "/cadastro",
-    linkAnnual: "/cadastro",
+    ctaText: "Começar trial grátis",
+    linkMonthly: CONFIG.STRIPE_PAYMENT_LINKS.STARTER_MENSAL || "/cadastro",
+    linkAnnual: CONFIG.STRIPE_PAYMENT_LINKS.STARTER_ANUAL || "/cadastro",
   },
   {
     name: "NAVIGATOR",
     description: "Para monitorar a reforma",
-    priceMonthly: 997,
-    priceAnnual: 9970,
-    cnpjLimit: "1 CNPJ • 2 Usuários",
+    priceMonthly: 697,
+    priceAnnual: 6970,
+    cnpjLimit: "2 CNPJs • 2 Usuários",
     features: [
-      { text: "Clara AI (Copiloto)", included: "limited", limitText: "10 msgs/dia" },
-      { text: "2 assentos inclusos", included: true },
-      { text: "Comunidade Tributalks", included: true },
-      { text: "Score Tributário", included: true },
-      { text: "Simulador Split Payment", included: true },
-      { text: "Comparativo de Regimes", included: true },
-      { text: "Calculadora RTC (CBS/IBS/IS)", included: true },
+      { text: "Clara AI (Copiloto)", included: "limited", limitText: "100 msgs/dia" },
+      { text: "Score Tributário", included: true, limitText: "Ilimitado" },
+      { text: "Tudo do Starter +", included: true },
       { text: "Calculadora NBS (Serviços)", included: true },
-      { text: "Newsletter Tributalks News", included: true },
-      { text: "Timeline 2026-2033", included: true },
-      { text: "Feed de Notícias + Pílula do Dia", included: true },
+      { text: "GPS da Reforma (Notícias)", included: true },
+      { text: "Checklist de Prontidão", included: true },
+      { text: "Analisador de Documentos IA", included: true },
+      { text: "Workflows Guiados", included: true },
+      { text: "Comunidade Tributalks", included: true },
       { text: "Relatórios PDF Clara AI", included: true },
+      { text: "Compra de créditos Clara", included: true },
     ],
     ctaText: "Assinar Navigator",
     linkMonthly: CONFIG.STRIPE_PAYMENT_LINKS.NAVIGATOR_MENSAL,
@@ -76,24 +77,23 @@ const plans: Plan[] = [
   },
   {
     name: "PROFESSIONAL",
-    description: "Plataforma completa + IA ilimitada",
-    priceMonthly: 2997,
-    priceAnnual: 29970,
+    description: "Diagnóstico completo + NEXUS",
+    priceMonthly: 1997,
+    priceAnnual: 19970,
     highlighted: true,
     popular: true,
-    cnpjLimit: "3 CNPJs • 3 Usuários",
+    cnpjLimit: "5 CNPJs • 5 Usuários",
     features: [
       { text: "Clara AI ilimitada", included: true },
-      { text: "3 assentos inclusos (CEO, CFO, Contador)", included: true },
-      { text: "Tudo do Navigator", included: true },
-      { text: "4 Workflows Guiados:", included: true },
-      { text: "1. Diagnóstico Tributário Completo", included: true, isSubItem: true },
-      { text: "2. Preparação para a Reforma", included: true, isSubItem: true },
-      { text: "3. Análise de Contratos Societários", included: true, isSubItem: true },
-      { text: "4. Simulação de Preços", included: true, isSubItem: true },
-      { text: "Radar de Créditos + DRE Inteligente", included: true },
+      { text: "Score Tributário", included: true, limitText: "Ilimitado" },
+      { text: "Tudo do Navigator +", included: true },
+      { text: "Análise de Créditos (XMLs)", included: true },
+      { text: "DRE Inteligente", included: true },
+      { text: "Radar de Créditos Tributários", included: true },
       { text: "61+ Oportunidades Fiscais", included: true },
-      { text: "Estimativa de Valuation com impacto do compliance", included: true },
+      { text: "Suíte Margem Ativa", included: true },
+      { text: "NEXUS (Centro de Comando)", included: true },
+      { text: "Conectar ERP", included: true },
       { text: "Relatórios PDF Profissionais", included: true },
     ],
     ctaText: "Assinar Professional",
@@ -102,14 +102,19 @@ const plans: Plan[] = [
   },
   {
     name: "ENTERPRISE",
-    description: "Diagnóstico + Implementação",
+    description: "Para grupos econômicos",
     priceMonthly: 0,
     priceAnnual: 0,
     isEnterprise: true,
     cnpjLimit: "Ilimitado • Usuários Ilimitados",
     features: [
-      { text: "Atendimento personalizado através do Rebechi & Silva Advogados Associados", included: true },
-      { text: "White Label", included: true, limitText: "(seu logo, suas cores, seu domínio)" },
+      { text: "Clara AI ilimitada", included: true },
+      { text: "Tudo do Professional +", included: true },
+      { text: "Painel Executivo Multi-empresa", included: true },
+      { text: "Consultoria com Rebechi & Silva Advogados", included: true },
+      { text: "White Label", included: true, limitText: "(seu logo, cores, domínio)" },
+      { text: "API de integração dedicada", included: true },
+      { text: "SLA prioritário", included: true },
     ],
     ctaText: "Fale conosco",
     linkMonthly: CONFIG.STRIPE_PAYMENT_LINKS.ENTERPRISE,
@@ -128,7 +133,7 @@ export function PricingSection() {
             Escolha seu plano
           </h2>
           <p className="text-muted-foreground text-lg">
-            Comece grátis. Faça upgrade quando fizer sentido para o seu negócio.
+            Comece com 7 dias grátis. Faça upgrade quando fizer sentido.
           </p>
         </div>
 
@@ -187,7 +192,17 @@ export function PricingSection() {
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-semibold">
                       <Star className="w-3 h-3" />
-                      MAIS COMPLETO
+                      MAIS POPULAR
+                    </div>
+                  </div>
+                )}
+
+                {/* Trial Badge for Starter */}
+                {plan.trialDays && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-success text-success-foreground text-xs font-semibold">
+                      <Sparkles className="w-3 h-3" />
+                      {plan.trialDays} DIAS GRÁTIS
                     </div>
                   </div>
                 )}
@@ -204,10 +219,6 @@ export function PricingSection() {
                     {plan.isEnterprise ? (
                       <span className="text-2xl font-bold text-foreground">
                         Sob consulta
-                      </span>
-                    ) : plan.priceMonthly === 0 ? (
-                      <span className="text-4xl font-bold text-foreground">
-                        R$0
                       </span>
                     ) : (
                       <>
@@ -257,7 +268,7 @@ export function PricingSection() {
                           {feature.text}
                         </span>
                         {feature.limitText && (
-                          <span className={`text-xs mt-0.5 ${plan.isEnterprise ? "text-muted-foreground" : "text-warning"}`}>
+                          <span className={`text-xs mt-0.5 ${plan.isEnterprise ? "text-muted-foreground" : feature.included === "limited" ? "text-warning" : "text-success"}`}>
                             {plan.isEnterprise ? feature.limitText : `(${feature.limitText})`}
                           </span>
                         )}
@@ -293,9 +304,12 @@ export function PricingSection() {
                       className={`w-full ${
                         plan.highlighted
                           ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                          : plan.trialDays
+                          ? "bg-success text-success-foreground hover:bg-success/90"
                           : "bg-transparent border border-foreground text-foreground hover:bg-foreground hover:text-background"
                       }`}
                     >
+                      {plan.trialDays && <Sparkles className="w-4 h-4 mr-2" />}
                       {plan.ctaText}
                     </Button>
                   </Link>

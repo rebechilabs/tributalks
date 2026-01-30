@@ -1,16 +1,17 @@
 export const CONFIG = {
   STRIPE_PAYMENT_LINKS: {
-    FREE: "/cadastro",
-    // Navigator - R$997/mês ou R$9.970/ano (2 meses grátis)
+    // Starter - R$297/mês ou R$2.970/ano (7 dias grátis)
+    STARTER_MENSAL: "https://buy.stripe.com/test_starter_mensal", // TODO: Criar no Stripe
+    STARTER_ANUAL: "https://buy.stripe.com/test_starter_anual", // TODO: Criar no Stripe
+    // Navigator - R$697/mês ou R$6.970/ano (2 meses grátis)
     NAVIGATOR_MENSAL: "https://buy.stripe.com/test_aFa8wI3V8e9U7PR9iSbo403",
     NAVIGATOR_ANUAL: "https://buy.stripe.com/test_fZu9AM63g2rcc67gLkbo404",
-    // Professional - R$2.497/mês ou R$24.970/ano (2 meses grátis)
+    // Professional - R$1.997/mês ou R$19.970/ano (2 meses grátis)
     PROFESSIONAL_MENSAL: "https://buy.stripe.com/test_aFa9AMfDQ7Lw6LNgLkbo402",
     PROFESSIONAL_ANUAL: "https://buy.stripe.com/test_dRmdR2ajwd5Q6LNcv4bo400",
     // Enterprise - Sob consulta (WhatsApp direto)
     ENTERPRISE: "https://wa.me/5511914523971",
-    // Credit packages for Navigator users (TribuBot extra credits)
-    // TODO: Criar produtos no Stripe e substituir pelos Payment Links reais
+    // Credit packages for Starter/Navigator users (Clara extra credits)
     CREDITS_10: "https://buy.stripe.com/PLACEHOLDER_CREDITS_10", // R$ 29,90 - 10 créditos
     CREDITS_20: "https://buy.stripe.com/PLACEHOLDER_CREDITS_20", // R$ 54,90 - 20 créditos
     CREDITS_30: "https://buy.stripe.com/PLACEHOLDER_CREDITS_30", // R$ 74,90 - 30 créditos
