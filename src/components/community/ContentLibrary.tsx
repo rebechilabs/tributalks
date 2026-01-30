@@ -49,14 +49,6 @@ const contentItems: ContentItem[] = [
     circleUrl: `${CONFIG.CIRCLE_COMMUNITY}/c/biblioteca`,
     comingSoon: true,
   },
-  {
-    id: "5",
-    title: "Planilha: Simulador de Fluxo de Caixa",
-    description: "Calcule o impacto do Split Payment no seu capital de giro.",
-    type: "template",
-    circleUrl: `${CONFIG.CIRCLE_COMMUNITY}/c/biblioteca`,
-    comingSoon: true,
-  },
 ];
 
 const typeConfig = {
