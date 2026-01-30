@@ -1,62 +1,93 @@
 
-# Adicionar Chatham House Rule à Comunidade
 
-## O Que É
-A **Chatham House Rule** é uma regra de confidencialidade internacionalmente reconhecida: participantes podem usar as informações compartilhadas, mas não devem revelar a identidade ou afiliação de quem falou.
+# Exportar Prompt Completo da Clara AI para Documentação
 
-## Proposta Visual
+## Objetivo
+Criar um arquivo markdown de documentação contendo todo o prompt da Clara AI v3, incluindo todas as camadas, heurísticas e regras especiais.
 
-Adicionar um banner elegante logo após o header da página, antes dos cards de comunidade:
+---
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  🤝  Chatham House Rule                                     │
-│                                                             │
-│  "O que é compartilhado aqui, fica aqui."                  │
-│                                                             │
-│  Informações podem ser usadas livremente, mas a            │
-│  identidade de quem compartilhou deve ser preservada.      │
-└─────────────────────────────────────────────────────────────┘
-```
+## Estrutura do Arquivo
 
-## Alteração Técnica
+O arquivo `docs/CLARA_AI_PROMPT.md` será criado com a seguinte estrutura:
 
-### Arquivo: `src/pages/Comunidade.tsx`
+### 1. Cabeçalho e Metadados
+- Versão do prompt (v3)
+- Modelo utilizado (Claude Sonnet 4)
+- Última atualização
 
-**1. Adicionar ícone Shield ao import:**
-```typescript
-import { Users, Lock, Sparkles, ExternalLink, MessageCircle, Calendar, BookOpen, Shield } from "lucide-react";
-```
+### 2. Arquitetura Completa
 
-**2. Inserir componente após o header (linha 28), antes do grid de cards:**
+**Camada 0 — Guardrails Absolutos**
+- Proteção contra jailbreak/manipulação
+- Limite jurídico OAB
 
-```tsx
-{/* Chatham House Rule Banner */}
-<div className="mb-6 p-4 rounded-lg border border-primary/20 bg-primary/5">
-  <div className="flex items-start gap-3">
-    <Shield className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-    <div>
-      <p className="text-sm font-medium text-foreground mb-1">
-        Chatham House Rule
-      </p>
-      <p className="text-sm text-muted-foreground">
-        "O que é compartilhado aqui, fica aqui." Informações podem ser 
-        usadas livremente, mas a identidade de quem compartilhou deve 
-        ser preservada.
-      </p>
-    </div>
-  </div>
-</div>
-```
+**Camada 1 — Identidade**
+- Clara como "Copiloto de Decisão Tributária"
 
-## Resultado
+**Camada 2 — Papel na Plataforma**
+- Orquestradora, tradutora, guia
 
-- Transmite **confiança e exclusividade**
-- Incentiva discussões mais **abertas e honestas**
-- Posiciona a comunidade como **espaço seguro** para CFOs
-- Diferencia das comunidades genéricas de WhatsApp
+**Camada 3 — Princípio de Comunicação**
+- Regra de ouro: frases curtas, escaneáveis
 
-## Impacto
-- Zero breaking changes
-- ~15 linhas de código
-- Aumenta valor percebido da comunidade
+**Camada 4 — Escopo**
+- O que pode/não pode fazer
+- Linguagem obrigatória
+
+**Camada 5 — Comportamento**
+- Onboarding e condução
+- Pedidos sensíveis
+
+**Camada 6 — Tom**
+- Simpático, claro, profissional
+
+**Camada 7 — Objetivo Final**
+- Usuário sair mais lúcido e confiante
+
+### 3. CLARA_DECISION_CORE
+- 25 heurísticas de raciocínio tributário
+
+### 4. CLARA_KNOWLEDGE_CORE
+- Marcos legais (EC 132/2023, LC 214/2025)
+- Tributos extintos e novos
+- Cronograma 2026-2033
+- Alíquotas especiais
+- Simples Nacional
+- Split Payment
+- Zona Franca de Manaus
+
+### 5. CLARA_LOCACAO_IMOVEIS
+- Módulo Anti-Distorção para Airbnb/locação
+- 7 regras específicas
+
+### 6. Contextos de Ferramentas (TOOL_CONTEXTS)
+- 13 ferramentas com descrições e passo-a-passo
+
+### 7. Respostas por Plano (PLAN_RESPONSES)
+- FREE, NAVIGATOR, PROFESSIONAL, ENTERPRISE
+- Jornadas personalizadas de onboarding
+
+### 8. Disclaimers Obrigatórios
+- Aviso padrão vs Enterprise
+
+---
+
+## Detalhes Técnicos
+
+| Item | Detalhe |
+|------|---------|
+| Arquivo | `docs/CLARA_AI_PROMPT.md` |
+| Tamanho estimado | ~800 linhas |
+| Formato | Markdown puro |
+| Fonte | `supabase/functions/clara-assistant/index.ts` |
+
+---
+
+## Entregável
+
+Um arquivo markdown completo e bem organizado que serve como:
+- Documentação interna da equipe
+- Referência para ajustes futuros
+- Base para treinamento de novos desenvolvedores
+
