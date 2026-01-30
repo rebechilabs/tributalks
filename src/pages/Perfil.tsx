@@ -21,6 +21,8 @@ const ESTADOS = [
 ];
 
 const FAIXAS_FATURAMENTO = [
+  { value: '200000', label: 'R$200K - R$500K/mês' },
+  { value: '500000', label: 'R$500K - R$1M/mês' },
   { value: '1000000', label: 'R$1M - R$2,5M/mês' },
   { value: '2500000', label: 'R$2,5M - R$5M/mês' },
   { value: '5000000', label: 'R$5M - R$10M/mês' },
