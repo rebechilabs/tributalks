@@ -1,5 +1,5 @@
 import { Shield, Lock, Cloud, Scale } from "lucide-react";
-import stripeLogo from "@/assets/stripe-logo.png";
+import mercadoPagoLogo from "@/assets/mercado-pago-logo.png";
 
 interface TrustBadge {
   icon: React.ReactNode;
@@ -30,9 +30,9 @@ const badges: TrustBadge[] = [
     description: "Backup diário",
   },
   {
-    icon: <img src={stripeLogo} alt="Stripe" className="h-5 w-auto" />,
+    icon: <img src={mercadoPagoLogo} alt="Mercado Pago" className="h-5 w-auto" />,
     title: "Pagamento Seguro",
-    description: "Powered by Stripe",
+    description: "Powered by Mercado Pago",
     isImage: true,
   },
 ];
