@@ -303,8 +303,9 @@ ESTRUTURA OBRIGATÓRIA:
 };
 
 interface ReportRequest {
-  reportType: keyof typeof REPORT_TEMPLATES;
-  companyData: {
+  reportType?: keyof typeof REPORT_TEMPLATES;
+  format?: "full" | "text"; // text = quick summary for Clara /resumo command
+  companyData?: {
     nome?: string;
     regime?: string;
     setor?: string;
@@ -369,8 +370,63 @@ Deno.serve(async (req) => {
     }
 
     const body: ReportRequest = await req.json();
-    const { reportType, companyData, metrics, customContext } = body;
+    const { reportType, format, companyData, metrics, customContext } = body;
 
+    // Quick summary mode for Clara /resumo command
+    if (format === "text") {
+      // Fetch user's data for quick summary
+      const [dreResult, scoreResult, creditsResult, oppsResult] = await Promise.all([
+        supabase.from("company_dre").select("*").eq("user_id", user.id).order("updated_at", { ascending: false }).limit(1).maybeSingle(),
+        supabase.from("tax_score_history").select("score_grade, score_total").eq("user_id", user.id).order("calculated_at", { ascending: false }).limit(1).maybeSingle(),
+        supabase.from("identified_credits").select("potential_recovery").eq("user_id", user.id).eq("status", "identified"),
+        supabase.from("company_opportunities").select("id").eq("user_id", user.id),
+      ]);
+
+      const dre = dreResult.data;
+      const score = scoreResult.data;
+      const creditsTotal = creditsResult.data?.reduce((sum, c) => sum + (Number(c.potential_recovery) || 0), 0) || 0;
+      const oppsCount = oppsResult.data?.length || 0;
+
+      // Build quick summary
+      let summary = `**📊 Resumo Executivo - ${profile?.empresa || "Sua Empresa"}**\n\n`;
+      
+      if (score) {
+        summary += `**Score Tributário:** ${score.score_grade} (${score.score_total} pontos)\n`;
+      }
+      
+      if (dre) {
+        const faturamento = (dre.calc_receita_bruta || 0);
+        const margemLiquida = dre.calc_margem_liquida || 0;
+        summary += `**Faturamento:** R$ ${faturamento.toLocaleString("pt-BR")}\n`;
+        summary += `**Margem Líquida:** ${(margemLiquida * 100).toFixed(1)}%\n`;
+        
+        if (dre.reforma_impacto_percentual) {
+          const impacto = dre.reforma_impacto_percentual;
+          summary += `**Impacto Reforma:** ${impacto > 0 ? "+" : ""}${(impacto * 100).toFixed(1)}% na carga tributária\n`;
+        }
+      }
+      
+      if (creditsTotal > 0) {
+        summary += `**Créditos Identificados:** R$ ${creditsTotal.toLocaleString("pt-BR")}\n`;
+      }
+      
+      if (oppsCount > 0) {
+        summary += `**Oportunidades Mapeadas:** ${oppsCount}\n`;
+      }
+      
+      if (!score && !dre && creditsTotal === 0) {
+        summary = "Ainda não há dados suficientes para gerar um resumo. Complete o Score Tributário, importe XMLs ou preencha o DRE para ter uma visão completa da sua situação.";
+      } else {
+        summary += `\n💡 Para um relatório completo em PDF, acesse o **Painel Executivo**.`;
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, summary }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Full report mode
     if (!reportType || !REPORT_TEMPLATES[reportType]) {
       return new Response(
         JSON.stringify({ error: "Tipo de relatório inválido" }),
@@ -379,14 +435,15 @@ Deno.serve(async (req) => {
     }
 
     const template = REPORT_TEMPLATES[reportType];
+    const safeCompanyData = companyData || {};
 
     // Construir contexto do usuário
     const userContext = `
 ## DADOS DA EMPRESA
-- Nome: ${companyData.nome || profile?.empresa || "Não informado"}
-- Regime Tributário: ${companyData.regime || "Não informado"}
-- Setor: ${companyData.setor || "Não informado"}
-- Faturamento Mensal: ${companyData.faturamento ? `R$ ${companyData.faturamento.toLocaleString("pt-BR")}` : "Não informado"}
+- Nome: ${safeCompanyData.nome || profile?.empresa || "Não informado"}
+- Regime Tributário: ${safeCompanyData.regime || "Não informado"}
+- Setor: ${safeCompanyData.setor || "Não informado"}
+- Faturamento Mensal: ${safeCompanyData.faturamento ? `R$ ${safeCompanyData.faturamento.toLocaleString("pt-BR")}` : "Não informado"}
 
 ## MÉTRICAS FORNECIDAS
 ${metrics ? JSON.stringify(metrics, null, 2) : "Nenhuma métrica adicional"}
