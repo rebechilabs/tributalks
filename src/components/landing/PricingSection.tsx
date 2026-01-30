@@ -173,8 +173,11 @@ export function PricingSection() {
           {plans.map((plan, index) => {
             const price =
               billingPeriod === "mensal" ? plan.priceMonthly : plan.priceAnnual;
+            // Fallback: se link anual estiver vazio, usa link mensal
             const link =
-              billingPeriod === "mensal" ? plan.linkMonthly : plan.linkAnnual;
+              billingPeriod === "mensal" 
+                ? plan.linkMonthly 
+                : (plan.linkAnnual || plan.linkMonthly);
             const isExternal = link.startsWith("http");
 
             return (
