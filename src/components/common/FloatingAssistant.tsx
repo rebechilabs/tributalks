@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
-import { MessageCircle, X, Sparkles, Send, Loader2, Mic, MicOff, Volume2, VolumeX, Command } from "lucide-react";
+import { Sparkles, Send, Mic, MicOff, Volume2, VolumeX, X } from "lucide-react";
 import { useClaraShortcut } from "@/hooks/useKeyboardShortcuts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import ReactMarkdown from "react-markdown";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
 import { useAuth } from "@/hooks/useAuth";
+import { ClaraFloatingButton } from "./ClaraFloatingButton";
 
 interface Message {
   role: "user" | "assistant";
@@ -711,59 +712,11 @@ Você também pode me fazer qualquer pergunta sobre a Reforma Tributária!`;
         </Card>
       </div>
 
-      {/* Floating Button with tooltip */}
-      <div className="relative">
-        {/* Tooltip bubble */}
-        <div
-          className={`absolute bottom-full right-0 mb-3 transition-all duration-300 ease-out ${
-            isOpen 
-              ? "opacity-0 translate-y-2 pointer-events-none" 
-              : "opacity-100 translate-y-0 pointer-events-auto"
-          }`}
-        >
-          <div className="bg-card border border-primary/30 rounded-lg px-4 py-2 shadow-lg whitespace-nowrap animate-bounce-gentle">
-            <p className="text-sm font-medium text-foreground flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary animate-pulse" />
-              Tire suas dúvidas aqui!
-            </p>
-            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-              <Command className="w-3 h-3" />
-              <span>+K para abrir</span>
-            </p>
-          </div>
-          {/* Arrow pointing down */}
-          <div className="absolute -bottom-2 right-6 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px] border-t-primary/30" />
-        </div>
-
-        {/* Main floating button */}
-        <Button
-          size="lg"
-          className={`rounded-full w-14 h-14 shadow-lg transition-all duration-300 ease-out ${
-            isOpen 
-              ? "bg-muted hover:bg-muted/80 text-muted-foreground rotate-0" 
-              : "bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 hover:scale-110 hover:shadow-xl hover:shadow-primary/25"
-          }`}
-          onClick={() => isOpen ? setIsOpen(false) : handleOpen()}
-        >
-          <span className={`transition-transform duration-300 ${isOpen ? 'rotate-90' : 'rotate-0'}`}>
-            {isOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <MessageCircle className="w-6 h-6" />
-            )}
-          </span>
-        </Button>
-
-        {/* Pulse ring when closed */}
-        {!isOpen && (
-          <>
-            <span className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
-            <span className="absolute top-0 right-0 w-3 h-3 bg-success rounded-full shadow-lg shadow-success/50">
-              <span className="absolute inset-0 rounded-full bg-success animate-ping opacity-75" />
-            </span>
-          </>
-        )}
-      </div>
+      {/* Floating Button */}
+      <ClaraFloatingButton
+        isOpen={isOpen}
+        onClick={() => isOpen ? setIsOpen(false) : handleOpen()}
+      />
     </div>
   );
 }
