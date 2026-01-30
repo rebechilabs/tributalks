@@ -56,6 +56,7 @@ import CalculadoraNBS from "./pages/calculadora/CalculadoraNBS";
 
 // Painel Executivo
 import PainelExecutivo from "./pages/PainelExecutivo";
+import Nexus from "./pages/Nexus";
 
 // Margem Ativa
 import MargemAtiva from "./pages/dashboard/MargemAtiva";
@@ -113,6 +114,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <PainelExecutivo />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/nexus" 
+              element={
+                <ProtectedRoute>
+                  <Nexus />
                 </ProtectedRoute>
               } 
             />

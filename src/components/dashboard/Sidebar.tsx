@@ -83,6 +83,7 @@ const navGroups: NavGroup[] = [
   {
     title: 'Enterprise',
     items: [
+      { label: 'NEXUS', href: '/dashboard/nexus', icon: LayoutDashboard, requiredPlan: 'PROFESSIONAL', badge: 'Novo' },
       { label: 'Painel Executivo', href: '/dashboard/executivo', icon: LayoutDashboard, requiredPlan: 'ENTERPRISE' },
       { label: 'Consultorias', href: '/consultorias', icon: Calendar, requiredPlan: 'ENTERPRISE' },
     ]
