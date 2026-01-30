@@ -1,41 +1,62 @@
 
 
-# Plano: Adicionar Faixas de Faturamento Menores
+# Plano: Corrigir Resposta da Clara AI que não aparece
 
-## Contexto
+## Diagnóstico
 
-Atualmente, as faixas de faturamento mensal no perfil começam em **R$1M/mês**, excluindo empresas com faturamento menor.
+A Clara AI não está exibindo respostas porque existe uma **incompatibilidade de formato**:
 
-**Faixas atuais:**
-- R$1M - R$2,5M/mês
-- R$2,5M - R$5M/mês
-- R$5M - R$10M/mês
-- R$10M - R$25M/mês
-- R$25M - R$50M/mês
-- Acima de R$50M/mês
+| Componente | Formato Esperado | Formato Recebido |
+|------------|------------------|------------------|
+| `TribuBot.tsx` | Streaming SSE (`data: {...}\n`) | JSON simples (`{"message": "..."}`) |
 
-## Alteração Proposta
+### O que acontece:
+1. Usuário pergunta "Posso mudar de regime no meio do ano?"
+2. Edge function processa e retorna: `{"message": "resposta aqui..."}`
+3. `TribuBot.tsx` tenta ler como stream SSE com `reader.read()`
+4. Procura por linhas começando com `data: `
+5. Não encontra → resposta vazia/ignorada
 
-**Arquivo:** `src/pages/Perfil.tsx`
+## Solução
 
-Adicionar 2 novas faixas no início da lista:
+Modificar `TribuBot.tsx` para detectar e processar **ambos os formatos**:
+- Se resposta é JSON → mostra direto
+- Se resposta é SSE stream → processa como streaming
+
+## Alterações
+
+**Arquivo:** `src/pages/TribuBot.tsx`
+
+### Mudança na função `handleSend`
 
 ```typescript
-const FAIXAS_FATURAMENTO = [
-  { value: '200000', label: 'R$200K - R$500K/mês' },   // NOVA
-  { value: '500000', label: 'R$500K - R$1M/mês' },     // NOVA
-  { value: '1000000', label: 'R$1M - R$2,5M/mês' },
-  { value: '2500000', label: 'R$2,5M - R$5M/mês' },
-  { value: '5000000', label: 'R$5M - R$10M/mês' },
-  { value: '10000000', label: 'R$10M - R$25M/mês' },
-  { value: '25000000', label: 'R$25M - R$50M/mês' },
-  { value: '50000000', label: 'Acima de R$50M/mês' },
-];
+// Após verificar resp.ok (linha 121)
+const contentType = resp.headers.get("content-type");
+
+// Se for JSON (resposta não-streaming)
+if (contentType?.includes("application/json")) {
+  const data = await resp.json();
+  if (data.message) {
+    setMessages(prev => [...prev, { 
+      role: "assistant", 
+      content: data.message 
+    }]);
+  }
+  setDailyCount(prev => prev + 1);
+  return;
+}
+
+// Se for streaming, continua com lógica atual...
 ```
 
-## Resultado Esperado
+## Benefício
 
-- Empresas com faturamento entre R$200K e R$1M poderão selecionar sua faixa correta
-- Seleções existentes de usuários continuam funcionando normalmente
-- O dropdown mostrará 8 opções em vez de 6
+- Clara responderá corretamente a todas as perguntas
+- Mantém compatibilidade com streaming (futuro)
+- Não requer mudanças na edge function
+
+## Impacto
+
+- **Arquivos alterados:** 1 (`TribuBot.tsx`)
+- **Risco:** Baixo (apenas adiciona tratamento alternativo)
 
