@@ -1,48 +1,58 @@
 
-# Plano de Implementação: Suíte Margem Ativa 2026
+# Plano de Implementação: Mercado Pago
 
-## Visao Geral
+## Visão Geral
 
-A **Suite Margem Ativa 2026** e um centro de comando integrado para a transicao tributaria CBS/IBS, composto por dois modulos complementares que resolvem o problema de margem de ponta a ponta:
-
-| Modulo | Foco | Problema Resolvido |
-|--------|------|-------------------|
-| **OMC-AI** | Compras | Fornecedores que parecem baratos mas "drenam" margem por falta de credito |
-| **PriceGuard** | Vendas | Preco mal calculado que ou destrói margem ou perde competitividade |
-
-**Diferencial Competitivo:** Unico no mercado que integra DRE (financeiro) + Radar de Creditos (fiscal) + RTC (aliquotas oficiais) + Historico de XMLs para calcular impacto real no EBITDA.
+Adicionar o **Mercado Pago** como opção alternativa de pagamento ao lado do Stripe já existente. Isso permitirá que clientes brasileiros paguem com métodos locais como PIX, boleto e cartões nacionais com parcelamento.
 
 ---
 
-## Arquitetura Tecnica
+## Por que Mercado Pago?
+
+| Vantagem | Detalhes |
+|----------|----------|
+| **PIX instantâneo** | Pagamento em segundos, sem taxa para o cliente |
+| **Boleto bancário** | Opção para quem não tem cartão de crédito |
+| **Parcelamento local** | Até 12x com taxas menores que Stripe |
+| **Preferência do brasileiro** | 80% dos e-commerces BR usam MP |
+
+---
+
+## Arquitetura Técnica
 
 ```text
 +------------------------------------------------------------------+
-|                    Suite Margem Ativa 2026                        |
+|                    Fluxo de Pagamento                             |
 +------------------------------------------------------------------+
 |                                                                   |
-|  +---------------------------+  +-----------------------------+   |
-|  |        OMC-AI             |  |        PriceGuard           |   |
-|  |   (Inteligencia de       |  |   (Inteligencia de          |   |
-|  |        Compras)           |  |         Vendas)             |   |
-|  +-------------+-------------+  +-------------+---------------+   |
-|                |                              |                   |
-|  +-------------v------------------------------v---------------+   |
-|  |              Motor de Calculo Unificado                    |   |
-|  |  - Custo Efetivo Liquido (fornecedores)                    |   |
-|  |  - Gross-Up Reverso (precos)                               |   |
-|  |  - Projecao de Margem 2026                                 |   |
-|  +-------------+------------------------------+---------------+   |
-|                |                              |                   |
-|  +-------------v--------------+  +------------v---------------+   |
-|  | identified_credits        |  | company_dre                |   |
-|  | (Radar de Creditos)       |  | (DRE Inteligente)          |   |
-|  +---------------------------+  +-----------------------------+   |
-|                                                                   |
-|  +---------------------------+  +-----------------------------+   |
-|  | company_ncm_analysis      |  | calculate-rtc              |   |
-|  | (Catalogo NCM)            |  | (API RFB)                  |   |
-|  +---------------------------+  +-----------------------------+   |
+|  Usuário escolhe plano                                            |
+|         |                                                         |
+|         v                                                         |
+|  +----------------+                                               |
+|  | Selecionar     |                                               |
+|  | Gateway        |                                               |
+|  +-------+--------+                                               |
+|          |                                                        |
+|    +-----+-----+                                                  |
+|    |           |                                                  |
+|    v           v                                                  |
+| [Stripe]    [Mercado Pago]                                        |
+|    |           |                                                  |
+|    v           v                                                  |
+| Payment     Preference API                                        |
+| Links       (Edge Function)                                       |
+|    |           |                                                  |
+|    v           v                                                  |
+| stripe-     mercadopago-                                          |
+| webhook     webhook                                               |
+|    |           |                                                  |
+|    +-----+-----+                                                  |
+|          |                                                        |
+|          v                                                        |
+|  +----------------+                                               |
+|  | profiles       |                                               |
+|  | (plano, status)|                                               |
+|  +----------------+                                               |
 |                                                                   |
 +------------------------------------------------------------------+
 ```
@@ -51,452 +61,230 @@ A **Suite Margem Ativa 2026** e um centro de comando integrado para a transicao 
 
 ## Banco de Dados
 
-### Tabela 1: `suppliers` (Consolidacao de Fornecedores)
-
-Nova tabela para agregar dados de fornecedores extraidos dos XMLs.
+### Tabela existente `profiles` - campos a adicionar:
 
 ```sql
--- Campos principais
-- id, user_id, cnpj, razao_social
-- regime_tributario (simples, presumido, real, desconhecido)
-- regime_confianca (high, medium, low) - nivel de certeza da classificacao
-- total_compras_12m (valor total de compras nos ultimos 12 meses)
-- qtd_notas_12m (quantidade de notas processadas)
-- ncms_frequentes (array dos NCMs mais comprados)
-- uf, municipio, cnae_principal
-- aliquota_credito_estimada (0-26.5% baseado no regime)
-- custo_efetivo_score (0-100, quanto maior, mais eficiente)
-- classificacao (manter, renegociar, substituir)
-- ultima_atualizacao, created_at
+-- Adicionar campos para Mercado Pago
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS 
+  mp_customer_id TEXT,
+  mp_subscription_id TEXT,
+  payment_provider TEXT DEFAULT 'stripe'; -- 'stripe' ou 'mercadopago'
 ```
 
-### Tabela 2: `supplier_analysis` (Analise Detalhada por Fornecedor)
-
-Historico de analises do OMC-AI para cada fornecedor.
+### Nova tabela `mp_subscription_events` (log de eventos):
 
 ```sql
--- Campos principais
-- id, user_id, supplier_id
-- periodo_inicio, periodo_fim
-- valor_nominal_total (soma das notas)
-- valor_tributos_pagos (ICMS + PIS + COFINS)
-- credito_aproveitado_atual
-- credito_potencial_2026 (projecao CBS/IBS)
-- gap_credito (diferenca = vazamento de margem)
-- custo_efetivo_liquido
-- preco_indiferenca (preco equivalente se fosse Lucro Real)
-- recomendacao (manter, renegociar_X%, substituir)
-- status (pendente, analisado, acao_tomada)
-```
-
-### Tabela 3: `price_simulations` (Simulacoes de Preco PriceGuard)
-
-Tabela para armazenar simulacoes de precificacao por SKU/produto.
-
-```sql
--- Campos principais
-- id, user_id, created_at, updated_at
-- sku_code, product_name, ncm_code, nbs_code
-- uf, municipio_codigo, municipio_nome
--- Dados atuais (2025)
-- preco_atual, custo_unitario, despesa_proporcional, margem_atual_percent
-- aliquota_pis_cofins, aliquota_icms, aliquota_iss, aliquota_ipi
--- Aliquotas 2026 (CBS/IBS)
-- aliquota_cbs, aliquota_ibs_uf, aliquota_ibs_mun, aliquota_is
--- Creditos de insumo
-- credito_insumo_estimado, credito_fonte (radar, estimativa, manual)
--- Resultados calculados
-- preco_2026_necessario, variacao_preco_percent
-- margem_2026_mantida, lucro_unitario_atual, lucro_unitario_2026
--- Analise de competitividade
-- preco_concorrente, gap_competitivo_percent, recomendacao
--- Cenarios
-- cenario_pessimista (JSONB), cenario_otimista (JSONB)
--- Metadata
-- simulation_batch_id, data_quality (A, B, C)
-```
-
-### Tabela 4: `margin_dashboard` (Consolidacao Executiva)
-
-Visao consolidada do impacto no EBITDA para o Painel Executivo.
-
-```sql
--- Campos principais
-- id, user_id, periodo_referencia
--- OMC-AI (Compras)
-- total_compras_analisado
-- gap_credito_total (vazamento de margem identificado)
-- economia_potencial_renegociacao
-- fornecedores_criticos (qtd com gap > 10%)
--- PriceGuard (Vendas)
-- skus_simulados
-- variacao_media_preco
-- gap_competitivo_medio
-- risco_perda_margem
--- Consolidado
-- impacto_ebitda_anual_min, impacto_ebitda_anual_max
-- score_prontidao (0-100)
-- created_at, updated_at
+CREATE TABLE mp_subscription_events (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  mp_event_id TEXT UNIQUE,
+  event_type TEXT NOT NULL,
+  payload JSONB,
+  processed BOOLEAN DEFAULT false,
+  processed_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
 ```
 
 ---
 
 ## Edge Functions
 
-### 1. `analyze-suppliers` - Consolidador de Fornecedores
+### 1. `mercadopago-create-preference`
 
-Processa os dados de `identified_credits` e `xml_analysis` para criar/atualizar o cadastro consolidado de fornecedores.
+Cria uma preferência de pagamento (equivalente ao checkout do Stripe).
 
-**Logica Principal:**
-1. Agrupa `identified_credits` por `supplier_cnpj`
-2. Calcula metricas agregadas (total compras, qtd notas, NCMs frequentes)
-3. Classifica regime tributario usando heuristicas:
-   - CST ICMS 101-103 -> Simples Nacional
-   - Destaque de ICMS com credito -> Lucro Real/Presumido
-   - Sem destaque -> Simples ou MEI
-4. Calcula `aliquota_credito_estimada` baseado no regime
-5. Persiste na tabela `suppliers`
+```typescript
+// Entrada
+{
+  plan: 'NAVIGATOR' | 'PROFESSIONAL',
+  billing: 'monthly' | 'annual',
+  user_email: string,
+  user_id: string
+}
 
-### 2. `calculate-supplier-cost` - Motor OMC-AI
-
-Calcula o Custo Efetivo Liquido e Preco de Indiferenca para cada fornecedor.
-
-**Formula Principal:**
-```
-Custo Efetivo Liquido = Preco Nominal * (1 - Aliquota Credito)
-
-Preco de Indiferenca = Preco Nominal Fornecedor B / (1 - Aliquota Credito B) * (1 - Aliquota Credito A)
+// Saída
+{
+  init_point: string,  // URL para redirecionar o usuário
+  preference_id: string
+}
 ```
 
-**Exemplo:**
-- Fornecedor A (Simples): R$ 10.000, credito 4% -> Custo Liquido = R$ 9.600
-- Fornecedor B (Lucro Real): R$ 12.000, credito 26.5% -> Custo Liquido = R$ 8.820
-- Fornecedor B e 8.1% mais barato apesar do preco nominal maior
+**Lógica:**
+1. Recebe plano e período
+2. Busca preço correspondente
+3. Cria preference na API do Mercado Pago
+4. Retorna URL de checkout
 
-### 3. `calculate-price-guard` - Motor PriceGuard
+### 2. `mercadopago-webhook`
 
-Calcula o preco de venda necessario para manter margem pos-reforma.
+Processa notificações de pagamento do Mercado Pago.
 
-**Formula Gross-Up Reverso:**
-```
-Preco 2026 = (Custo Unitario + Despesa - Credito Insumo) / (1 - Aliquota Nova) / (1 - Margem Desejada)
-```
+**Eventos tratados:**
+- `payment.approved` - Pagamento aprovado (ativa plano)
+- `payment.pending` - Pagamento pendente (PIX/Boleto aguardando)
+- `payment.rejected` - Pagamento rejeitado
+- `subscription_preapproval.authorized` - Assinatura ativada
+- `subscription_preapproval.paused` - Assinatura pausada
+- `subscription_preapproval.cancelled` - Assinatura cancelada
 
-**Integracao:**
-- Puxa margem do `company_dre` mais recente
-- Puxa creditos de insumo do `identified_credits`
-- Busca aliquotas oficiais via `calculate-rtc`
+**Lógica (similar ao stripe-webhook):**
+1. Valida assinatura do webhook
+2. Extrai dados do evento
+3. Busca usuário por `external_reference` (user_id)
+4. Atualiza `profiles` com plano correto
+5. Registra evento em `mp_subscription_events`
 
-### 4. `sync-margin-dashboard` - Consolidador Executivo
+---
 
-Agrega dados das duas ferramentas para o Painel Executivo.
+## Configuração de Secrets
+
+Adicionar ao projeto:
+
+| Secret | Descrição |
+|--------|-----------|
+| `MERCADOPAGO_ACCESS_TOKEN` | Token de acesso da conta MP |
+| `MERCADOPAGO_PUBLIC_KEY` | Chave pública (para frontend) |
+| `MERCADOPAGO_WEBHOOK_SECRET` | Segredo para validar webhooks |
 
 ---
 
 ## Componentes de UI
 
-### Estrutura de Arquivos
+### 1. Atualizar `PricingSection.tsx`
 
-```
-src/
-  pages/
-    dashboard/
-      MargemAtiva.tsx           # Hub da Suite (3 abas)
-      
-  components/
-    margem-ativa/
-      index.ts                  # Exports
-      MargemAtivaHeader.tsx     # Header com KPIs consolidados
-      
-      # OMC-AI (Compras)
-      omc/
-        SupplierTable.tsx       # Lista de fornecedores
-        SupplierAnalysisCard.tsx # Detalhe do fornecedor
-        SupplierGapChart.tsx    # Grafico de gap por fornecedor
-        IndifferentPriceModal.tsx # Calculadora de indiferenca
-        SupplierRecommendations.tsx # Lista de acoes sugeridas
-        
-      # PriceGuard (Vendas)  
-      priceguard/
-        PriceGuardForm.tsx      # Formulario de entrada
-        PriceGuardResults.tsx   # Resultados da simulacao
-        PriceSimulationTable.tsx # Tabela de SKUs
-        SensitivityChart.tsx    # Grafico de sensibilidade
-        CompetitiveGapAlert.tsx # Alerta de gap
-        
-      # Dashboard Executivo
-      executive/
-        MarginImpactCard.tsx    # Impacto consolidado no EBITDA
-        ActionPriorityList.tsx  # Lista de acoes priorizadas
-        MarginPdfReport.tsx     # Gerador de PDF executivo
-        
-  hooks/
-    useSupplierAnalysis.ts      # Dados de fornecedores
-    usePriceGuard.ts            # Simulacoes de preco
-    useMarginDashboard.ts       # Dados consolidados
-```
-
-### Tela Principal: Hub da Suite
+Adicionar seletor de método de pagamento:
 
 ```text
-+------------------------------------------------------------------+
-| Suite Margem Ativa 2026                                           |
-| Proteja sua margem na transicao da Reforma Tributaria             |
-+------------------------------------------------------------------+
-| KPIs Consolidados                                                 |
-| +------------------+ +------------------+ +--------------------+  |
-| | Vazamento de     | | Variacao de      | | Impacto no         |  |
-| | Credito          | | Preco Necessaria | | EBITDA Anual       |  |
-| | R$ 245.000/ano   | | +8,2% medio      | | -R$ 180k a +R$ 95k |  |
-| +------------------+ +------------------+ +--------------------+  |
-+------------------------------------------------------------------+
-| [OMC-AI Compras] [PriceGuard Vendas] [Dashboard Executivo]        |
-+------------------------------------------------------------------+
-|                                                                   |
-| (Conteudo da aba selecionada)                                     |
-|                                                                   |
-+------------------------------------------------------------------+
++------------------------------------------+
+|  Como você prefere pagar?                |
+|                                          |
+|  [💳 Cartão Internacional (Stripe)]      |
+|  [🇧🇷 PIX, Boleto ou Cartão (Mercado Pago)] |
+|                                          |
++------------------------------------------+
 ```
 
-### Aba 1: OMC-AI (Compras)
+### 2. Componente `PaymentGatewaySelector`
 
-```text
-+------------------------------------------------------------------+
-| Analise de Fornecedores                   [Atualizar] [Exportar]  |
-+------------------------------------------------------------------+
-| Filtros: [Todos os regimes v] [Gap > 5% v] [Ordenar: Gap v]       |
-+------------------------------------------------------------------+
-| Fornecedor        | Regime    | Compras 12m | Gap      | Acao    |
-|-------------------|-----------|-------------|----------|---------|
-| Tech Solutions    | Simples   | R$ 180.000  | R$ 42.300| Subst.  |
-| Office Express    | Presumido | R$ 95.000   | R$ 8.200 | Reneg.  |
-| Logistica Agil    | Real      | R$ 320.000  | R$ 0     | Manter  |
-+------------------------------------------------------------------+
-|                                                                   |
-| Detalhes: Tech Solutions Ltda                          [X]        |
-| CNPJ: 12.345.678/0001-90 | Regime: Simples Nacional               |
-| --------------------------------------------------------          |
-| Preco Nominal Total:           R$ 180.000,00                      |
-| Credito de IBS/CBS Estimado:   R$ 7.200,00 (4%)                   |
-| Custo Efetivo Liquido:         R$ 172.800,00                      |
-| --------------------------------------------------------          |
-| Se fosse Lucro Real (26,5%):   R$ 132.300,00                      |
-| GAP de Credito (vazamento):    R$ 40.500,00/ano                   |
-| --------------------------------------------------------          |
-| Preco de Indiferenca:                                             |
-| "Para continuar competitivo, o fornecedor precisaria              |
-|  reduzir o preco para R$ 147.000 (-18,3%)"                        |
-| --------------------------------------------------------          |
-| [Gerar Script de Renegociacao] [Buscar Alternativas]              |
-+------------------------------------------------------------------+
-```
-
-### Aba 2: PriceGuard (Vendas)
-
-```text
-+------------------------------------------------------------------+
-| Simulador de Precos 2026                  [Importar NCMs] [Novo]  |
-+------------------------------------------------------------------+
-| Resumo: 45 SKUs simulados | Variacao media: +8,2% | Gap: R$ 45k   |
-+------------------------------------------------------------------+
-| SKU      | NCM       | Preco Atual | Preco 2026 | Var.  | Gap    |
-|----------|-----------|-------------|------------|-------|--------|
-| PROD-001 | 69101100  | R$ 150,00   | R$ 162,15  | +8,1% | 3%     |
-| PROD-002 | 84713012  | R$ 500,00   | R$ 548,00  | +9,6% | -      |
-| SERV-001 | 1234567890| R$ 200,00   | R$ 218,00  | +9,0% | 5%     |
-+------------------------------------------------------------------+
-|                                                                   |
-| Simulacao Detalhada: PROD-001                          [X]        |
-| --------------------------------------------------------          |
-|           ATUAL (2025)          |    PROJECAO 2026                |
-| Preco de Venda: R$ 150,00       | R$ 162,15 (+8,1%)               |
-| Custo Unitario: R$ 80,00        | R$ 80,00                        |
-| Aliquota Total: 9,25% (PIS/COF) | 26,5% (CBS/IBS)                 |
-| Credito Insumo: -               | R$ 12,50                        |
-| --------------------------------------------------------          |
-| Margem Liquida: 18%             | 18% (mantida)                   |
-| Lucro Unitario: R$ 27,00        | R$ 29,19                        |
-| --------------------------------------------------------          |
-| Preco do concorrente: R$ [______]                                 |
-| Se o mercado so suporta +5%, voce tem um gap de 3,1%              |
-| para buscar em eficiencia (veja OMC-AI).                          |
-| --------------------------------------------------------          |
-| [Recalcular] [Salvar] [Gerar PDF]                                 |
-+------------------------------------------------------------------+
-```
-
-### Aba 3: Dashboard Executivo
-
-```text
-+------------------------------------------------------------------+
-| Impacto Consolidado no EBITDA               [Atualizar] [PDF]     |
-+------------------------------------------------------------------+
-|                                                                   |
-| +-------------------------+  +-------------------------------+    |
-| | VAZAMENTO DE MARGEM     |  | PROTECAO DE MARGEM            |    |
-| | (Compras - OMC-AI)      |  | (Vendas - PriceGuard)         |    |
-| |                         |  |                               |    |
-| | Gap de Credito Total    |  | Variacao Media de Preco       |    |
-| | R$ 245.000/ano          |  | +8,2%                         |    |
-| |                         |  |                               |    |
-| | Fornecedores Criticos   |  | SKUs em Risco Competitivo     |    |
-| | 12 (gap > 10%)          |  | 8 (gap > 5%)                  |    |
-| |                         |  |                               |    |
-| | Economia Potencial      |  | Risco de Perda de Margem      |    |
-| | R$ 180.000/ano          |  | R$ 95.000/ano                 |    |
-| +-------------------------+  +-------------------------------+    |
-|                                                                   |
-| +-------------------------------------------------------------+  |
-| | IMPACTO LIQUIDO NO EBITDA 2026                              |  |
-| |                                                             |  |
-| | Cenario Pessimista: -R$ 180.000 (sem acoes)                 |  |
-| | Cenario Otimista:   +R$ 95.000 (acoes implementadas)        |  |
-| | =========================================================== |  |
-| | Delta: R$ 275.000 de valor capturavel                       |  |
-| +-------------------------------------------------------------+  |
-|                                                                   |
-| Acoes Priorizadas:                                                |
-| 1. Renegociar Tech Solutions (R$ 42k/ano) [Alta]                  |
-| 2. Ajustar preco PROD-002 (+9,6%) [Media]                         |
-| 3. Substituir Office Express (R$ 8k/ano) [Media]                  |
-|                                                                   |
-+------------------------------------------------------------------+
-```
-
----
-
-## Roadmap de Implementacao (4 Meses)
-
-### Mes 1: Fundacao e OMC-AI Basico
-
-**Semana 1-2: Banco de Dados**
-- Criar tabelas `suppliers`, `supplier_analysis`, `price_simulations`, `margin_dashboard`
-- Configurar RLS policies
-- Criar indices para performance
-
-**Semana 3-4: OMC-AI Core**
-- Edge Function `analyze-suppliers` (consolidador)
-- Edge Function `calculate-supplier-cost` (motor de calculo)
-- UI basica: `SupplierTable`, `SupplierAnalysisCard`
-- Integrar com dados existentes de `identified_credits`
-
-### Mes 2: PriceGuard Basico
-
-**Semana 1-2: Motor de Calculo**
-- Edge Function `calculate-price-guard`
-- Integracao com API RTC existente
-- Integracao com DRE para puxar margens
-
-**Semana 3-4: UI PriceGuard**
-- `PriceGuardForm` (entrada manual)
-- `PriceGuardResults` (resultados)
-- `PriceSimulationTable` (lista de SKUs)
-- Importacao de NCMs do catalogo existente
-
-### Mes 3: Integracao e Dashboard
-
-**Semana 1-2: Hub da Suite**
-- Pagina principal `MargemAtiva.tsx` com 3 abas
-- `MargemAtivaHeader` com KPIs consolidados
-- Edge Function `sync-margin-dashboard`
-
-**Semana 3-4: Features Avancadas**
-- `SensitivityChart` (analise de cenarios)
-- `IndifferentPriceModal` (calculadora de indiferenca)
-- `CompetitiveGapAlert` (alertas de gap)
-- Conexao entre OMC-AI e PriceGuard (CTA cruzada)
-
-### Mes 4: Polish e Lancamento
-
-**Semana 1-2: Relatorios e Exportacao**
-- `MarginPdfReport` (PDF executivo consolidado)
-- Exportacao de tabela de precos 2026
-- Script de renegociacao para fornecedores
-
-**Semana 3-4: Testes e Lancamento**
-- Testes alpha com 5 clientes
-- Refinamento de UX
-- Integracao com Painel Executivo existente
-- Documentacao e onboarding
-
----
-
-## Integracao com Navegacao
-
-### Adicionar no Sidebar
+Novo componente para escolher gateway:
 
 ```typescript
-// Em navGroups, adicionar novo grupo "Margem Ativa"
-{
-  title: 'Margem Ativa',
-  items: [
-    { 
-      label: 'Suite Margem Ativa', 
-      href: '/dashboard/margem-ativa', 
-      icon: TrendingUp, 
-      requiredPlan: 'ENTERPRISE', 
-      badge: 'Novo' 
-    },
-  ]
+interface PaymentGatewaySelectorProps {
+  plan: 'NAVIGATOR' | 'PROFESSIONAL';
+  billing: 'monthly' | 'annual';
+  onSelect: (gateway: 'stripe' | 'mercadopago') => void;
 }
 ```
 
-### Adicionar Rota no App.tsx
+### 3. Atualizar `config/site.ts`
+
+Adicionar links do Mercado Pago:
 
 ```typescript
-import MargemAtiva from "./pages/dashboard/MargemAtiva";
-
-// Dentro de Routes
-<Route 
-  path="/dashboard/margem-ativa" 
-  element={
-    <ProtectedRoute>
-      <MargemAtiva />
-    </ProtectedRoute>
-  } 
-/>
+MERCADOPAGO_PREFERENCES: {
+  NAVIGATOR_MENSAL: null, // Será gerado dinamicamente
+  NAVIGATOR_ANUAL: null,
+  PROFESSIONAL_MENSAL: null,
+  PROFESSIONAL_ANUAL: null,
+},
+MERCADOPAGO_PRICES: {
+  NAVIGATOR_MENSAL: 997,
+  NAVIGATOR_ANUAL: 9970,
+  PROFESSIONAL_MENSAL: 2997,
+  PROFESSIONAL_ANUAL: 29970,
+}
 ```
 
 ---
 
-## Monetizacao
+## Fluxo de Checkout Mercado Pago
 
-| Modelo | Preco | Justificativa |
-|--------|-------|---------------|
-| Add-on Premium | R$ 3.800/mes | Empresas que ja usam outras ferramentas |
-| Pacote Full | R$ 5.500/mes | Suite completa + Painel Executivo |
-
-**ROI para o Cliente:**
-- Empresa com R$ 1M/mes em compras -> 1% de otimizacao = R$ 10.000/mes
-- Erro de 2% em repasse de precos em empresa de R$ 10M/ano = R$ 200k de prejuizo
-- O software se paga em menos de 1 mes
-
-**Perfil de Cliente Ideal:**
-- Faturamento: R$ 50M - R$ 200M/ano
-- Regime: Lucro Real ou Presumido
-- Setor: Varejo, Industria leve, Servicos
-- Dor: Margens apertadas (3-10%) + Alto volume de fornecedores
+1. Usuário clica em "Assinar" e escolhe "Mercado Pago"
+2. Frontend chama Edge Function `mercadopago-create-preference`
+3. Edge Function cria preference na API MP com:
+   - Itens (plano escolhido)
+   - `external_reference` = user_id
+   - `notification_url` = URL do webhook
+   - `back_urls` (success, pending, failure)
+4. Usuário é redirecionado para checkout do Mercado Pago
+5. Após pagamento, MP envia notificação para webhook
+6. Webhook atualiza `profiles` com plano ativo
 
 ---
 
-## Pontos de Atencao Tecnicos
+## Arquivos a Criar/Modificar
 
-1. **Performance:** Agregacao de `identified_credits` pode ser pesada. Considerar materialized views ou cache.
+### Novos arquivos:
 
-2. **Classificacao de Regime:** A heuristica de CST/CSOSN tem ~80% de acuracia. Permitir correcao manual pelo usuario.
+```
+supabase/functions/mercadopago-create-preference/index.ts
+supabase/functions/mercadopago-webhook/index.ts
+src/components/payment/PaymentGatewaySelector.tsx
+src/hooks/useMercadoPago.ts
+```
 
-3. **Volatilidade de Aliquotas:** Aliquotas de IBS/CBS podem mudar ate 2026. Usar campos parametrizaveis com defaults.
+### Arquivos a modificar:
 
-4. **Integracao DRE:** Garantir que o DRE mais recente seja usado para calculos de margem.
-
-5. **API RTC:** Rate limiting da API oficial. Implementar cache de aliquotas por NCM.
+```
+src/config/site.ts                    # Adicionar configurações MP
+src/components/landing/PricingSection.tsx  # Adicionar seletor de gateway
+supabase/migrations/xxx_add_mercadopago_fields.sql
+```
 
 ---
 
-## Proximos Passos Apos Aprovacao
+## Roadmap de Implementação
 
-1. Criar migracao SQL para as 4 novas tabelas
-2. Desenvolver Edge Function `analyze-suppliers`
-3. Implementar UI basica do OMC-AI
-4. Testar com dados reais de `identified_credits`
-5. Iterar com feedback de usuarios beta
+### Fase 1: Fundação (1 dia)
+- Criar migração SQL (campos MP em profiles, tabela de eventos)
+- Criar Edge Function `mercadopago-create-preference`
+- Configurar secrets do Mercado Pago
+
+### Fase 2: Webhook (1 dia)
+- Criar Edge Function `mercadopago-webhook`
+- Testar com sandbox do MP
+- Validar atualização de planos
+
+### Fase 3: UI (1 dia)
+- Criar `PaymentGatewaySelector`
+- Atualizar `PricingSection` com opção MP
+- Adicionar fluxo de redirecionamento
+
+### Fase 4: Testes e Deploy (1 dia)
+- Testar fluxo completo em sandbox
+- Configurar produção no MP
+- Deploy e monitoramento
+
+---
+
+## Preços no Mercado Pago
+
+| Plano | Mensal | Anual |
+|-------|--------|-------|
+| Navigator | R$ 997 | R$ 9.970 |
+| Professional | R$ 2.997 | R$ 29.970 |
+
+---
+
+## Considerações Técnicas
+
+1. **Assinaturas recorrentes:** O Mercado Pago tem API de assinaturas (`preapproval`), mas é mais complexa que o Stripe. Para MVP, podemos usar pagamentos únicos + renovação manual ou lembrete.
+
+2. **PIX:** Funciona como pagamento único. Para assinaturas, o cliente recebe lembrete mensal.
+
+3. **Boleto:** Tem prazo de 3 dias para pagamento. O plano só ativa após compensação.
+
+4. **Webhook validation:** O MP usa assinatura `x-signature` diferente do Stripe. Implementar validação específica.
+
+5. **Ambiente sandbox:** Testar com credenciais de teste antes de produção.
+
+---
+
+## Próximos Passos Após Aprovação
+
+1. Solicitar configuração das secrets do Mercado Pago
+2. Criar migração SQL para novos campos
+3. Desenvolver Edge Function `mercadopago-create-preference`
+4. Desenvolver Edge Function `mercadopago-webhook`
+5. Atualizar UI com seletor de gateway
+6. Testar fluxo completo em sandbox
