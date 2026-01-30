@@ -454,8 +454,8 @@ Para conversar comigo e ter orientação personalizada sobre a Reforma Tributár
 
 💡 **Suas opções:**
 - **Starter (R$ 297/mês)** - 30 mensagens/dia comigo
-- **Navigator (R$ 697/mês)** - 100 mensagens/dia comigo
-- **Professional (R$ 1.997/mês)** - Mensagens ilimitadas
+- **Navigator (R$ 1.997/mês)** - 100 mensagens/dia comigo
+- **Professional (R$ 2.997/mês)** - Mensagens ilimitadas
 
 Quer conhecer os planos?`,
 
