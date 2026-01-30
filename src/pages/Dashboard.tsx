@@ -14,6 +14,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatBrasilia } from "@/lib/dateUtils";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { ClaraCard } from "@/components/dashboard/ClaraCard";
+import { ExecutiveSummaryCard } from "@/components/dashboard/ExecutiveSummaryCard";
+import { useExecutiveData } from "@/hooks/useExecutiveData";
+
 interface CalcItem {
   id: string;
   slug: string;
@@ -175,6 +178,21 @@ const PLAN_HIERARCHY: Record<string, number> = {
   'ENTERPRISE': 3,
 };
 
+// Wrapper para o ExecutiveSummaryCard com dados do hook
+function ExecutiveSummaryCardWrapper({ currentPlan, userId }: { currentPlan: string; userId?: string }) {
+  const { thermometerData, loading } = useExecutiveData(userId);
+  
+  return (
+    <div className="mb-8">
+      <ExecutiveSummaryCard 
+        thermometerData={thermometerData} 
+        loading={loading} 
+        userPlan={currentPlan} 
+      />
+    </div>
+  );
+}
+
 const Dashboard = () => {
   const { user, profile } = useAuth();
   const [simulations, setSimulations] = useState<Simulation[]>([]);
@@ -280,6 +298,9 @@ const Dashboard = () => {
         <div className="mb-8">
           <ClaraCard />
         </div>
+
+        {/* Resumo Executivo - Semáforo do CEO/CFO */}
+        <ExecutiveSummaryCardWrapper currentPlan={currentPlan} userId={user?.id} />
 
         {/* GPS DA REFORMA - Section right after Clara */}
         <section className="mb-8">
