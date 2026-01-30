@@ -1800,11 +1800,13 @@ export type Database = {
           avg_margem_bruta: number | null
           avg_margem_liquida: number | null
           avg_margem_operacional: number | null
+          avg_score: number | null
           cnae_code: string
           cnae_description: string | null
           company_size: string | null
           created_at: string | null
           id: string
+          score_percentile_data: Json | null
           sector_name: string
           source: string | null
           typical_custo_aluguel_percent: number | null
@@ -1816,11 +1818,13 @@ export type Database = {
           avg_margem_bruta?: number | null
           avg_margem_liquida?: number | null
           avg_margem_operacional?: number | null
+          avg_score?: number | null
           cnae_code: string
           cnae_description?: string | null
           company_size?: string | null
           created_at?: string | null
           id?: string
+          score_percentile_data?: Json | null
           sector_name: string
           source?: string | null
           typical_custo_aluguel_percent?: number | null
@@ -1832,11 +1836,13 @@ export type Database = {
           avg_margem_bruta?: number | null
           avg_margem_liquida?: number | null
           avg_margem_operacional?: number | null
+          avg_score?: number | null
           cnae_code?: string
           cnae_description?: string | null
           company_size?: string | null
           created_at?: string | null
           id?: string
+          score_percentile_data?: Json | null
           sector_name?: string
           source?: string | null
           typical_custo_aluguel_percent?: number | null

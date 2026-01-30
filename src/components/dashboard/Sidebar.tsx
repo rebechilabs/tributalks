@@ -6,6 +6,7 @@ import {
   MapPin, ShieldCheck, FileSearch, Route, Briefcase, ClipboardCheck, Plug, Gift
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useUnreadNotificationsByCategory } from "@/hooks/useUnreadNotificationsByCategory";
 import logoTributalks from "@/assets/logo-tributalks.png";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
@@ -108,8 +109,17 @@ const PLAN_HIERARCHY: Record<string, number> = {
 export function Sidebar() {
   const location = useLocation();
   const { profile } = useAuth();
+  const { counts: unreadCounts } = useUnreadNotificationsByCategory();
   const rawPlan = profile?.plano || 'FREE';
   const currentPlan = LEGACY_PLAN_MAP[rawPlan] || 'FREE';
+
+  // Map categories to menu items for notification badges
+  const getUnreadForRoute = (href: string): number => {
+    if (href === '/noticias') return unreadCounts.reforma;
+    if (href === '/indicar') return unreadCounts.indicacao;
+    if (href === '/dashboard/oportunidades') return unreadCounts.geral;
+    return 0;
+  };
 
   const hasAccess = (requiredPlan?: string) => {
     if (!requiredPlan) return true;
@@ -132,6 +142,7 @@ export function Sidebar() {
     const Icon = item.icon;
     const isActive = location.pathname === item.href;
     const canAccess = hasAccess(item.requiredPlan);
+    const unreadCount = getUnreadForRoute(item.href);
 
     if (!canAccess) {
       return (
@@ -161,16 +172,25 @@ export function Sidebar() {
             : "text-muted-foreground hover:text-foreground hover:bg-muted"
         )}
       >
-        <Icon className="w-4 h-4" />
+        <div className="relative">
+          <Icon className="w-4 h-4" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full animate-pulse" />
+          )}
+        </div>
         <span className="flex-1 text-sm font-medium">{item.label}</span>
-        {item.badge && (
+        {unreadCount > 0 ? (
+          <span className="text-xs px-1.5 py-0.5 rounded-full bg-destructive text-destructive-foreground font-medium min-w-[20px] text-center">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        ) : item.badge ? (
           <span className={cn(
             "text-xs px-1.5 py-0.5 rounded",
             isActive ? "bg-primary/20 text-primary" : "bg-primary/10 text-primary"
           )}>
             {item.badge}
           </span>
-        )}
+        ) : null}
       </Link>
     );
   };
