@@ -1913,6 +1913,7 @@ export type Database = {
           onboarding_complete: boolean | null
           percentual_vendas_pj: number | null
           plano: string | null
+          plano_expires_at: string | null
           regime: string | null
           setor: string | null
           stripe_customer_id: string | null
@@ -1942,6 +1943,7 @@ export type Database = {
           onboarding_complete?: boolean | null
           percentual_vendas_pj?: number | null
           plano?: string | null
+          plano_expires_at?: string | null
           regime?: string | null
           setor?: string | null
           stripe_customer_id?: string | null
@@ -1971,6 +1973,7 @@ export type Database = {
           onboarding_complete?: boolean | null
           percentual_vendas_pj?: number | null
           plano?: string | null
+          plano_expires_at?: string | null
           regime?: string | null
           setor?: string | null
           stripe_customer_id?: string | null
