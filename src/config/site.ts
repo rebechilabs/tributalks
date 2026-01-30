@@ -1,7 +1,7 @@
 export const CONFIG = {
   // Payment Links - Mercado Pago
   PAYMENT_LINKS: {
-    // Starter - R$297/mês ou R$3.970/ano (7 dias grátis)
+    // Starter - R$397/mês ou R$3.970/ano (7 dias grátis)
     STARTER_MENSAL: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=8afa4ed679f649fc99fe3ebe6ea6bd94",
     STARTER_ANUAL: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=b816a10f5deb42bd8a92e711f60d5961",
     // Navigator - R$1.297/mês (anual não disponível por enquanto)
