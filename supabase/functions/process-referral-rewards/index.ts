@@ -30,6 +30,54 @@ function getDiscountTier(successfulReferrals: number) {
   return null;
 }
 
+function getDiscountPercent(successfulReferrals: number): number {
+  if (successfulReferrals >= 10) return 20;
+  if (successfulReferrals >= 5) return 15;
+  if (successfulReferrals >= 3) return 10;
+  if (successfulReferrals >= 1) return 5;
+  return 0;
+}
+
+function checkLevelUp(previousCount: number, newCount: number): { leveledUp: boolean; newPercent: number; previousPercent: number } {
+  const previousPercent = getDiscountPercent(previousCount);
+  const newPercent = getDiscountPercent(newCount);
+  return {
+    leveledUp: newPercent > previousPercent,
+    newPercent,
+    previousPercent,
+  };
+}
+
+function getLevelUpNotification(newPercent: number): { title: string; message: string } {
+  switch (newPercent) {
+    case 5:
+      return {
+        title: "🎉 Primeiro Desconto!",
+        message: "Parabéns! Você conquistou 5% de desconto na mensalidade! Continue indicando para aumentar.",
+      };
+    case 10:
+      return {
+        title: "🚀 Nível 2 Desbloqueado!",
+        message: "Você subiu para 10% de desconto! Faltam 2 indicações para o próximo nível.",
+      };
+    case 15:
+      return {
+        title: "⭐ Nível 3 Desbloqueado!",
+        message: "Incrível! Agora você tem 15% de desconto! Faltam 5 indicações para o máximo!",
+      };
+    case 20:
+      return {
+        title: "🏆 Nível Máximo!",
+        message: "Você atingiu o desconto máximo de 20%! Você é um embaixador top do TribuTalks!",
+      };
+    default:
+      return {
+        title: "🚀 Novo Nível!",
+        message: `Parabéns! Você subiu para ${newPercent}% de desconto!`,
+      };
+  }
+}
+
 async function getOrCreateCoupon(stripe: Stripe, tier: { percent: number; couponId: string }) {
   try {
     // Try to retrieve existing coupon
@@ -195,14 +243,32 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (codeData) {
-        const successfulCount = (codeData.successful_referrals || 0) + 1;
+        const previousCount = codeData.successful_referrals || 0;
+        const successfulCount = previousCount + 1;
         const tier = getDiscountTier(successfulCount);
+
+        // Verifica se subiu de nível
+        const levelCheck = checkLevelUp(previousCount, successfulCount);
 
         // Update successful_referrals count
         await supabase
           .from("referral_codes")
           .update({ successful_referrals: successfulCount })
           .eq("user_id", referral.referrer_id);
+
+        // Notificação especial de novo nível (antes da notificação de recompensa)
+        if (levelCheck.leveledUp) {
+          const levelNotification = getLevelUpNotification(levelCheck.newPercent);
+          await supabase.from("notifications").insert({
+            user_id: referral.referrer_id,
+            title: levelNotification.title,
+            message: levelNotification.message,
+            type: "success",
+            category: "indicacao",
+            action_url: "/indicar",
+          });
+          console.log(`Level up notification sent: ${previousCount} -> ${successfulCount} (${levelCheck.previousPercent}% -> ${levelCheck.newPercent}%)`);
+        }
 
         let couponApplied = false;
 
