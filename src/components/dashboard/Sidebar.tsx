@@ -78,7 +78,7 @@ const navGroups: NavGroup[] = [
     ]
   },
   {
-    title: 'IA e Documentos',
+    title: 'Central Inteligente',
     items: [
       { label: 'Analisador de Documentos', href: '/dashboard/analisador-documentos', icon: FileSearch, requiredPlan: 'NAVIGATOR' },
       { label: 'Workflows', href: '/dashboard/workflows', icon: Route, requiredPlan: 'NAVIGATOR' },
