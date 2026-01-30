@@ -1,91 +1,66 @@
 
-# Plano: Atualizar Pacotes de Créditos Clara
+# Plano: Ativar Integração com Circle Community
 
 ## Resumo
 
-Atualizar os pacotes de créditos da Clara AI de (10, 20, 30) para os novos valores (30, 50, 100) com os preços informados.
+Corrigir a URL do Circle e ativar o acesso para usuários NAVIGATOR+ na página de Comunidade.
 
 ---
 
-## Novos Pacotes de Créditos
+## Alterações Necessárias
 
-| Pacote | Créditos | Preço | Preço/Crédito |
-|--------|----------|-------|---------------|
-| Básico | 30 | R$ 74,90 | R$ 2,50 |
-| Intermediário | 50 | R$ 109,90 | R$ 2,20 |
-| Premium | 100 | R$ 199,90 | R$ 2,00 |
+### 1. `src/config/site.ts`
 
-**Regra**: 1 crédito = 1 conversa com a Clara
-
----
-
-## Arquivos a Modificar
-
-### 1. `src/hooks/useUserCredits.ts`
-
-Atualizar a função `getCreditPackages()`:
+Atualizar a URL do Circle:
 
 ```typescript
-export function getCreditPackages(): CreditPackage[] {
-  return [
-    {
-      id: 'credits_30',
-      credits: 30,
-      price: 74.90,
-      priceFormatted: 'R$ 74,90',
-      paymentLink: CONFIG.PAYMENT_LINKS.CREDITS_30 || '',
-    },
-    {
-      id: 'credits_50',
-      credits: 50,
-      price: 109.90,
-      priceFormatted: 'R$ 109,90',
-      paymentLink: CONFIG.PAYMENT_LINKS.CREDITS_50 || '',
-    },
-    {
-      id: 'credits_100',
-      credits: 100,
-      price: 199.90,
-      priceFormatted: 'R$ 199,90',
-      paymentLink: CONFIG.PAYMENT_LINKS.CREDITS_100 || '',
-    },
-  ];
-}
+// De:
+CIRCLE_COMMUNITY: "https://tributalks.circle.so",
+
+// Para:
+CIRCLE_COMMUNITY: "https://tributalksconnect.circle.so",
 ```
 
-### 2. `src/config/site.ts`
+### 2. `src/pages/Comunidade.tsx`
 
-Atualizar as chaves de links de pagamento:
+Alterar o card "Comunidade Circle" para usuários NAVIGATOR+:
 
-```typescript
-PAYMENT_LINKS: {
-  // ... planos existentes ...
-  
-  // Pacotes de créditos Clara (1 crédito = 1 conversa)
-  CREDITS_30: "/cadastro",   // R$ 74,90 - 30 créditos
-  CREDITS_50: "/cadastro",   // R$ 109,90 - 50 créditos  
-  CREDITS_100: "/cadastro",  // R$ 199,90 - 100 créditos
-  
-  // ... restante ...
-}
+- Remover a badge "Em breve"
+- Trocar botão desabilitado por link funcional
+- Abrir o Circle em nova aba
+
+**Antes:**
+```tsx
+<Badge variant="outline">Em breve</Badge>
+...
+<Button disabled className="gap-2">
+  Aguardando lançamento
+</Button>
+```
+
+**Depois:**
+```tsx
+<Badge variant="secondary">{PLAN_LABELS.NAVIGATOR}+</Badge>
+...
+<Button asChild className="gap-2">
+  <a href={CONFIG.CIRCLE_COMMUNITY} target="_blank" rel="noopener noreferrer">
+    Acessar comunidade
+    <ExternalLink className="w-4 h-4" />
+  </a>
+</Button>
 ```
 
 ---
 
-## Correção Adicional
+## Comportamento Final
 
-No arquivo `useUserCredits.ts`, também corrigir o mapeamento legado duplicado (linha 53):
-
-```typescript
-// Atual (incorreto - duplicado do useFeatureAccess.ts)
-'BASICO': 'NAVIGATOR'
-
-// Correto (deve manter consistência)
-'BASICO': 'STARTER'
-```
+| Plano | Acesso Circle |
+|-------|---------------|
+| FREE / STARTER | Bloqueado (card locked com CTA upgrade) |
+| NAVIGATOR+ | Link ativo abrindo em nova aba |
 
 ---
 
-## Próximo Passo
+## Observação sobre Autenticação
 
-Após aprovação, você poderá fornecer os **preference-ids do Mercado Pago** para cada pacote, e eu configurarei os links de pagamento reais.
+O Circle usa autenticação própria (email, Google, Twitter, Facebook). Usuários precisarão fazer login separado no Circle ao acessar pela primeira vez.
