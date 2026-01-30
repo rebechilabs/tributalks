@@ -48,7 +48,7 @@ const plans: Plan[] = [
       { text: "Newsletter Tributalks News", included: true },
       { text: "Compra de créditos Clara", included: true },
     ],
-    ctaText: "Começar trial grátis",
+    ctaText: "Testar 7 dias grátis",
     linkMonthly: CONFIG.PAYMENT_LINKS.STARTER_MENSAL,
     linkAnnual: CONFIG.PAYMENT_LINKS.STARTER_ANUAL,
   },
@@ -133,7 +133,7 @@ export function PricingSection() {
             Escolha seu plano
           </h2>
           <p className="text-muted-foreground text-lg">
-            Comece com 7 dias grátis. Faça upgrade quando fizer sentido.
+            Teste grátis por 7 dias com cartão. Cancele quando quiser.
           </p>
         </div>
 
