@@ -1,447 +1,436 @@
 
-# Plano de Implementação: Melhorias Estratégicas TribuTalks
+# Plano de Implementação: PriceGuard 2026
 
 ## Visão Geral
 
-Análise completa das 10 melhorias propostas com priorização baseada em impacto x esforço. O plano organiza a implementação em 3 ondas progressivas.
+O **PriceGuard 2026** é um simulador de elasticidade de margem que calcula o preço de venda necessário para cada produto/serviço manter o mesmo lucro líquido após a Reforma Tributária (CBS/IBS).
+
+**Diferencial competitivo:** Único no mercado que integra DRE (financeiro) + Radar de Créditos (fiscal) + RTC (alíquotas oficiais) para calcular o "Ponto de Equilíbrio de Margem" por SKU.
 
 ---
 
-## Estado Atual Identificado
+## Arquitetura Técnica
 
-| Funcionalidade | Status Atual | Lacunas |
-|----------------|--------------|---------|
-| **Dashboard** | Lista ferramentas por categoria | Sem progresso, sem resumo de dados, sem próximos passos |
-| **Notificações** | Sistema in-app funcional com Realtime | Sem triggers automáticos, sem resumo semanal |
-| **Score Tributário** | Cálculo único, histórico existe | Sem benchmark, sem integração com DRE/Radar |
-| **Workflows** | Progresso salva no banco | Sem "Continuar" no Dashboard, sem notificação |
-| **Gamificação** | Não existe | Nenhum badge/conquista implementado |
-| **Resumo Executivo** | ExecutiveSummaryCard funcional | Falta botão PDF 1-clique |
-| **Clara Contextual** | Apenas floating button | Sem sugestões por página, sem atalho teclado |
-| **Alertas de Prazo** | check-expiring-benefits existe | Sem filtro por setor/regime no Dashboard |
-| **Conexão Ferramentas** | Isoladas | Sem "próximo passo" contextual |
-| **Onboarding** | 6 etapas funcionais | Sem tour guiado, sem missão inicial |
-
----
-
-## Matriz de Priorização
-
-| Melhoria | Esforço | Impacto | Prioridade |
-|----------|---------|---------|------------|
-| 1. Dashboard Centrado em Progresso | M | Alto | 1 |
-| 6. Resumo Executivo (CEO View) | P | Alto | 2 |
-| 8. Alertas de Prazo Inteligentes | P | Alto | 3 |
-| 4. Workflows com Progresso Salvo | P | Médio | 4 |
-| 9. Conectar Ferramentas Entre Si | P | Médio | 5 |
-| 7. Clara como Copiloto Ativo | M | Alto | 6 |
-| 3. Score como Hub Central | M | Alto | 7 |
-| 2. Notificações Proativas | M | Alto | 8 |
-| 10. Onboarding Guiado | P | Alto | 9 |
-| 5. Gamificação Leve | M | Médio | 10 |
-
----
-
-## Onda 1: Quick Wins (Esforço P, Impacto Alto)
-
-### 1.1 Dashboard Centrado em Progresso
-
-**Objetivo**: Transformar o Dashboard de lista de ferramentas para hub de progresso.
-
-**Componentes a Criar**:
+### Componentes Existentes Reutilizados
 
 ```text
-src/components/dashboard/
-├── ProgressSummary.tsx      # "Seu Progresso Tributário" 
-├── DataSummaryCards.tsx     # Score, créditos, última simulação
-├── NextStepRecommendation.tsx # "Próximo passo recomendado"
-├── LastActivityCard.tsx     # "Sua última atividade"
-└── AchievementBadges.tsx    # Badges básicos (fase inicial)
+┌──────────────────────────────────────────────────────────────────┐
+│                      PriceGuard 2026                             │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
+│  │ DRE         │  │ Radar de    │  │ Calculadora │              │
+│  │ Inteligente │  │ Créditos    │  │ RTC         │              │
+│  │             │  │             │  │             │              │
+│  │ - Margem    │  │ - Créditos  │  │ - Alíquotas │              │
+│  │   bruta     │  │   por NCM   │  │   CBS/IBS   │              │
+│  │ - CPV       │  │ - Insumos   │  │ - NCM/NBS   │              │
+│  │ - Despesas  │  │             │  │             │              │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘              │
+│         │                │                │                      │
+│         └────────────────┼────────────────┘                      │
+│                          │                                       │
+│                   ┌──────▼──────┐                                │
+│                   │  Engine de  │                                │
+│                   │  Gross-Up   │                                │
+│                   │  Reverso    │                                │
+│                   └──────┬──────┘                                │
+│                          │                                       │
+│         ┌────────────────┼────────────────┐                      │
+│         │                │                │                      │
+│  ┌──────▼──────┐  ┌──────▼──────┐  ┌──────▼──────┐              │
+│  │ Preço 2026  │  │ Gap de      │  │ Análise de  │              │
+│  │ Necessário  │  │ Eficiência  │  │ Competitivi-│              │
+│  │             │  │             │  │ dade        │              │
+│  └─────────────┘  └─────────────┘  └─────────────┘              │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
-**Mudanças no Dashboard.tsx**:
-- Adicionar seção "Seu Progresso Tributário" no topo (após ClaraCard)
-- Barra de progresso calculando % da jornada completa
-- Grid 2x2 com: Score atual, Créditos encontrados, Última simulação, Workflows completos
-- Substituir primeiro grupo de ferramentas por "Próximo Passo Recomendado" (lógica baseada no que falta)
-- Adicionar "Sua última atividade" com timestamp + link direto
+### Fluxo de Dados
 
-**Lógica de Progresso**:
-```text
-Jornada = Score + XMLs + DRE + Oportunidades + 1 Workflow
-Peso: 20% cada = 100% quando todos completos
-```
+1. **Entrada de Produtos** (3 opções):
+   - Importação automática dos NCMs já catalogados (`company_ncm_analysis`)
+   - Upload de planilha Excel com SKUs
+   - Entrada manual de itens
 
-**Banco de Dados**: Usar dados existentes (tax_score, xml_imports, company_dre, company_opportunities, workflow_progress).
+2. **Cruzamento de Dados:**
+   - Para cada NCM → buscar alíquota CBS/IBS via `calculate-rtc`
+   - Para cada NCM → buscar crédito estimado de insumos via `identified_credits`
+   - Para cada produto → calcular custo proporcional via DRE
+
+3. **Cálculo de Gross-Up Reverso:**
+   - Preço2025 = input do usuário
+   - AlíquotaAtual = calculada pelo DRE (PIS/COFINS/ICMS/ISS)
+   - AlíquotaNova = CBS + IBS (via API oficial)
+   - CréditoInsumo = estimado do Radar
+   - **PreçoNovo = CustoLíquido / (1 - AlíquotaNova) / (1 - MargemDesejada)**
+
+4. **Saída:**
+   - Tabela de preços 2026 por SKU
+   - Gap de eficiência (se preço sobe demais)
+   - Análise de sensibilidade (cenários pessimista/otimista)
 
 ---
 
-### 1.2 Resumo Executivo (CEO View) - Aprimorar
+## Banco de Dados
 
-**O que já existe**: ExecutiveSummaryCard mostra Caixa em Jogo, Risco, Score.
+### Nova Tabela: `price_simulations`
 
-**Melhorias a Implementar**:
-- Adicionar semáforo visual grande (verde/amarelo/vermelho) baseado em riscoNivel
-- Incluir "3 ações recomendadas" com links diretos (usar score_actions existente)
-- Botão "Gerar PDF" 1-clique que chama edge function generate-executive-report
-
-**Mudanças**:
-```text
-ExecutiveSummaryCard.tsx:
-├── Adicionar ícone semáforo (ShieldCheck/Alert/X) maior
-├── Seção "3 Ações Recomendadas" com links
-└── Botão "Baixar PDF Executivo"
-```
-
----
-
-### 1.3 Alertas de Prazo Inteligentes no Dashboard
-
-**O que já existe**: 
-- Tabela `prazos_reforma` com prazos por regime/setor
-- Edge function `check-expiring-benefits` processa oportunidades
-
-**Melhorias**:
-- Criar componente `NextRelevantDeadline.tsx` no Dashboard
-- Filtrar por regime do usuário (profile.regime) e setor (company_profile.setor)
-- Mostrar apenas o próximo prazo relevante com contagem regressiva
-- Incluir botão "Adicionar ao Calendário" (gerar link Google Calendar)
-
-**Componente**:
-```text
-src/components/dashboard/NextRelevantDeadline.tsx
-├── Query prazos_reforma filtrado por regime/setor
-├── Contagem regressiva em dias
-├── Impacto estimado (texto descritivo)
-└── Botão "Adicionar ao Calendário" (URL Google Calendar)
-```
-
----
-
-### 1.4 Workflows - "Continuar de Onde Parou"
-
-**O que já existe**: 
-- `workflow_progress` tabela com current_step_index, completed_steps, completed_at
-- Hook `useWorkflowProgress` totalmente funcional
-
-**Melhorias**:
-- Criar `InProgressWorkflows.tsx` para o Dashboard
-- Query workflows incompletos (completed_at IS NULL)
-- Card com "Continuar workflow X - Step Y de Z"
-- Link direto para WorkflowsGuiados com workflow selecionado
-
-**Componente**:
-```text
-src/components/dashboard/InProgressWorkflows.tsx
-├── Query workflow_progress WHERE completed_at IS NULL
-├── Mapear workflow_id para dados do workflow (título, steps)
-├── Mostrar progresso visual (checkmarks)
-└── Botão "Continuar"
-```
-
----
-
-### 1.5 Conectar Ferramentas - "Próximo Passo Sugerido"
-
-**Implementar CTAs contextuais ao final de cada ferramenta**:
-
-| Ferramenta | Próximo Passo Sugerido |
-|------------|------------------------|
-| Score Tributário | "Ver impacto da Reforma → RTC" |
-| Importar XMLs | "Ver créditos identificados → Radar" |
-| Calculadora RTC | "Simular impacto no lucro → DRE" |
-| DRE | "Descobrir oportunidades → Matching" |
-| Radar de Créditos | "Ver impacto no resultado → DRE" |
-
-**Componente Reutilizável**:
-```text
-src/components/common/NextStepCta.tsx
-├── Props: currentTool, hasData
-├── Lógica de mapeamento ferramenta → próximo
-└── Card com descrição + botão "Continuar"
-```
-
----
-
-## Onda 2: Engajamento (Esforço M, Impacto Alto)
-
-### 2.1 Clara como Copiloto Ativo
-
-**Melhorias**:
-
-1. **Sugestões Contextuais por Página**:
-   - Criar `ClaraContextualSuggestion.tsx`
-   - Mapear rotas para sugestões específicas
-   - Exemplo: No Score: "Quer que eu explique o que significa essa nota?"
-
-2. **"Clara te recomenda" no Dashboard**:
-   - Usar dados do perfil (company_profile) para personalizar
-   - Mostrar 1-2 sugestões baseadas no que falta (sem score → calcular score)
-
-3. **Atalho de Teclado**:
-   - Adicionar listener global para Cmd+K / Ctrl+K
-   - Dispatch evento openClaraFreeChat
-
-4. **Comando /resumo**:
-   - No FloatingAssistant, interceptar mensagens começando com /
-   - /resumo → chamar generate-executive-report e retornar texto
-
-**Arquivos a Modificar**:
-```text
-src/components/common/FloatingAssistant.tsx
-├── Adicionar keyboard listener (Cmd+K)
-├── Interceptar /comandos no input
-└── Adicionar função handleCommand()
-
-src/components/common/ClaraContextualSuggestion.tsx (novo)
-├── Props: currentRoute
-├── Mapeamento rota → sugestão
-└── Botão que abre Clara com pergunta
-```
-
----
-
-### 2.2 Score Tributário como Hub Central
-
-**Melhorias**:
-
-1. **Score Mensal com Histórico**:
-   - ScoreHistoryChart já existe e funciona
-   - Adicionar gráfico de tendência 3-6 meses no card principal
-   - Mostrar "Evolução: +X pts desde [mês]"
-
-2. **Benchmark do Setor**:
-   - Criar tabela `sector_score_benchmarks` ou usar `sector_benchmarks` existente
-   - Adicionar campo avg_score_by_sector
-   - Mostrar "Você está melhor que X% das empresas do seu porte"
-
-3. **Alertas Automáticos**:
-   - Trigger quando score muda significativamente (>10 pts)
-   - Criar notificação: "Seu score mudou de X para Y"
-
-4. **Integração DRE/Radar**:
-   - Pré-preencher perguntas do Score com dados de DRE (faturamento)
-   - Pré-preencher com dados de Radar (créditos não aproveitados)
-
-**Banco de Dados**:
 ```sql
--- Adicionar benchmark de score por setor
-ALTER TABLE sector_benchmarks ADD COLUMN avg_score INTEGER DEFAULT 65;
-ALTER TABLE sector_benchmarks ADD COLUMN percentile_data JSONB DEFAULT '{}';
-```
-
----
-
-### 2.3 Notificações Proativas
-
-**Edge Functions a Criar/Modificar**:
-
-1. **check-score-recalculation** (novo):
-   - Query tax_score WHERE updated_at < NOW() - 30 days
-   - Criar notificação: "Seu Score foi calculado há 30 dias"
-
-2. **check-platform-inactivity** (novo):
-   - Query profiles WHERE updated_at < NOW() - 7 days
-   - Criar notificação: "Você não acessou a plataforma em 7 dias"
-
-3. **check-sector-news** (modificar fetch-news):
-   - Após processar notícia, verificar setores_afetados
-   - Notificar usuários com company_profile.setor matching
-
-4. **send-weekly-digest** (novo, cron semanal):
-   - Compilar: novos prazos, novas notícias, score, créditos
-   - Enviar por email (opt-in via profiles.notif_novidades)
-
-**Cron Jobs**:
-```sql
--- Score recalculation reminder (diário)
-SELECT cron.schedule('check-score-30d', '0 9 * * *', ...);
-
--- Weekly digest (segunda-feira 9h)
-SELECT cron.schedule('weekly-digest', '0 9 * * 1', ...);
-
--- Inactivity check (diário)
-SELECT cron.schedule('check-inactivity', '0 10 * * *', ...);
-```
-
-**Badge de Novidades no Menu**:
-- Adicionar `hasUpdates` flag no Sidebar
-- Query notificações não lidas por categoria
-- Mostrar ponto vermelho em itens com atualizações
-
----
-
-## Onda 3: Diferenciação (Esforço M, Impacto Médio/Alto)
-
-### 3.1 Onboarding Guiado Pós-Cadastro
-
-**Melhorias**:
-
-1. **Tour Guiado de 60 segundos**:
-   - Usar biblioteca como `react-joyride` ou componente custom
-   - 5 steps: Clara, Score, GPS Reforma, Calculadoras, Perfil
-
-2. **"Sua Primeira Missão"**:
-   - Baseado no regime:
-     - Simples Nacional → Score + Split Payment
-     - Lucro Presumido → Score + Comparativo
-     - Lucro Real → XMLs + Radar de Créditos
-
-3. **Checklist de Primeiros Passos**:
-   - Persistir em localStorage (ou nova tabela user_onboarding_checklist)
-   - Mostrar por 7 dias após cadastro
-   - Items: Calcular Score, Primeira Simulação, Explorar Timeline
-
-4. **Email D+1**:
-   - Edge function disparada 24h após signup
-   - Template com resumo do que fazer
-
-**Componentes**:
-```text
-src/components/onboarding/
-├── GuidedTour.tsx          # Tour interativo
-├── FirstMission.tsx        # Missão baseada no regime
-├── OnboardingChecklist.tsx # Checklist de 7 dias
-└── OnboardingTooltip.tsx   # Tooltips destacados
-```
-
----
-
-### 3.2 Gamificação Leve
-
-**Sistema de Conquistas**:
-
-1. **Tabela user_achievements**:
-```sql
-CREATE TABLE user_achievements (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+CREATE TABLE price_simulations (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id),
-  achievement_code TEXT NOT NULL,
-  achieved_at TIMESTAMPTZ DEFAULT now(),
-  metadata JSONB DEFAULT '{}',
-  UNIQUE(user_id, achievement_code)
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  
+  -- Identificação do produto
+  sku_code TEXT,
+  product_name TEXT NOT NULL,
+  ncm_code TEXT,
+  nbs_code TEXT,
+  
+  -- Preços e custos atuais (2025)
+  preco_atual NUMERIC DEFAULT 0,
+  custo_unitario NUMERIC DEFAULT 0,
+  despesa_proporcional NUMERIC DEFAULT 0,
+  margem_atual_percent NUMERIC DEFAULT 0,
+  
+  -- Alíquotas atuais
+  aliquota_pis_cofins NUMERIC DEFAULT 0,
+  aliquota_icms NUMERIC DEFAULT 0,
+  aliquota_iss NUMERIC DEFAULT 0,
+  aliquota_ipi NUMERIC DEFAULT 0,
+  
+  -- Alíquotas 2026 (CBS/IBS)
+  aliquota_cbs NUMERIC DEFAULT 0,
+  aliquota_ibs_uf NUMERIC DEFAULT 0,
+  aliquota_ibs_mun NUMERIC DEFAULT 0,
+  aliquota_is NUMERIC DEFAULT 0,
+  
+  -- Créditos de insumo
+  credito_insumo_estimado NUMERIC DEFAULT 0,
+  credito_fonte TEXT, -- 'radar', 'estimativa', 'manual'
+  
+  -- Resultados calculados
+  preco_2026_necessario NUMERIC,
+  variacao_preco_percent NUMERIC,
+  margem_2026_mantida NUMERIC,
+  lucro_unitario_atual NUMERIC,
+  lucro_unitario_2026 NUMERIC,
+  
+  -- Análise de competitividade
+  preco_concorrente NUMERIC,
+  gap_competitivo_percent NUMERIC,
+  recomendacao TEXT,
+  
+  -- Cenários
+  cenario_pessimista JSONB,
+  cenario_otimista JSONB,
+  
+  -- Metadata
+  simulation_batch_id UUID,
+  data_quality TEXT DEFAULT 'C', -- A, B, C
+  
+  CONSTRAINT unique_user_sku UNIQUE (user_id, sku_code)
 );
+
+-- RLS
+ALTER TABLE price_simulations ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can manage own simulations" 
+  ON price_simulations FOR ALL 
+  USING (auth.uid() = user_id);
+
+-- Index
+CREATE INDEX idx_price_simulations_user ON price_simulations(user_id);
+CREATE INDEX idx_price_simulations_ncm ON price_simulations(ncm_code);
 ```
 
-2. **Conquistas Iniciais**:
-| Código | Nome | Condição |
-|--------|------|----------|
-| first_score | Primeiro Score | Calcular score pela 1ª vez |
-| score_a_plus | Score A+ | Atingir nota A+ |
-| score_improved | Score Melhorou | Score subir 10+ pts |
-| xml_100 | 100 XMLs | Importar 100 notas |
-| xml_1000 | 1000 XMLs | Importar 1000 notas |
-| credits_10k | R$10k em Créditos | Identificar R$10k+ em créditos |
-| workflow_complete | Workflow Completo | Completar 1 workflow |
-| workflow_all | Todos os Workflows | Completar 4 workflows |
-| referral_3 | Indicou 3 Amigos | 3 indicações bem-sucedidas |
-| streak_5 | 5 Dias Seguidos | Acessar 5 dias consecutivos |
+---
 
-3. **Trigger de Verificação**:
-- Edge function `check-achievements` chamada após ações-chave
-- Verificar condições e inserir conquistas
-- Criar notificação celebratória
+## Edge Function: `calculate-price-guard`
 
-4. **UI**:
+### Lógica Principal
+
+```typescript
+// Fórmula de Gross-Up Reverso
+function calculatePriceGuard(input: PriceGuardInput): PriceGuardResult {
+  const {
+    custoUnitario,
+    despesaProporcional,
+    margemDesejada,
+    aliquotaCBS,
+    aliquotaIBSUf,
+    aliquotaIBSMun,
+    aliquotaIS,
+    creditoInsumo,
+    precoAtual
+  } = input;
+
+  // Alíquota total CBS/IBS
+  const aliquotaTotal = aliquotaCBS + aliquotaIBSUf + aliquotaIBSMun + aliquotaIS;
+  
+  // Custo líquido = Custo + Despesa - Crédito de insumo
+  const custoLiquido = custoUnitario + despesaProporcional - creditoInsumo;
+  
+  // Preço necessário para manter margem
+  // P = C / (1 - t) / (1 - m)
+  // Onde: t = alíquota, m = margem desejada
+  const fatorTributario = 1 - (aliquotaTotal / 100);
+  const fatorMargem = 1 - (margemDesejada / 100);
+  
+  const precoNecessario = custoLiquido / fatorTributario / fatorMargem;
+  
+  // Variação percentual
+  const variacaoPercent = ((precoNecessario - precoAtual) / precoAtual) * 100;
+  
+  // Lucro unitário comparativo
+  const lucroAtual = precoAtual * (margemDesejada / 100);
+  const lucro2026 = precoNecessario * fatorTributario * (margemDesejada / 100);
+  
+  return {
+    precoNecessario,
+    variacaoPercent,
+    lucroAtual,
+    lucro2026,
+    aliquotaTotal,
+    custoLiquido
+  };
+}
+```
+
+### Integração com API RTC
+
+```typescript
+// Buscar alíquotas oficiais para o NCM
+async function fetchTaxRates(ncm: string, uf: string, municipio: number) {
+  const response = await fetch(
+    'https://piloto-cbs.tributos.gov.br/servico/calculadora-consumo/api/calculadora/regime-geral',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: crypto.randomUUID(),
+        versao: '1.0.0',
+        municipio,
+        uf,
+        itens: [{
+          numero: 1,
+          ncm: ncm.replace(/\D/g, ''),
+          quantidade: 1,
+          unidade: 'UN',
+          cst: '000',
+          baseCalculo: 100 // Base de R$ 100 para cálculo percentual
+        }]
+      })
+    }
+  );
+  
+  const data = await response.json();
+  
+  // Extrair alíquotas do retorno
+  const tribCalc = data.objetos?.[0]?.tribCalc?.IBSCBS?.gIBSCBS || {};
+  
+  return {
+    aliquotaCBS: parseFloat(tribCalc.gCBS?.pCBS || '8.8'),
+    aliquotaIBSUf: parseFloat(tribCalc.gIBSUF?.pIBSUF || '8.85'),
+    aliquotaIBSMun: parseFloat(tribCalc.gIBSMun?.pIBSMun || '8.85'),
+    aliquotaIS: parseFloat(data.objetos?.[0]?.tribCalc?.IS?.gIS?.pIS || '0')
+  };
+}
+```
+
+---
+
+## Componentes de UI
+
+### 1. Página Principal: `/dashboard/priceguard`
+
 ```text
-src/components/achievements/
-├── AchievementBadge.tsx    # Badge individual
-├── AchievementList.tsx     # Lista no perfil
-├── AchievementToast.tsx    # Toast de conquista
-└── AchievementProgress.tsx # Progresso até próxima
+┌────────────────────────────────────────────────────────────────┐
+│  🛡️ PriceGuard 2026 - Simulador de Preços                     │
+│  Proteja sua margem na transição da Reforma Tributária        │
+├────────────────────────────────────────────────────────────────┤
+│                                                                │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │ Resumo do Impacto                                        │  │
+│  │ ┌───────────────┬───────────────┬───────────────┐        │  │
+│  │ │ 📦 45 SKUs    │ 📈 +8,2%      │ 💰 -R$ 45k    │        │  │
+│  │ │ Simulados     │ Aumento Médio │ Gap Anual     │        │  │
+│  │ └───────────────┴───────────────┴───────────────┘        │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                │
+│  [📥 Importar NCMs do Catálogo] [📊 Nova Simulação Manual]     │
+│                                                                │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │ Tabela de Simulações                                     │  │
+│  │ ┌──────────┬────────┬────────┬─────────┬────────┬─────┐  │  │
+│  │ │ SKU      │ NCM    │ Preço  │ Preço   │ Varia- │ Gap │  │  │
+│  │ │          │        │ Atual  │ 2026    │ ção    │     │  │  │
+│  │ ├──────────┼────────┼────────┼─────────┼────────┼─────┤  │  │
+│  │ │ PROD-001 │ 6910.. │ R$ 150 │ R$ 162  │ +8,1%  │ 3%  │  │  │
+│  │ │ PROD-002 │ 8471.. │ R$ 500 │ R$ 548  │ +9,6%  │ -   │  │  │
+│  │ │ SERV-001 │ 123..  │ R$ 200 │ R$ 218  │ +9,0%  │ 5%  │  │  │
+│  │ └──────────┴────────┴────────┴─────────┴────────┴─────┘  │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                │
+│  [📄 Exportar Tabela de Preços 2026]                           │
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
 ```
 
-5. **Streak de Uso**:
-- Adicionar campo `last_access_date` e `current_streak` em profiles
-- Atualizar no login
-- Mostrar no Dashboard: "🔥 5 dias seguidos!"
+### 2. Modal de Simulação Detalhada
 
----
-
-## Resumo de Entregas por Onda
-
-### Onda 1 (2-3 sprints)
-- [ ] ProgressSummary.tsx + DataSummaryCards.tsx
-- [ ] NextStepRecommendation.tsx + LastActivityCard.tsx
-- [ ] Aprimorar ExecutiveSummaryCard (semáforo + ações + PDF)
-- [ ] NextRelevantDeadline.tsx com calendário
-- [ ] InProgressWorkflows.tsx ("Continuar de onde parou")
-- [ ] NextStepCta.tsx (conectar ferramentas)
-
-### Onda 2 (3-4 sprints)
-- [ ] ClaraContextualSuggestion.tsx
-- [ ] Atalho Cmd+K para Clara
-- [ ] Comando /resumo
-- [ ] Benchmark de Score por setor
-- [ ] Edge functions de notificação proativa (4 funções)
-- [ ] Badge de novidades no menu
-
-### Onda 3 (2-3 sprints)
-- [ ] Sistema de conquistas (tabela + edge function + UI)
-- [ ] Tour guiado pós-onboarding
-- [ ] Primeira missão por regime
-- [ ] Checklist de primeiros passos
-- [ ] Streak de uso
-
----
-
-## Detalhes Técnicos
-
-### Novas Tabelas Necessárias
-```sql
--- Conquistas do usuário
-CREATE TABLE user_achievements (...);
-
--- Onboarding checklist (opcional - pode ser localStorage)
-CREATE TABLE user_onboarding_progress (...);
-
--- Streak tracking (pode ser campo em profiles)
-ALTER TABLE profiles ADD COLUMN last_access_date DATE;
-ALTER TABLE profiles ADD COLUMN current_streak INTEGER DEFAULT 0;
-```
-
-### Novas Edge Functions
-1. `check-score-recalculation` - Lembrete de recálculo
-2. `check-platform-inactivity` - Alerta de inatividade
-3. `send-weekly-digest` - Resumo semanal por email
-4. `check-achievements` - Verificar e conceder conquistas
-5. `send-onboarding-d1-email` - Email D+1
-
-### Arquivos a Criar
 ```text
-src/components/dashboard/
-├── ProgressSummary.tsx
-├── DataSummaryCards.tsx
-├── NextStepRecommendation.tsx
-├── LastActivityCard.tsx
-├── InProgressWorkflows.tsx
-├── NextRelevantDeadline.tsx
+┌──────────────────────────────────────────────────────────────┐
+│  Simulação: PROD-001 - Cerâmica Industrial                   │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│  NCM: 69101100 │ UF: SP │ Município: São Paulo               │
+│                                                              │
+│  ┌────────────────────────────────────────────────────────┐  │
+│  │ Dados Atuais (2025)               Projeção 2026        │  │
+│  │ ─────────────────────             ─────────────────    │  │
+│  │ Preço de Venda: R$ 150,00         R$ 162,15 (+8,1%)    │  │
+│  │ Custo Unitário: R$ 80,00          R$ 80,00             │  │
+│  │ Alíquota Total: 9,25% (PIS/COF)   26,5% (CBS/IBS)      │  │
+│  │ Crédito Insumo: -                 R$ 12,50             │  │
+│  │ ─────────────────────             ─────────────────    │  │
+│  │ Margem Líquida: 18%               18% (mantida)        │  │
+│  │ Lucro Unitário: R$ 27,00          R$ 29,19             │  │
+│  └────────────────────────────────────────────────────────┘  │
+│                                                              │
+│  ⚠️ Análise de Competitividade                               │
+│  Preço do concorrente: R$ [______]                          │
+│  Se o mercado só suporta +5%, você tem um gap de 3,1% para  │
+│  buscar em eficiência operacional ou renegociação com       │
+│  fornecedores (veja o OMC-AI).                              │
+│                                                              │
+│  [🔄 Recalcular] [💾 Salvar] [📄 Gerar PDF Executivo]        │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
 
-src/components/common/
-├── NextStepCta.tsx
-├── ClaraContextualSuggestion.tsx
+### 3. Análise de Sensibilidade
 
-src/components/achievements/
-├── AchievementBadge.tsx
-├── AchievementList.tsx
-├── AchievementToast.tsx
-
-src/components/onboarding/
-├── GuidedTour.tsx
-├── FirstMission.tsx
-├── OnboardingChecklist.tsx
+```text
+┌─────────────────────────────────────────────────────────────┐
+│  📊 Análise de Sensibilidade - PROD-001                     │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  "E se a alíquota de IBS for diferente?"                    │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │         │ IBS 15%  │ IBS 17.7% │ IBS 20%  │ IBS 22% │    │
+│  │─────────┼──────────┼───────────┼──────────┼─────────│    │
+│  │ Preço   │ R$ 155   │ R$ 162    │ R$ 168   │ R$ 175  │    │
+│  │ Variação│ +3,3%    │ +8,1%     │ +12,0%   │ +16,7%  │    │
+│  │ Gap     │ OK       │ 3%        │ 7%       │ 12%     │    │
+│  └─────────────────────────────────────────────────────┘    │
+│                                                             │
+│  💡 Clara sugere:                                           │
+│  "Se a alíquota de IBS ficar acima de 20%, considere        │
+│   renegociar fornecedores via OMC-AI para compensar."       │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Ordem de Implementação Sugerida
+## Roadmap de Implementação (4 Meses)
 
-1. **ProgressSummary + DataSummaryCards** - Maior impacto visual
-2. **NextRelevantDeadline** - Quick win, alta urgência percebida
-3. **InProgressWorkflows** - Retém usuários que começaram
-4. **ExecutiveSummaryCard melhorado** - Valor para C-level
-5. **NextStepCta** - Conecta a jornada
-6. **Clara contextual + atalho** - Diferencial de UX
-7. **Notificações proativas** - Engajamento recorrente
-8. **Score como hub** - Profundidade na ferramenta-chave
-9. **Onboarding guiado** - Melhora conversão inicial
-10. **Gamificação** - Retenção de longo prazo
+### Mês 1: Fundação
+
+**Semana 1-2: Banco de Dados e Edge Function**
+- Criar tabela `price_simulations`
+- Desenvolver Edge Function `calculate-price-guard`
+- Integrar com API RTC existente
+
+**Semana 3-4: UI Básica**
+- Página principal `/dashboard/priceguard`
+- Formulário de entrada manual de produto
+- Exibição de resultado básico
+
+### Mês 2: Integração com Módulos Existentes
+
+**Semana 1-2: Conexão com DRE**
+- Puxar margem bruta e CPV do DRE mais recente
+- Calcular despesa proporcional automaticamente
+- Usar regime tributário para alíquotas atuais
+
+**Semana 3-4: Conexão com Radar**
+- Buscar créditos de insumo por NCM
+- Estimar crédito quando não disponível
+- Indicador de qualidade do dado
+
+### Mês 3: Interface Avançada
+
+**Semana 1-2: Importação em Lote**
+- Importar NCMs de `company_ncm_analysis`
+- Upload de Excel com lista de SKUs
+- Processamento em batch via Edge Function
+
+**Semana 3-4: Análise de Competitividade**
+- Campo para preço do concorrente
+- Cálculo de gap de eficiência
+- Integração com OMC-AI (CTA para otimizar compras)
+
+### Mês 4: Relatórios e Polish
+
+**Semana 1-2: Análise de Sensibilidade**
+- Cenários pessimista/otimista
+- Slider de alíquotas
+- Gráfico de impacto
+
+**Semana 3-4: Exportação e Lançamento**
+- Gerador de PDF "Tabela de Preços 2026"
+- Relatório executivo para o Board
+- Onboarding guiado
+- Testes alpha com 5 clientes
+
+---
+
+## Arquivos a Criar
+
+### Frontend
+- `src/pages/calculadora/PriceGuard.tsx` - Página principal
+- `src/components/priceguard/PriceGuardForm.tsx` - Formulário de entrada
+- `src/components/priceguard/PriceGuardResults.tsx` - Exibição de resultados
+- `src/components/priceguard/PriceSimulationTable.tsx` - Tabela de simulações
+- `src/components/priceguard/SensitivityAnalysis.tsx` - Gráfico de sensibilidade
+- `src/components/priceguard/PriceGuardPdf.tsx` - Gerador de relatório PDF
+- `src/hooks/usePriceGuard.ts` - Hook de gerenciamento de estado
+
+### Backend
+- `supabase/functions/calculate-price-guard/index.ts` - Engine de cálculo
+- `supabase/migrations/xxx_create_price_simulations.sql` - Tabela
+
+### Rotas
+- Adicionar rota `/dashboard/priceguard` em `App.tsx`
+- Adicionar item no menu lateral em `Sidebar.tsx`
+
+---
+
+## Monetização
+
+**Preço Sugerido:** R$ 4.500/mês (add-on Enterprise)
+
+**Justificativa:**
+- Erro de 2% no repasse de preços em empresa de R$ 10M/ano = R$ 200k de prejuízo
+- O software se paga em 1 mês de uso
+
+**Perfil de Cliente:**
+- Indústrias com centenas de SKUs
+- Varejistas com contratos de longo prazo
+- Empresas B2B com tabelas de preço fixo
+
+---
+
+## Próximos Passos Após Aprovação
+
+1. Criar migração SQL para tabela `price_simulations`
+2. Desenvolver Edge Function `calculate-price-guard`
+3. Implementar página básica com formulário manual
+4. Conectar com DRE e Radar existentes
+5. Testar com dados reais de um cliente beta
