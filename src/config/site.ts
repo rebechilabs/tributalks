@@ -12,10 +12,10 @@ export const CONFIG = {
     PROFESSIONAL_ANUAL: "/cadastro", // TODO: Criar link Mercado Pago
     // Enterprise - Sob consulta (WhatsApp direto)
     ENTERPRISE: "https://wa.me/5511914523971",
-    // Credit packages for Starter/Navigator users (Clara extra credits)
-    CREDITS_10: "/cadastro", // R$ 29,90 - 10 créditos
-    CREDITS_20: "/cadastro", // R$ 54,90 - 20 créditos
+    // Pacotes de créditos Clara (1 crédito = 1 conversa)
     CREDITS_30: "/cadastro", // R$ 74,90 - 30 créditos
+    CREDITS_50: "/cadastro", // R$ 109,90 - 50 créditos
+    CREDITS_100: "/cadastro", // R$ 199,90 - 100 créditos
     // Extra seats for multi-user plans
     SEAT_PROFESSIONAL: "/cadastro",
     SEAT_ENTERPRISE: "/cadastro",

@@ -24,25 +24,25 @@ export const UPSELL_THRESHOLD = 3;
 export function getCreditPackages(): CreditPackage[] {
   return [
     {
-      id: 'credits_10',
-      credits: 10,
-      price: 29.90,
-      priceFormatted: 'R$ 29,90',
-      paymentLink: CONFIG.STRIPE_PAYMENT_LINKS.CREDITS_10 || '',
-    },
-    {
-      id: 'credits_20',
-      credits: 20,
-      price: 54.90,
-      priceFormatted: 'R$ 54,90',
-      paymentLink: CONFIG.STRIPE_PAYMENT_LINKS.CREDITS_20 || '',
-    },
-    {
       id: 'credits_30',
       credits: 30,
       price: 74.90,
       priceFormatted: 'R$ 74,90',
-      paymentLink: CONFIG.STRIPE_PAYMENT_LINKS.CREDITS_30 || '',
+      paymentLink: CONFIG.PAYMENT_LINKS.CREDITS_30 || '',
+    },
+    {
+      id: 'credits_50',
+      credits: 50,
+      price: 109.90,
+      priceFormatted: 'R$ 109,90',
+      paymentLink: CONFIG.PAYMENT_LINKS.CREDITS_50 || '',
+    },
+    {
+      id: 'credits_100',
+      credits: 100,
+      price: 199.90,
+      priceFormatted: 'R$ 199,90',
+      paymentLink: CONFIG.PAYMENT_LINKS.CREDITS_100 || '',
     },
   ];
 }
@@ -50,7 +50,7 @@ export function getCreditPackages(): CreditPackage[] {
 // Mapeamento de planos legados
 const LEGACY_PLAN_MAP: Record<string, UserPlan> = {
   'FREE': 'FREE',
-  'BASICO': 'NAVIGATOR',
+  'BASICO': 'STARTER',
   'PROFISSIONAL': 'PROFESSIONAL',
   'PREMIUM': 'ENTERPRISE',
   'STARTER': 'STARTER',
