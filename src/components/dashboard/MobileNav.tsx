@@ -68,6 +68,12 @@ const navGroups: NavGroup[] = [
     ]
   },
   {
+    title: 'Margem Ativa',
+    items: [
+      { label: 'Suíte Margem Ativa', href: '/dashboard/margem-ativa', icon: Target, requiredPlan: 'PROFESSIONAL', badge: 'Novo' },
+    ]
+  },
+  {
     title: 'Enterprise',
     items: [
       { label: 'Painel Executivo', href: '/dashboard/executivo', icon: LayoutDashboard, requiredPlan: 'ENTERPRISE' },
