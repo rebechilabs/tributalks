@@ -212,7 +212,7 @@ export function PricingSection() {
                 )}
 
                 {/* Plan Header */}
-                <div className="text-center mb-4 md:mb-6 pt-2">
+                <div className={`text-center mb-4 md:mb-6 ${plan.popular || plan.trialDays ? 'pt-4' : 'pt-2'}`}>
                   <h3 className="text-base md:text-lg font-bold text-foreground mb-1">
                     {plan.name}
                   </h3>
