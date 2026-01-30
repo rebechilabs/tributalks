@@ -110,19 +110,10 @@ export function DREWizard({ onComplete, initialData }: DREWizardProps) {
     } finally { setLoading(false); }
   };
 
-  const CurrencyInput = ({ label, field, tooltip, placeholder }: { label: string; field: keyof DREFormData; tooltip?: string; placeholder?: string }) => {
-    const fieldValue = formData[field];
-    const numValue = typeof fieldValue === 'number' ? fieldValue : 0;
-    return (
-      <VoiceCurrencyInput
-        label={label}
-        field={field}
-        value={numValue}
-        onChange={(value) => handleInputChange(field, value)}
-        tooltip={tooltip}
-        placeholder={placeholder}
-      />
-    );
+  // Helper to get numeric value safely
+  const getNumValue = (field: keyof DREFormData) => {
+    const v = formData[field];
+    return typeof v === 'number' ? v : 0;
   };
 
   const renderStep = () => {
@@ -132,15 +123,15 @@ export function DREWizard({ onComplete, initialData }: DREWizardProps) {
           <div className="space-y-6">
             <div><h3 className="text-lg font-semibold mb-2">Quanto sua empresa vendeu neste período?</h3><p className="text-sm text-muted-foreground mb-6">Informe os valores totais de vendas do mês selecionado</p></div>
             <div className="grid gap-4 md:grid-cols-2">
-              <CurrencyInput label="Vendas de produtos" field="vendas_produtos" tooltip="Total de notas fiscais de produtos vendidos" placeholder="150.000" />
-              <CurrencyInput label="Vendas de serviços" field="vendas_servicos" tooltip="Total de notas de serviço emitidas" placeholder="80.000" />
-              <CurrencyInput label="Outras receitas" field="outras_receitas" tooltip="Aluguéis, comissões, rendimentos, etc" placeholder="5.000" />
+              <VoiceCurrencyInput label="Vendas de produtos" field="vendas_produtos" value={getNumValue('vendas_produtos')} onChange={(v) => handleInputChange('vendas_produtos', v)} tooltip="Total de notas fiscais de produtos vendidos" placeholder="150.000" />
+              <VoiceCurrencyInput label="Vendas de serviços" field="vendas_servicos" value={getNumValue('vendas_servicos')} onChange={(v) => handleInputChange('vendas_servicos', v)} tooltip="Total de notas de serviço emitidas" placeholder="80.000" />
+              <VoiceCurrencyInput label="Outras receitas" field="outras_receitas" value={getNumValue('outras_receitas')} onChange={(v) => handleInputChange('outras_receitas', v)} tooltip="Aluguéis, comissões, rendimentos, etc" placeholder="5.000" />
             </div>
             <div className="border-t pt-4">
               <p className="text-sm text-muted-foreground mb-4">Deduções da receita</p>
               <div className="grid gap-4 md:grid-cols-2">
-                <CurrencyInput label="Devoluções" field="devolucoes" tooltip="Vendas canceladas ou devolvidas" placeholder="3.000" />
-                <CurrencyInput label="Descontos concedidos" field="descontos" tooltip="Descontos dados aos clientes" placeholder="2.000" />
+                <VoiceCurrencyInput label="Devoluções" field="devolucoes" value={getNumValue('devolucoes')} onChange={(v) => handleInputChange('devolucoes', v)} tooltip="Vendas canceladas ou devolvidas" placeholder="3.000" />
+                <VoiceCurrencyInput label="Descontos concedidos" field="descontos" value={getNumValue('descontos')} onChange={(v) => handleInputChange('descontos', v)} tooltip="Descontos dados aos clientes" placeholder="2.000" />
               </div>
             </div>
             <Card className="bg-muted/50"><CardContent className="pt-4">
@@ -157,10 +148,10 @@ export function DREWizard({ onComplete, initialData }: DREWizardProps) {
           <div className="space-y-6">
             <div><h3 className="text-lg font-semibold mb-2">Quanto custou o que você vendeu?</h3><p className="text-sm text-muted-foreground mb-6">Custos diretamente ligados aos produtos ou serviços vendidos</p></div>
             <div className="grid gap-4 md:grid-cols-2">
-              <CurrencyInput label="Custo das mercadorias" field="custo_mercadorias" tooltip="Valor pago aos fornecedores" />
-              <CurrencyInput label="Custo de materiais" field="custo_materiais" tooltip="Matéria-prima, insumos, embalagens" />
-              <CurrencyInput label="Mão de obra direta" field="mao_obra_direta" tooltip="Salários da equipe de produção" />
-              <CurrencyInput label="Serviços de terceiros" field="servicos_terceiros" tooltip="Freelancers, fábricas terceirizadas" />
+              <VoiceCurrencyInput label="Custo das mercadorias" field="custo_mercadorias" value={getNumValue('custo_mercadorias')} onChange={(v) => handleInputChange('custo_mercadorias', v)} tooltip="Valor pago aos fornecedores" />
+              <VoiceCurrencyInput label="Custo de materiais" field="custo_materiais" value={getNumValue('custo_materiais')} onChange={(v) => handleInputChange('custo_materiais', v)} tooltip="Matéria-prima, insumos, embalagens" />
+              <VoiceCurrencyInput label="Mão de obra direta" field="mao_obra_direta" value={getNumValue('mao_obra_direta')} onChange={(v) => handleInputChange('mao_obra_direta', v)} tooltip="Salários da equipe de produção" />
+              <VoiceCurrencyInput label="Serviços de terceiros" field="servicos_terceiros" value={getNumValue('servicos_terceiros')} onChange={(v) => handleInputChange('servicos_terceiros', v)} tooltip="Freelancers, fábricas terceirizadas" />
             </div>
             <Card className="bg-muted/50"><CardContent className="pt-4">
               <div className="space-y-2 text-sm">
@@ -177,9 +168,9 @@ export function DREWizard({ onComplete, initialData }: DREWizardProps) {
           <div className="space-y-6">
             <div><h3 className="text-lg font-semibold mb-2">Quanto você gasta para manter a empresa?</h3><p className="text-sm text-muted-foreground mb-6">Despesas operacionais do dia a dia</p></div>
             <div className="space-y-6">
-              <div><h4 className="text-sm font-medium text-muted-foreground mb-3">👥 Pessoas</h4><div className="grid gap-4 md:grid-cols-2"><CurrencyInput label="Salários + encargos" field="salarios_encargos" tooltip="Folha de pagamento" /><CurrencyInput label="Pró-labore dos sócios" field="prolabore" tooltip="Retiradas mensais dos sócios" /></div></div>
-              <div><h4 className="text-sm font-medium text-muted-foreground mb-3">🏢 Estrutura</h4><div className="grid gap-4 md:grid-cols-3"><CurrencyInput label="Aluguel" field="aluguel" /><CurrencyInput label="Energia, água, internet" field="energia_agua_internet" /><CurrencyInput label="Software e assinaturas" field="software" /></div></div>
-              <div><h4 className="text-sm font-medium text-muted-foreground mb-3">⚙️ Operação</h4><div className="grid gap-4 md:grid-cols-3"><CurrencyInput label="Marketing" field="marketing" /><CurrencyInput label="Contador, advogado" field="contador_juridico" /><CurrencyInput label="Viagens, alimentação" field="viagens" /><CurrencyInput label="Manutenção" field="manutencao" /><CurrencyInput label="Frete e logística" field="frete" /><CurrencyInput label="Outras despesas" field="outras_despesas" /></div></div>
+              <div><h4 className="text-sm font-medium text-muted-foreground mb-3">👥 Pessoas</h4><div className="grid gap-4 md:grid-cols-2"><VoiceCurrencyInput label="Salários + encargos" field="salarios_encargos" value={getNumValue('salarios_encargos')} onChange={(v) => handleInputChange('salarios_encargos', v)} tooltip="Folha de pagamento" /><VoiceCurrencyInput label="Pró-labore dos sócios" field="prolabore" value={getNumValue('prolabore')} onChange={(v) => handleInputChange('prolabore', v)} tooltip="Retiradas mensais dos sócios" /></div></div>
+              <div><h4 className="text-sm font-medium text-muted-foreground mb-3">🏢 Estrutura</h4><div className="grid gap-4 md:grid-cols-3"><VoiceCurrencyInput label="Aluguel" field="aluguel" value={getNumValue('aluguel')} onChange={(v) => handleInputChange('aluguel', v)} /><VoiceCurrencyInput label="Energia, água, internet" field="energia_agua_internet" value={getNumValue('energia_agua_internet')} onChange={(v) => handleInputChange('energia_agua_internet', v)} /><VoiceCurrencyInput label="Software e assinaturas" field="software" value={getNumValue('software')} onChange={(v) => handleInputChange('software', v)} /></div></div>
+              <div><h4 className="text-sm font-medium text-muted-foreground mb-3">⚙️ Operação</h4><div className="grid gap-4 md:grid-cols-3"><VoiceCurrencyInput label="Marketing" field="marketing" value={getNumValue('marketing')} onChange={(v) => handleInputChange('marketing', v)} /><VoiceCurrencyInput label="Contador, advogado" field="contador_juridico" value={getNumValue('contador_juridico')} onChange={(v) => handleInputChange('contador_juridico', v)} /><VoiceCurrencyInput label="Viagens, alimentação" field="viagens" value={getNumValue('viagens')} onChange={(v) => handleInputChange('viagens', v)} /><VoiceCurrencyInput label="Manutenção" field="manutencao" value={getNumValue('manutencao')} onChange={(v) => handleInputChange('manutencao', v)} /><VoiceCurrencyInput label="Frete e logística" field="frete" value={getNumValue('frete')} onChange={(v) => handleInputChange('frete', v)} /><VoiceCurrencyInput label="Outras despesas" field="outras_despesas" value={getNumValue('outras_despesas')} onChange={(v) => handleInputChange('outras_despesas', v)} /></div></div>
             </div>
           </div>
         );
@@ -188,10 +179,10 @@ export function DREWizard({ onComplete, initialData }: DREWizardProps) {
           <div className="space-y-6">
             <div><h3 className="text-lg font-semibold mb-2">Receitas e despesas financeiras</h3><p className="text-sm text-muted-foreground mb-6">Juros, tarifas bancárias e outros custos financeiros</p></div>
             <div className="grid gap-4 md:grid-cols-2">
-              <CurrencyInput label="Juros pagos" field="juros_pagos" tooltip="Empréstimos, cartões, cheque especial" />
-              <CurrencyInput label="Juros recebidos" field="juros_recebidos" tooltip="Rendimentos de aplicações" />
-              <CurrencyInput label="Tarifas bancárias" field="tarifas" tooltip="DOC, TED, taxas de maquininha" />
-              <CurrencyInput label="Multas por atraso" field="multas" tooltip="Multas pagas a fornecedores ou governo" />
+              <VoiceCurrencyInput label="Juros pagos" field="juros_pagos" value={getNumValue('juros_pagos')} onChange={(v) => handleInputChange('juros_pagos', v)} tooltip="Empréstimos, cartões, cheque especial" />
+              <VoiceCurrencyInput label="Juros recebidos" field="juros_recebidos" value={getNumValue('juros_recebidos')} onChange={(v) => handleInputChange('juros_recebidos', v)} tooltip="Rendimentos de aplicações" />
+              <VoiceCurrencyInput label="Tarifas bancárias" field="tarifas" value={getNumValue('tarifas')} onChange={(v) => handleInputChange('tarifas', v)} tooltip="DOC, TED, taxas de maquininha" />
+              <VoiceCurrencyInput label="Multas por atraso" field="multas" value={getNumValue('multas')} onChange={(v) => handleInputChange('multas', v)} tooltip="Multas pagas a fornecedores ou governo" />
             </div>
           </div>
         );
@@ -208,7 +199,7 @@ export function DREWizard({ onComplete, initialData }: DREWizardProps) {
               </RadioGroup>
             </div>
             <div className="flex items-center space-x-2 p-4 bg-muted rounded-lg"><Switch id="calcular_auto" checked={formData.calcular_auto} onCheckedChange={(checked) => handleInputChange('calcular_auto', checked)} /><Label htmlFor="calcular_auto">Calcular impostos automaticamente</Label></div>
-            {!formData.calcular_auto && <CurrencyInput label="Impostos sobre vendas (PIS, COFINS, ICMS, ISS)" field="impostos_vendas" tooltip="Valor total de impostos sobre o faturamento" />}
+            {!formData.calcular_auto && <VoiceCurrencyInput label="Impostos sobre vendas (PIS, COFINS, ICMS, ISS)" field="impostos_vendas" value={getNumValue('impostos_vendas')} onChange={(v) => handleInputChange('impostos_vendas', v)} tooltip="Valor total de impostos sobre o faturamento" />}
             <div className="flex items-center space-x-2 p-4 bg-primary/5 border border-primary/20 rounded-lg"><Switch id="simular_reforma" checked={formData.simular_reforma} onCheckedChange={(checked) => handleInputChange('simular_reforma', checked)} /><div><Label htmlFor="simular_reforma" className="text-primary">📊 Ver impacto da Reforma Tributária</Label><p className="text-xs text-muted-foreground">Simula como ficará sua carga tributária após 2027</p></div></div>
           </div>
         );
