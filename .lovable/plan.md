@@ -1,436 +1,502 @@
 
-# Plano de Implementação: PriceGuard 2026
+# Plano de Implementação: Suíte Margem Ativa 2026
 
-## Visão Geral
+## Visao Geral
 
-O **PriceGuard 2026** é um simulador de elasticidade de margem que calcula o preço de venda necessário para cada produto/serviço manter o mesmo lucro líquido após a Reforma Tributária (CBS/IBS).
+A **Suite Margem Ativa 2026** e um centro de comando integrado para a transicao tributaria CBS/IBS, composto por dois modulos complementares que resolvem o problema de margem de ponta a ponta:
 
-**Diferencial competitivo:** Único no mercado que integra DRE (financeiro) + Radar de Créditos (fiscal) + RTC (alíquotas oficiais) para calcular o "Ponto de Equilíbrio de Margem" por SKU.
+| Modulo | Foco | Problema Resolvido |
+|--------|------|-------------------|
+| **OMC-AI** | Compras | Fornecedores que parecem baratos mas "drenam" margem por falta de credito |
+| **PriceGuard** | Vendas | Preco mal calculado que ou destrói margem ou perde competitividade |
+
+**Diferencial Competitivo:** Unico no mercado que integra DRE (financeiro) + Radar de Creditos (fiscal) + RTC (aliquotas oficiais) + Historico de XMLs para calcular impacto real no EBITDA.
 
 ---
 
-## Arquitetura Técnica
-
-### Componentes Existentes Reutilizados
+## Arquitetura Tecnica
 
 ```text
-┌──────────────────────────────────────────────────────────────────┐
-│                      PriceGuard 2026                             │
-├──────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
-│  │ DRE         │  │ Radar de    │  │ Calculadora │              │
-│  │ Inteligente │  │ Créditos    │  │ RTC         │              │
-│  │             │  │             │  │             │              │
-│  │ - Margem    │  │ - Créditos  │  │ - Alíquotas │              │
-│  │   bruta     │  │   por NCM   │  │   CBS/IBS   │              │
-│  │ - CPV       │  │ - Insumos   │  │ - NCM/NBS   │              │
-│  │ - Despesas  │  │             │  │             │              │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘              │
-│         │                │                │                      │
-│         └────────────────┼────────────────┘                      │
-│                          │                                       │
-│                   ┌──────▼──────┐                                │
-│                   │  Engine de  │                                │
-│                   │  Gross-Up   │                                │
-│                   │  Reverso    │                                │
-│                   └──────┬──────┘                                │
-│                          │                                       │
-│         ┌────────────────┼────────────────┐                      │
-│         │                │                │                      │
-│  ┌──────▼──────┐  ┌──────▼──────┐  ┌──────▼──────┐              │
-│  │ Preço 2026  │  │ Gap de      │  │ Análise de  │              │
-│  │ Necessário  │  │ Eficiência  │  │ Competitivi-│              │
-│  │             │  │             │  │ dade        │              │
-│  └─────────────┘  └─────────────┘  └─────────────┘              │
-│                                                                  │
-└──────────────────────────────────────────────────────────────────┘
++------------------------------------------------------------------+
+|                    Suite Margem Ativa 2026                        |
++------------------------------------------------------------------+
+|                                                                   |
+|  +---------------------------+  +-----------------------------+   |
+|  |        OMC-AI             |  |        PriceGuard           |   |
+|  |   (Inteligencia de       |  |   (Inteligencia de          |   |
+|  |        Compras)           |  |         Vendas)             |   |
+|  +-------------+-------------+  +-------------+---------------+   |
+|                |                              |                   |
+|  +-------------v------------------------------v---------------+   |
+|  |              Motor de Calculo Unificado                    |   |
+|  |  - Custo Efetivo Liquido (fornecedores)                    |   |
+|  |  - Gross-Up Reverso (precos)                               |   |
+|  |  - Projecao de Margem 2026                                 |   |
+|  +-------------+------------------------------+---------------+   |
+|                |                              |                   |
+|  +-------------v--------------+  +------------v---------------+   |
+|  | identified_credits        |  | company_dre                |   |
+|  | (Radar de Creditos)       |  | (DRE Inteligente)          |   |
+|  +---------------------------+  +-----------------------------+   |
+|                                                                   |
+|  +---------------------------+  +-----------------------------+   |
+|  | company_ncm_analysis      |  | calculate-rtc              |   |
+|  | (Catalogo NCM)            |  | (API RFB)                  |   |
+|  +---------------------------+  +-----------------------------+   |
+|                                                                   |
++------------------------------------------------------------------+
 ```
-
-### Fluxo de Dados
-
-1. **Entrada de Produtos** (3 opções):
-   - Importação automática dos NCMs já catalogados (`company_ncm_analysis`)
-   - Upload de planilha Excel com SKUs
-   - Entrada manual de itens
-
-2. **Cruzamento de Dados:**
-   - Para cada NCM → buscar alíquota CBS/IBS via `calculate-rtc`
-   - Para cada NCM → buscar crédito estimado de insumos via `identified_credits`
-   - Para cada produto → calcular custo proporcional via DRE
-
-3. **Cálculo de Gross-Up Reverso:**
-   - Preço2025 = input do usuário
-   - AlíquotaAtual = calculada pelo DRE (PIS/COFINS/ICMS/ISS)
-   - AlíquotaNova = CBS + IBS (via API oficial)
-   - CréditoInsumo = estimado do Radar
-   - **PreçoNovo = CustoLíquido / (1 - AlíquotaNova) / (1 - MargemDesejada)**
-
-4. **Saída:**
-   - Tabela de preços 2026 por SKU
-   - Gap de eficiência (se preço sobe demais)
-   - Análise de sensibilidade (cenários pessimista/otimista)
 
 ---
 
 ## Banco de Dados
 
-### Nova Tabela: `price_simulations`
+### Tabela 1: `suppliers` (Consolidacao de Fornecedores)
+
+Nova tabela para agregar dados de fornecedores extraidos dos XMLs.
 
 ```sql
-CREATE TABLE price_simulations (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES auth.users(id),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  
-  -- Identificação do produto
-  sku_code TEXT,
-  product_name TEXT NOT NULL,
-  ncm_code TEXT,
-  nbs_code TEXT,
-  
-  -- Preços e custos atuais (2025)
-  preco_atual NUMERIC DEFAULT 0,
-  custo_unitario NUMERIC DEFAULT 0,
-  despesa_proporcional NUMERIC DEFAULT 0,
-  margem_atual_percent NUMERIC DEFAULT 0,
-  
-  -- Alíquotas atuais
-  aliquota_pis_cofins NUMERIC DEFAULT 0,
-  aliquota_icms NUMERIC DEFAULT 0,
-  aliquota_iss NUMERIC DEFAULT 0,
-  aliquota_ipi NUMERIC DEFAULT 0,
-  
-  -- Alíquotas 2026 (CBS/IBS)
-  aliquota_cbs NUMERIC DEFAULT 0,
-  aliquota_ibs_uf NUMERIC DEFAULT 0,
-  aliquota_ibs_mun NUMERIC DEFAULT 0,
-  aliquota_is NUMERIC DEFAULT 0,
-  
-  -- Créditos de insumo
-  credito_insumo_estimado NUMERIC DEFAULT 0,
-  credito_fonte TEXT, -- 'radar', 'estimativa', 'manual'
-  
-  -- Resultados calculados
-  preco_2026_necessario NUMERIC,
-  variacao_preco_percent NUMERIC,
-  margem_2026_mantida NUMERIC,
-  lucro_unitario_atual NUMERIC,
-  lucro_unitario_2026 NUMERIC,
-  
-  -- Análise de competitividade
-  preco_concorrente NUMERIC,
-  gap_competitivo_percent NUMERIC,
-  recomendacao TEXT,
-  
-  -- Cenários
-  cenario_pessimista JSONB,
-  cenario_otimista JSONB,
-  
-  -- Metadata
-  simulation_batch_id UUID,
-  data_quality TEXT DEFAULT 'C', -- A, B, C
-  
-  CONSTRAINT unique_user_sku UNIQUE (user_id, sku_code)
-);
+-- Campos principais
+- id, user_id, cnpj, razao_social
+- regime_tributario (simples, presumido, real, desconhecido)
+- regime_confianca (high, medium, low) - nivel de certeza da classificacao
+- total_compras_12m (valor total de compras nos ultimos 12 meses)
+- qtd_notas_12m (quantidade de notas processadas)
+- ncms_frequentes (array dos NCMs mais comprados)
+- uf, municipio, cnae_principal
+- aliquota_credito_estimada (0-26.5% baseado no regime)
+- custo_efetivo_score (0-100, quanto maior, mais eficiente)
+- classificacao (manter, renegociar, substituir)
+- ultima_atualizacao, created_at
+```
 
--- RLS
-ALTER TABLE price_simulations ENABLE ROW LEVEL SECURITY;
+### Tabela 2: `supplier_analysis` (Analise Detalhada por Fornecedor)
 
-CREATE POLICY "Users can manage own simulations" 
-  ON price_simulations FOR ALL 
-  USING (auth.uid() = user_id);
+Historico de analises do OMC-AI para cada fornecedor.
 
--- Index
-CREATE INDEX idx_price_simulations_user ON price_simulations(user_id);
-CREATE INDEX idx_price_simulations_ncm ON price_simulations(ncm_code);
+```sql
+-- Campos principais
+- id, user_id, supplier_id
+- periodo_inicio, periodo_fim
+- valor_nominal_total (soma das notas)
+- valor_tributos_pagos (ICMS + PIS + COFINS)
+- credito_aproveitado_atual
+- credito_potencial_2026 (projecao CBS/IBS)
+- gap_credito (diferenca = vazamento de margem)
+- custo_efetivo_liquido
+- preco_indiferenca (preco equivalente se fosse Lucro Real)
+- recomendacao (manter, renegociar_X%, substituir)
+- status (pendente, analisado, acao_tomada)
+```
+
+### Tabela 3: `price_simulations` (Simulacoes de Preco PriceGuard)
+
+Tabela para armazenar simulacoes de precificacao por SKU/produto.
+
+```sql
+-- Campos principais
+- id, user_id, created_at, updated_at
+- sku_code, product_name, ncm_code, nbs_code
+- uf, municipio_codigo, municipio_nome
+-- Dados atuais (2025)
+- preco_atual, custo_unitario, despesa_proporcional, margem_atual_percent
+- aliquota_pis_cofins, aliquota_icms, aliquota_iss, aliquota_ipi
+-- Aliquotas 2026 (CBS/IBS)
+- aliquota_cbs, aliquota_ibs_uf, aliquota_ibs_mun, aliquota_is
+-- Creditos de insumo
+- credito_insumo_estimado, credito_fonte (radar, estimativa, manual)
+-- Resultados calculados
+- preco_2026_necessario, variacao_preco_percent
+- margem_2026_mantida, lucro_unitario_atual, lucro_unitario_2026
+-- Analise de competitividade
+- preco_concorrente, gap_competitivo_percent, recomendacao
+-- Cenarios
+- cenario_pessimista (JSONB), cenario_otimista (JSONB)
+-- Metadata
+- simulation_batch_id, data_quality (A, B, C)
+```
+
+### Tabela 4: `margin_dashboard` (Consolidacao Executiva)
+
+Visao consolidada do impacto no EBITDA para o Painel Executivo.
+
+```sql
+-- Campos principais
+- id, user_id, periodo_referencia
+-- OMC-AI (Compras)
+- total_compras_analisado
+- gap_credito_total (vazamento de margem identificado)
+- economia_potencial_renegociacao
+- fornecedores_criticos (qtd com gap > 10%)
+-- PriceGuard (Vendas)
+- skus_simulados
+- variacao_media_preco
+- gap_competitivo_medio
+- risco_perda_margem
+-- Consolidado
+- impacto_ebitda_anual_min, impacto_ebitda_anual_max
+- score_prontidao (0-100)
+- created_at, updated_at
 ```
 
 ---
 
-## Edge Function: `calculate-price-guard`
+## Edge Functions
 
-### Lógica Principal
+### 1. `analyze-suppliers` - Consolidador de Fornecedores
 
-```typescript
-// Fórmula de Gross-Up Reverso
-function calculatePriceGuard(input: PriceGuardInput): PriceGuardResult {
-  const {
-    custoUnitario,
-    despesaProporcional,
-    margemDesejada,
-    aliquotaCBS,
-    aliquotaIBSUf,
-    aliquotaIBSMun,
-    aliquotaIS,
-    creditoInsumo,
-    precoAtual
-  } = input;
+Processa os dados de `identified_credits` e `xml_analysis` para criar/atualizar o cadastro consolidado de fornecedores.
 
-  // Alíquota total CBS/IBS
-  const aliquotaTotal = aliquotaCBS + aliquotaIBSUf + aliquotaIBSMun + aliquotaIS;
-  
-  // Custo líquido = Custo + Despesa - Crédito de insumo
-  const custoLiquido = custoUnitario + despesaProporcional - creditoInsumo;
-  
-  // Preço necessário para manter margem
-  // P = C / (1 - t) / (1 - m)
-  // Onde: t = alíquota, m = margem desejada
-  const fatorTributario = 1 - (aliquotaTotal / 100);
-  const fatorMargem = 1 - (margemDesejada / 100);
-  
-  const precoNecessario = custoLiquido / fatorTributario / fatorMargem;
-  
-  // Variação percentual
-  const variacaoPercent = ((precoNecessario - precoAtual) / precoAtual) * 100;
-  
-  // Lucro unitário comparativo
-  const lucroAtual = precoAtual * (margemDesejada / 100);
-  const lucro2026 = precoNecessario * fatorTributario * (margemDesejada / 100);
-  
-  return {
-    precoNecessario,
-    variacaoPercent,
-    lucroAtual,
-    lucro2026,
-    aliquotaTotal,
-    custoLiquido
-  };
-}
+**Logica Principal:**
+1. Agrupa `identified_credits` por `supplier_cnpj`
+2. Calcula metricas agregadas (total compras, qtd notas, NCMs frequentes)
+3. Classifica regime tributario usando heuristicas:
+   - CST ICMS 101-103 -> Simples Nacional
+   - Destaque de ICMS com credito -> Lucro Real/Presumido
+   - Sem destaque -> Simples ou MEI
+4. Calcula `aliquota_credito_estimada` baseado no regime
+5. Persiste na tabela `suppliers`
+
+### 2. `calculate-supplier-cost` - Motor OMC-AI
+
+Calcula o Custo Efetivo Liquido e Preco de Indiferenca para cada fornecedor.
+
+**Formula Principal:**
+```
+Custo Efetivo Liquido = Preco Nominal * (1 - Aliquota Credito)
+
+Preco de Indiferenca = Preco Nominal Fornecedor B / (1 - Aliquota Credito B) * (1 - Aliquota Credito A)
 ```
 
-### Integração com API RTC
+**Exemplo:**
+- Fornecedor A (Simples): R$ 10.000, credito 4% -> Custo Liquido = R$ 9.600
+- Fornecedor B (Lucro Real): R$ 12.000, credito 26.5% -> Custo Liquido = R$ 8.820
+- Fornecedor B e 8.1% mais barato apesar do preco nominal maior
 
-```typescript
-// Buscar alíquotas oficiais para o NCM
-async function fetchTaxRates(ncm: string, uf: string, municipio: number) {
-  const response = await fetch(
-    'https://piloto-cbs.tributos.gov.br/servico/calculadora-consumo/api/calculadora/regime-geral',
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: crypto.randomUUID(),
-        versao: '1.0.0',
-        municipio,
-        uf,
-        itens: [{
-          numero: 1,
-          ncm: ncm.replace(/\D/g, ''),
-          quantidade: 1,
-          unidade: 'UN',
-          cst: '000',
-          baseCalculo: 100 // Base de R$ 100 para cálculo percentual
-        }]
-      })
-    }
-  );
-  
-  const data = await response.json();
-  
-  // Extrair alíquotas do retorno
-  const tribCalc = data.objetos?.[0]?.tribCalc?.IBSCBS?.gIBSCBS || {};
-  
-  return {
-    aliquotaCBS: parseFloat(tribCalc.gCBS?.pCBS || '8.8'),
-    aliquotaIBSUf: parseFloat(tribCalc.gIBSUF?.pIBSUF || '8.85'),
-    aliquotaIBSMun: parseFloat(tribCalc.gIBSMun?.pIBSMun || '8.85'),
-    aliquotaIS: parseFloat(data.objetos?.[0]?.tribCalc?.IS?.gIS?.pIS || '0')
-  };
-}
+### 3. `calculate-price-guard` - Motor PriceGuard
+
+Calcula o preco de venda necessario para manter margem pos-reforma.
+
+**Formula Gross-Up Reverso:**
 ```
+Preco 2026 = (Custo Unitario + Despesa - Credito Insumo) / (1 - Aliquota Nova) / (1 - Margem Desejada)
+```
+
+**Integracao:**
+- Puxa margem do `company_dre` mais recente
+- Puxa creditos de insumo do `identified_credits`
+- Busca aliquotas oficiais via `calculate-rtc`
+
+### 4. `sync-margin-dashboard` - Consolidador Executivo
+
+Agrega dados das duas ferramentas para o Painel Executivo.
 
 ---
 
 ## Componentes de UI
 
-### 1. Página Principal: `/dashboard/priceguard`
+### Estrutura de Arquivos
 
-```text
-┌────────────────────────────────────────────────────────────────┐
-│  🛡️ PriceGuard 2026 - Simulador de Preços                     │
-│  Proteja sua margem na transição da Reforma Tributária        │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │ Resumo do Impacto                                        │  │
-│  │ ┌───────────────┬───────────────┬───────────────┐        │  │
-│  │ │ 📦 45 SKUs    │ 📈 +8,2%      │ 💰 -R$ 45k    │        │  │
-│  │ │ Simulados     │ Aumento Médio │ Gap Anual     │        │  │
-│  │ └───────────────┴───────────────┴───────────────┘        │  │
-│  └──────────────────────────────────────────────────────────┘  │
-│                                                                │
-│  [📥 Importar NCMs do Catálogo] [📊 Nova Simulação Manual]     │
-│                                                                │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │ Tabela de Simulações                                     │  │
-│  │ ┌──────────┬────────┬────────┬─────────┬────────┬─────┐  │  │
-│  │ │ SKU      │ NCM    │ Preço  │ Preço   │ Varia- │ Gap │  │  │
-│  │ │          │        │ Atual  │ 2026    │ ção    │     │  │  │
-│  │ ├──────────┼────────┼────────┼─────────┼────────┼─────┤  │  │
-│  │ │ PROD-001 │ 6910.. │ R$ 150 │ R$ 162  │ +8,1%  │ 3%  │  │  │
-│  │ │ PROD-002 │ 8471.. │ R$ 500 │ R$ 548  │ +9,6%  │ -   │  │  │
-│  │ │ SERV-001 │ 123..  │ R$ 200 │ R$ 218  │ +9,0%  │ 5%  │  │  │
-│  │ └──────────┴────────┴────────┴─────────┴────────┴─────┘  │  │
-│  └──────────────────────────────────────────────────────────┘  │
-│                                                                │
-│  [📄 Exportar Tabela de Preços 2026]                           │
-│                                                                │
-└────────────────────────────────────────────────────────────────┘
+```
+src/
+  pages/
+    dashboard/
+      MargemAtiva.tsx           # Hub da Suite (3 abas)
+      
+  components/
+    margem-ativa/
+      index.ts                  # Exports
+      MargemAtivaHeader.tsx     # Header com KPIs consolidados
+      
+      # OMC-AI (Compras)
+      omc/
+        SupplierTable.tsx       # Lista de fornecedores
+        SupplierAnalysisCard.tsx # Detalhe do fornecedor
+        SupplierGapChart.tsx    # Grafico de gap por fornecedor
+        IndifferentPriceModal.tsx # Calculadora de indiferenca
+        SupplierRecommendations.tsx # Lista de acoes sugeridas
+        
+      # PriceGuard (Vendas)  
+      priceguard/
+        PriceGuardForm.tsx      # Formulario de entrada
+        PriceGuardResults.tsx   # Resultados da simulacao
+        PriceSimulationTable.tsx # Tabela de SKUs
+        SensitivityChart.tsx    # Grafico de sensibilidade
+        CompetitiveGapAlert.tsx # Alerta de gap
+        
+      # Dashboard Executivo
+      executive/
+        MarginImpactCard.tsx    # Impacto consolidado no EBITDA
+        ActionPriorityList.tsx  # Lista de acoes priorizadas
+        MarginPdfReport.tsx     # Gerador de PDF executivo
+        
+  hooks/
+    useSupplierAnalysis.ts      # Dados de fornecedores
+    usePriceGuard.ts            # Simulacoes de preco
+    useMarginDashboard.ts       # Dados consolidados
 ```
 
-### 2. Modal de Simulação Detalhada
+### Tela Principal: Hub da Suite
 
 ```text
-┌──────────────────────────────────────────────────────────────┐
-│  Simulação: PROD-001 - Cerâmica Industrial                   │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│  NCM: 69101100 │ UF: SP │ Município: São Paulo               │
-│                                                              │
-│  ┌────────────────────────────────────────────────────────┐  │
-│  │ Dados Atuais (2025)               Projeção 2026        │  │
-│  │ ─────────────────────             ─────────────────    │  │
-│  │ Preço de Venda: R$ 150,00         R$ 162,15 (+8,1%)    │  │
-│  │ Custo Unitário: R$ 80,00          R$ 80,00             │  │
-│  │ Alíquota Total: 9,25% (PIS/COF)   26,5% (CBS/IBS)      │  │
-│  │ Crédito Insumo: -                 R$ 12,50             │  │
-│  │ ─────────────────────             ─────────────────    │  │
-│  │ Margem Líquida: 18%               18% (mantida)        │  │
-│  │ Lucro Unitário: R$ 27,00          R$ 29,19             │  │
-│  └────────────────────────────────────────────────────────┘  │
-│                                                              │
-│  ⚠️ Análise de Competitividade                               │
-│  Preço do concorrente: R$ [______]                          │
-│  Se o mercado só suporta +5%, você tem um gap de 3,1% para  │
-│  buscar em eficiência operacional ou renegociação com       │
-│  fornecedores (veja o OMC-AI).                              │
-│                                                              │
-│  [🔄 Recalcular] [💾 Salvar] [📄 Gerar PDF Executivo]        │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
++------------------------------------------------------------------+
+| Suite Margem Ativa 2026                                           |
+| Proteja sua margem na transicao da Reforma Tributaria             |
++------------------------------------------------------------------+
+| KPIs Consolidados                                                 |
+| +------------------+ +------------------+ +--------------------+  |
+| | Vazamento de     | | Variacao de      | | Impacto no         |  |
+| | Credito          | | Preco Necessaria | | EBITDA Anual       |  |
+| | R$ 245.000/ano   | | +8,2% medio      | | -R$ 180k a +R$ 95k |  |
+| +------------------+ +------------------+ +--------------------+  |
++------------------------------------------------------------------+
+| [OMC-AI Compras] [PriceGuard Vendas] [Dashboard Executivo]        |
++------------------------------------------------------------------+
+|                                                                   |
+| (Conteudo da aba selecionada)                                     |
+|                                                                   |
++------------------------------------------------------------------+
 ```
 
-### 3. Análise de Sensibilidade
+### Aba 1: OMC-AI (Compras)
 
 ```text
-┌─────────────────────────────────────────────────────────────┐
-│  📊 Análise de Sensibilidade - PROD-001                     │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  "E se a alíquota de IBS for diferente?"                    │
-│                                                             │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │         │ IBS 15%  │ IBS 17.7% │ IBS 20%  │ IBS 22% │    │
-│  │─────────┼──────────┼───────────┼──────────┼─────────│    │
-│  │ Preço   │ R$ 155   │ R$ 162    │ R$ 168   │ R$ 175  │    │
-│  │ Variação│ +3,3%    │ +8,1%     │ +12,0%   │ +16,7%  │    │
-│  │ Gap     │ OK       │ 3%        │ 7%       │ 12%     │    │
-│  └─────────────────────────────────────────────────────┘    │
-│                                                             │
-│  💡 Clara sugere:                                           │
-│  "Se a alíquota de IBS ficar acima de 20%, considere        │
-│   renegociar fornecedores via OMC-AI para compensar."       │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
++------------------------------------------------------------------+
+| Analise de Fornecedores                   [Atualizar] [Exportar]  |
++------------------------------------------------------------------+
+| Filtros: [Todos os regimes v] [Gap > 5% v] [Ordenar: Gap v]       |
++------------------------------------------------------------------+
+| Fornecedor        | Regime    | Compras 12m | Gap      | Acao    |
+|-------------------|-----------|-------------|----------|---------|
+| Tech Solutions    | Simples   | R$ 180.000  | R$ 42.300| Subst.  |
+| Office Express    | Presumido | R$ 95.000   | R$ 8.200 | Reneg.  |
+| Logistica Agil    | Real      | R$ 320.000  | R$ 0     | Manter  |
++------------------------------------------------------------------+
+|                                                                   |
+| Detalhes: Tech Solutions Ltda                          [X]        |
+| CNPJ: 12.345.678/0001-90 | Regime: Simples Nacional               |
+| --------------------------------------------------------          |
+| Preco Nominal Total:           R$ 180.000,00                      |
+| Credito de IBS/CBS Estimado:   R$ 7.200,00 (4%)                   |
+| Custo Efetivo Liquido:         R$ 172.800,00                      |
+| --------------------------------------------------------          |
+| Se fosse Lucro Real (26,5%):   R$ 132.300,00                      |
+| GAP de Credito (vazamento):    R$ 40.500,00/ano                   |
+| --------------------------------------------------------          |
+| Preco de Indiferenca:                                             |
+| "Para continuar competitivo, o fornecedor precisaria              |
+|  reduzir o preco para R$ 147.000 (-18,3%)"                        |
+| --------------------------------------------------------          |
+| [Gerar Script de Renegociacao] [Buscar Alternativas]              |
++------------------------------------------------------------------+
+```
+
+### Aba 2: PriceGuard (Vendas)
+
+```text
++------------------------------------------------------------------+
+| Simulador de Precos 2026                  [Importar NCMs] [Novo]  |
++------------------------------------------------------------------+
+| Resumo: 45 SKUs simulados | Variacao media: +8,2% | Gap: R$ 45k   |
++------------------------------------------------------------------+
+| SKU      | NCM       | Preco Atual | Preco 2026 | Var.  | Gap    |
+|----------|-----------|-------------|------------|-------|--------|
+| PROD-001 | 69101100  | R$ 150,00   | R$ 162,15  | +8,1% | 3%     |
+| PROD-002 | 84713012  | R$ 500,00   | R$ 548,00  | +9,6% | -      |
+| SERV-001 | 1234567890| R$ 200,00   | R$ 218,00  | +9,0% | 5%     |
++------------------------------------------------------------------+
+|                                                                   |
+| Simulacao Detalhada: PROD-001                          [X]        |
+| --------------------------------------------------------          |
+|           ATUAL (2025)          |    PROJECAO 2026                |
+| Preco de Venda: R$ 150,00       | R$ 162,15 (+8,1%)               |
+| Custo Unitario: R$ 80,00        | R$ 80,00                        |
+| Aliquota Total: 9,25% (PIS/COF) | 26,5% (CBS/IBS)                 |
+| Credito Insumo: -               | R$ 12,50                        |
+| --------------------------------------------------------          |
+| Margem Liquida: 18%             | 18% (mantida)                   |
+| Lucro Unitario: R$ 27,00        | R$ 29,19                        |
+| --------------------------------------------------------          |
+| Preco do concorrente: R$ [______]                                 |
+| Se o mercado so suporta +5%, voce tem um gap de 3,1%              |
+| para buscar em eficiencia (veja OMC-AI).                          |
+| --------------------------------------------------------          |
+| [Recalcular] [Salvar] [Gerar PDF]                                 |
++------------------------------------------------------------------+
+```
+
+### Aba 3: Dashboard Executivo
+
+```text
++------------------------------------------------------------------+
+| Impacto Consolidado no EBITDA               [Atualizar] [PDF]     |
++------------------------------------------------------------------+
+|                                                                   |
+| +-------------------------+  +-------------------------------+    |
+| | VAZAMENTO DE MARGEM     |  | PROTECAO DE MARGEM            |    |
+| | (Compras - OMC-AI)      |  | (Vendas - PriceGuard)         |    |
+| |                         |  |                               |    |
+| | Gap de Credito Total    |  | Variacao Media de Preco       |    |
+| | R$ 245.000/ano          |  | +8,2%                         |    |
+| |                         |  |                               |    |
+| | Fornecedores Criticos   |  | SKUs em Risco Competitivo     |    |
+| | 12 (gap > 10%)          |  | 8 (gap > 5%)                  |    |
+| |                         |  |                               |    |
+| | Economia Potencial      |  | Risco de Perda de Margem      |    |
+| | R$ 180.000/ano          |  | R$ 95.000/ano                 |    |
+| +-------------------------+  +-------------------------------+    |
+|                                                                   |
+| +-------------------------------------------------------------+  |
+| | IMPACTO LIQUIDO NO EBITDA 2026                              |  |
+| |                                                             |  |
+| | Cenario Pessimista: -R$ 180.000 (sem acoes)                 |  |
+| | Cenario Otimista:   +R$ 95.000 (acoes implementadas)        |  |
+| | =========================================================== |  |
+| | Delta: R$ 275.000 de valor capturavel                       |  |
+| +-------------------------------------------------------------+  |
+|                                                                   |
+| Acoes Priorizadas:                                                |
+| 1. Renegociar Tech Solutions (R$ 42k/ano) [Alta]                  |
+| 2. Ajustar preco PROD-002 (+9,6%) [Media]                         |
+| 3. Substituir Office Express (R$ 8k/ano) [Media]                  |
+|                                                                   |
++------------------------------------------------------------------+
 ```
 
 ---
 
-## Roadmap de Implementação (4 Meses)
+## Roadmap de Implementacao (4 Meses)
 
-### Mês 1: Fundação
+### Mes 1: Fundacao e OMC-AI Basico
 
-**Semana 1-2: Banco de Dados e Edge Function**
-- Criar tabela `price_simulations`
-- Desenvolver Edge Function `calculate-price-guard`
-- Integrar com API RTC existente
+**Semana 1-2: Banco de Dados**
+- Criar tabelas `suppliers`, `supplier_analysis`, `price_simulations`, `margin_dashboard`
+- Configurar RLS policies
+- Criar indices para performance
 
-**Semana 3-4: UI Básica**
-- Página principal `/dashboard/priceguard`
-- Formulário de entrada manual de produto
-- Exibição de resultado básico
+**Semana 3-4: OMC-AI Core**
+- Edge Function `analyze-suppliers` (consolidador)
+- Edge Function `calculate-supplier-cost` (motor de calculo)
+- UI basica: `SupplierTable`, `SupplierAnalysisCard`
+- Integrar com dados existentes de `identified_credits`
 
-### Mês 2: Integração com Módulos Existentes
+### Mes 2: PriceGuard Basico
 
-**Semana 1-2: Conexão com DRE**
-- Puxar margem bruta e CPV do DRE mais recente
-- Calcular despesa proporcional automaticamente
-- Usar regime tributário para alíquotas atuais
+**Semana 1-2: Motor de Calculo**
+- Edge Function `calculate-price-guard`
+- Integracao com API RTC existente
+- Integracao com DRE para puxar margens
 
-**Semana 3-4: Conexão com Radar**
-- Buscar créditos de insumo por NCM
-- Estimar crédito quando não disponível
-- Indicador de qualidade do dado
+**Semana 3-4: UI PriceGuard**
+- `PriceGuardForm` (entrada manual)
+- `PriceGuardResults` (resultados)
+- `PriceSimulationTable` (lista de SKUs)
+- Importacao de NCMs do catalogo existente
 
-### Mês 3: Interface Avançada
+### Mes 3: Integracao e Dashboard
 
-**Semana 1-2: Importação em Lote**
-- Importar NCMs de `company_ncm_analysis`
-- Upload de Excel com lista de SKUs
-- Processamento em batch via Edge Function
+**Semana 1-2: Hub da Suite**
+- Pagina principal `MargemAtiva.tsx` com 3 abas
+- `MargemAtivaHeader` com KPIs consolidados
+- Edge Function `sync-margin-dashboard`
 
-**Semana 3-4: Análise de Competitividade**
-- Campo para preço do concorrente
-- Cálculo de gap de eficiência
-- Integração com OMC-AI (CTA para otimizar compras)
+**Semana 3-4: Features Avancadas**
+- `SensitivityChart` (analise de cenarios)
+- `IndifferentPriceModal` (calculadora de indiferenca)
+- `CompetitiveGapAlert` (alertas de gap)
+- Conexao entre OMC-AI e PriceGuard (CTA cruzada)
 
-### Mês 4: Relatórios e Polish
+### Mes 4: Polish e Lancamento
 
-**Semana 1-2: Análise de Sensibilidade**
-- Cenários pessimista/otimista
-- Slider de alíquotas
-- Gráfico de impacto
+**Semana 1-2: Relatorios e Exportacao**
+- `MarginPdfReport` (PDF executivo consolidado)
+- Exportacao de tabela de precos 2026
+- Script de renegociacao para fornecedores
 
-**Semana 3-4: Exportação e Lançamento**
-- Gerador de PDF "Tabela de Preços 2026"
-- Relatório executivo para o Board
-- Onboarding guiado
+**Semana 3-4: Testes e Lancamento**
 - Testes alpha com 5 clientes
+- Refinamento de UX
+- Integracao com Painel Executivo existente
+- Documentacao e onboarding
 
 ---
 
-## Arquivos a Criar
+## Integracao com Navegacao
 
-### Frontend
-- `src/pages/calculadora/PriceGuard.tsx` - Página principal
-- `src/components/priceguard/PriceGuardForm.tsx` - Formulário de entrada
-- `src/components/priceguard/PriceGuardResults.tsx` - Exibição de resultados
-- `src/components/priceguard/PriceSimulationTable.tsx` - Tabela de simulações
-- `src/components/priceguard/SensitivityAnalysis.tsx` - Gráfico de sensibilidade
-- `src/components/priceguard/PriceGuardPdf.tsx` - Gerador de relatório PDF
-- `src/hooks/usePriceGuard.ts` - Hook de gerenciamento de estado
+### Adicionar no Sidebar
 
-### Backend
-- `supabase/functions/calculate-price-guard/index.ts` - Engine de cálculo
-- `supabase/migrations/xxx_create_price_simulations.sql` - Tabela
+```typescript
+// Em navGroups, adicionar novo grupo "Margem Ativa"
+{
+  title: 'Margem Ativa',
+  items: [
+    { 
+      label: 'Suite Margem Ativa', 
+      href: '/dashboard/margem-ativa', 
+      icon: TrendingUp, 
+      requiredPlan: 'ENTERPRISE', 
+      badge: 'Novo' 
+    },
+  ]
+}
+```
 
-### Rotas
-- Adicionar rota `/dashboard/priceguard` em `App.tsx`
-- Adicionar item no menu lateral em `Sidebar.tsx`
+### Adicionar Rota no App.tsx
+
+```typescript
+import MargemAtiva from "./pages/dashboard/MargemAtiva";
+
+// Dentro de Routes
+<Route 
+  path="/dashboard/margem-ativa" 
+  element={
+    <ProtectedRoute>
+      <MargemAtiva />
+    </ProtectedRoute>
+  } 
+/>
+```
 
 ---
 
-## Monetização
+## Monetizacao
 
-**Preço Sugerido:** R$ 4.500/mês (add-on Enterprise)
+| Modelo | Preco | Justificativa |
+|--------|-------|---------------|
+| Add-on Premium | R$ 3.800/mes | Empresas que ja usam outras ferramentas |
+| Pacote Full | R$ 5.500/mes | Suite completa + Painel Executivo |
 
-**Justificativa:**
-- Erro de 2% no repasse de preços em empresa de R$ 10M/ano = R$ 200k de prejuízo
-- O software se paga em 1 mês de uso
+**ROI para o Cliente:**
+- Empresa com R$ 1M/mes em compras -> 1% de otimizacao = R$ 10.000/mes
+- Erro de 2% em repasse de precos em empresa de R$ 10M/ano = R$ 200k de prejuizo
+- O software se paga em menos de 1 mes
 
-**Perfil de Cliente:**
-- Indústrias com centenas de SKUs
-- Varejistas com contratos de longo prazo
-- Empresas B2B com tabelas de preço fixo
+**Perfil de Cliente Ideal:**
+- Faturamento: R$ 50M - R$ 200M/ano
+- Regime: Lucro Real ou Presumido
+- Setor: Varejo, Industria leve, Servicos
+- Dor: Margens apertadas (3-10%) + Alto volume de fornecedores
 
 ---
 
-## Próximos Passos Após Aprovação
+## Pontos de Atencao Tecnicos
 
-1. Criar migração SQL para tabela `price_simulations`
-2. Desenvolver Edge Function `calculate-price-guard`
-3. Implementar página básica com formulário manual
-4. Conectar com DRE e Radar existentes
-5. Testar com dados reais de um cliente beta
+1. **Performance:** Agregacao de `identified_credits` pode ser pesada. Considerar materialized views ou cache.
+
+2. **Classificacao de Regime:** A heuristica de CST/CSOSN tem ~80% de acuracia. Permitir correcao manual pelo usuario.
+
+3. **Volatilidade de Aliquotas:** Aliquotas de IBS/CBS podem mudar ate 2026. Usar campos parametrizaveis com defaults.
+
+4. **Integracao DRE:** Garantir que o DRE mais recente seja usado para calculos de margem.
+
+5. **API RTC:** Rate limiting da API oficial. Implementar cache de aliquotas por NCM.
+
+---
+
+## Proximos Passos Apos Aprovacao
+
+1. Criar migracao SQL para as 4 novas tabelas
+2. Desenvolver Edge Function `analyze-suppliers`
+3. Implementar UI basica do OMC-AI
+4. Testar com dados reais de `identified_credits`
+5. Iterar com feedback de usuarios beta
