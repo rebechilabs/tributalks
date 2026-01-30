@@ -1,38 +1,41 @@
 
-# Plano: Corrigir FAQ sobre Cartão de Crédito
 
-## Problema Atual
+# Plano: Adicionar Faixas de Faturamento Menores
 
-A FAQ diz:
-> "Preciso de cartão para começar?"
-> "Não. O plano FREE é completamente gratuito e não requer cartão de crédito..."
+## Contexto
 
-Isso está incorreto porque:
-1. Não existe mais plano "FREE" - o plano inicial é STARTER
-2. O STARTER tem trial de 7 dias, mas **requer cartão de crédito** no Mercado Pago
+Atualmente, as faixas de faturamento mensal no perfil começam em **R$1M/mês**, excluindo empresas com faturamento menor.
+
+**Faixas atuais:**
+- R$1M - R$2,5M/mês
+- R$2,5M - R$5M/mês
+- R$5M - R$10M/mês
+- R$10M - R$25M/mês
+- R$25M - R$50M/mês
+- Acima de R$50M/mês
 
 ## Alteração Proposta
 
-**Arquivo:** `src/components/landing/FAQSection.tsx`
+**Arquivo:** `src/pages/Perfil.tsx`
 
-**De:**
-```typescript
-{
-  question: "Preciso de cartão para começar?",
-  answer: "Não. O plano FREE é completamente gratuito e não requer cartão de crédito. Você só precisa informar dados de pagamento se decidir fazer upgrade para um plano pago.",
-}
-```
+Adicionar 2 novas faixas no início da lista:
 
-**Para:**
 ```typescript
-{
-  question: "Preciso de cartão para começar?",
-  answer: "Sim. Para ativar o período de teste gratuito de 7 dias do plano Starter, é necessário cadastrar um cartão de crédito no Mercado Pago. Você pode cancelar a qualquer momento durante o trial sem ser cobrado.",
-}
+const FAIXAS_FATURAMENTO = [
+  { value: '200000', label: 'R$200K - R$500K/mês' },   // NOVA
+  { value: '500000', label: 'R$500K - R$1M/mês' },     // NOVA
+  { value: '1000000', label: 'R$1M - R$2,5M/mês' },
+  { value: '2500000', label: 'R$2,5M - R$5M/mês' },
+  { value: '5000000', label: 'R$5M - R$10M/mês' },
+  { value: '10000000', label: 'R$10M - R$25M/mês' },
+  { value: '25000000', label: 'R$25M - R$50M/mês' },
+  { value: '50000000', label: 'Acima de R$50M/mês' },
+];
 ```
 
 ## Resultado Esperado
 
-- FAQ reflete a política real de trial com cartão
-- Alinhamento com o modelo de precificação atual (STARTER com trial de 7 dias)
-- Transparência para o cliente sobre a necessidade de cartão
+- Empresas com faturamento entre R$200K e R$1M poderão selecionar sua faixa correta
+- Seleções existentes de usuários continuam funcionando normalmente
+- O dropdown mostrará 8 opções em vez de 6
+
