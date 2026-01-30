@@ -106,8 +106,8 @@ export const FEATURE_CONFIG: Record<FeatureKey, FeatureConfig> = {
 // Limite de CNPJs por plano
 export const CNPJ_LIMITS: Record<UserPlan, number | 'unlimited'> = {
   'FREE': 1,
-  'NAVIGATOR': 1,
-  'PROFESSIONAL': 3,
+  'NAVIGATOR': 2,
+  'PROFESSIONAL': 5,
   'ENTERPRISE': 'unlimited',
 };
 
