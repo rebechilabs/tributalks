@@ -5,7 +5,7 @@ export type UserPlan = 'FREE' | 'STARTER' | 'NAVIGATOR' | 'PROFESSIONAL' | 'ENTE
 // Mapeamento de planos legados para novos
 const LEGACY_PLAN_MAP: Record<string, UserPlan> = {
   'FREE': 'FREE',
-  'BASICO': 'NAVIGATOR',
+  'BASICO': 'STARTER',
   'PROFISSIONAL': 'PROFESSIONAL',
   'PREMIUM': 'ENTERPRISE',
   'STARTER': 'STARTER',
@@ -33,8 +33,8 @@ export const PLAN_LABELS: Record<UserPlan, string> = {
 export const PLAN_PRICES: Record<UserPlan, string> = {
   'FREE': 'R$ 0',
   'STARTER': 'R$ 297/mês',
-  'NAVIGATOR': 'R$ 1.997/mês',
-  'PROFESSIONAL': 'R$ 2.997/mês',
+  'NAVIGATOR': 'R$ 697/mês',
+  'PROFESSIONAL': 'R$ 1.997/mês',
   'ENTERPRISE': 'Sob consulta',
 };
 
