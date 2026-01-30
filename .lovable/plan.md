@@ -1,64 +1,64 @@
 
-# Plano: Correção dos Preços na Landing Page
+# Plano: Correção do Mapeamento de Planos Legados e Preços
 
-## Problema
+## Problema Identificado
 
-Os preços dos planos Navigator e Professional estão incorretos na seção de preços da LP.
+1. **Mapeamento Incorreto**: O plano legado `BASICO` está mapeando para `NAVIGATOR` quando deveria mapear para `STARTER`
+2. **Preços Desatualizados**: Os preços em `PLAN_PRICES` não refletem os valores corretos
 
 ---
 
-## Correções Necessárias
+## Arquivo: `src/hooks/useFeatureAccess.ts`
 
-### Arquivo: `src/components/landing/PricingSection.tsx`
+### Correção 1: Mapeamento Legado (Linha 8)
+
+| De | Para |
+|----|------|
+| `'BASICO': 'NAVIGATOR'` | `'BASICO': 'STARTER'` |
+
+### Correção 2: Preços (Linhas 33-39)
 
 | Plano | Atual | Correto |
 |-------|-------|---------|
-| STARTER | R$ 297/mês • R$ 2.970/ano | ✅ Mantém |
-| NAVIGATOR | R$ 1.997/mês • R$ 19.970/ano | **R$ 697/mês • R$ 6.970/ano** |
-| PROFESSIONAL | R$ 2.997/mês • R$ 29.970/ano | **R$ 1.997/mês • R$ 19.970/ano** |
+| FREE | R$ 0 | ✅ Mantém |
+| STARTER | R$ 297/mês | ✅ Mantém |
+| NAVIGATOR | R$ 1.997/mês | **R$ 697/mês** |
+| PROFESSIONAL | R$ 2.997/mês | **R$ 1.997/mês** |
 | ENTERPRISE | Sob consulta | ✅ Mantém |
 
 ---
 
-## Mudanças no Código
+## Código Atualizado
 
-### Linhas 58-59 (Navigator)
+### LEGACY_PLAN_MAP (linha 6-15)
 ```typescript
-// DE:
-priceMonthly: 1997,
-priceAnnual: 19970,
-
-// PARA:
-priceMonthly: 697,
-priceAnnual: 6970,
+const LEGACY_PLAN_MAP: Record<string, UserPlan> = {
+  'FREE': 'FREE',
+  'BASICO': 'STARTER',        // ← Corrigido
+  'PROFISSIONAL': 'PROFESSIONAL',
+  'PREMIUM': 'ENTERPRISE',
+  'STARTER': 'STARTER',
+  'NAVIGATOR': 'NAVIGATOR',
+  'PROFESSIONAL': 'PROFESSIONAL',
+  'ENTERPRISE': 'ENTERPRISE',
+};
 ```
 
-### Linhas 81-82 (Professional)
+### PLAN_PRICES (linha 33-39)
 ```typescript
-// DE:
-priceMonthly: 2997,
-priceAnnual: 29970,
-
-// PARA:
-priceMonthly: 1997,
-priceAnnual: 19970,
+export const PLAN_PRICES: Record<UserPlan, string> = {
+  'FREE': 'R$ 0',
+  'STARTER': 'R$ 297/mês',
+  'NAVIGATOR': 'R$ 697/mês',       // ← Corrigido
+  'PROFESSIONAL': 'R$ 1.997/mês',  // ← Corrigido
+  'ENTERPRISE': 'Sob consulta',
+};
 ```
 
 ---
 
-## Resultado Final
+## Impacto
 
-| Plano | Mensal | Anual | Trial |
-|-------|--------|-------|-------|
-| STARTER | R$ 297 | R$ 2.970 | 7 dias grátis |
-| NAVIGATOR | R$ 697 | R$ 6.970 | - |
-| PROFESSIONAL | R$ 1.997 | R$ 19.970 | - |
-| ENTERPRISE | Sob consulta | - | - |
-
----
-
-## Observação
-
-O desconto "2 meses grátis" para planos anuais permanece correto, pois:
-- Navigator: R$ 697 × 10 = R$ 6.970 ✅
-- Professional: R$ 1.997 × 10 = R$ 19.970 ✅
+- Usuários com plano legado `BASICO` terão acesso correto às features do **STARTER** (não Navigator)
+- Mensagens de upgrade exibirão os preços corretos em toda a aplicação
+- Consistência com a Landing Page já corrigida
