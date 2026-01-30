@@ -81,7 +81,7 @@ async function sendEmail(to: string[], subject: string, html: string, replyTo?: 
       Authorization: `Bearer ${RESEND_API_KEY}`,
     },
     body: JSON.stringify({
-      from: "TribuTech <noreply@tributalks.com.br>",
+      from: "TribuTalks <noreply@tributalks.com.br>",
       to,
       subject,
       html,
@@ -201,7 +201,7 @@ const handler = async (req: Request): Promise<Response> => {
           <div class="container">
             <div class="header">
               <h2 style="margin: 0;">📩 Nova Mensagem de Contato</h2>
-              <p style="margin: 10px 0 0 0; opacity: 0.9;">TribuTech - Plataforma de Inteligência Tributária</p>
+              <p style="margin: 10px 0 0 0; opacity: 0.9;">TribuTalks - Plataforma de Inteligência Tributária</p>
             </div>
             <div class="content">
               <div class="field">
@@ -267,7 +267,7 @@ const handler = async (req: Request): Promise<Response> => {
               </p>
             </div>
             <div class="footer">
-              <p><strong>TribuTech</strong> - Seu GPS da Reforma Tributária</p>
+              <p><strong>TribuTalks</strong> - Seu GPS da Reforma Tributária</p>
               <p>Uma iniciativa Rebechi & Silva Produções</p>
             </div>
           </div>

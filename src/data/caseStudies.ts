@@ -52,7 +52,7 @@ Com operações interestaduais complexas e mais de 2.000 notas fiscais emitidas 
 
 **A Descoberta**
 
-Após uma demonstração do TributechAI, identificamos que a empresa:
+Após uma demonstração do TribuTalks, identificamos que a empresa:
 - Não estava aproveitando créditos de PIS/COFINS sobre fretes contratados
 - Possuía NCMs classificados incorretamente em produtos monofásicos
 - Não utilizava benefícios estaduais disponíveis no Paraná (TTD)

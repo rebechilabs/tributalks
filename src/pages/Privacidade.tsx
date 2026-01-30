@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-import logo from "@/assets/logo-tributech.png";
+import logo from "@/assets/logo-tributalks.png";
 
 export default function Privacidade() {
   return (

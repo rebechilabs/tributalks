@@ -166,7 +166,7 @@ export async function CaseStudyPdf(caseStudy: CaseStudy): Promise<void> {
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   addText("TribuTalks - GPS da Reforma Tributária", margin, pageHeight - 10);
-  addText("tributechai.lovable.app", pageWidth - margin - 40, pageHeight - 10);
+  addText("tributalks.lovable.app", pageWidth - margin - 40, pageHeight - 10);
 
   // Save
   doc.save(`estudo-de-caso-${caseStudy.slug}.pdf`);

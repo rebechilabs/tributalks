@@ -1,4 +1,4 @@
-import { TributechPitchPdf } from "@/components/docs/TributechPitchPdf";
+import { TribuTalksPitchPdf } from "@/components/docs/TribuTalksPitchPdf";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Download, ArrowLeft } from "lucide-react";
@@ -21,7 +21,7 @@ const DocumentoComercial = () => {
             <div className="mx-auto w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
               <FileText className="w-8 h-8 text-primary" />
             </div>
-            <CardTitle className="text-2xl">Documento Comercial Tributech</CardTitle>
+            <CardTitle className="text-2xl">Documento Comercial TribuTalks</CardTitle>
             <CardDescription className="text-base">
               Visão completa da plataforma para apresentação comercial
             </CardDescription>
@@ -63,7 +63,7 @@ const DocumentoComercial = () => {
             </div>
 
             <div className="pt-4 flex justify-center">
-              <TributechPitchPdf />
+              <TribuTalksPitchPdf />
             </div>
 
             <p className="text-xs text-center text-muted-foreground">

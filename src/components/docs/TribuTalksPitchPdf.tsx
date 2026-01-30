@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
 
-export function TributechPitchPdf() {
+export function TribuTalksPitchPdf() {
   const [generating, setGenerating] = useState(false);
 
   const generatePdf = async () => {

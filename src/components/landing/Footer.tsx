@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { CONFIG } from "@/config/site";
-import logoTributech from "@/assets/logo-tributech.png";
+import logoTributalks from "@/assets/logo-tributalks.png";
 import { TrustBadges } from "./TrustBadges";
 import { Linkedin, Phone, Mail } from "lucide-react";
 import { NewsletterForm } from "@/components/common/NewsletterForm";
@@ -11,7 +11,7 @@ export function Footer() {
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className="flex flex-col items-center text-center gap-6">
           {/* Logo */}
-          <img src={logoTributech} alt="TribuTalks" className="h-10 w-auto" />
+          <img src={logoTributalks} alt="TribuTalks" className="h-10 w-auto" />
 
           {/* Description */}
           <p className="text-muted-foreground text-sm">

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-import logo from "@/assets/logo-tributech.png";
+import logo from "@/assets/logo-tributalks.png";
 
 export default function Termos() {
   return (
@@ -28,7 +28,7 @@ export default function Termos() {
 
         <div className="prose prose-invert prose-sm max-w-none space-y-8 text-muted-foreground">
           <p>
-            Bem-vindo ao TribuTech. Ao acessar ou utilizar nossa plataforma, você concorda com estes Termos de Uso. Leia-os atentamente.
+            Bem-vindo ao TribuTalks. Ao acessar ou utilizar nossa plataforma, você concorda com estes Termos de Uso. Leia-os atentamente.
           </p>
 
           <section>
