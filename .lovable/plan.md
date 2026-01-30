@@ -1,62 +1,38 @@
 
-
-# Plano: Corrigir Resposta da Clara AI que não aparece
+# Plano: Corrigir Título do Professional Cortado pelo Badge
 
 ## Diagnóstico
 
-A Clara AI não está exibindo respostas porque existe uma **incompatibilidade de formato**:
+O card do plano **Professional** exibe o badge "MAIS POPULAR" posicionado acima do card com `absolute -top-3`. No entanto, o conteúdo interno (título "PROFESSIONAL") tem apenas `pt-2` de padding superior, o que não deixa espaço suficiente entre o badge e o título.
 
-| Componente | Formato Esperado | Formato Recebido |
-|------------|------------------|------------------|
-| `TribuBot.tsx` | Streaming SSE (`data: {...}\n`) | JSON simples (`{"message": "..."}`) |
-
-### O que acontece:
-1. Usuário pergunta "Posso mudar de regime no meio do ano?"
-2. Edge function processa e retorna: `{"message": "resposta aqui..."}`
-3. `TribuBot.tsx` tenta ler como stream SSE com `reader.read()`
-4. Procura por linhas começando com `data: `
-5. Não encontra → resposta vazia/ignorada
+**Situação atual:**
+- Badge: `absolute -top-3` (posicionado 12px acima do card)
+- Conteúdo: `pt-2` (apenas 8px de padding superior)
+- Resultado: título fica visualmente "colado" no badge
 
 ## Solução
 
-Modificar `TribuBot.tsx` para detectar e processar **ambos os formatos**:
-- Se resposta é JSON → mostra direto
-- Se resposta é SSE stream → processa como streaming
+Aumentar o padding superior do header dos cards que possuem badges (popular ou trial), de `pt-2` para `pt-4` ou `pt-6`, para criar espaçamento adequado.
 
-## Alterações
+## Alteração
 
-**Arquivo:** `src/pages/TribuBot.tsx`
+**Arquivo:** `src/components/landing/PricingSection.tsx`
 
-### Mudança na função `handleSend`
-
-```typescript
-// Após verificar resp.ok (linha 121)
-const contentType = resp.headers.get("content-type");
-
-// Se for JSON (resposta não-streaming)
-if (contentType?.includes("application/json")) {
-  const data = await resp.json();
-  if (data.message) {
-    setMessages(prev => [...prev, { 
-      role: "assistant", 
-      content: data.message 
-    }]);
-  }
-  setDailyCount(prev => prev + 1);
-  return;
-}
-
-// Se for streaming, continua com lógica atual...
+**Linha 215** - Alterar de:
+```tsx
+<div className="text-center mb-4 md:mb-6 pt-2">
 ```
 
-## Benefício
+**Para:**
+```tsx
+<div className={`text-center mb-4 md:mb-6 ${plan.popular || plan.trialDays ? 'pt-4' : 'pt-2'}`}>
+```
 
-- Clara responderá corretamente a todas as perguntas
-- Mantém compatibilidade com streaming (futuro)
-- Não requer mudanças na edge function
+Isso aplica padding extra (`pt-4`) apenas nos cards que possuem badges (STARTER com "7 DIAS GRÁTIS" e PROFESSIONAL com "MAIS POPULAR"), mantendo `pt-2` nos demais.
 
-## Impacto
+## Resultado Esperado
 
-- **Arquivos alterados:** 1 (`TribuBot.tsx`)
-- **Risco:** Baixo (apenas adiciona tratamento alternativo)
-
+- Título "PROFESSIONAL" totalmente visível, sem parecer cortado
+- Badge "MAIS POPULAR" com espaçamento adequado do título
+- Mesmo comportamento aplicado ao badge "7 DIAS GRÁTIS" do STARTER
+- Cards sem badge mantêm o espaçamento atual
