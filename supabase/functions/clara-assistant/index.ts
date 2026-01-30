@@ -150,6 +150,27 @@ const TOOL_CONTEXTS: Record<string, ToolContext> = {
       "Detalhe as atividades e benefícios atuais",
       "Quanto mais completo, melhores as análises"
     ]
+  },
+  "nexus": {
+    toolName: "NEXUS",
+    toolDescription: "centro de comando executivo com 8 KPIs consolidados",
+    stepByStep: [
+      "Veja os 8 KPIs principais de uma só vez",
+      "Analise fluxo de caixa, receita e margens",
+      "Monitore impacto tributário e créditos",
+      "Siga os insights automáticos priorizados",
+      "Tome decisões com base em dados reais"
+    ]
+  },
+  "margem-ativa": {
+    toolName: "Margem Ativa",
+    toolDescription: "análise de margem de contribuição e fornecedores",
+    stepByStep: [
+      "Importe seus XMLs de compras",
+      "Veja a análise de fornecedores críticos",
+      "Simule cenários de preços",
+      "Identifique oportunidades de renegociação"
+    ]
   }
 };
 
@@ -180,6 +201,150 @@ const CONVERSATION_STARTERS = [
     shortLabel: "O que fazer agora?"
   }
 ];
+
+// ============================================
+// ESCOPO DE FERRAMENTAS POR PLANO
+// ============================================
+const PLAN_TOOL_SCOPE: Record<string, string[]> = {
+  'FREE': [],
+  'STARTER': [
+    'score_tributario', 
+    'split_payment', 
+    'comparativo_regimes', 
+    'calculadora_rtc', 
+    'timeline_reforma'
+  ],
+  'NAVIGATOR': [
+    'score_tributario', 
+    'split_payment', 
+    'comparativo_regimes', 
+    'calculadora_rtc',
+    'calculadora_nbs', 
+    'timeline_reforma',
+    'noticias', 
+    'analisador_docs', 
+    'workflows', 
+    'comunidade', 
+    'relatorios_pdf'
+  ],
+  'PROFESSIONAL': [
+    'score_tributario', 
+    'split_payment', 
+    'comparativo_regimes', 
+    'calculadora_rtc',
+    'calculadora_nbs', 
+    'timeline_reforma',
+    'noticias', 
+    'analisador_docs', 
+    'workflows', 
+    'comunidade', 
+    'relatorios_pdf',
+    'dre_inteligente', 
+    'radar_creditos', 
+    'analise_xmls',
+    'oportunidades', 
+    'margem_ativa', 
+    'nexus', 
+    'erp'
+  ],
+  'ENTERPRISE': [
+    'score_tributario', 
+    'split_payment', 
+    'comparativo_regimes', 
+    'calculadora_rtc',
+    'calculadora_nbs', 
+    'timeline_reforma',
+    'noticias', 
+    'analisador_docs', 
+    'workflows', 
+    'comunidade', 
+    'relatorios_pdf',
+    'dre_inteligente', 
+    'radar_creditos', 
+    'analise_xmls',
+    'oportunidades', 
+    'margem_ativa', 
+    'nexus', 
+    'erp',
+    'painel_executivo',
+    'consultoria_juridica', 
+    'white_label'
+  ],
+};
+
+// Mapeamento de palavras-chave para ferramentas
+const TOPIC_KEYWORDS: Record<string, string[]> = {
+  'dre_inteligente': ['dre', 'demonstrativo', 'resultado', 'receita líquida', 'margem', 'ebitda', 'lucro'],
+  'radar_creditos': ['crédito', 'radar', 'recuperar', 'pis cofins', 'icms', 'ipi'],
+  'analise_xmls': ['xml', 'nota fiscal', 'importar', 'nfe', 'nf-e'],
+  'oportunidades': ['oportunidade', 'benefício', 'incentivo', 'economia'],
+  'margem_ativa': ['margem ativa', 'fornecedor', 'compra', 'renegociar'],
+  'nexus': ['nexus', 'kpi', 'indicador', 'painel kpi'],
+  'erp': ['erp', 'integração', 'omie', 'bling', 'contaazul'],
+  'painel_executivo': ['painel executivo', 'relatório executivo', 'ceo', 'cfo'],
+  'calculadora_nbs': ['nbs', 'serviço', 'calculadora nbs'],
+  'consultoria_juridica': ['advogado', 'jurídico', 'consultoria jurídica', 'rebechi'],
+};
+
+// Detecta qual ferramenta está sendo mencionada na mensagem
+function detectTopic(message: string): string | null {
+  const lowerMessage = message.toLowerCase();
+  
+  for (const [topic, keywords] of Object.entries(TOPIC_KEYWORDS)) {
+    if (keywords.some(kw => lowerMessage.includes(kw))) {
+      return topic;
+    }
+  }
+  
+  return null;
+}
+
+// Verifica se o tópico está no escopo do plano
+function isTopicInScope(topic: string | null, userPlan: string): boolean {
+  if (!topic) return true; // Se não detectou tópico, permite
+  const scope = PLAN_TOOL_SCOPE[userPlan] || [];
+  return scope.includes(topic);
+}
+
+// Gera resposta educada para fora do escopo
+function getOutOfScopeResponse(topic: string, userPlan: string): string {
+  const toolNames: Record<string, string> = {
+    'dre_inteligente': 'DRE Inteligente',
+    'radar_creditos': 'Radar de Créditos',
+    'analise_xmls': 'Análise de XMLs',
+    'oportunidades': 'Oportunidades Fiscais',
+    'margem_ativa': 'Margem Ativa',
+    'nexus': 'NEXUS',
+    'erp': 'Integrações com ERP',
+    'painel_executivo': 'Painel Executivo',
+    'calculadora_nbs': 'Calculadora NBS',
+    'consultoria_juridica': 'Consultoria Jurídica',
+  };
+
+  const requiredPlans: Record<string, string> = {
+    'dre_inteligente': 'Professional',
+    'radar_creditos': 'Professional',
+    'analise_xmls': 'Professional',
+    'oportunidades': 'Professional',
+    'margem_ativa': 'Professional',
+    'nexus': 'Professional',
+    'erp': 'Professional',
+    'painel_executivo': 'Enterprise',
+    'calculadora_nbs': 'Navigator',
+    'consultoria_juridica': 'Enterprise',
+  };
+
+  const toolName = toolNames[topic] || topic;
+  const requiredPlan = requiredPlans[topic] || 'Professional';
+
+  return `Entendo sua dúvida sobre **${toolName}**! 💡
+
+Essa é uma ferramenta poderosa disponível no plano **${requiredPlan}**.
+
+Posso te explicar como ela funciona e como ajudaria sua empresa. Mas para usar na prática, você precisaria fazer upgrade.
+
+Quer saber mais sobre o que o plano ${requiredPlan} oferece? Ou prefere que eu te ajude com as ferramentas do seu plano atual?`;
+}
 
 // ============================================
 // CLARA v4 — VERSÃO SLIM (para queries simples)
@@ -271,7 +436,7 @@ O Score Tributário é uma avaliação da saúde tributária da empresa inspirad
 
 O Simulador Split Payment simula o novo sistema de pagamento dividido. O usuário informa o valor da operação e seleciona o NCM do produto ou serviço. O sistema mostra como os impostos serão retidos automaticamente e compara com o sistema atual de recolhimento. O Comparativo de Regimes compara Simples Nacional, Lucro Presumido e Lucro Real. O usuário informa faturamento anual, despesas, folha de pagamento e setor de atuação. O sistema compara a carga tributária em cada regime e mostra qual é mais vantajoso.
 
-A Calculadora RTC calcula oficialmente CBS, IBS e IS. O usuário seleciona estado e município da operação, adiciona produtos ou serviços com seus NCMs, informa os valores e vê o cálculo detalhado. O Importador de XMLs faz análise automatizada de notas fiscais. O Radar de Créditos Fiscais identifica créditos tributários não aproveitados. A DRE Inteligente é o Demonstrativo de Resultados com análise tributária. As Oportunidades Fiscais mapeiam 37+ incentivos e benefícios aplicáveis ao negócio.
+A Calculadora RTC calcula oficialmente CBS, IBS e IS. O usuário seleciona estado e município da operação, adiciona produtos ou serviços com seus NCMs, informa os valores e vê o cálculo detalhado. O Importador de XMLs faz análise automatizada de notas fiscais. O Radar de Créditos Fiscais identifica créditos tributários não aproveitados. A DRE Inteligente é o Demonstrativo de Resultados com análise tributária. As Oportunidades Fiscais mapeiam 37+ incentivos e benefícios aplicáveis ao negócio. O NEXUS é o centro de comando executivo que consolida 8 KPIs principais em uma única tela.
 
 Seu objetivo final em cada conversa é que o usuário saia mais lúcido, mais confiante, mais orientado e menos ansioso do que entrou. Se ele entende o cenário e sabe qual é o próximo passo dele, você venceu. Você mede seu sucesso por clareza gerada, não por volume de informação transmitida. Clareza é o usuário saber o que fazer em seguida. Informação sem direcionamento é ruído.
 
@@ -283,33 +448,45 @@ Você transmite controle, não medo. Você transmite direção, não burocracia.
 // RESPOSTAS POR PLANO
 // ============================================
 const PLAN_RESPONSES: Record<string, string> = {
-  FREE: `Oi! Vou te ajudar a começar do jeito certo.
+  FREE: `Oi! O plano Grátis não inclui acesso à Clara AI. 😊
 
-No plano Grátis você testa 4 ferramentas. Cada uma pode ser usada 1 vez.
+Para conversar comigo e ter orientação personalizada sobre a Reforma Tributária, você precisa de um plano pago.
 
-🎯 **Suas ferramentas:**
-- **Score Tributário** - Descubra sua situação tributária atual
-- **Simulador Split Payment** - Entenda a nova forma de pagamento de impostos
+💡 **Suas opções:**
+- **Starter (R$ 297/mês)** - 30 mensagens/dia comigo
+- **Navigator (R$ 697/mês)** - 100 mensagens/dia comigo
+- **Professional (R$ 1.997/mês)** - Mensagens ilimitadas
+
+Quer conhecer os planos?`,
+
+  STARTER: `Oi! Vou te ajudar a começar do jeito certo. 🎯
+
+No plano **Starter** você tem acesso às ferramentas essenciais:
+
+📍 **Suas ferramentas:**
+- **Score Tributário** - Descubra sua situação tributária (ilimitado)
+- **Simulador Split Payment** - Entenda a nova forma de pagamento
 - **Comparativo de Regimes** - Compare Simples, Presumido e Real
 - **Calculadora RTC** - Simule CBS, IBS e IS
+- **Timeline 2026-2033** - Acompanhe os prazos
 
 💡 **Minha recomendação?**
-Comece pelo **Score Tributário**. Em 10 minutos você descobre sua situação tributária atual, principais riscos e próximos passos.
+Comece pelo **Score Tributário**. Em 10 minutos você descobre sua situação atual, principais riscos e próximos passos.
 
-Quer que eu te guie no Score? Ou prefere conhecer outra ferramenta primeiro?`,
+Quer que eu te guie no Score?`,
 
-  BASICO: `Ótimo! Você tem acesso completo ao GPS da Reforma.
+  NAVIGATOR: `Ótimo! Você tem acesso ao GPS da Reforma completo. 🚀
 
 📍 **Sua jornada ideal:**
 
 **FASE 1 - Entenda o Cenário** (30 min)
-Timeline 2026-2033, Notícias da Reforma, Feed + Pílula do Dia.
+Timeline 2026-2033, Notícias da Reforma, Pílula do Dia.
 
 **FASE 2 - Avalie sua Situação** (1 hora)
-Score Tributário, Comparativo de Regimes, Calculadora RTC.
+Score Tributário, Comparativo de Regimes, Calculadora RTC e NBS.
 
-**FASE 3 - Simule Impactos** (45 min)
-Split Payment e Calculadora de Serviços (se você presta serviços).
+**FASE 3 - Documente e Prepare** (45 min)
+Analisador de Documentos, Workflows Guiados, Relatórios PDF.
 
 💡 **Quick Start (1 hora):**
 1. Timeline 2026-2033 (15 min)
@@ -320,105 +497,78 @@ Split Payment e Calculadora de Serviços (se você presta serviços).
 
 Por onde quer começar? Timeline ou Score direto?`,
 
-  NAVIGATOR: `Ótimo! Você tem acesso completo ao GPS da Reforma.
+  PROFESSIONAL: `Perfeito! Agora sim você tem o arsenal completo. 🏆
 
-📍 **Sua jornada ideal:**
-
-**FASE 1 - Entenda o Cenário** (30 min)
-Timeline 2026-2033, Notícias da Reforma, Feed + Pílula do Dia.
-
-**FASE 2 - Avalie sua Situação** (1 hora)
-Score Tributário, Comparativo de Regimes, Calculadora RTC.
-
-**FASE 3 - Simule Impactos** (45 min)
-Split Payment e Calculadora de Serviços (se você presta serviços).
-
-💡 **Quick Start (1 hora):**
-1. Timeline 2026-2033 (15 min)
-2. Score Tributário (30 min)
-3. Calculadora RTC (15 min)
-
-*Resultado: você sai sabendo exatamente onde está.*
-
-Por onde quer começar? Timeline ou Score direto?`,
-
-  PROFISSIONAL: `Perfeito! Agora sim você tem o arsenal completo.
-
-🚀 **Você tem 4 Workflows Automáticos:**
+🚀 **Você tem 4 Workflows + Diagnóstico Completo:**
 
 **1. Diagnóstico Completo**
 XMLs ilimitados → Radar de Créditos → DRE Inteligente → 37+ Oportunidades Fiscais
 
-**2. Preparação Reforma**
+**2. NEXUS - Centro de Comando**
+8 KPIs consolidados → Insights automáticos → Decisões em tempo real
+
+**3. Suite Margem Ativa**
+Análise de fornecedores → Simulação de preços → Oportunidades de negociação
+
+**4. Preparação Reforma**
 Seus dados reais → Simulações personalizadas → Relatórios PDF profissionais
 
-**3. Análise Societária**
-Upload ilimitado de contratos → IA analisa tudo → Identifica oportunidades
-
-**4. Simulação de Preços**
-Seus XMLs reais → Split Payment real → Precificação otimizada
-
-🎁 **Suas exclusividades:**
+🎁 **Exclusividades Professional:**
 ✅ XMLs ilimitados
 ✅ Radar de Créditos
 ✅ DRE Inteligente
+✅ NEXUS
 ✅ Clara AI sem limites
-✅ Relatórios PDF
+✅ Integrações ERP
 
 💡 **Quick Start (90 min):**
-1. Importar seus XMLs (20 min)
-2. Executar Workflow 1 (40 min)
-3. Analisar resultados (30 min)
+1. Score Tributário (15 min)
+2. DRE Inteligente (30 min)
+3. Acesse o NEXUS (15 min)
+4. Importe seus XMLs (30 min)
 
 *Resultado: diagnóstico real baseado na SUA operação.*
 
-Importamos seus XMLs agora? Ou prefere conhecer os Workflows antes?`,
+Por onde quer começar?`,
 
-  PREMIUM: `Perfeito! Agora sim você tem o arsenal completo.
-
-🚀 **Você tem 4 Workflows Automáticos:**
-
-**1. Diagnóstico Completo** → XMLs ilimitados, Radar de Créditos, DRE, Oportunidades
-**2. Preparação Reforma** → Dados reais, simulações, relatórios PDF
-**3. Análise Societária** → Upload ilimitado, IA analisa, identifica oportunidades
-**4. Simulação de Preços** → XMLs reais, Split Payment real, precificação otimizada
-
-💡 **Quick Start (90 min):**
-1. Importar seus XMLs (20 min)
-2. Executar Workflow 1 (40 min)
-3. Analisar resultados (30 min)
-
-Por qual Workflow quer começar?`,
-
-  ENTERPRISE: `Excelente escolha! Você tem a plataforma completa + acompanhamento especializado da Rebechi & Silva Advogados.
+  ENTERPRISE: `Excelente escolha! Você tem a plataforma completa + acompanhamento especializado. 👑
 
 🏆 **Você tem tudo do Professional:**
-4 Workflows, XMLs ilimitados, Radar de Créditos, DRE, 37+ Oportunidades, Clara AI ilimitada, Relatórios PDF.
+4 Workflows, XMLs ilimitados, Radar de Créditos, DRE, NEXUS, 37+ Oportunidades, Clara AI ilimitada.
 
 ✨ **Exclusividades Enterprise:**
-- Diagnóstico estratégico personalizado com advogado tributarista
 - Painel Executivo com KPIs em tempo real
-- Análise por CNPJ considerando todas suas particularidades
-- Reuniões mensais estratégicas
+- Diagnóstico estratégico com advogado tributarista (Rebechi & Silva)
 - Consultorias ilimitadas com acesso direto aos advogados
+- Reuniões mensais estratégicas
+- White Label (logotipo e domínio próprio)
 - Suporte prioritário e implementação guiada
-- Histórico completo de análises
 
 📍 **Próximos passos:**
 
 **Agora:**
-1. Acesse Enterprise > Consultorias e agende sua primeira reunião de diagnóstico
-2. Enquanto aguarda, execute o Workflow 1 e importe seus XMLs
+1. Acesse Enterprise > Consultorias e agende sua primeira reunião
+2. Execute o Score e DRE enquanto aguarda
 3. Acesse o Painel Executivo para ver seus indicadores
 
 **Na primeira reunião:**
-- Apresentaremos análise preliminar com base nos dados da plataforma
-- Definiremos estratégia personalizada para sua empresa
-- Estabeleceremos cronograma de implementação
+- Análise preliminar com base nos seus dados
+- Estratégia personalizada para sua empresa
+- Cronograma de implementação
 
-Quer agendar sua reunião agora?
+✨ No Enterprise, suas consultorias com advogados são incluídas e ilimitadas. Use sem moderação!`
+};
 
-✨ No Enterprise, suas consultorias com advogados tributaristas são incluídas e ilimitadas. Use esse benefício sem moderação para maximizar seus resultados.`
+// Mapeamento de planos legados
+const PLAN_MAPPING: Record<string, string> = {
+  'FREE': 'FREE',
+  'BASICO': 'NAVIGATOR',
+  'STARTER': 'STARTER',
+  'NAVIGATOR': 'NAVIGATOR',
+  'PROFISSIONAL': 'PROFESSIONAL',
+  'PROFESSIONAL': 'PROFESSIONAL',
+  'PREMIUM': 'ENTERPRISE',
+  'ENTERPRISE': 'ENTERPRISE',
 };
 
 // ============================================
@@ -478,8 +628,14 @@ const buildSystemPrompt = (
     return `${CLARA_CORE_SLIM}\n\n${nameContext}\n\nO usuário está no plano: ${userPlan}`;
   }
 
+  // Contexto de escopo por plano
+  const scopeContext = `
+IMPORTANTE - ESCOPO POR PLANO:
+O usuário está no plano ${userPlan}. Você só pode dar orientações detalhadas sobre as ferramentas disponíveis no plano dele.
+Se ele perguntar sobre ferramentas de planos superiores, você pode explicar brevemente o que a ferramenta faz, mas deve indicar educadamente que precisa de upgrade para usar.`;
+
   // Query complexa = prompt completo v4
-  let prompt = `${CLARA_CORE_FULL}\n\n${nameContext}\n\nO usuário está no plano: ${userPlan}`;
+  let prompt = `${CLARA_CORE_FULL}\n\n${nameContext}${scopeContext}`;
   
   // Adiciona contexto da ferramenta atual
   if (toolContext) {
@@ -536,17 +692,6 @@ serve(async (req) => {
       .eq("user_id", user.id)
       .single();
 
-    // Map legacy/different plan names to standard ones
-    const PLAN_MAPPING: Record<string, string> = {
-      'FREE': 'FREE',
-      'BASICO': 'NAVIGATOR',
-      'NAVIGATOR': 'NAVIGATOR',
-      'PROFISSIONAL': 'PROFISSIONAL',
-      'PROFESSIONAL': 'PROFISSIONAL',
-      'PREMIUM': 'ENTERPRISE',
-      'ENTERPRISE': 'ENTERPRISE',
-    };
-
     const rawPlan = profile?.plano || "FREE";
     const userPlan = PLAN_MAPPING[rawPlan] || "FREE";
     const userName = profile?.nome || null;
@@ -566,12 +711,21 @@ serve(async (req) => {
     const lastMessage = messages?.[messages.length - 1]?.content || "";
     const isSimple = isSimpleQuery(lastMessage);
     
+    // Detecta tópico da mensagem e verifica escopo
+    const detectedTopic = detectTopic(lastMessage);
+    if (detectedTopic && !isTopicInScope(detectedTopic, userPlan)) {
+      const outOfScopeResponse = getOutOfScopeResponse(detectedTopic, userPlan);
+      return new Response(JSON.stringify({ message: outOfScopeResponse }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    
     const systemPrompt = buildSystemPrompt(toolContext, userPlan, userName, isSimple);
 
     // Check if user is asking "Por onde eu começo?" and return plan-specific response
     const lastUserMessage = lastMessage.toLowerCase();
     if (lastUserMessage.includes("por onde") && (lastUserMessage.includes("começo") || lastUserMessage.includes("inicio") || lastUserMessage.includes("começar"))) {
-      let planResponse = PLAN_RESPONSES[userPlan] || PLAN_RESPONSES.FREE;
+      let planResponse = PLAN_RESPONSES[userPlan] || PLAN_RESPONSES.STARTER;
       
       // Personaliza com o nome se disponível
       if (userName) {
@@ -644,12 +798,14 @@ serve(async (req) => {
     return new Response(JSON.stringify({ message: assistantMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (e) {
-    // Log error internally for debugging, but return sanitized message
-    console.error("Clara assistant error:", e);
-    return new Response(JSON.stringify({ error: "Ocorreu um erro ao processar sua solicitação. Tente novamente." }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  } catch (error) {
+    console.error("Error in clara-assistant:", error);
+    return new Response(
+      JSON.stringify({ error: "Erro interno. Tente novamente." }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   }
 });

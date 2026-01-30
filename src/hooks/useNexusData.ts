@@ -66,7 +66,6 @@ interface UseNexusDataReturn {
   hasData: {
     dre: boolean;
     score: boolean;
-    credits: boolean;
   };
 }
 
@@ -144,7 +143,7 @@ export function useNexusData(): UseNexusDataReturn {
   const [insights, setInsights] = useState<NexusInsight[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
-  const [hasData, setHasData] = useState({ dre: false, score: false, credits: false });
+  const [hasData, setHasData] = useState({ dre: false, score: false });
 
   const fetchData = useCallback(async () => {
     if (!user?.id) {
@@ -212,12 +211,11 @@ export function useNexusData(): UseNexusDataReturn {
         creditosAproveitados = Math.round((creditsAproveitados.length / identifiedCredits.length) * 100);
       }
 
-      // Data availability flags
+      // Data availability flags - NEXUS não requer mais XMLs/créditos
       const hasDreData = !!dre && dre.calc_receita_bruta && Number(dre.calc_receita_bruta) > 0;
       const hasScoreData = !!taxScore && taxScore.score_total !== null;
-      const hasCreditsData = creditosTotal > 0;
 
-      setHasData({ dre: hasDreData, score: hasScoreData, credits: hasCreditsData });
+      setHasData({ dre: hasDreData, score: hasScoreData });
 
       // Calculate KPIs
       const receitaBruta = Number(dre?.calc_receita_bruta || 0);

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { CONFIG } from '@/config/site';
+import { CLARA_DAILY_LIMITS, type UserPlan } from './useFeatureAccess';
 
 interface UserCredits {
   balance: number;
@@ -46,27 +47,57 @@ export function getCreditPackages(): CreditPackage[] {
   ];
 }
 
+// Mapeamento de planos legados
+const LEGACY_PLAN_MAP: Record<string, UserPlan> = {
+  'FREE': 'FREE',
+  'BASICO': 'NAVIGATOR',
+  'PROFISSIONAL': 'PROFESSIONAL',
+  'PREMIUM': 'ENTERPRISE',
+  'STARTER': 'STARTER',
+  'NAVIGATOR': 'NAVIGATOR',
+  'PROFESSIONAL': 'PROFESSIONAL',
+  'ENTERPRISE': 'ENTERPRISE',
+};
+
 export function useUserCredits() {
   const { user, profile } = useAuth();
   const [credits, setCredits] = useState<UserCredits | null>(null);
+  const [dailyUsage, setDailyUsage] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const userPlan = (profile?.plano as string) || 'FREE';
+  // Normaliza o plano
+  const rawPlan = (profile?.plano as string) || 'FREE';
+  const userPlan: UserPlan = LEGACY_PLAN_MAP[rawPlan] || 'FREE';
+  
+  const isStarter = userPlan === 'STARTER';
   const isNavigator = userPlan === 'NAVIGATOR';
   const isProfessionalOrHigher = userPlan === 'PROFESSIONAL' || userPlan === 'ENTERPRISE';
   
+  // Pode comprar créditos extras (STARTER e NAVIGATOR)
+  const canBuyCredits = isStarter || isNavigator;
+  
+  // Limite diário do plano
+  const dailyLimit = CLARA_DAILY_LIMITS[userPlan];
+  
+  // Mensagens restantes hoje (do limite diário + créditos extras comprados)
+  const dailyRemaining = typeof dailyLimit === 'number' 
+    ? Math.max(0, dailyLimit - dailyUsage) + (credits?.balance || 0)
+    : 'unlimited';
+  
   // Show upsell after 3+ purchases
-  const shouldShowUpsell = credits && credits.purchaseCount >= UPSELL_THRESHOLD;
+  const shouldShowUpsell = credits && credits.purchaseCount >= UPSELL_THRESHOLD && canBuyCredits;
 
   useEffect(() => {
     if (!user) {
       setCredits(null);
+      setDailyUsage(0);
       setLoading(false);
       return;
     }
 
     fetchCredits();
+    fetchDailyUsage();
   }, [user]);
 
   const fetchCredits = async () => {
@@ -115,17 +146,73 @@ export function useUserCredits() {
     }
   };
 
+  const fetchDailyUsage = async () => {
+    if (!user) return;
+    
+    try {
+      // Busca uso de hoje
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const { count, error: countError } = await supabase
+        .from('credit_usage')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('feature', 'tribubot')
+        .gte('created_at', today.toISOString());
+
+      if (countError) throw countError;
+      
+      setDailyUsage(count || 0);
+    } catch (err) {
+      console.error('Error fetching daily usage:', err);
+    }
+  };
+
   const consumeCredit = async (feature: string = 'tribubot', metadata: object = {}): Promise<boolean> => {
-    if (!user || !credits) return false;
+    if (!user) return false;
     
     // Professional+ users have unlimited access
-    if (isProfessionalOrHigher) return true;
+    if (isProfessionalOrHigher) {
+      // Log usage but don't check limits
+      await supabase
+        .from('credit_usage')
+        .insert({
+          user_id: user.id,
+          credits_used: 0, // Não consome crédito
+          feature,
+          metadata: metadata as any,
+        });
+      return true;
+    }
     
-    // Navigator users check balance
-    if (credits.balance <= 0) return false;
+    // FREE não tem acesso à Clara
+    if (userPlan === 'FREE') return false;
+    
+    // STARTER e NAVIGATOR: verificar limite diário + créditos extras
+    const currentDailyLimit = typeof dailyLimit === 'number' ? dailyLimit : 0;
+    
+    // Ainda tem mensagens do limite diário?
+    if (dailyUsage < currentDailyLimit) {
+      // Usa do limite diário (não consome crédito comprado)
+      await supabase
+        .from('credit_usage')
+        .insert({
+          user_id: user.id,
+          credits_used: 0, // Contabiliza uso mas não crédito
+          feature,
+          metadata: metadata as any,
+        });
+      
+      setDailyUsage(prev => prev + 1);
+      return true;
+    }
+    
+    // Limite diário esgotado - verificar créditos comprados
+    if (!credits || credits.balance <= 0) return false;
 
     try {
-      // Decrement balance
+      // Decrement balance from purchased credits
       const { error: updateError } = await supabase
         .from('user_credits')
         .update({ balance: credits.balance - 1 })
@@ -133,7 +220,7 @@ export function useUserCredits() {
 
       if (updateError) throw updateError;
 
-      // Log usage
+      // Log usage with credit consumption
       await supabase
         .from('credit_usage')
         .insert({
@@ -180,13 +267,34 @@ export function useUserCredits() {
     }
   };
 
+  // Verifica se pode enviar mensagem (para UI)
+  const canSendMessage = (): boolean => {
+    if (isProfessionalOrHigher) return true;
+    if (userPlan === 'FREE') return false;
+    
+    const currentDailyLimit = typeof dailyLimit === 'number' ? dailyLimit : 0;
+    
+    // Tem mensagens do limite diário?
+    if (dailyUsage < currentDailyLimit) return true;
+    
+    // Tem créditos comprados?
+    return (credits?.balance || 0) > 0;
+  };
+
   return {
     credits,
+    dailyUsage,
+    dailyLimit,
+    dailyRemaining,
     loading,
     error,
+    userPlan,
+    isStarter,
     isNavigator,
     isProfessionalOrHigher,
+    canBuyCredits,
     shouldShowUpsell,
+    canSendMessage,
     consumeCredit,
     addCredits,
     refetch: fetchCredits,
