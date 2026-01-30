@@ -4,7 +4,7 @@ import { useNexusData } from '@/hooks/useNexusData';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { BarChart3, FileText, Trophy, AlertTriangle } from 'lucide-react';
+import { BarChart3, Trophy, AlertTriangle } from 'lucide-react';
 
 export default function Nexus() {
   const { kpiData, insights, loading, lastUpdate, refresh, hasData } = useNexusData();
@@ -49,14 +49,6 @@ export default function Nexus() {
                       <Link to="/dashboard/score-tributario">
                         <Trophy className="w-4 h-4 mr-1" />
                         Calcular Score
-                      </Link>
-                    </Button>
-                  )}
-                  {!hasData.credits && (
-                    <Button asChild size="sm" variant="outline">
-                      <Link to="/dashboard/analise-notas">
-                        <FileText className="w-4 h-4 mr-1" />
-                        Importar XMLs
                       </Link>
                     </Button>
                   )}
