@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
-import logoTributech from "@/assets/logo-tributech.png";
+import logoTributalks from "@/assets/logo-tributalks.png";
 import { cn } from "@/lib/utils";
 import { NewsletterForm } from "@/components/common/NewsletterForm";
 
@@ -174,7 +174,7 @@ export function MobileNav() {
       <SheetContent side="left" className="w-72 p-0">
         {/* Header */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-border">
-          <img src={logoTributech} alt="TribuTalks" className="h-8 w-auto" />
+          <img src={logoTributalks} alt="TribuTalks" className="h-8 w-auto" />
           <Button variant="ghost" size="icon" onClick={() => setOpen(false)}>
             <X className="w-5 h-5" />
           </Button>

@@ -6,7 +6,7 @@ import {
   MapPin, ShieldCheck, FileSearch, Route, Briefcase, ClipboardCheck, Plug, Gift
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import logoTributech from "@/assets/logo-tributech.png";
+import logoTributalks from "@/assets/logo-tributalks.png";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { NewsletterForm } from "@/components/common/NewsletterForm";
@@ -180,7 +180,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="h-16 flex items-center px-6 border-b border-border">
         <Link to="/dashboard" className="flex items-center gap-2">
-          <img src={logoTributech} alt="TribuTalks" className="h-8 w-auto" />
+          <img src={logoTributalks} alt="TribuTalks" className="h-8 w-auto" />
         </Link>
       </div>
 

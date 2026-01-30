@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import logoTributech from "@/assets/logo-tributech.png";
+import logoTributalks from "@/assets/logo-tributalks.png";
 import { useAuth } from "@/hooks/useAuth";
 
 export function Header() {
