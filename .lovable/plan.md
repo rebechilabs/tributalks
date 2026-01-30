@@ -1,236 +1,63 @@
 
-# Plano de Correção de Segurança - 100% das Vulnerabilidades
+# Plano de Atualização de Preços
 
-## Resumo Executivo
-
-Este plano corrige **todas as vulnerabilidades identificadas** no projeto TribuTalks, incluindo:
-- 2 vulnerabilidades críticas (ERRO)
-- 5 vulnerabilidades médias (AVISO)
-- 3 alertas informativos (INFO)
+## Resumo
+Atualização dos valores dos planos Navigator e Professional em toda a aplicação.
 
 ---
 
-## Vulnerabilidades a Corrigir
+## Alterações de Preço
 
-### 1. CRÍTICO - Tabela `profiles` Exposta Publicamente
-**Problema**: A tabela `profiles` está acessível publicamente, expondo emails, CNPJs, IDs Stripe e dados financeiros.
-
-**Correção**: As políticas RLS atuais JÁ estão corretas (`auth.uid() = user_id`). O scanner pode ter detectado incorretamente. Vou validar e confirmar.
-
----
-
-### 2. CRÍTICO - Tabela `contatos` Leitura Pública
-**Problema**: Formulário de contato pode ter dados lidos por não-autenticados.
-
-**Correção**: As políticas RLS atuais já restringem SELECT apenas a admins. Nenhuma alteração necessária.
-
----
-
-### 3. MÉDIO - Policy INSERT `notifications` Muito Permissiva
-**Problema**: `WITH CHECK (true)` permite que qualquer um insira notificações em qualquer user_id.
-
-**Correção SQL**:
-```sql
--- Remover política atual
-DROP POLICY IF EXISTS "Service can insert notifications" ON public.notifications;
-
--- Criar política restritiva
-CREATE POLICY "Authenticated users can insert own notifications" 
-ON public.notifications FOR INSERT 
-TO authenticated 
-WITH CHECK (auth.uid() = user_id);
-```
-
----
-
-### 4. MÉDIO - Policy INSERT `user_achievements` Muito Permissiva
-**Problema**: `WITH CHECK (true)` na política "Service can insert achievements".
-
-**Correção SQL**:
-```sql
--- Remover política permissiva
-DROP POLICY IF EXISTS "Service can insert achievements" ON public.user_achievements;
-
--- A política "Users can insert own achievements" já existe e está correta
-```
-
----
-
-### 5. MÉDIO - Referral Codes Lookup Público
-**Problema**: `USING (true)` na política SELECT permite coletar todos os códigos de indicação.
-
-**Correção SQL**:
-```sql
--- Remover política pública de lookup
-DROP POLICY IF EXISTS "Anyone can lookup referral codes by code" ON public.referral_codes;
-
--- Criar função segura para validar códigos (via RPC)
-CREATE OR REPLACE FUNCTION public.validate_referral_code(code_to_check text)
-RETURNS TABLE(valid boolean, referrer_id uuid) 
-LANGUAGE sql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT 
-    EXISTS(SELECT 1 FROM referral_codes WHERE code = UPPER(code_to_check)) as valid,
-    (SELECT user_id FROM referral_codes WHERE code = UPPER(code_to_check) LIMIT 1) as referrer_id;
-$$;
-```
-
----
-
-### 6. MÉDIO - Mensagens de Erro Verbosas
-**Problema**: Edge Functions expõem detalhes internos de erro.
-
-**Correções no Código**:
-
-**clara-assistant/index.ts** (já corrigido - linha 804):
-```typescript
-// ATUAL (bom):
-return new Response(
-  JSON.stringify({ error: "Erro interno. Tente novamente." }),
-  { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-);
-```
-
-**process-xml-batch/index.ts** (já corrigido - linha 637):
-```typescript
-// ATUAL (bom):
-JSON.stringify({ success: false, error: 'Erro ao processar XMLs. Tente novamente.' })
-```
-
-✅ Ambas as funções principais já foram corrigidas anteriormente.
-
----
-
-### 7. AVISO - Extensões no Schema `public`
-**Problema**: Extensões instaladas no schema público podem expor funcionalidades.
-
-**Correção**: Não é possível migrar extensões existentes sem acesso direto ao Supabase. Este é um aviso de menor prioridade e é uma limitação da infraestrutura gerenciada pelo Lovable Cloud.
-
----
-
-### 8. AVISO - Leaked Password Protection Desabilitado
-**Problema**: Proteção contra senhas vazadas está desativada.
-
-**Correção**: Requer acesso ao painel Supabase Auth, que é gerenciado pelo Lovable Cloud. Já existe ticket de suporte pendente (conforme documentado na memória do projeto).
-
----
-
-### 9. AVISO - Admin Verificado Apenas no Client-Side
-**Problema**: Páginas admin verificam roles via client-side.
-
-**Correção**: As políticas RLS de banco já usam `has_role(auth.uid(), 'admin')` para operações sensíveis. A verificação client-side é apenas para UI. Edge Functions admin-only devem verificar role no server-side.
-
----
-
-### 10. INFO - Prazos Reforma Públicos
-**Problema**: Tabela `prazos_reforma` é pública.
-
-**Análise**: Intencional - são dados educacionais sobre datas da Reforma Tributária. Não contém informações sensíveis.
-
----
-
-## Alterações no Código Frontend
-
-### Arquivo: `src/hooks/useReferral.ts`
-
-Atualizar o método `validateReferralCode` para usar a nova função RPC segura:
-
-```typescript
-// ANTES (linha 99-112):
-const validateReferralCode = async (code: string): Promise<{ valid: boolean; referrerId?: string }> => {
-  try {
-    const { data, error } = await supabase
-      .from('referral_codes')
-      .select('user_id, code')
-      .eq('code', code.toUpperCase())
-      .maybeSingle();
-    // ...
-  }
-};
-
-// DEPOIS:
-const validateReferralCode = async (code: string): Promise<{ valid: boolean; referrerId?: string }> => {
-  try {
-    const { data, error } = await supabase
-      .rpc('validate_referral_code', { code_to_check: code.toUpperCase() });
-
-    if (error || !data || !data[0]?.valid) {
-      return { valid: false };
-    }
-
-    return { valid: true, referrerId: data[0].referrer_id };
-  } catch {
-    return { valid: false };
-  }
-};
-```
-
----
-
-## Resumo das Migrações SQL
-
-```sql
--- ======================================================
--- MIGRAÇÃO DE SEGURANÇA - CORREÇÃO DE VULNERABILIDADES
--- ======================================================
-
--- 1. Corrigir policy de INSERT em notifications
-DROP POLICY IF EXISTS "Service can insert notifications" ON public.notifications;
-
-CREATE POLICY "Authenticated users can insert own notifications" 
-ON public.notifications FOR INSERT 
-TO authenticated 
-WITH CHECK (auth.uid() = user_id);
-
--- 2. Remover policy permissiva de achievements
-DROP POLICY IF EXISTS "Service can insert achievements" ON public.user_achievements;
-
--- 3. Remover lookup público de referral codes e criar função segura
-DROP POLICY IF EXISTS "Anyone can lookup referral codes by code" ON public.referral_codes;
-
-CREATE OR REPLACE FUNCTION public.validate_referral_code(code_to_check text)
-RETURNS TABLE(valid boolean, referrer_id uuid) 
-LANGUAGE sql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT 
-    EXISTS(SELECT 1 FROM referral_codes WHERE code = UPPER(code_to_check)) as valid,
-    (SELECT user_id FROM referral_codes WHERE code = UPPER(code_to_check) LIMIT 1) as referrer_id;
-$$;
-
--- Garantir que função é acessível para anônimos (cadastro)
-GRANT EXECUTE ON FUNCTION public.validate_referral_code(text) TO anon;
-GRANT EXECUTE ON FUNCTION public.validate_referral_code(text) TO authenticated;
-```
+| Plano | Preço Anterior | Novo Preço | Anual Anterior | Novo Anual |
+|-------|----------------|------------|----------------|------------|
+| Navigator | R$ 697/mês | R$ 1.997/mês | R$ 6.970/ano | R$ 19.970/ano |
+| Professional | R$ 1.997/mês | R$ 2.997/mês | R$ 19.970/ano | R$ 29.970/ano |
 
 ---
 
 ## Arquivos a Modificar
 
-| Arquivo | Tipo de Alteração |
-|---------|-------------------|
-| Migração SQL | Criar novas policies RLS |
-| `src/hooks/useReferral.ts` | Usar RPC ao invés de SELECT direto |
+### 1. `src/components/landing/PricingSection.tsx`
+Atualizar os valores numéricos nas definições dos planos:
+- Linha 58: `priceMonthly: 697` → `priceMonthly: 1997`
+- Linha 59: `priceAnnual: 6970` → `priceAnnual: 19970`
+- Linha 81: `priceMonthly: 1997` → `priceMonthly: 2997`
+- Linha 82: `priceAnnual: 19970` → `priceAnnual: 29970`
+
+### 2. `src/config/site.ts`
+Atualizar comentários de documentação:
+- Linha 6: `// Navigator - R$697/mês ou R$6.970/ano` → `// Navigator - R$1.997/mês ou R$19.970/ano`
+- Adicionar comentário atualizado para Professional se existir
+
+### 3. `src/hooks/useFeatureAccess.ts`
+Atualizar strings de display:
+- Linha 36: `'NAVIGATOR': 'R$ 697/mês'` → `'NAVIGATOR': 'R$ 1.997/mês'`
+- Linha 37: `'PROFESSIONAL': 'R$ 1.997/mês'` → `'PROFESSIONAL': 'R$ 2.997/mês'`
+
+### 4. `supabase/functions/clara-assistant/index.ts`
+Atualizar mensagem de upsell da Clara:
+- Linha 457: `Navigator (R$ 697/mês)` → `Navigator (R$ 1.997/mês)`
+- Linha 458: `Professional (R$ 1.997/mês)` → `Professional (R$ 2.997/mês)`
+
+### 5. `src/pages/NoticiasReforma.tsx`
+Atualizar CTA de upgrade:
+- Linha 311: `Upgrade para Navigator — R$ 697/mês` → `Upgrade para Navigator — R$ 1.997/mês`
 
 ---
 
-## Vulnerabilidades Não Corrigíveis (Limitações)
+## Impacto
 
-| Vulnerabilidade | Motivo |
-|-----------------|--------|
-| Extensões no schema public | Infraestrutura gerenciada pelo Lovable Cloud |
-| Leaked Password Protection | Requer acesso ao painel Supabase Auth (ticket pendente) |
+- **Landing Page**: Reflete novos preços na seção de planos
+- **Clara AI**: Mensagens de upgrade mostram valores corretos
+- **Hooks de Acesso**: Mensagens de gate/upgrade consistentes
+- **Páginas Internas**: CTAs de upgrade atualizados
 
 ---
 
-## Resultado Esperado
+## Observação Importante
 
-Após implementação:
-- ✅ 0 vulnerabilidades críticas
-- ✅ 0 vulnerabilidades médias corrigíveis
-- ⚠️ 2 avisos pendentes (infraestrutura gerenciada)
-- ℹ️ 1 alerta informativo (intencional)
-
+Os **Payment Links do Stripe** precisarão ser atualizados no dashboard do Stripe com os novos preços. Os links atuais em `src/config/site.ts` continuarão funcionando, mas os valores cobrados devem ser ajustados diretamente no Stripe para refletir:
+- Navigator Mensal: R$ 1.997
+- Navigator Anual: R$ 19.970
+- Professional Mensal: R$ 2.997
+- Professional Anual: R$ 29.970
