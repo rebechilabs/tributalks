@@ -3,10 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Sparkles, MessageCircle, ArrowRight } from "lucide-react";
 
-interface ClaraCardProps {
-  onOpenChat?: () => void;
-}
-
 const QUICK_QUESTIONS = [
   { id: "basico", label: "O que é a Reforma?", question: "O que é essa Reforma Tributária que todo mundo está falando?" },
   { id: "impacto", label: "Impacto na empresa", question: "Como a Reforma Tributária vai afetar minha empresa na prática?" },
@@ -15,7 +11,7 @@ const QUICK_QUESTIONS = [
   { id: "acao", label: "O que fazer agora", question: "O que preciso fazer agora para não ser pego de surpresa pela Reforma Tributária?" },
 ];
 
-export function ClaraCard({ onOpenChat }: ClaraCardProps) {
+export function ClaraCard() {
   const [hoveredQuestion, setHoveredQuestion] = useState<string | null>(null);
 
   const handleQuestionClick = (question: string) => {
@@ -28,6 +24,10 @@ export function ClaraCard({ onOpenChat }: ClaraCardProps) {
     window.dispatchEvent(new CustomEvent('openClaraWithWelcome', { 
       detail: { type: 'getting-started' } 
     }));
+  };
+
+  const handleOpenFreeChat = () => {
+    window.dispatchEvent(new CustomEvent('openClaraFreeChat'));
   };
 
   return (
@@ -95,7 +95,7 @@ export function ClaraCard({ onOpenChat }: ClaraCardProps) {
 
         {/* Secondary CTA - Chat direto */}
         <Button 
-          onClick={onOpenChat} 
+          onClick={handleOpenFreeChat} 
           variant="outline"
           className="w-full gap-2 border-primary/30 hover:bg-primary/5"
         >

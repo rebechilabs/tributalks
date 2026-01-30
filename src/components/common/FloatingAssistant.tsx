@@ -283,11 +283,18 @@ export function FloatingAssistant() {
       }
     };
 
+    // Listen for "Abrir chat livre" button
+    const handleOpenFreeChat = () => {
+      setIsOpen(true);
+    };
+
     window.addEventListener('openClaraWithQuestion', handleOpenWithQuestion as EventListener);
     window.addEventListener('openClaraWithWelcome', handleOpenWithWelcome as EventListener);
+    window.addEventListener('openClaraFreeChat', handleOpenFreeChat as EventListener);
     return () => {
       window.removeEventListener('openClaraWithQuestion', handleOpenWithQuestion as EventListener);
       window.removeEventListener('openClaraWithWelcome', handleOpenWithWelcome as EventListener);
+      window.removeEventListener('openClaraFreeChat', handleOpenFreeChat as EventListener);
     };
   }, []);
 
