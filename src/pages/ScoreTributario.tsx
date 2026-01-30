@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { Building2, Scale, Shield, FileCheck, Clock, Settings, HelpCircle, Info, DollarSign, Bell, CreditCard, Target, FileSearch, AlertTriangle, TrendingUp, Lightbulb } from "lucide-react";
+import { Building2, Scale, Shield, FileCheck, Clock, Settings, Info, DollarSign, Bell, CreditCard, Target, FileSearch, AlertTriangle, TrendingUp, Lightbulb } from "lucide-react";
+import { HelpButton } from "@/components/common/HelpButton";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { ScoreGauge } from "@/components/score/ScoreGauge";
 import { ScoreCard } from "@/components/score/ScoreCard";
@@ -238,10 +239,7 @@ export default function ScoreTributario() {
               Diagnóstico completo da saúde fiscal da sua empresa
             </p>
           </div>
-          <Button variant="outline" className="gap-2">
-            <HelpCircle className="h-4 w-4" />
-            Como funciona?
-          </Button>
+          <HelpButton toolSlug="score-tributario" size="default" className="gap-2" />
         </div>
 
         {/* Card Principal do Score */}
