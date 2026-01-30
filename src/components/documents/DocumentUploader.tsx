@@ -1,13 +1,13 @@
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
-import { Upload, FileText, Loader2, X } from "lucide-react";
+import { Upload, FileText, Loader2, X, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import type { AnalysisResult } from "@/pages/AnalisadorDocumentos";
+import type { LegalAnalysisResult } from "@/pages/AnalisadorDocumentos";
 
 interface DocumentUploaderProps {
-  onAnalysisComplete: (result: AnalysisResult | null) => void;
+  onAnalysisComplete: (result: LegalAnalysisResult | null) => void;
   isAnalyzing: boolean;
   setIsAnalyzing: (value: boolean) => void;
 }
@@ -19,22 +19,6 @@ export function DocumentUploader({
 }: DocumentUploaderProps) {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [extractionProgress, setExtractionProgress] = useState("");
-
-  const readFileAsText = async (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result;
-        if (typeof result === 'string') {
-          resolve(result);
-        } else {
-          reject(new Error('Failed to read file'));
-        }
-      };
-      reader.onerror = () => reject(new Error('Error reading file'));
-      reader.readAsText(file);
-    });
-  };
 
   const readFileAsBase64 = async (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -66,17 +50,13 @@ export function DocumentUploader({
     try {
       setExtractionProgress("Preparando documento...");
       
-      // Read the PDF as base64 and send to the edge function
-      // The edge function will use Gemini's vision capabilities to read the PDF
       const base64Content = await readFileAsBase64(uploadedFile);
       
-      setExtractionProgress("Analisando documento com IA...");
+      setExtractionProgress("Analisando cláusulas com IA jurídica...");
 
-      // Call the edge function with the base64 content
       const { data, error } = await supabase.functions.invoke("analyze-document", {
         body: {
           documentBase64: base64Content,
-          documentType: "Contrato Social",
           fileName: uploadedFile.name,
         },
       });
@@ -89,13 +69,9 @@ export function DocumentUploader({
         throw new Error(data.error || "Análise falhou");
       }
 
-      onAnalysisComplete({
-        extractedData: data.extractedData,
-        matchedOpportunities: data.matchedOpportunities,
-        totalMatches: data.totalMatches,
-      });
+      onAnalysisComplete(data.result);
 
-      toast.success("Documento analisado com sucesso!");
+      toast.success("Análise jurídica concluída!");
     } catch (error) {
       console.error("Error analyzing document:", error);
       toast.error(
@@ -137,7 +113,10 @@ export function DocumentUploader({
 
   return (
     <div className="bg-card border border-border rounded-xl p-6">
-      <h2 className="font-semibold text-foreground mb-4">Upload do Documento</h2>
+      <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+        <Scale className="w-5 h-5 text-primary" />
+        Upload do Documento
+      </h2>
 
       {!uploadedFile ? (
         <div
@@ -154,7 +133,7 @@ export function DocumentUploader({
             {isDragActive ? "Solte o arquivo aqui" : "Arraste um PDF ou clique para selecionar"}
           </p>
           <p className="text-sm text-muted-foreground">
-            Contrato Social em PDF • Máximo 10MB
+            Contrato em PDF • Máximo 10MB
           </p>
         </div>
       ) : (
@@ -195,7 +174,7 @@ export function DocumentUploader({
               </>
             ) : (
               <>
-                <FileText className="w-4 h-4 mr-2" />
+                <Scale className="w-4 h-4 mr-2" />
                 Analisar Documento
               </>
             )}
