@@ -55,8 +55,8 @@ const plans: Plan[] = [
   {
     name: "NAVIGATOR",
     description: "Para monitorar a reforma",
-    priceMonthly: 1997,
-    priceAnnual: 19970,
+    priceMonthly: 697,
+    priceAnnual: 6970,
     cnpjLimit: "2 CNPJs • 2 Usuários",
     features: [
       { text: "Clara AI (Copiloto)", included: "limited", limitText: "100 msgs/dia" },
@@ -78,8 +78,8 @@ const plans: Plan[] = [
   {
     name: "PROFESSIONAL",
     description: "Diagnóstico completo + NEXUS",
-    priceMonthly: 2997,
-    priceAnnual: 29970,
+    priceMonthly: 1997,
+    priceAnnual: 19970,
     highlighted: true,
     popular: true,
     cnpjLimit: "5 CNPJs • 5 Usuários",
