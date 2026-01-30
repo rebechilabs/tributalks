@@ -17,11 +17,6 @@ const upcomingFeatures = [
     label: "App Mobile",
     description: "iOS e Android nativo",
   },
-  {
-    icon: Users,
-    label: "Comunidade Circle",
-    description: "Networking exclusivo para CFOs",
-  },
 ];
 
 export function ComingSoonSection() {
