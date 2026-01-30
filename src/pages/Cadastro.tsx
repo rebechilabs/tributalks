@@ -7,7 +7,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
-import logoTributech from "@/assets/logo-tributech.png";
+import logoTributalks from "@/assets/logo-tributalks.png";
 import { supabase } from "@/integrations/supabase/client";
 
 const Cadastro = () => {
@@ -169,7 +169,7 @@ const Cadastro = () => {
         <div className="bg-card rounded-xl border border-border p-8 shadow-lg">
           {/* Logo */}
           <div className="flex justify-center mb-6">
-            <img src={logoTributech} alt="TribuTalks" className="h-16 w-auto" />
+            <img src={logoTributalks} alt="TribuTalks" className="h-16 w-auto" />
           </div>
 
           {/* Heading */}
