@@ -1284,6 +1284,66 @@ export type Database = {
           },
         ]
       }
+      margin_dashboard: {
+        Row: {
+          created_at: string | null
+          economia_potencial_renegociacao: number | null
+          fornecedores_analisados: number | null
+          fornecedores_criticos: number | null
+          gap_competitivo_medio: number | null
+          gap_credito_total: number | null
+          id: string
+          impacto_ebitda_anual_max: number | null
+          impacto_ebitda_anual_min: number | null
+          periodo_referencia: string
+          risco_perda_margem: number | null
+          score_prontidao: number | null
+          skus_simulados: number | null
+          total_compras_analisado: number | null
+          updated_at: string | null
+          user_id: string
+          variacao_media_preco: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          economia_potencial_renegociacao?: number | null
+          fornecedores_analisados?: number | null
+          fornecedores_criticos?: number | null
+          gap_competitivo_medio?: number | null
+          gap_credito_total?: number | null
+          id?: string
+          impacto_ebitda_anual_max?: number | null
+          impacto_ebitda_anual_min?: number | null
+          periodo_referencia: string
+          risco_perda_margem?: number | null
+          score_prontidao?: number | null
+          skus_simulados?: number | null
+          total_compras_analisado?: number | null
+          updated_at?: string | null
+          user_id: string
+          variacao_media_preco?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          economia_potencial_renegociacao?: number | null
+          fornecedores_analisados?: number | null
+          fornecedores_criticos?: number | null
+          gap_competitivo_medio?: number | null
+          gap_credito_total?: number | null
+          id?: string
+          impacto_ebitda_anual_max?: number | null
+          impacto_ebitda_anual_min?: number | null
+          periodo_referencia?: string
+          risco_perda_margem?: number | null
+          score_prontidao?: number | null
+          skus_simulados?: number | null
+          total_compras_analisado?: number | null
+          updated_at?: string | null
+          user_id?: string
+          variacao_media_preco?: number | null
+        }
+        Relationships: []
+      }
       noticias_tributarias: {
         Row: {
           acao_recomendada: string | null
@@ -1494,6 +1554,126 @@ export type Database = {
           titulo?: string
           updated_at?: string | null
           url_referencia?: string | null
+        }
+        Relationships: []
+      }
+      price_simulations: {
+        Row: {
+          aliquota_cbs: number | null
+          aliquota_ibs_mun: number | null
+          aliquota_ibs_uf: number | null
+          aliquota_icms: number | null
+          aliquota_ipi: number | null
+          aliquota_is: number | null
+          aliquota_iss: number | null
+          aliquota_pis_cofins: number | null
+          cenario_otimista: Json | null
+          cenario_pessimista: Json | null
+          created_at: string | null
+          credito_fonte: string | null
+          credito_insumo_estimado: number | null
+          custo_unitario: number | null
+          data_quality: string | null
+          despesa_proporcional: number | null
+          gap_competitivo_percent: number | null
+          id: string
+          lucro_unitario_2026: number | null
+          lucro_unitario_atual: number | null
+          margem_2026_mantida: number | null
+          margem_atual_percent: number | null
+          municipio_codigo: number | null
+          municipio_nome: string | null
+          nbs_code: string | null
+          ncm_code: string | null
+          preco_2026_necessario: number | null
+          preco_atual: number | null
+          preco_concorrente: number | null
+          product_name: string
+          recomendacao: string | null
+          simulation_batch_id: string | null
+          sku_code: string | null
+          uf: string | null
+          updated_at: string | null
+          user_id: string
+          variacao_preco_percent: number | null
+        }
+        Insert: {
+          aliquota_cbs?: number | null
+          aliquota_ibs_mun?: number | null
+          aliquota_ibs_uf?: number | null
+          aliquota_icms?: number | null
+          aliquota_ipi?: number | null
+          aliquota_is?: number | null
+          aliquota_iss?: number | null
+          aliquota_pis_cofins?: number | null
+          cenario_otimista?: Json | null
+          cenario_pessimista?: Json | null
+          created_at?: string | null
+          credito_fonte?: string | null
+          credito_insumo_estimado?: number | null
+          custo_unitario?: number | null
+          data_quality?: string | null
+          despesa_proporcional?: number | null
+          gap_competitivo_percent?: number | null
+          id?: string
+          lucro_unitario_2026?: number | null
+          lucro_unitario_atual?: number | null
+          margem_2026_mantida?: number | null
+          margem_atual_percent?: number | null
+          municipio_codigo?: number | null
+          municipio_nome?: string | null
+          nbs_code?: string | null
+          ncm_code?: string | null
+          preco_2026_necessario?: number | null
+          preco_atual?: number | null
+          preco_concorrente?: number | null
+          product_name: string
+          recomendacao?: string | null
+          simulation_batch_id?: string | null
+          sku_code?: string | null
+          uf?: string | null
+          updated_at?: string | null
+          user_id: string
+          variacao_preco_percent?: number | null
+        }
+        Update: {
+          aliquota_cbs?: number | null
+          aliquota_ibs_mun?: number | null
+          aliquota_ibs_uf?: number | null
+          aliquota_icms?: number | null
+          aliquota_ipi?: number | null
+          aliquota_is?: number | null
+          aliquota_iss?: number | null
+          aliquota_pis_cofins?: number | null
+          cenario_otimista?: Json | null
+          cenario_pessimista?: Json | null
+          created_at?: string | null
+          credito_fonte?: string | null
+          credito_insumo_estimado?: number | null
+          custo_unitario?: number | null
+          data_quality?: string | null
+          despesa_proporcional?: number | null
+          gap_competitivo_percent?: number | null
+          id?: string
+          lucro_unitario_2026?: number | null
+          lucro_unitario_atual?: number | null
+          margem_2026_mantida?: number | null
+          margem_atual_percent?: number | null
+          municipio_codigo?: number | null
+          municipio_nome?: string | null
+          nbs_code?: string | null
+          ncm_code?: string | null
+          preco_2026_necessario?: number | null
+          preco_atual?: number | null
+          preco_concorrente?: number | null
+          product_name?: string
+          recomendacao?: string | null
+          simulation_batch_id?: string | null
+          sku_code?: string | null
+          uf?: string | null
+          updated_at?: string | null
+          user_id?: string
+          variacao_preco_percent?: number | null
         }
         Relationships: []
       }
@@ -1917,6 +2097,134 @@ export type Database = {
           processed_at?: string | null
           stripe_event_id?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      supplier_analysis: {
+        Row: {
+          created_at: string | null
+          credito_aproveitado_atual: number | null
+          credito_potencial_2026: number | null
+          custo_efetivo_liquido: number | null
+          gap_credito: number | null
+          id: string
+          notas_analise: string | null
+          periodo_fim: string
+          periodo_inicio: string
+          preco_indiferenca: number | null
+          recomendacao: string | null
+          status: string | null
+          supplier_id: string
+          updated_at: string | null
+          user_id: string
+          valor_nominal_total: number | null
+          valor_tributos_pagos: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          credito_aproveitado_atual?: number | null
+          credito_potencial_2026?: number | null
+          custo_efetivo_liquido?: number | null
+          gap_credito?: number | null
+          id?: string
+          notas_analise?: string | null
+          periodo_fim: string
+          periodo_inicio: string
+          preco_indiferenca?: number | null
+          recomendacao?: string | null
+          status?: string | null
+          supplier_id: string
+          updated_at?: string | null
+          user_id: string
+          valor_nominal_total?: number | null
+          valor_tributos_pagos?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          credito_aproveitado_atual?: number | null
+          credito_potencial_2026?: number | null
+          custo_efetivo_liquido?: number | null
+          gap_credito?: number | null
+          id?: string
+          notas_analise?: string | null
+          periodo_fim?: string
+          periodo_inicio?: string
+          preco_indiferenca?: number | null
+          recomendacao?: string | null
+          status?: string | null
+          supplier_id?: string
+          updated_at?: string | null
+          user_id?: string
+          valor_nominal_total?: number | null
+          valor_tributos_pagos?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_analysis_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suppliers: {
+        Row: {
+          aliquota_credito_estimada: number | null
+          classificacao: string | null
+          cnae_principal: string | null
+          cnpj: string
+          created_at: string | null
+          custo_efetivo_score: number | null
+          id: string
+          municipio: string | null
+          ncms_frequentes: string[] | null
+          qtd_notas_12m: number | null
+          razao_social: string | null
+          regime_confianca: string | null
+          regime_tributario: string | null
+          total_compras_12m: number | null
+          uf: string | null
+          ultima_atualizacao: string | null
+          user_id: string
+        }
+        Insert: {
+          aliquota_credito_estimada?: number | null
+          classificacao?: string | null
+          cnae_principal?: string | null
+          cnpj: string
+          created_at?: string | null
+          custo_efetivo_score?: number | null
+          id?: string
+          municipio?: string | null
+          ncms_frequentes?: string[] | null
+          qtd_notas_12m?: number | null
+          razao_social?: string | null
+          regime_confianca?: string | null
+          regime_tributario?: string | null
+          total_compras_12m?: number | null
+          uf?: string | null
+          ultima_atualizacao?: string | null
+          user_id: string
+        }
+        Update: {
+          aliquota_credito_estimada?: number | null
+          classificacao?: string | null
+          cnae_principal?: string | null
+          cnpj?: string
+          created_at?: string | null
+          custo_efetivo_score?: number | null
+          id?: string
+          municipio?: string | null
+          ncms_frequentes?: string[] | null
+          qtd_notas_12m?: number | null
+          razao_social?: string | null
+          regime_confianca?: string | null
+          regime_tributario?: string | null
+          total_compras_12m?: number | null
+          uf?: string | null
+          ultima_atualizacao?: string | null
+          user_id?: string
         }
         Relationships: []
       }
