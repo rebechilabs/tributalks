@@ -62,3 +62,12 @@ verify_jwt = false
 
 [functions.check-expiring-benefits]
 verify_jwt = false
+
+[functions.check-score-recalculation]
+verify_jwt = false
+
+[functions.check-platform-inactivity]
+verify_jwt = false
+
+[functions.send-weekly-digest]
+verify_jwt = false
