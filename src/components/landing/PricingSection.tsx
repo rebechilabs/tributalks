@@ -35,7 +35,7 @@ const plans: Plan[] = [
     name: "STARTER",
     description: "Para começar com segurança",
     priceMonthly: 297,
-    priceAnnual: 2970,
+    priceAnnual: 3970,
     trialDays: 7,
     cnpjLimit: "1 CNPJ • 1 Usuário",
     features: [
