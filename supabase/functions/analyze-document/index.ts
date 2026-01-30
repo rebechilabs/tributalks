@@ -6,29 +6,30 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface ExtractedData {
-  razaoSocial?: string;
-  cnpj?: string;
-  cnaesPrincipais?: string[];
-  cnaesSecundarios?: string[];
-  objetoSocial?: string;
-  regimeTributario?: string;
-  capitalSocial?: number;
-  dataConstituicao?: string;
-  socios?: { nome: string; participacao?: number }[];
-  endereco?: { cidade?: string; uf?: string };
-  atividadesIdentificadas?: string[];
+interface ClauseAnalysis {
+  clausula: string;
+  tipo: "positivo" | "atencao" | "melhoria";
+  descricao: string;
+  sugestao?: string;
 }
 
-interface MatchedOpportunity {
-  id: string;
-  code: string;
-  name: string;
-  nameSimples: string;
-  category: string;
-  matchScore: number;
-  matchReasons: string[];
-  economiaDescricao?: string;
+interface DocumentSuggestion {
+  titulo: string;
+  descricao: string;
+  motivo: string;
+}
+
+interface LegalAnalysisResult {
+  tipoDocumento: string;
+  resumoGeral: string;
+  pontosPositivos: ClauseAnalysis[];
+  pontosAtencao: ClauseAnalysis[];
+  sugestoesMelhorias: ClauseAnalysis[];
+  documentoSugerido?: DocumentSuggestion;
+  avaliacaoGeral: {
+    nota: number;
+    classificacao: "Excelente" | "Bom" | "Regular" | "Requer Atenção";
+  };
 }
 
 serve(async (req) => {
@@ -67,92 +68,108 @@ serve(async (req) => {
       });
     }
 
-    const userId = claimsData.claims.sub;
+    const { documentBase64, fileName } = await req.json();
 
-    const { documentBase64, documentText, documentType, fileName } = await req.json();
-
-    // Accept either base64 PDF or plain text
-    if (!documentBase64 && !documentText) {
+    if (!documentBase64) {
       return new Response(
-        JSON.stringify({ error: "Document content is required (base64 or text)" }),
+        JSON.stringify({ error: "Document content is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Step 1: Extract data from document using AI with vision capabilities
-    let extractionPrompt: string;
-    let messages: any[];
-    
-    if (documentBase64) {
-      // Use Gemini vision to read PDF directly
-      extractionPrompt = `Você é um especialista em análise de documentos societários brasileiros.
+    const analysisPrompt = `Você é um advogado experiente especializado em análise de contratos empresariais brasileiros.
 
-Analise este ${documentType || "Contrato Social"} (arquivo: ${fileName || "documento.pdf"}) e extraia as informações estruturadas.
+Analise este documento jurídico (arquivo: ${fileName || "documento.pdf"}) como um advogado profissional faria.
 
-Responda APENAS com um JSON válido no seguinte formato (sem markdown, sem explicações):
-{
-  "razaoSocial": "Nome completo da empresa",
-  "cnpj": "00.000.000/0000-00",
-  "cnaesPrincipais": ["0000-0/00"],
-  "cnaesSecundarios": ["0000-0/00"],
-  "objetoSocial": "Descrição resumida do objeto social",
-  "regimeTributario": "Simples Nacional|Lucro Presumido|Lucro Real|Não identificado",
-  "capitalSocial": 100000,
-  "dataConstituicao": "2020-01-15",
-  "socios": [{"nome": "Nome do Sócio", "participacao": 50}],
-  "endereco": {"cidade": "São Paulo", "uf": "SP"},
-  "atividadesIdentificadas": ["Comércio varejista", "Prestação de serviços de TI"]
-}
+Sua análise deve incluir:
 
-Se algum campo não for encontrado, use null. Mantenha o JSON válido.`;
+1. **Identificação do tipo de documento** (Contrato Social, Contrato de Prestação de Serviços, Acordo de Sócios, Contrato de Trabalho, NDA, Contrato de Locação, etc.)
 
-      messages = [
-        { role: "system", content: "Você é um analisador de documentos. Responda apenas com JSON válido." },
-        { 
-          role: "user", 
-          content: [
-            { type: "text", text: extractionPrompt },
-            { 
-              type: "file", 
-              file: {
-                filename: fileName || "document.pdf",
-                file_data: `data:application/pdf;base64,${documentBase64}`
-              }
-            }
-          ]
-        },
-      ];
-    } else {
-      // Fallback to text-based analysis
-      extractionPrompt = `Você é um especialista em análise de documentos societários brasileiros.
+2. **Resumo executivo** do documento em 2-3 frases
 
-Analise o seguinte texto extraído de um ${documentType || "Contrato Social"} e extraia as informações estruturadas.
+3. **Pontos positivos**: Cláusulas bem redigidas que protegem as partes adequadamente
 
-TEXTO DO DOCUMENTO:
-${documentText.substring(0, 15000)}
+4. **Pontos de atenção**: Cláusulas que podem gerar riscos, ambiguidades ou problemas futuros
+
+5. **Sugestões de melhoria**: Cláusulas ausentes ou que poderiam ser aprimoradas
+
+6. **Recomendação de documento**: Se identificar que outro tipo de documento seria mais adequado para a situação
+
+7. **Avaliação geral**: Nota de 1 a 10 baseada na segurança jurídica do documento
 
 Responda APENAS com um JSON válido no seguinte formato (sem markdown, sem explicações):
 {
-  "razaoSocial": "Nome completo da empresa",
-  "cnpj": "00.000.000/0000-00",
-  "cnaesPrincipais": ["0000-0/00"],
-  "cnaesSecundarios": ["0000-0/00"],
-  "objetoSocial": "Descrição resumida do objeto social",
-  "regimeTributario": "Simples Nacional|Lucro Presumido|Lucro Real|Não identificado",
-  "capitalSocial": 100000,
-  "dataConstituicao": "2020-01-15",
-  "socios": [{"nome": "Nome do Sócio", "participacao": 50}],
-  "endereco": {"cidade": "São Paulo", "uf": "SP"},
-  "atividadesIdentificadas": ["Comércio varejista", "Prestação de serviços de TI"]
-}
-
-Se algum campo não for encontrado, use null. Mantenha o JSON válido.`;
-
-      messages = [
-        { role: "system", content: "Você é um analisador de documentos. Responda apenas com JSON válido." },
-        { role: "user", content: extractionPrompt },
-      ];
+  "tipoDocumento": "Tipo do documento identificado",
+  "resumoGeral": "Resumo executivo do documento em 2-3 frases",
+  "pontosPositivos": [
+    {
+      "clausula": "Nome/número da cláusula",
+      "tipo": "positivo",
+      "descricao": "Explicação do que está bem feito"
     }
+  ],
+  "pontosAtencao": [
+    {
+      "clausula": "Nome/número da cláusula",
+      "tipo": "atencao",
+      "descricao": "Explicação do risco ou problema",
+      "sugestao": "Como corrigir ou mitigar"
+    }
+  ],
+  "sugestoesMelhorias": [
+    {
+      "clausula": "Cláusula ausente ou a melhorar",
+      "tipo": "melhoria",
+      "descricao": "O que está faltando ou pode ser melhorado",
+      "sugestao": "Redação sugerida ou orientação"
+    }
+  ],
+  "documentoSugerido": {
+    "titulo": "Nome do documento recomendado",
+    "descricao": "Breve descrição do documento",
+    "motivo": "Por que seria mais adequado"
+  },
+  "avaliacaoGeral": {
+    "nota": 7,
+    "classificacao": "Bom"
+  }
+}
+
+Classificações possíveis:
+- 8-10: "Excelente"
+- 6-7: "Bom"  
+- 4-5: "Regular"
+- 1-3: "Requer Atenção"
+
+Se documentoSugerido não for aplicável (o documento atual é adequado), use null.
+
+IMPORTANTE:
+- Seja específico nas análises, citando cláusulas quando possível
+- Foque em aspectos práticos e de risco empresarial
+- Mantenha linguagem acessível mas profissional
+- Inclua entre 3-6 itens em cada categoria (positivos, atenção, melhorias)`;
+
+    const messages = [
+      { 
+        role: "system", 
+        content: "Você é um advogado empresarial experiente. Analise documentos jurídicos de forma profissional e prática. Responda apenas com JSON válido." 
+      },
+      { 
+        role: "user", 
+        content: [
+          { type: "text", text: analysisPrompt },
+          { 
+            type: "file", 
+            file: {
+              filename: fileName || "document.pdf",
+              file_data: `data:application/pdf;base64,${documentBase64}`
+            }
+          }
+        ]
+      },
+    ];
+
+    console.log("Calling AI for legal document analysis...");
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -168,147 +185,63 @@ Se algum campo não for encontrado, use null. Mantenha o JSON válido.`;
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
-      console.error("AI extraction error:", aiResponse.status, errorText);
+      console.error("AI analysis error:", aiResponse.status, errorText);
       
       if (aiResponse.status === 429) {
         return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
+          JSON.stringify({ error: "Limite de requisições excedido. Tente novamente mais tarde." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       
-      throw new Error(`AI extraction failed: ${aiResponse.status}`);
+      if (aiResponse.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "Créditos de IA esgotados. Adicione mais créditos para continuar." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      throw new Error(`AI analysis failed: ${aiResponse.status}`);
     }
 
     const aiData = await aiResponse.json();
-    const extractedContent = aiData.choices?.[0]?.message?.content || "";
+    const analysisContent = aiData.choices?.[0]?.message?.content || "";
     
-    // Parse the extracted JSON
-    let extractedData: ExtractedData;
+    console.log("AI response received, parsing...");
+
+    // Parse the analysis JSON
+    let analysisResult: LegalAnalysisResult;
     try {
       // Remove any markdown formatting if present
-      const jsonStr = extractedContent.replace(/```json\n?|\n?```/g, "").trim();
-      extractedData = JSON.parse(jsonStr);
+      const jsonStr = analysisContent.replace(/```json\n?|\n?```/g, "").trim();
+      analysisResult = JSON.parse(jsonStr);
     } catch (parseError) {
-      console.error("Failed to parse AI response:", extractedContent);
-      extractedData = {
-        razaoSocial: "Não identificado",
-        atividadesIdentificadas: [],
+      console.error("Failed to parse AI response:", analysisContent);
+      // Return a default structure if parsing fails
+      analysisResult = {
+        tipoDocumento: "Documento não identificado",
+        resumoGeral: "Não foi possível analisar completamente o documento. Por favor, verifique se o PDF está legível e tente novamente.",
+        pontosPositivos: [],
+        pontosAtencao: [{
+          clausula: "Análise",
+          tipo: "atencao",
+          descricao: "O documento não pôde ser analisado completamente. Pode estar ilegível ou em formato não suportado.",
+          sugestao: "Tente enviar um PDF com texto selecionável (não escaneado)"
+        }],
+        sugestoesMelhorias: [],
+        avaliacaoGeral: {
+          nota: 0,
+          classificacao: "Requer Atenção"
+        }
       };
     }
 
-    // Step 2: Fetch tax opportunities for matching
-    const { data: opportunities, error: oppError } = await supabase
-      .from("tax_opportunities")
-      .select("*")
-      .eq("is_active", true);
+    console.log("Analysis complete:", analysisResult.tipoDocumento);
 
-    if (oppError) {
-      console.error("Error fetching opportunities:", oppError);
-      throw oppError;
-    }
-
-    // Step 3: Match opportunities based on extracted data
-    const matchedOpportunities: MatchedOpportunity[] = [];
-
-    for (const opp of opportunities || []) {
-      const matchReasons: string[] = [];
-      let matchScore = 0;
-
-      // Check CNAE matches
-      const allCnaes = [...(extractedData.cnaesPrincipais || []), ...(extractedData.cnaesSecundarios || [])];
-      const criterios = opp.criterios as Record<string, any>;
-      
-      if (criterios?.cnae_prefix && allCnaes.length > 0) {
-        const prefixes = Array.isArray(criterios.cnae_prefix) ? criterios.cnae_prefix : [criterios.cnae_prefix];
-        for (const cnae of allCnaes) {
-          for (const prefix of prefixes) {
-            if (cnae.startsWith(prefix)) {
-              matchScore += 30;
-              matchReasons.push(`CNAE ${cnae} compatível`);
-              break;
-            }
-          }
-        }
-      }
-
-      // Check regime tributário
-      if (extractedData.regimeTributario) {
-        if (criterios?.regime_tributario) {
-          const regimes = Array.isArray(criterios.regime_tributario) 
-            ? criterios.regime_tributario 
-            : [criterios.regime_tributario];
-          
-          if (regimes.some((r: string) => 
-            extractedData.regimeTributario?.toLowerCase().includes(r.toLowerCase())
-          )) {
-            matchScore += 20;
-            matchReasons.push(`Regime ${extractedData.regimeTributario} elegível`);
-          }
-        }
-      }
-
-      // Check sector/category keywords
-      const objetoSocial = extractedData.objetoSocial?.toLowerCase() || "";
-      const atividades = extractedData.atividadesIdentificadas?.join(" ").toLowerCase() || "";
-      const textToSearch = objetoSocial + " " + atividades;
-
-      const categoryKeywords: Record<string, string[]> = {
-        "Agro": ["agropecuária", "rural", "agricultura", "pecuária", "fazenda"],
-        "Saúde": ["médico", "hospital", "clínica", "saúde", "farmácia", "laboratório"],
-        "Tecnologia": ["software", "tecnologia", "informática", "sistemas", "desenvolvimento"],
-        "Construção": ["construção", "engenharia", "imobiliária", "edificações"],
-        "Comércio": ["comércio", "varejo", "atacado", "loja", "venda"],
-        "Indústria": ["indústria", "fabricação", "manufatura", "produção"],
-        "Transporte": ["transporte", "logística", "frete", "carga"],
-        "Educação": ["educação", "ensino", "escola", "faculdade", "curso"],
-        "Alimentação": ["restaurante", "alimentação", "bar", "lanchonete"],
-      };
-
-      if (opp.category && categoryKeywords[opp.category]) {
-        const keywords = categoryKeywords[opp.category];
-        for (const keyword of keywords) {
-          if (textToSearch.includes(keyword)) {
-            matchScore += 25;
-            matchReasons.push(`Setor ${opp.category} identificado no objeto social`);
-            break;
-          }
-        }
-      }
-
-      // Check UF-specific benefits
-      if (extractedData.endereco?.uf) {
-        if (criterios?.uf_operacao?.includes(extractedData.endereco.uf)) {
-          matchScore += 15;
-          matchReasons.push(`Benefício disponível em ${extractedData.endereco.uf}`);
-        }
-      }
-
-      // Only include if there's at least one match reason
-      if (matchScore > 0 && matchReasons.length > 0) {
-        matchedOpportunities.push({
-          id: opp.id,
-          code: opp.code,
-          name: opp.name,
-          nameSimples: opp.name_simples,
-          category: opp.category || "Geral",
-          matchScore: Math.min(matchScore, 100),
-          matchReasons: [...new Set(matchReasons)],
-          economiaDescricao: opp.economia_descricao_simples,
-        });
-      }
-    }
-
-    // Sort by match score
-    matchedOpportunities.sort((a, b) => b.matchScore - a.matchScore);
-
-    // Return results
     return new Response(
       JSON.stringify({
         success: true,
-        extractedData,
-        matchedOpportunities: matchedOpportunities.slice(0, 15),
-        totalMatches: matchedOpportunities.length,
+        result: analysisResult,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

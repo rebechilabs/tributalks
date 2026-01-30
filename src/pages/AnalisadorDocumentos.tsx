@@ -3,42 +3,37 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { DocumentUploader } from "@/components/documents/DocumentUploader";
 import { DocumentAnalysisResults } from "@/components/documents/DocumentAnalysisResults";
 import { FeatureGate } from "@/components/FeatureGate";
-import { FileText, Sparkles, AlertTriangle } from "lucide-react";
+import { Scale, Sparkles, AlertTriangle, ShieldCheck } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-export interface ExtractedData {
-  razaoSocial?: string;
-  cnpj?: string;
-  cnaesPrincipais?: string[];
-  cnaesSecundarios?: string[];
-  objetoSocial?: string;
-  regimeTributario?: string;
-  capitalSocial?: number;
-  dataConstituicao?: string;
-  socios?: { nome: string; participacao?: number }[];
-  endereco?: { cidade?: string; uf?: string };
-  atividadesIdentificadas?: string[];
+export interface ClauseAnalysis {
+  clausula: string;
+  tipo: "positivo" | "atencao" | "melhoria";
+  descricao: string;
+  sugestao?: string;
 }
 
-export interface MatchedOpportunity {
-  id: string;
-  code: string;
-  name: string;
-  nameSimples: string;
-  category: string;
-  matchScore: number;
-  matchReasons: string[];
-  economiaDescricao?: string;
+export interface DocumentSuggestion {
+  titulo: string;
+  descricao: string;
+  motivo: string;
 }
 
-export interface AnalysisResult {
-  extractedData: ExtractedData;
-  matchedOpportunities: MatchedOpportunity[];
-  totalMatches: number;
+export interface LegalAnalysisResult {
+  tipoDocumento: string;
+  resumoGeral: string;
+  pontosPositivos: ClauseAnalysis[];
+  pontosAtencao: ClauseAnalysis[];
+  sugestoesMelhorias: ClauseAnalysis[];
+  documentoSugerido?: DocumentSuggestion;
+  avaliacaoGeral: {
+    nota: number;
+    classificacao: "Excelente" | "Bom" | "Regular" | "Requer Atenção";
+  };
 }
 
 export default function AnalisadorDocumentos() {
-  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<LegalAnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   return (
@@ -49,25 +44,36 @@ export default function AnalisadorDocumentos() {
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <FileText className="w-5 h-5 text-primary" />
+                <Scale className="w-5 h-5 text-primary" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">
                   Analisador de Documentos
                 </h1>
                 <p className="text-muted-foreground text-sm">
-                  Upload de contratos sociais para identificação automática de oportunidades
+                  Análise jurídica inteligente de contratos e documentos legais
                 </p>
               </div>
             </div>
           </div>
 
+          {/* Legal Disclaimer */}
+          <Alert className="mb-6 border-warning/30 bg-warning/5">
+            <ShieldCheck className="w-4 h-4 text-warning" />
+            <AlertDescription className="text-sm">
+              <strong>Aviso Importante:</strong> Esta ferramenta oferece orientação geral baseada em IA 
+              e não substitui a consulta a um advogado. Para questões jurídicas complexas ou decisões 
+              legais importantes, recomendamos sempre buscar assessoria profissional qualificada.
+            </AlertDescription>
+          </Alert>
+
           {/* Beta Notice */}
           <Alert className="mb-6 border-primary/30 bg-primary/5">
             <Sparkles className="w-4 h-4 text-primary" />
             <AlertDescription className="text-sm">
-              <strong>Funcionalidade em Beta:</strong> O Analisador usa IA para extrair dados 
-              de Contratos Sociais e cruzar com nossa base de 57+ oportunidades fiscais.
+              <strong>Análise Jurídica com IA:</strong> Nossa IA analisa cláusulas contratuais, 
+              identifica pontos de atenção, sugere melhorias e recomenda documentos mais adequados 
+              para sua situação.
             </AlertDescription>
           </Alert>
 
@@ -90,19 +96,31 @@ export default function AnalisadorDocumentos() {
                 <ul className="text-sm text-muted-foreground space-y-2">
                   <li className="flex items-start gap-2">
                     <span className="text-primary">•</span>
-                    Contrato Social ou Estatuto Social
+                    Contratos de Prestação de Serviços
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary">•</span>
-                    Alterações contratuais consolidadas
+                    Contratos Sociais e Estatutos
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary">•</span>
-                    Requerimento de Empresário (MEI/EI)
+                    Contratos de Trabalho
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary">•</span>
-                    Formato PDF (texto legível, não escaneado)
+                    Acordos de Sócios e Acionistas
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary">•</span>
+                    Termos de Confidencialidade (NDA)
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary">•</span>
+                    Contratos de Locação
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-muted-foreground">→</span>
+                    <span>Formato PDF (texto legível)</span>
                   </li>
                 </ul>
               </div>
