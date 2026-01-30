@@ -308,7 +308,7 @@ export default function Noticias() {
             <Link to="/#planos">
               <Button className="w-full">
                 <Sparkles className="w-4 h-4 mr-2" />
-                Upgrade para Navigator — R$ 697/mês
+                Upgrade para Navigator — R$ 1.997/mês
               </Button>
             </Link>
           </div>
