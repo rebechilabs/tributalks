@@ -1,62 +1,36 @@
 
-# Plano Definitivo: Corrigir Digitação nos Campos da DRE
+# Plano: Atualizar Informações do Plano Professional
 
-## Causa Raiz Identificada
+## Alterações Solicitadas
 
-O problema está na **linha 113 do `DREWizard.tsx`**:
-
-```tsx
-const CurrencyInput = ({ label, field, tooltip, placeholder }) => {
-  // ...
-  return <VoiceCurrencyInput ... />
-}
-```
-
-O `CurrencyInput` é definido **dentro do componente `DREWizard`** como uma função inline. Isso causa:
-
-1. **Cada vez que o usuário digita** algo, o `formData` muda
-2. O `DREWizard` faz re-render
-3. O React **cria uma nova definição** de `CurrencyInput` (nova referência de função)
-4. O React entende que é um **componente diferente** do anterior
-5. O input é **desmontado e remontado**, perdendo o foco
-6. O usuário precisa clicar de novo para continuar digitando
-
-## Solução
-
-**Remover o wrapper `CurrencyInput`** e usar `VoiceCurrencyInput` diretamente no JSX, passando as props inline.
-
-Ou seja, trocar:
-```tsx
-<CurrencyInput label="Vendas de produtos" field="vendas_produtos" />
-```
-
-Por:
-```tsx
-<VoiceCurrencyInput 
-  label="Vendas de produtos" 
-  field="vendas_produtos" 
-  value={formData.vendas_produtos}
-  onChange={(value) => handleInputChange('vendas_produtos', value)}
-/>
-```
+| Campo | Valor Atual | Novo Valor |
+|-------|-------------|------------|
+| Preço mensal | R$ 1.997/mês | R$ 2.997/mês |
+| Preço anual | R$ 19.970/ano | R$ 29.970/ano |
+| CNPJs/Usuários | 5 CNPJs • 5 Usuários | 5 CNPJs • 4 Usuários |
 
 ## Arquivo a Modificar
 
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/components/dre/DREWizard.tsx` | Remover a definição de `CurrencyInput` (linhas 113-126) e substituir todas as chamadas pelo componente real `VoiceCurrencyInput` com props explícitas |
+**`src/components/landing/PricingSection.tsx`** (linhas 81-85)
 
-## Por que isso resolve?
+```tsx
+// De:
+priceMonthly: 1997,
+priceAnnual: 19970,
+highlighted: true,
+popular: true,
+cnpjLimit: "5 CNPJs • 5 Usuários",
 
-- O `VoiceCurrencyInput` é importado de um arquivo externo, então sua referência **nunca muda**
-- Apenas as **props** mudam, não o componente em si
-- O React vai **atualizar** o componente existente em vez de desmontar/remontar
-- O **foco permanece** no input durante a digitação
+// Para:
+priceMonthly: 2997,
+priceAnnual: 29970,
+highlighted: true,
+popular: true,
+cnpjLimit: "5 CNPJs • 4 Usuários",
+```
 
-## Resultado Esperado
+## Impacto
 
-Após a correção:
-- Digitação contínua e fluida sem perda de foco
-- Formatação automática aplicada ao sair do campo (onBlur)
-- Sem necessidade de clicar múltiplas vezes
-- Sem erros no console
+- A seção de preços da landing page exibirá o novo valor de R$ 2.997/mês
+- O plano anual será calculado como R$ 29.970/ano (10x mensal, equivalente a 2 meses grátis)
+- O limite de usuários será atualizado para 4
