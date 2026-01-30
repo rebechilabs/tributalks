@@ -527,7 +527,7 @@ Use os dados fornecidos. Onde faltar informação, indique claramente.
   } catch (error) {
     console.error("Erro na geração do relatório:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Erro desconhecido" }),
+      JSON.stringify({ error: "Ocorreu um erro ao processar sua solicitação." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

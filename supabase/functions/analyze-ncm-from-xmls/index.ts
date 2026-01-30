@@ -493,9 +493,8 @@ serve(async (req) => {
 
   } catch (error: unknown) {
     console.error('[analyze-ncm] Erro:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Erro interno ao analisar NCMs';
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: 'Ocorreu um erro ao processar sua solicitação.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

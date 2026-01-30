@@ -253,11 +253,10 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error("Error in cross-analysis:", error);
-    const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "Ocorreu um erro ao processar sua solicitação." }),
       {
-        status: 400,
+        status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );

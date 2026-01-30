@@ -416,11 +416,8 @@ serve(async (req) => {
     }
   } catch (error: unknown) {
     console.error('gov-data-api error:', error);
-    
-    const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
-    
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: 'Ocorreu um erro ao processar sua solicitação.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

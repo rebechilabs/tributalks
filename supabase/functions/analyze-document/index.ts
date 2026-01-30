@@ -251,9 +251,7 @@ IMPORTANTE:
   } catch (error) {
     console.error("Error in analyze-document:", error);
     return new Response(
-      JSON.stringify({ 
-        error: error instanceof Error ? error.message : "Internal server error" 
-      }),
+      JSON.stringify({ error: "Ocorreu um erro ao processar sua solicitação." }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -201,11 +201,10 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('[erp-auto-sync] Fatal error:', error);
-    
     return new Response(
       JSON.stringify({
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: 'Ocorreu um erro ao processar sua solicitação.',
       }),
       { 
         status: 500,
