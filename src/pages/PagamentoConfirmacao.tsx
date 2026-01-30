@@ -1,0 +1,197 @@
+import { useEffect, useState } from "react";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { CheckCircle2, Clock, XCircle, ArrowRight, RefreshCw, Home } from "lucide-react";
+import { motion } from "framer-motion";
+
+type PaymentStatus = "approved" | "pending" | "rejected" | "unknown";
+
+const STATUS_CONFIG: Record<PaymentStatus, {
+  icon: typeof CheckCircle2;
+  title: string;
+  description: string;
+  color: string;
+  bgColor: string;
+  redirectDelay: number | null;
+  showRetry: boolean;
+}> = {
+  approved: {
+    icon: CheckCircle2,
+    title: "Pagamento Confirmado! 🎉",
+    description: "Seu plano já está ativo. Você será redirecionado ao Dashboard em instantes.",
+    color: "text-success",
+    bgColor: "bg-success/10",
+    redirectDelay: 3000,
+    showRetry: false,
+  },
+  pending: {
+    icon: Clock,
+    title: "Pagamento em Processamento ⏳",
+    description: "Seu pagamento está sendo processado. Você receberá uma notificação quando for confirmado.",
+    color: "text-warning",
+    bgColor: "bg-warning/10",
+    redirectDelay: 5000,
+    showRetry: false,
+  },
+  rejected: {
+    icon: XCircle,
+    title: "Pagamento Não Aprovado ❌",
+    description: "Houve um problema com seu pagamento. Por favor, tente novamente ou escolha outro método.",
+    color: "text-destructive",
+    bgColor: "bg-destructive/10",
+    redirectDelay: null,
+    showRetry: true,
+  },
+  unknown: {
+    icon: Clock,
+    title: "Verificando Status...",
+    description: "Estamos verificando o status do seu pagamento.",
+    color: "text-muted-foreground",
+    bgColor: "bg-muted",
+    redirectDelay: 5000,
+    showRetry: false,
+  },
+};
+
+export default function PagamentoConfirmacao() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [countdown, setCountdown] = useState<number | null>(null);
+
+  // Parse Mercado Pago redirect parameters
+  const status = searchParams.get("status") || searchParams.get("collection_status");
+  const paymentId = searchParams.get("payment_id") || searchParams.get("collection_id");
+  const paymentType = searchParams.get("payment_type");
+
+  // Determine payment status
+  const getPaymentStatus = (): PaymentStatus => {
+    if (!status) return "unknown";
+    
+    const normalizedStatus = status.toLowerCase();
+    
+    if (normalizedStatus === "approved") return "approved";
+    if (normalizedStatus === "pending" || normalizedStatus === "in_process" || normalizedStatus === "authorized") return "pending";
+    if (normalizedStatus === "rejected" || normalizedStatus === "cancelled" || normalizedStatus === "refunded") return "rejected";
+    
+    return "unknown";
+  };
+
+  const paymentStatus = getPaymentStatus();
+  const config = STATUS_CONFIG[paymentStatus];
+  const Icon = config.icon;
+
+  // Auto-redirect countdown
+  useEffect(() => {
+    if (config.redirectDelay) {
+      const seconds = Math.ceil(config.redirectDelay / 1000);
+      setCountdown(seconds);
+
+      const interval = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev === null || prev <= 1) {
+            clearInterval(interval);
+            navigate("/dashboard");
+            return null;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [config.redirectDelay, navigate]);
+
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md"
+      >
+        <Card className="border-2 shadow-lg">
+          <CardHeader className="text-center pb-2">
+            <div className={`mx-auto w-20 h-20 rounded-full ${config.bgColor} flex items-center justify-center mb-4`}>
+              <Icon className={`w-10 h-10 ${config.color}`} />
+            </div>
+            <CardTitle className="text-2xl">{config.title}</CardTitle>
+            <CardDescription className="text-base mt-2">
+              {config.description}
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="space-y-4">
+            {/* Payment Details */}
+            {paymentId && (
+              <div className="bg-muted/50 rounded-lg p-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">ID do pagamento:</span>
+                  <span className="font-mono">{paymentId}</span>
+                </div>
+                {paymentType && (
+                  <div className="flex justify-between mt-1">
+                    <span className="text-muted-foreground">Método:</span>
+                    <span className="capitalize">{paymentType.replace("_", " ")}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Countdown for auto-redirect */}
+            {countdown !== null && countdown > 0 && (
+              <p className="text-center text-sm text-muted-foreground">
+                Redirecionando em {countdown} segundo{countdown !== 1 ? "s" : ""}...
+              </p>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex flex-col gap-2">
+              {config.showRetry && (
+                <Button asChild variant="default" className="w-full">
+                  <Link to="/#planos">
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Tentar Novamente
+                  </Link>
+                </Button>
+              )}
+
+              <Button
+                asChild
+                variant={config.showRetry ? "outline" : "default"}
+                className="w-full"
+              >
+                <Link to="/dashboard">
+                  {config.showRetry ? (
+                    <>
+                      <Home className="w-4 h-4 mr-2" />
+                      Ir para o Dashboard
+                    </>
+                  ) : (
+                    <>
+                      Ir para o Dashboard
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </>
+                  )}
+                </Link>
+              </Button>
+            </div>
+
+            {/* Help text for pending */}
+            {paymentStatus === "pending" && (
+              <p className="text-xs text-center text-muted-foreground">
+                Pagamentos via PIX ou boleto podem levar alguns minutos para serem confirmados.
+                Você receberá um e-mail quando o pagamento for processado.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Logo/Branding */}
+        <p className="text-center text-sm text-muted-foreground mt-6">
+          TribuTalks • Inteligência Tributária
+        </p>
+      </motion.div>
+    </div>
+  );
+}
