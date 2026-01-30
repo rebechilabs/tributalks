@@ -39,7 +39,8 @@ import { ExposureProjection } from "@/components/credits/ExposureProjection";
 import { SavingsSummaryCard } from "@/components/credits/SavingsSummaryCard";
 import { SpedUploader } from "@/components/sped";
 import { DctfUploader } from "@/components/dctf";
-// XMLs de teste do ciclo comercial
+import { FiscalGapsDashboard } from "@/components/fiscal";
+import { GitCompare } from "lucide-react";
 import xmlCompra from "../../test-xml/ciclo-comercial/01-compra-mercadoria.xml?raw";
 import xmlVendaPJ from "../../test-xml/ciclo-comercial/02-venda-mercadoria.xml?raw";
 import xmlVendaPF from "../../test-xml/ciclo-comercial/03-venda-consumidor-final.xml?raw";
@@ -121,7 +122,7 @@ export default function AnaliseNotasFiscais() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const initialTab = searchParams.get('tab') as 'importar' | 'sped' | 'dctf' | 'creditos' | 'exposicao' | null;
+  const initialTab = searchParams.get('tab') as 'importar' | 'sped' | 'dctf' | 'cruzamento' | 'creditos' | 'exposicao' | null;
   
   const [activeTab, setActiveTab] = useState(initialTab || 'importar');
   const [files, setFiles] = useState<FileItem[]>([]);
@@ -531,7 +532,7 @@ export default function AnaliseNotasFiscais() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="space-y-6">
-          <TabsList className="grid w-full max-w-3xl grid-cols-5">
+          <TabsList className="grid w-full max-w-4xl grid-cols-6">
             <TabsTrigger value="importar" className="gap-2">
               <Upload className="h-4 w-4" />
               XMLs
@@ -543,6 +544,10 @@ export default function AnaliseNotasFiscais() {
             <TabsTrigger value="dctf" className="gap-2">
               <FileText className="h-4 w-4" />
               DCTF
+            </TabsTrigger>
+            <TabsTrigger value="cruzamento" className="gap-2">
+              <GitCompare className="h-4 w-4" />
+              Cruzamento
             </TabsTrigger>
             <TabsTrigger value="creditos" className="gap-2">
               <Target className="h-4 w-4" />
@@ -843,6 +848,11 @@ export default function AnaliseNotasFiscais() {
           {/* Tab: DCTF */}
           <TabsContent value="dctf">
             <DctfUploader />
+          </TabsContent>
+
+          {/* Tab: Cruzamento SPED x DCTF */}
+          <TabsContent value="cruzamento">
+            <FiscalGapsDashboard />
           </TabsContent>
 
           {/* Tab: Créditos Recuperáveis */}
