@@ -47,6 +47,7 @@ import ChecklistReforma from "./pages/ChecklistReforma";
 import Integracoes from "./pages/Integracoes";
 import Consultorias from "./pages/Consultorias";
 import Indicar from "./pages/Indicar";
+import Ajuda from "./pages/Ajuda";
 
 // Calculadoras
 import SplitPayment from "./pages/calculadora/SplitPayment";
@@ -392,6 +393,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <AdminNoticias />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/ajuda" 
+              element={
+                <ProtectedRoute>
+                  <Ajuda />
                 </ProtectedRoute>
               } 
             />
