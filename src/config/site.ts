@@ -1,13 +1,13 @@
 export const CONFIG = {
   // Payment Links - Mercado Pago
   PAYMENT_LINKS: {
-    // Starter - R$297/mês ou R$2.970/ano (7 dias grátis)
+    // Starter - R$297/mês ou R$3.970/ano (7 dias grátis)
     STARTER_MENSAL: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=8afa4ed679f649fc99fe3ebe6ea6bd94",
     STARTER_ANUAL: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=b816a10f5deb42bd8a92e711f60d5961",
     // Navigator - R$1.297/mês (anual não disponível por enquanto)
     NAVIGATOR_MENSAL: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=89e78b22cd71461595f92886fcacfa17",
     NAVIGATOR_ANUAL: "", // Não disponível - usar link mensal como fallback
-    // Professional - R$1.997/mês (anual não disponível por enquanto)
+    // Professional - R$2.997/mês (anual não disponível por enquanto)
     PROFESSIONAL_MENSAL: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=622791ff8aea48febbc1a8643e56fb2b",
     PROFESSIONAL_ANUAL: "", // Não disponível - usar link mensal como fallback
     // Enterprise - Sob consulta (WhatsApp direto)
