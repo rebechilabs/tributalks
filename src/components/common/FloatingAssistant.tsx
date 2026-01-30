@@ -542,7 +542,7 @@ export function FloatingAssistant() {
 
           <CardContent className="p-0">
             {/* Messages Area */}
-            <ScrollArea className="h-80 p-3" ref={scrollRef as React.RefObject<HTMLDivElement>}>
+            <ScrollArea className="h-80 p-3 [&_[data-radix-scroll-area-viewport]]:!overflow-y-auto" ref={scrollRef as React.RefObject<HTMLDivElement>}>
               <div className="space-y-3">
                 {messages.length === 0 && !isLoading && (
                   <div className="text-center text-muted-foreground text-sm py-8 animate-fade-in">
