@@ -5,7 +5,7 @@ import { Loader2, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import logoTributech from "@/assets/logo-tributech.png";
+import logoTributalks from "@/assets/logo-tributalks.png";
 
 const RedefinirSenha = () => {
   const [password, setPassword] = useState("");
@@ -80,7 +80,7 @@ const RedefinirSenha = () => {
         <div className="w-full max-w-md">
           <div className="bg-card rounded-xl border border-border p-8 shadow-lg text-center">
             <div className="flex justify-center mb-6">
-              <img src={logoTributech} alt="TribuTalks" className="h-16 w-auto" />
+              <img src={logoTributalks} alt="TribuTalks" className="h-16 w-auto" />
             </div>
             <h1 className="text-2xl font-bold text-foreground mb-4">
               Link inválido ou expirado
@@ -109,7 +109,7 @@ const RedefinirSenha = () => {
         <div className="bg-card rounded-xl border border-border p-8 shadow-lg">
           {/* Logo */}
           <div className="flex justify-center mb-6">
-            <img src={logoTributech} alt="TribuTalks" className="h-16 w-auto" />
+            <img src={logoTributalks} alt="TribuTalks" className="h-16 w-auto" />
           </div>
 
           {!success ? (
