@@ -6,6 +6,7 @@ import { ContentLibrary } from "@/components/community/ContentLibrary";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Link } from "react-router-dom";
 import { usePlanAccess, PLAN_LABELS } from "@/hooks/useFeatureAccess";
+import { CONFIG } from "@/config/site";
 
 const COMMUNITY_URL = "https://chat.whatsapp.com/BbdIWJqap2FHmj90zfz5l3";
 
@@ -72,7 +73,7 @@ const Comunidade = () => {
             </CardContent>
           </Card>
 
-          {/* Circle Community - NAVIGATOR+ (Em breve) */}
+          {/* Circle Community - NAVIGATOR+ */}
           {isNavigator ? (
             <Card className="border-primary/20">
               <CardContent className="pt-6">
@@ -83,14 +84,17 @@ const Comunidade = () => {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold text-foreground">Comunidade Circle</h3>
-                      <Badge variant="outline">Em breve</Badge>
+                      <Badge variant="secondary" className="text-xs">{PLAN_LABELS.NAVIGATOR}+</Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mb-4">
                       Networking exclusivo para CFOs e gestores financeiros. 
                       Discussões aprofundadas, mentorias em grupo e conexões estratégicas.
                     </p>
-                    <Button disabled className="gap-2">
-                      Aguardando lançamento
+                    <Button asChild className="gap-2">
+                      <a href={CONFIG.CIRCLE_COMMUNITY} target="_blank" rel="noopener noreferrer">
+                        Acessar comunidade
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
                     </Button>
                   </div>
                 </div>
@@ -102,7 +106,6 @@ const Comunidade = () => {
               title="Comunidade Circle"
               description="Networking exclusivo para CFOs e gestores financeiros. Discussões aprofundadas, mentorias em grupo e conexões estratégicas."
               minPlan="NAVIGATOR"
-              comingSoon
             />
           )}
 
