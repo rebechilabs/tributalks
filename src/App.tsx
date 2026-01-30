@@ -57,6 +57,9 @@ import CalculadoraNBS from "./pages/calculadora/CalculadoraNBS";
 // Painel Executivo
 import PainelExecutivo from "./pages/PainelExecutivo";
 
+// Margem Ativa
+import MargemAtiva from "./pages/dashboard/MargemAtiva";
+
 // Admin
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminPilulas from "./pages/admin/AdminPilulas";
@@ -331,6 +334,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Consultorias />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/margem-ativa" 
+              element={
+                <ProtectedRoute>
+                  <MargemAtiva />
                 </ProtectedRoute>
               } 
             />
