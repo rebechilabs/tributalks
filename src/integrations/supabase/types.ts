@@ -1694,6 +1694,36 @@ export type Database = {
         }
         Relationships: []
       }
+      pending_plan_grants: {
+        Row: {
+          applied_at: string | null
+          applied_to_user_id: string | null
+          created_at: string | null
+          email: string
+          id: string
+          plano: string
+          plano_expires_at: string
+        }
+        Insert: {
+          applied_at?: string | null
+          applied_to_user_id?: string | null
+          created_at?: string | null
+          email: string
+          id?: string
+          plano?: string
+          plano_expires_at: string
+        }
+        Update: {
+          applied_at?: string | null
+          applied_to_user_id?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          plano?: string
+          plano_expires_at?: string
+        }
+        Relationships: []
+      }
       pilulas_reforma: {
         Row: {
           ativo: boolean | null
