@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { HelpCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,44 +21,36 @@ export function VoiceCurrencyInput({
   tooltip, 
   placeholder = '0,00' 
 }: VoiceCurrencyInputProps) {
-  const [localValue, setLocalValue] = useState(value === 0 ? '' : formatCurrency(value));
-
-  function formatCurrency(num: number): string {
-    if (num === 0) return '';
-    return num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
+  const [localValue, setLocalValue] = useState(() => {
+    if (value === 0) return '';
+    return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  });
+  const isFocusedRef = useRef(false);
 
   function parseCurrency(str: string): number {
-    // Remove tudo exceto dígitos, vírgula e ponto
     const cleaned = str.replace(/[^\d,.-]/g, '');
-    // Converte formato brasileiro (1.234,56) para número
     const normalized = cleaned.replace(/\./g, '').replace(',', '.');
     return parseFloat(normalized) || 0;
   }
 
-  // Update local value when prop changes externally
-  useEffect(() => {
-    const formatted = value === 0 ? '' : formatCurrency(value);
-    if (parseCurrency(localValue) !== value) {
-      setLocalValue(formatted);
-    }
-  }, [value]);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value;
-    // Permite apenas números, vírgula e ponto durante digitação
-    const sanitized = rawValue.replace(/[^\d,.]/g, '');
-    setLocalValue(sanitized);
+    // Permite digitação livre de números, vírgula e ponto
+    setLocalValue(rawValue);
     
-    const numValue = parseCurrency(sanitized);
+    const numValue = parseCurrency(rawValue);
     onChange(numValue);
   };
 
+  const handleFocus = () => {
+    isFocusedRef.current = true;
+  };
+
   const handleBlur = () => {
-    // Formata o valor ao sair do campo
+    isFocusedRef.current = false;
     const numValue = parseCurrency(localValue);
     if (numValue > 0) {
-      setLocalValue(formatCurrency(numValue));
+      setLocalValue(numValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     } else {
       setLocalValue('');
     }
@@ -93,6 +85,7 @@ export function VoiceCurrencyInput({
           placeholder={placeholder} 
           value={localValue} 
           onChange={handleInputChange}
+          onFocus={handleFocus}
           onBlur={handleBlur}
         />
       </div>
