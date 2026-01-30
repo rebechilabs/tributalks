@@ -190,7 +190,7 @@ export function TribuTalksPitchPdf() {
       {
         name: "Comunidade Exclusiva",
         badge: null,
-        desc: "Networking com empresários e CFOs que faturam acima de R$1M/mês.",
+        desc: "Network com empresários que faturam acima de R$1M/mês.",
         inputs: "Participação ativa, perguntas, cases",
         outputs: "Conexões, troca de experiências, acesso a especialistas"
       }

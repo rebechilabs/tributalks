@@ -23,7 +23,7 @@ const Comunidade = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground">Comunidade</h1>
-              <p className="text-muted-foreground">Networking com empresários e CFOs</p>
+              <p className="text-muted-foreground">Network com empresários</p>
             </div>
           </div>
         </div>
