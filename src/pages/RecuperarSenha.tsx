@@ -5,7 +5,7 @@ import { ArrowLeft, Loader2, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import logoTributech from "@/assets/logo-tributech.png";
+import logoTributalks from "@/assets/logo-tributalks.png";
 
 const RecuperarSenha = () => {
   const [email, setEmail] = useState("");
@@ -54,7 +54,7 @@ const RecuperarSenha = () => {
         <div className="bg-card rounded-xl border border-border p-8 shadow-lg">
           {/* Logo */}
           <div className="flex justify-center mb-6">
-            <img src={logoTributech} alt="TribuTalks" className="h-16 w-auto" />
+            <img src={logoTributalks} alt="TribuTalks" className="h-16 w-auto" />
           </div>
 
           {!emailSent ? (
