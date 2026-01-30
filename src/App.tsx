@@ -21,6 +21,7 @@ import DocumentoComercial from "./pages/DocumentoComercial";
 import DocumentoOportunidades from "./pages/DocumentoOportunidades";
 import EstudosCaso from "./pages/EstudosCaso";
 import EstudoCasoDetalhe from "./pages/EstudoCasoDetalhe";
+import PagamentoConfirmacao from "./pages/PagamentoConfirmacao";
 
 // Páginas protegidas
 import Onboarding from "./pages/Onboarding";
@@ -92,6 +93,7 @@ const App = () => (
             <Route path="/documento-oportunidades" element={<DocumentoOportunidades />} />
             <Route path="/casos" element={<EstudosCaso />} />
             <Route path="/casos/:slug" element={<EstudoCasoDetalhe />} />
+            <Route path="/pagamento/confirmacao" element={<PagamentoConfirmacao />} />
             
             {/* Protegidas */}
             <Route 
