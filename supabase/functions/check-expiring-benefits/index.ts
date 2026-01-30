@@ -203,10 +203,9 @@ Deno.serve(async (req) => {
       }
     );
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    console.error("Error in check-expiring-benefits:", errorMessage);
+    console.error("Error in check-expiring-benefits:", error);
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "Ocorreu um erro ao processar sua solicitação." }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,

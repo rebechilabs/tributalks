@@ -240,7 +240,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error processing DRE:', error)
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: String(error) }),
+      JSON.stringify({ error: 'Ocorreu um erro ao processar sua solicitação.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
