@@ -92,7 +92,9 @@ export function VoiceCurrencyInput({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                <span className="cursor-help">
+                  <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                </span>
               </TooltipTrigger>
               <TooltipContent>
                 <p className="max-w-xs text-sm">{tooltip}</p>

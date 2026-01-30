@@ -106,58 +106,60 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
   useEffect(() => {
     const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
     setIsSupported(!!SpeechRecognitionAPI);
-
-    if (SpeechRecognitionAPI) {
-      const recognition = new SpeechRecognitionAPI();
-      recognition.continuous = false;
-      recognition.interimResults = true;
-      recognition.lang = 'pt-BR';
-
-      recognition.onresult = (event: SpeechRecognitionEvent) => {
-        let finalTranscript = '';
-        let interimTranscript = '';
-
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const result = event.results[i];
-          if (result.isFinal) {
-            finalTranscript += result[0].transcript;
-          } else {
-            interimTranscript += result[0].transcript;
-          }
-        }
-
-        // Convert spoken digits to numbers
-        const rawTranscript = finalTranscript || interimTranscript;
-        const convertedTranscript = convertSpokenDigits(rawTranscript);
-        setTranscript(convertedTranscript);
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognition.onerror = () => {
-        setIsListening(false);
-      };
-
-      recognitionRef.current = recognition;
-    }
-
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
-      }
-    };
   }, []);
 
   const startListening = useCallback(() => {
-    if (!recognitionRef.current || isListening) return;
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognitionAPI || isListening) return;
     
+    // Abort any existing session first
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.abort();
+      } catch (e) {
+        // Ignore abort errors
+      }
+    }
+    
+    // Create a fresh instance for each session
+    const recognition = new SpeechRecognitionAPI();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'pt-BR';
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let finalTranscript = '';
+      let interimTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          finalTranscript += result[0].transcript;
+        } else {
+          interimTranscript += result[0].transcript;
+        }
+      }
+
+      // Convert spoken digits to numbers
+      const rawTranscript = finalTranscript || interimTranscript;
+      const convertedTranscript = convertSpokenDigits(rawTranscript);
+      setTranscript(convertedTranscript);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.onerror = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
     setTranscript("");
     setIsListening(true);
     
     try {
-      recognitionRef.current.start();
+      recognition.start();
     } catch (error) {
       console.error("Error starting speech recognition:", error);
       setIsListening(false);
@@ -177,6 +179,19 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
 
   const resetTranscript = useCallback(() => {
     setTranscript("");
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.abort();
+        } catch (e) {
+          // Ignore
+        }
+      }
+    };
   }, []);
 
   return {
