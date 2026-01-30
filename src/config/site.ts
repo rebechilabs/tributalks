@@ -38,7 +38,7 @@ export const CONFIG = {
   // Social
   LINKEDIN: "https://www.linkedin.com/company/tributalks/",
   // Community
-  CIRCLE_COMMUNITY: "https://tributalks.circle.so",
+  CIRCLE_COMMUNITY: "https://tributalksconnect.circle.so",
   // Calendly
   CALENDLY_LINK: "https://calendly.com/tributalks/consultoria",
 };
