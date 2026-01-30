@@ -123,6 +123,24 @@ Como posso te ajudar hoje?`,
         throw new Error(errorData.error || "Erro ao processar mensagem");
       }
 
+      // Check content type to handle both JSON and SSE streaming responses
+      const contentType = resp.headers.get("content-type");
+      
+      // Handle standard JSON response (non-streaming)
+      if (contentType?.includes("application/json")) {
+        const data = await resp.json();
+        if (data.message) {
+          setMessages(prev => [...prev, { 
+            role: "assistant", 
+            content: data.message 
+          }]);
+        }
+        setDailyCount(prev => prev + 1);
+        setIsLoading(false);
+        return;
+      }
+
+      // Handle SSE streaming response
       if (!resp.body) throw new Error("No response body");
 
       const reader = resp.body.getReader();
