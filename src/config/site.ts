@@ -1,24 +1,27 @@
 export const CONFIG = {
-  STRIPE_PAYMENT_LINKS: {
+  // Payment Links - Mercado Pago
+  PAYMENT_LINKS: {
     // Starter - R$297/mês ou R$2.970/ano (7 dias grátis)
-    STARTER_MENSAL: "https://buy.stripe.com/test_starter_mensal", // TODO: Criar no Stripe
-    STARTER_ANUAL: "https://buy.stripe.com/test_starter_anual", // TODO: Criar no Stripe
+    STARTER_MENSAL: "/cadastro", // TODO: Criar link Mercado Pago
+    STARTER_ANUAL: "/cadastro", // TODO: Criar link Mercado Pago
     // Navigator - R$1.997/mês ou R$19.970/ano (2 meses grátis)
-    NAVIGATOR_MENSAL: "https://buy.stripe.com/test_aFa8wI3V8e9U7PR9iSbo403",
-    NAVIGATOR_ANUAL: "https://buy.stripe.com/test_fZu9AM63g2rcc67gLkbo404",
+    NAVIGATOR_MENSAL: "/cadastro", // TODO: Criar link Mercado Pago
+    NAVIGATOR_ANUAL: "/cadastro", // TODO: Criar link Mercado Pago
     // Professional - R$2.997/mês ou R$29.970/ano (2 meses grátis)
-    PROFESSIONAL_MENSAL: "https://buy.stripe.com/test_aFa9AMfDQ7Lw6LNgLkbo402",
-    PROFESSIONAL_ANUAL: "https://buy.stripe.com/test_dRmdR2ajwd5Q6LNcv4bo400",
+    PROFESSIONAL_MENSAL: "/cadastro", // TODO: Criar link Mercado Pago
+    PROFESSIONAL_ANUAL: "/cadastro", // TODO: Criar link Mercado Pago
     // Enterprise - Sob consulta (WhatsApp direto)
     ENTERPRISE: "https://wa.me/5511914523971",
     // Credit packages for Starter/Navigator users (Clara extra credits)
-    CREDITS_10: "https://buy.stripe.com/PLACEHOLDER_CREDITS_10", // R$ 29,90 - 10 créditos
-    CREDITS_20: "https://buy.stripe.com/PLACEHOLDER_CREDITS_20", // R$ 54,90 - 20 créditos
-    CREDITS_30: "https://buy.stripe.com/PLACEHOLDER_CREDITS_30", // R$ 74,90 - 30 créditos
-    // Extra seats for multi-user plans (opcional para MVP)
-    SEAT_PROFESSIONAL: "https://buy.stripe.com/PLACEHOLDER_SEAT_PROFESSIONAL",
-    SEAT_ENTERPRISE: "https://buy.stripe.com/PLACEHOLDER_SEAT_ENTERPRISE",
+    CREDITS_10: "/cadastro", // R$ 29,90 - 10 créditos
+    CREDITS_20: "/cadastro", // R$ 54,90 - 20 créditos
+    CREDITS_30: "/cadastro", // R$ 74,90 - 30 créditos
+    // Extra seats for multi-user plans
+    SEAT_PROFESSIONAL: "/cadastro",
+    SEAT_ENTERPRISE: "/cadastro",
   },
+  // Legacy alias for backward compatibility
+  STRIPE_PAYMENT_LINKS: {} as Record<string, string>,
   // Contact Info
   CONTACT_EMAIL: "suporte@tributalks.com.br",
   COMMERCIAL_EMAIL: "comercial@tributalks.com.br",
@@ -34,6 +37,11 @@ export const CONFIG = {
   },
   // Social
   LINKEDIN: "https://www.linkedin.com/company/tributalks/",
-  // Calendly - substituir pelo link real após configurar
+  // Community
+  CIRCLE_COMMUNITY: "https://tributalks.circle.so",
+  // Calendly
   CALENDLY_LINK: "https://calendly.com/tributalks/consultoria",
 };
+
+// Backward compatibility: map old STRIPE keys to new PAYMENT keys
+CONFIG.STRIPE_PAYMENT_LINKS = CONFIG.PAYMENT_LINKS;
