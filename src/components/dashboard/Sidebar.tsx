@@ -83,7 +83,6 @@ const navGroups: NavGroup[] = [
       { label: 'Analisador de Documentos', href: '/dashboard/analisador-documentos', icon: FileSearch, requiredPlan: 'NAVIGATOR' },
       { label: 'Workflows', href: '/dashboard/workflows', icon: Route, requiredPlan: 'NAVIGATOR' },
       { label: 'Comunidade', href: '/comunidade', icon: Users, requiredPlan: 'NAVIGATOR' },
-      { label: 'Indicar Amigos', href: '/indicar', icon: Gift, badge: 'Novo' },
     ]
   },
   {
@@ -224,6 +223,26 @@ export function Sidebar() {
       <div className="h-16 flex items-center px-6 border-b border-border">
         <Link to="/dashboard" className="flex items-center gap-2">
           <img src={logoTributalks} alt="TribuTalks" className="h-8 w-auto" />
+        </Link>
+      </div>
+
+      {/* Referral Highlight Card */}
+      <div className="mx-3 mt-4 p-3 rounded-lg bg-gradient-to-br from-amber-500/20 via-primary/20 to-amber-500/10 border border-amber-500/30">
+        <Link to="/indicar" className="block group">
+          <div className="flex items-center gap-2 mb-1">
+            <Gift className="w-5 h-5 text-amber-500 animate-pulse" />
+            <span className="text-sm font-bold text-foreground">Indique e Ganhe!</span>
+            <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500 text-white font-medium">
+              Novo
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground mb-2">
+            Ganhe até 20% de desconto na sua mensalidade
+          </p>
+          <div className="flex items-center justify-center gap-2 py-1.5 px-3 rounded-md bg-amber-500 text-white text-xs font-semibold group-hover:bg-amber-600 transition-colors">
+            <Sparkles className="w-3 h-3" />
+            Indicar Agora
+          </div>
         </Link>
       </div>
 
