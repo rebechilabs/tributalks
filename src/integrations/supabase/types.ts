@@ -2067,6 +2067,146 @@ export type Database = {
         }
         Relationships: []
       }
+      sped_contribuicoes: {
+        Row: {
+          arquivo_nome: string | null
+          arquivo_storage_path: string | null
+          cnpj: string
+          created_at: string | null
+          erro_mensagem: string | null
+          id: string
+          periodo_fim: string
+          periodo_inicio: string
+          razao_social: string | null
+          regime_apuracao: string | null
+          registros_processados: number | null
+          status: string | null
+          tipo_escrituracao: string | null
+          total_cofins_apurado: number | null
+          total_credito_cofins: number | null
+          total_credito_pis: number | null
+          total_debito_cofins: number | null
+          total_debito_pis: number | null
+          total_pis_apurado: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          arquivo_storage_path?: string | null
+          cnpj: string
+          created_at?: string | null
+          erro_mensagem?: string | null
+          id?: string
+          periodo_fim: string
+          periodo_inicio: string
+          razao_social?: string | null
+          regime_apuracao?: string | null
+          registros_processados?: number | null
+          status?: string | null
+          tipo_escrituracao?: string | null
+          total_cofins_apurado?: number | null
+          total_credito_cofins?: number | null
+          total_credito_pis?: number | null
+          total_debito_cofins?: number | null
+          total_debito_pis?: number | null
+          total_pis_apurado?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          arquivo_nome?: string | null
+          arquivo_storage_path?: string | null
+          cnpj?: string
+          created_at?: string | null
+          erro_mensagem?: string | null
+          id?: string
+          periodo_fim?: string
+          periodo_inicio?: string
+          razao_social?: string | null
+          regime_apuracao?: string | null
+          registros_processados?: number | null
+          status?: string | null
+          tipo_escrituracao?: string | null
+          total_cofins_apurado?: number | null
+          total_credito_cofins?: number | null
+          total_credito_pis?: number | null
+          total_debito_cofins?: number | null
+          total_debito_pis?: number | null
+          total_pis_apurado?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sped_contribuicoes_items: {
+        Row: {
+          aliquota: number | null
+          base_calculo: number | null
+          bloco: string | null
+          created_at: string | null
+          id: string
+          natureza_credito: string | null
+          observacao: string | null
+          origem_credito: string | null
+          potencial_recuperacao: number | null
+          saldo_credito: number | null
+          sped_id: string
+          tipo_credito: string | null
+          tipo_credito_descricao: string | null
+          tipo_tributo: string
+          user_id: string
+          valor_credito: number | null
+          valor_credito_utilizado: number | null
+        }
+        Insert: {
+          aliquota?: number | null
+          base_calculo?: number | null
+          bloco?: string | null
+          created_at?: string | null
+          id?: string
+          natureza_credito?: string | null
+          observacao?: string | null
+          origem_credito?: string | null
+          potencial_recuperacao?: number | null
+          saldo_credito?: number | null
+          sped_id: string
+          tipo_credito?: string | null
+          tipo_credito_descricao?: string | null
+          tipo_tributo: string
+          user_id: string
+          valor_credito?: number | null
+          valor_credito_utilizado?: number | null
+        }
+        Update: {
+          aliquota?: number | null
+          base_calculo?: number | null
+          bloco?: string | null
+          created_at?: string | null
+          id?: string
+          natureza_credito?: string | null
+          observacao?: string | null
+          origem_credito?: string | null
+          potencial_recuperacao?: number | null
+          saldo_credito?: number | null
+          sped_id?: string
+          tipo_credito?: string | null
+          tipo_credito_descricao?: string | null
+          tipo_tributo?: string
+          user_id?: string
+          valor_credito?: number | null
+          valor_credito_utilizado?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sped_contribuicoes_items_sped_id_fkey"
+            columns: ["sped_id"]
+            isOneToOne: false
+            referencedRelation: "sped_contribuicoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_events: {
         Row: {
           created_at: string | null

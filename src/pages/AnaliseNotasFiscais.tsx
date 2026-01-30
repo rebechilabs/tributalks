@@ -21,7 +21,8 @@ import {
   FolderArchive,
   Target,
   TrendingDown,
-  FileStack
+  FileStack,
+  FileSpreadsheet
 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { 
@@ -36,6 +37,7 @@ import {
 import { CreditRadar } from "@/components/credits/CreditRadar";
 import { ExposureProjection } from "@/components/credits/ExposureProjection";
 import { SavingsSummaryCard } from "@/components/credits/SavingsSummaryCard";
+import { SpedUploader } from "@/components/sped";
 
 // XMLs de teste do ciclo comercial
 import xmlCompra from "../../test-xml/ciclo-comercial/01-compra-mercadoria.xml?raw";
@@ -119,7 +121,7 @@ export default function AnaliseNotasFiscais() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const initialTab = searchParams.get('tab') as 'importar' | 'creditos' | 'exposicao' | null;
+  const initialTab = searchParams.get('tab') as 'importar' | 'sped' | 'creditos' | 'exposicao' | null;
   
   const [activeTab, setActiveTab] = useState(initialTab || 'importar');
   const [files, setFiles] = useState<FileItem[]>([]);
@@ -529,10 +531,14 @@ export default function AnaliseNotasFiscais() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="space-y-6">
-          <TabsList className="grid w-full max-w-lg grid-cols-3">
+          <TabsList className="grid w-full max-w-2xl grid-cols-4">
             <TabsTrigger value="importar" className="gap-2">
               <Upload className="h-4 w-4" />
-              Importar XMLs
+              XMLs
+            </TabsTrigger>
+            <TabsTrigger value="sped" className="gap-2">
+              <FileSpreadsheet className="h-4 w-4" />
+              SPED
             </TabsTrigger>
             <TabsTrigger value="creditos" className="gap-2">
               <Target className="h-4 w-4" />
@@ -823,6 +829,11 @@ export default function AnaliseNotasFiscais() {
                 </Button>
               </div>
             )}
+          </TabsContent>
+
+          {/* Tab: SPED Contribuições */}
+          <TabsContent value="sped">
+            <SpedUploader />
           </TabsContent>
 
           {/* Tab: Créditos Recuperáveis */}
