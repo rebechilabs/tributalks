@@ -1,18 +1,34 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Wallet, AlertTriangle, Trophy, ArrowRight, Lock, 
-  TrendingUp, ShieldCheck, ShieldAlert, ShieldX 
+  TrendingUp, ShieldCheck, ShieldAlert, ShieldX,
+  Lightbulb, FileDown, Loader2
 } from "lucide-react";
 import { ThermometerData } from "@/hooks/useExecutiveData";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface ExecutiveSummaryCardProps {
   thermometerData: ThermometerData | null;
   loading?: boolean;
   userPlan: string;
+}
+
+interface ScoreAction {
+  id: string;
+  action_code: string;
+  action_title: string;
+  action_description: string | null;
+  link_to: string | null;
+  points_gain: number | null;
+  economia_estimada: number | null;
+  priority: number | null;
 }
 
 // Mapeamento de planos para acesso ao Painel Executivo
@@ -85,12 +101,83 @@ function getRiskLabel(nivel: 'baixo' | 'medio' | 'alto' | null): string {
 }
 
 export function ExecutiveSummaryCard({ thermometerData, loading, userPlan }: ExecutiveSummaryCardProps) {
+  const { user } = useAuth();
+  const [actions, setActions] = useState<ScoreAction[]>([]);
+  const [actionsLoading, setActionsLoading] = useState(true);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  
   const normalizedPlan = LEGACY_PLAN_MAP[userPlan] || 'FREE';
   const canAccessExecutive = (PLAN_HIERARCHY[normalizedPlan] || 0) >= PLAN_HIERARCHY['PROFESSIONAL'];
   
   const scoreColors = getScoreColor(thermometerData?.scoreGrade || null);
   const riskColors = getRiskColor(thermometerData?.riscoNivel || null);
   const RiskIcon = riskColors.icon;
+
+  // Fetch recommended actions
+  useEffect(() => {
+    if (!user?.id) {
+      setActionsLoading(false);
+      return;
+    }
+
+    const fetchActions = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('score_actions')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('status', 'pending')
+          .order('priority', { ascending: true })
+          .limit(3);
+
+        if (error) throw error;
+        setActions(data || []);
+      } catch (error) {
+        console.error('Error fetching actions:', error);
+      } finally {
+        setActionsLoading(false);
+      }
+    };
+
+    fetchActions();
+  }, [user?.id]);
+
+  // Generate PDF handler
+  const handleGeneratePdf = async () => {
+    if (!canAccessExecutive) {
+      toast.error('Disponível para planos Professional e superiores');
+      return;
+    }
+
+    setPdfLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-executive-report', {
+        body: { reportType: 'monthly' }
+      });
+
+      if (error) throw error;
+
+      // The edge function should return a PDF or a URL
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      } else if (data?.html) {
+        // Open HTML in new window for print/PDF
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+          printWindow.document.write(data.html);
+          printWindow.document.close();
+          printWindow.print();
+        }
+      }
+
+      toast.success('Relatório gerado com sucesso!');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Erro ao gerar relatório. Tente novamente.');
+    } finally {
+      setPdfLoading(false);
+    }
+  };
 
   // Estado de loading
   if (loading) {
@@ -149,6 +236,34 @@ export function ExecutiveSummaryCard({ thermometerData, loading, userPlan }: Exe
   return (
     <Card className={cn("border-2 transition-all", scoreColors.border)}>
       <CardContent className="pt-6">
+        {/* Header with Semaphore */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className={cn(
+              "w-4 h-4 rounded-full animate-pulse",
+              scoreColors.semaforo === 'verde' ? 'bg-emerald-500' :
+              scoreColors.semaforo === 'amarelo' ? 'bg-amber-500' :
+              'bg-red-500'
+            )} />
+            <h3 className="font-semibold text-foreground">Resumo Executivo</h3>
+          </div>
+          {canAccessExecutive && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleGeneratePdf}
+              disabled={pdfLoading}
+            >
+              {pdfLoading ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <FileDown className="w-4 h-4 mr-2" />
+              )}
+              Baixar PDF
+            </Button>
+          )}
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
           {/* Caixa em Jogo */}
           <div className="flex flex-col items-center text-center p-4 rounded-xl bg-gradient-to-br from-primary/5 to-transparent">
@@ -215,12 +330,44 @@ export function ExecutiveSummaryCard({ thermometerData, loading, userPlan }: Exe
           </div>
         </div>
 
+        {/* Ações Recomendadas */}
+        {actions.length > 0 && (
+          <div className="mb-4 p-4 rounded-xl bg-muted/30 border border-border/50">
+            <div className="flex items-center gap-2 mb-3">
+              <Lightbulb className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-foreground">Ações Recomendadas</span>
+            </div>
+            <div className="space-y-2">
+              {actions.map((action, index) => (
+                <Link 
+                  key={action.id}
+                  to={action.link_to || '/dashboard/score-tributario'}
+                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors group"
+                >
+                  <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary flex-shrink-0">
+                    {index + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{action.action_title}</p>
+                    {action.economia_estimada && action.economia_estimada > 0 && (
+                      <p className="text-xs text-emerald-600">
+                        Economia estimada: {formatCurrency(action.economia_estimada)}
+                      </p>
+                    )}
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* CTA para Painel Executivo */}
         <div className="pt-4 border-t border-border">
           {canAccessExecutive ? (
             <Button asChild variant="outline" className="w-full">
               <Link to="/dashboard/executivo">
-                Ver Painel Executivo
+                Ver Painel Executivo Completo
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </Button>
