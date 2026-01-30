@@ -5,6 +5,7 @@ import { ScoreGauge } from "@/components/score/ScoreGauge";
 import { ScoreCard } from "@/components/score/ScoreCard";
 import { ScoreResults } from "@/components/score/ScoreResults";
 import { ScorePdfReport } from "@/components/score/ScorePdfReport";
+import { ScoreHistoryChart } from "@/components/score/ScoreHistoryChart";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -618,6 +619,11 @@ export default function ScoreTributario() {
             />
           </div>
         </div>
+
+        {/* Histórico de Evolução */}
+        {scoreData && scoreData.score_total > 0 && (
+          <ScoreHistoryChart currentScore={scoreData.score_total} />
+        )}
 
         {/* Seção de Resultados - Botões de ação */}
         {scoreData && scoreData.score_total > 0 && (
