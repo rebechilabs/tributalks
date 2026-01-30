@@ -178,7 +178,7 @@ const Comunidade = () => {
                     </p>
                   </div>
                 </div>
-                <ContentLibrary />
+                <ContentLibrary isProfessional={isProfessional} />
               </CardContent>
             </Card>
           ) : (
