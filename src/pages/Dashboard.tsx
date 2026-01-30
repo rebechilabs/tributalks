@@ -15,6 +15,7 @@ import { formatBrasilia } from "@/lib/dateUtils";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { ClaraCard } from "@/components/dashboard/ClaraCard";
 import { ExecutiveSummaryCard } from "@/components/dashboard/ExecutiveSummaryCard";
+import { ExpiringBenefitsAlert } from "@/components/dashboard/ExpiringBenefitsAlert";
 import { useExecutiveData } from "@/hooks/useExecutiveData";
 
 interface CalcItem {
@@ -293,6 +294,9 @@ const Dashboard = () => {
             Bem-vindo ao seu painel de inteligência tributária.
           </p>
         </div>
+
+        {/* Alerta de Benefícios em Extinção */}
+        <ExpiringBenefitsAlert />
 
         {/* TribuChat - Clara Card (integra o CTA "Por onde começo") */}
         <div className="mb-8">
