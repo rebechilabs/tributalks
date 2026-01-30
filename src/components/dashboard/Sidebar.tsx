@@ -1,9 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
 import { 
-  Home, Scale, Wallet, Bot, FileText, Users, Calendar, 
+  Home, Scale, Wallet, FileText, Users, Calendar, 
   Clock, Settings, Lock, Sparkles, Newspaper,
-  Upload, Calculator, Target, BarChart3, Trophy, Lightbulb, LayoutDashboard,
-  MapPin, ShieldCheck, FileSearch, Route, Briefcase, ClipboardCheck, Plug, Gift
+  Calculator, Target, BarChart3, Trophy, Lightbulb, LayoutDashboard,
+  MapPin, Briefcase, ClipboardCheck, Plug, Gift, Route, FileSearch
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUnreadNotificationsByCategory } from "@/hooks/useUnreadNotificationsByCategory";
@@ -16,12 +16,13 @@ interface NavItem {
   label: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
-  requiredPlan?: 'NAVIGATOR' | 'PROFESSIONAL' | 'ENTERPRISE';
+  requiredPlan?: 'STARTER' | 'NAVIGATOR' | 'PROFESSIONAL' | 'ENTERPRISE';
   badge?: string;
 }
 
 interface NavGroup {
   title: string;
+  stepNumber?: number;
   items: NavItem[];
 }
 
@@ -33,59 +34,62 @@ const navGroups: NavGroup[] = [
     ]
   },
   {
-    title: 'GPS da Reforma',
+    title: 'Etapa 1: Entender',
+    stepNumber: 1,
     items: [
-      { label: 'Checklist de Prontidão', href: '/dashboard/checklist-reforma', icon: ClipboardCheck, requiredPlan: 'NAVIGATOR', badge: 'Novo' },
-      { label: 'Notícias da Reforma', href: '/noticias', icon: Newspaper, requiredPlan: 'NAVIGATOR' },
-      { label: 'Timeline 2026-2033', href: '/dashboard/timeline-reforma', icon: MapPin, requiredPlan: 'NAVIGATOR' },
+      { label: 'Score Tributário', href: '/dashboard/score-tributario', icon: Trophy },
+      { label: 'Clara AI', href: '/tribubot', icon: Sparkles, badge: 'IA' },
     ]
   },
   {
-    title: 'Calculadoras',
+    title: 'Etapa 2: Simular',
+    stepNumber: 2,
     items: [
-      { label: 'Score Tributário', href: '/dashboard/score-tributario', icon: Trophy },
       { label: 'Split Payment', href: '/calculadora/split-payment', icon: Wallet },
       { label: 'Comparativo de Regimes', href: '/calculadora/comparativo-regimes', icon: Scale },
       { label: 'Calculadora RTC', href: '/calculadora/rtc', icon: Calculator, badge: 'NCM' },
-      { label: 'Calculadora Serviços', href: '/calculadora/servicos', icon: Briefcase, badge: 'NBS' },
+      { label: 'Calculadora Serviços', href: '/calculadora/servicos', icon: Briefcase, requiredPlan: 'NAVIGATOR', badge: 'NBS' },
     ]
   },
   {
-    title: 'Diagnóstico',
+    title: 'Etapa 3: Diagnosticar',
+    stepNumber: 3,
     items: [
-      { label: 'Análise de Créditos Tributários', href: '/dashboard/analise-notas', icon: FileText, requiredPlan: 'PROFESSIONAL', badge: 'Novo' },
       { label: 'DRE Inteligente', href: '/dashboard/dre', icon: BarChart3, requiredPlan: 'PROFESSIONAL' },
-      { label: 'Oportunidades', href: '/dashboard/oportunidades', icon: Lightbulb, requiredPlan: 'PROFESSIONAL' },
+      { label: 'Análise de Créditos', href: '/dashboard/analise-notas', icon: FileText, requiredPlan: 'PROFESSIONAL' },
+      { label: 'Oportunidades Fiscais', href: '/dashboard/oportunidades', icon: Lightbulb, requiredPlan: 'PROFESSIONAL' },
+      { label: 'Suíte Margem Ativa', href: '/dashboard/margem-ativa', icon: Target, requiredPlan: 'PROFESSIONAL' },
+    ]
+  },
+  {
+    title: 'Etapa 4: Comandar',
+    stepNumber: 4,
+    items: [
+      { label: 'NEXUS', href: '/dashboard/nexus', icon: LayoutDashboard, requiredPlan: 'PROFESSIONAL', badge: 'Novo' },
+      { label: 'Painel Executivo', href: '/dashboard/executivo', icon: LayoutDashboard, requiredPlan: 'ENTERPRISE' },
+    ]
+  },
+  {
+    title: 'GPS da Reforma',
+    items: [
+      { label: 'Timeline 2026-2033', href: '/dashboard/timeline-reforma', icon: MapPin },
+      { label: 'Notícias da Reforma', href: '/noticias', icon: Newspaper, requiredPlan: 'NAVIGATOR' },
+      { label: 'Checklist de Prontidão', href: '/dashboard/checklist-reforma', icon: ClipboardCheck, requiredPlan: 'NAVIGATOR' },
     ]
   },
   {
     title: 'IA e Documentos',
     items: [
-      { label: 'Clara AI', href: '/tribubot', icon: Sparkles, requiredPlan: 'NAVIGATOR', badge: 'IA' },
-      { label: 'Analisador de Documentos', href: '/dashboard/analisador-documentos', icon: FileSearch, requiredPlan: 'NAVIGATOR', badge: 'Novo' },
-      { label: 'Workflows', href: '/dashboard/workflows', icon: Route, requiredPlan: 'NAVIGATOR', badge: 'Novo' },
-      { label: 'Comunidade', href: '/comunidade', icon: Users, requiredPlan: 'PROFESSIONAL' },
+      { label: 'Analisador de Documentos', href: '/dashboard/analisador-documentos', icon: FileSearch, requiredPlan: 'NAVIGATOR' },
+      { label: 'Workflows', href: '/dashboard/workflows', icon: Route, requiredPlan: 'NAVIGATOR' },
+      { label: 'Comunidade', href: '/comunidade', icon: Users, requiredPlan: 'NAVIGATOR' },
       { label: 'Indicar Amigos', href: '/indicar', icon: Gift, badge: 'Novo' },
     ]
   },
   {
     title: 'Integrações',
     items: [
-      { label: 'Conectar ERP', href: '/dashboard/integracoes', icon: Plug, requiredPlan: 'PROFESSIONAL', badge: 'Novo' },
-    ]
-  },
-  {
-    title: 'Margem Ativa',
-    items: [
-      { label: 'Suíte Margem Ativa', href: '/dashboard/margem-ativa', icon: Target, requiredPlan: 'PROFESSIONAL', badge: 'Novo' },
-    ]
-  },
-  {
-    title: 'Enterprise',
-    items: [
-      { label: 'NEXUS', href: '/dashboard/nexus', icon: LayoutDashboard, requiredPlan: 'PROFESSIONAL', badge: 'Novo' },
-      { label: 'Painel Executivo', href: '/dashboard/executivo', icon: LayoutDashboard, requiredPlan: 'ENTERPRISE' },
-      { label: 'Consultorias', href: '/consultorias', icon: Calendar, requiredPlan: 'ENTERPRISE' },
+      { label: 'Conectar ERP', href: '/dashboard/integracoes', icon: Plug, requiredPlan: 'PROFESSIONAL' },
     ]
   },
 ];
@@ -97,17 +101,18 @@ const secondaryNavItems: NavItem[] = [
 
 // Mapeamento de planos legados para novos
 const LEGACY_PLAN_MAP: Record<string, string> = {
-  'FREE': 'FREE',
+  'FREE': 'STARTER',
   'BASICO': 'NAVIGATOR',
   'PROFISSIONAL': 'PROFESSIONAL',
   'PREMIUM': 'ENTERPRISE',
+  'STARTER': 'STARTER',
   'NAVIGATOR': 'NAVIGATOR',
   'PROFESSIONAL': 'PROFESSIONAL',
   'ENTERPRISE': 'ENTERPRISE',
 };
 
 const PLAN_HIERARCHY: Record<string, number> = {
-  'FREE': 0,
+  'STARTER': 0,
   'NAVIGATOR': 1,
   'PROFESSIONAL': 2,
   'ENTERPRISE': 3,
@@ -117,8 +122,8 @@ export function Sidebar() {
   const location = useLocation();
   const { profile } = useAuth();
   const { counts: unreadCounts } = useUnreadNotificationsByCategory();
-  const rawPlan = profile?.plano || 'FREE';
-  const currentPlan = LEGACY_PLAN_MAP[rawPlan] || 'FREE';
+  const rawPlan = profile?.plano || 'STARTER';
+  const currentPlan = LEGACY_PLAN_MAP[rawPlan] || 'STARTER';
 
   // Map categories to menu items for notification badges
   const getUnreadForRoute = (href: string): number => {
@@ -137,19 +142,19 @@ export function Sidebar() {
 
   const getPlanLabel = () => {
     const labels: Record<string, string> = {
-      'FREE': 'Grátis',
+      'STARTER': 'Starter',
       'NAVIGATOR': 'Navigator',
       'PROFESSIONAL': 'Professional',
       'ENTERPRISE': 'Enterprise',
     };
-    return labels[currentPlan] || 'Grátis';
+    return labels[currentPlan] || 'Starter';
   };
 
   // Get tour attribute for specific items
   const getTourAttribute = (href: string, groupTitle: string): Record<string, string> => {
     if (href === '/dashboard/score-tributario') return { 'data-tour': 'score-link' };
-    if (groupTitle === 'Calculadoras') return { 'data-tour': 'calculators-group' };
-    if (groupTitle === 'GPS da Reforma') return { 'data-tour': 'gps-reforma-group' };
+    if (groupTitle.includes('Simular')) return { 'data-tour': 'calculators-group' };
+    if (groupTitle.includes('GPS')) return { 'data-tour': 'gps-reforma-group' };
     return {};
   };
 
@@ -230,9 +235,16 @@ export function Sidebar() {
             {group.title && (
               <>
                 {index > 0 && <Separator className="my-3" />}
-                <span className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  {group.title}
-                </span>
+                <div className="flex items-center gap-2 px-3 py-2">
+                  {group.stepNumber && (
+                    <span className="w-5 h-5 flex items-center justify-center rounded-full bg-primary/20 text-primary text-xs font-bold">
+                      {group.stepNumber}
+                    </span>
+                  )}
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    {group.stepNumber ? group.title.replace(/Etapa \d: /, '') : group.title}
+                  </span>
+                </div>
               </>
             )}
             {/* Group Items */}
@@ -283,7 +295,7 @@ export function Sidebar() {
             <span className="text-xs text-muted-foreground">Seu plano</span>
             <span className="text-xs font-medium text-primary">{getPlanLabel()}</span>
           </div>
-          {currentPlan === 'FREE' && (
+          {currentPlan === 'STARTER' && (
             <Link
               to="/#planos"
               className="flex items-center justify-center gap-2 w-full py-2 px-3 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
