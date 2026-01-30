@@ -38,7 +38,7 @@ import { CreditRadar } from "@/components/credits/CreditRadar";
 import { ExposureProjection } from "@/components/credits/ExposureProjection";
 import { SavingsSummaryCard } from "@/components/credits/SavingsSummaryCard";
 import { SpedUploader } from "@/components/sped";
-
+import { DctfUploader } from "@/components/dctf";
 // XMLs de teste do ciclo comercial
 import xmlCompra from "../../test-xml/ciclo-comercial/01-compra-mercadoria.xml?raw";
 import xmlVendaPJ from "../../test-xml/ciclo-comercial/02-venda-mercadoria.xml?raw";
@@ -121,7 +121,7 @@ export default function AnaliseNotasFiscais() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const initialTab = searchParams.get('tab') as 'importar' | 'sped' | 'creditos' | 'exposicao' | null;
+  const initialTab = searchParams.get('tab') as 'importar' | 'sped' | 'dctf' | 'creditos' | 'exposicao' | null;
   
   const [activeTab, setActiveTab] = useState(initialTab || 'importar');
   const [files, setFiles] = useState<FileItem[]>([]);
@@ -531,7 +531,7 @@ export default function AnaliseNotasFiscais() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4">
+          <TabsList className="grid w-full max-w-3xl grid-cols-5">
             <TabsTrigger value="importar" className="gap-2">
               <Upload className="h-4 w-4" />
               XMLs
@@ -539,6 +539,10 @@ export default function AnaliseNotasFiscais() {
             <TabsTrigger value="sped" className="gap-2">
               <FileSpreadsheet className="h-4 w-4" />
               SPED
+            </TabsTrigger>
+            <TabsTrigger value="dctf" className="gap-2">
+              <FileText className="h-4 w-4" />
+              DCTF
             </TabsTrigger>
             <TabsTrigger value="creditos" className="gap-2">
               <Target className="h-4 w-4" />
@@ -834,6 +838,11 @@ export default function AnaliseNotasFiscais() {
           {/* Tab: SPED Contribuições */}
           <TabsContent value="sped">
             <SpedUploader />
+          </TabsContent>
+
+          {/* Tab: DCTF */}
+          <TabsContent value="dctf">
+            <DctfUploader />
           </TabsContent>
 
           {/* Tab: Créditos Recuperáveis */}
