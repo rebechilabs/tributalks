@@ -80,7 +80,7 @@ const navGroups: NavGroup[] = [
     ]
   },
   {
-    title: 'IA e Documentos',
+    title: 'Central Inteligente',
     items: [
       { label: 'Analisador de Documentos', href: '/dashboard/analisador-documentos', icon: FileSearch, requiredPlan: 'NAVIGATOR' },
       { label: 'Workflows', href: '/dashboard/workflows', icon: Route, requiredPlan: 'NAVIGATOR' },
@@ -226,8 +226,8 @@ export function MobileNav() {
                 {group.items.map(renderNavItem)}
               </div>
               
-              {/* Newsletter após o grupo "IA e Documentos" */}
-              {group.title === 'IA e Documentos' && (
+              {/* Newsletter após o grupo Central Inteligente */}
+              {group.title === 'Central Inteligente' && (
                 <div className="mt-2 mx-1 p-2 rounded-lg bg-muted/30 border border-border/50">
                   <NewsletterForm variant="compact" />
                 </div>
