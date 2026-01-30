@@ -271,8 +271,8 @@ export function Sidebar() {
               {group.items.map(item => renderNavItem(item, group.title))}
             </div>
             
-            {/* Newsletter após o grupo "IA e Documentos" */}
-            {group.title === 'IA e Documentos' && (
+            {/* Newsletter após o grupo Central Inteligente */}
+            {group.title === 'Central Inteligente' && (
               <div className="mt-2 mx-1 p-2 rounded-lg bg-muted/30 border border-border/50">
                 <NewsletterForm variant="compact" />
               </div>
