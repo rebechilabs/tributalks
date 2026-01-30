@@ -23,7 +23,7 @@ import { LastActivityCard } from "@/components/dashboard/LastActivityCard";
 import { InProgressWorkflows } from "@/components/dashboard/InProgressWorkflows";
 import { NextRelevantDeadline } from "@/components/dashboard/NextRelevantDeadline";
 import { ClaraContextualSuggestion } from "@/components/common/ClaraContextualSuggestion";
-import { OnboardingChecklist, FirstMission } from "@/components/onboarding";
+import { OnboardingChecklist, FirstMission, GuidedTour } from "@/components/onboarding";
 import { StreakDisplay } from "@/components/achievements";
 import { useExecutiveData } from "@/hooks/useExecutiveData";
 import { useUserProgress } from "@/hooks/useUserProgress";
@@ -336,9 +336,12 @@ const Dashboard = () => {
         <ExpiringBenefitsAlert />
 
         {/* TribuChat - Clara Card (integra o CTA "Por onde começo") */}
-        <div className="mb-6">
+        <div className="mb-6" data-tour="clara-card">
           <ClaraCard />
         </div>
+
+        {/* Guided Tour */}
+        <GuidedTour />
 
         {/* Progresso do Usuário - Nova seção */}
         <ProgressSummary progress={userProgress} />

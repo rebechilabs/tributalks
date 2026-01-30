@@ -138,17 +138,27 @@ export function Sidebar() {
     return labels[currentPlan] || 'Grátis';
   };
 
-  const renderNavItem = (item: NavItem) => {
+  // Get tour attribute for specific items
+  const getTourAttribute = (href: string, groupTitle: string): Record<string, string> => {
+    if (href === '/dashboard/score-tributario') return { 'data-tour': 'score-link' };
+    if (groupTitle === 'Calculadoras') return { 'data-tour': 'calculators-group' };
+    if (groupTitle === 'GPS da Reforma') return { 'data-tour': 'gps-reforma-group' };
+    return {};
+  };
+
+  const renderNavItem = (item: NavItem, groupTitle: string) => {
     const Icon = item.icon;
     const isActive = location.pathname === item.href;
     const canAccess = hasAccess(item.requiredPlan);
     const unreadCount = getUnreadForRoute(item.href);
+    const tourAttr = getTourAttribute(item.href, groupTitle);
 
     if (!canAccess) {
       return (
         <div
           key={item.href}
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground/50 cursor-not-allowed"
+          {...tourAttr}
         >
           <Lock className="w-4 h-4" />
           <span className="flex-1 text-sm">{item.label}</span>
@@ -171,6 +181,7 @@ export function Sidebar() {
             ? "bg-primary/10 text-primary border-l-2 border-primary"
             : "text-muted-foreground hover:text-foreground hover:bg-muted"
         )}
+        {...tourAttr}
       >
         <div className="relative">
           <Icon className="w-4 h-4" />
@@ -219,7 +230,7 @@ export function Sidebar() {
             )}
             {/* Group Items */}
             <div className="space-y-1">
-              {group.items.map(renderNavItem)}
+              {group.items.map(item => renderNavItem(item, group.title))}
             </div>
             
             {/* Newsletter após o grupo "IA e Documentos" */}
