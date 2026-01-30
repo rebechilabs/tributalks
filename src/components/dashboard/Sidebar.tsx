@@ -53,7 +53,7 @@ const navGroups: NavGroup[] = [
   {
     title: 'Diagnóstico',
     items: [
-      { label: 'Análise de Notas Fiscais', href: '/dashboard/analise-notas', icon: FileText, requiredPlan: 'PROFESSIONAL', badge: 'Novo' },
+      { label: 'Análise de Créditos Tributários', href: '/dashboard/analise-notas', icon: FileText, requiredPlan: 'PROFESSIONAL', badge: 'Novo' },
       { label: 'DRE Inteligente', href: '/dashboard/dre', icon: BarChart3, requiredPlan: 'PROFESSIONAL' },
       { label: 'Oportunidades', href: '/dashboard/oportunidades', icon: Lightbulb, requiredPlan: 'PROFESSIONAL' },
     ]

@@ -520,7 +520,7 @@ export default function AnaliseNotasFiscais() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <FileStack className="h-7 w-7 text-primary" />
-            Análise de Notas Fiscais
+            Análise de Créditos Tributários
           </h1>
           <p className="text-muted-foreground">
             Importe XMLs, identifique créditos recuperáveis e projete sua exposição tributária

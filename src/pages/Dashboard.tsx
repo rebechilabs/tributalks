@@ -119,7 +119,7 @@ const toolGroups: ToolGroup[] = [
     icon: Target,
     items: [
       { 
-        name: 'Análise de Notas Fiscais', 
+        name: 'Análise de Créditos Tributários', 
         description: 'XMLs + Créditos + Exposição',
         href: '/dashboard/analise-notas', 
         icon: FileText,
