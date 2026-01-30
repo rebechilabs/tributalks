@@ -1,6 +1,6 @@
 
 
-# Tarefa 1: Card Resumo Executivo no Dashboard
+# ✅ Tarefa 1: Card Resumo Executivo no Dashboard (CONCLUÍDA)
 
 ## Objetivo
 Criar um card compacto que responda às 3 perguntas do CEO/CFO:
