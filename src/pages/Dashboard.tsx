@@ -23,8 +23,11 @@ import { LastActivityCard } from "@/components/dashboard/LastActivityCard";
 import { InProgressWorkflows } from "@/components/dashboard/InProgressWorkflows";
 import { NextRelevantDeadline } from "@/components/dashboard/NextRelevantDeadline";
 import { ClaraContextualSuggestion } from "@/components/common/ClaraContextualSuggestion";
+import { OnboardingChecklist, FirstMission } from "@/components/onboarding";
+import { StreakDisplay } from "@/components/achievements";
 import { useExecutiveData } from "@/hooks/useExecutiveData";
 import { useUserProgress } from "@/hooks/useUserProgress";
+import { useAchievements } from "@/hooks/useAchievements";
 
 interface CalcItem {
   id: string;
@@ -211,6 +214,15 @@ const Dashboard = () => {
   
   // New progress hook
   const userProgress = useUserProgress();
+  
+  // Achievements - check on mount
+  const { checkAchievements } = useAchievements();
+  
+  useEffect(() => {
+    if (user?.id) {
+      checkAchievements();
+    }
+  }, [user?.id]);
 
   const rawPlan = profile?.plano || 'FREE';
   const currentPlan = LEGACY_PLAN_MAP[rawPlan] || 'FREE';
@@ -298,13 +310,26 @@ const Dashboard = () => {
     <DashboardLayout title="Dashboard">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-foreground mb-2">
-            Olá, {profile?.nome?.split(' ')[0] || 'Usuário'} 👋
-          </h1>
-          <p className="text-muted-foreground">
-            Bem-vindo ao seu painel de inteligência tributária.
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground mb-2">
+              Olá, {profile?.nome?.split(' ')[0] || 'Usuário'} 👋
+            </h1>
+            <p className="text-muted-foreground">
+              Bem-vindo ao seu painel de inteligência tributária.
+            </p>
+          </div>
+          <StreakDisplay showLongest />
+        </div>
+        
+        {/* Onboarding - First Mission (appears for new users) */}
+        <div className="mb-6">
+          <FirstMission />
+        </div>
+        
+        {/* Onboarding Checklist (7 days) */}
+        <div className="mb-6">
+          <OnboardingChecklist />
         </div>
 
         {/* Alerta de Benefícios em Extinção */}

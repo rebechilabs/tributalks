@@ -6,11 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Loader2, Save, User, Building, FileText, Lock, CreditCard, Crown, AlertTriangle, ExternalLink } from "lucide-react";
+import { Loader2, Save, User, Building, FileText, Lock, CreditCard, Crown, AlertTriangle, ExternalLink, Trophy } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { AchievementList, StreakDisplay } from "@/components/achievements";
 import { CONFIG } from "@/config/site";
 
 const ESTADOS = [
@@ -133,7 +134,26 @@ const Perfil = () => {
 
   return (
     <DashboardLayout title="Meu Perfil">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* Achievements Section */}
+        <AchievementList />
+        
+        {/* Streak display */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-primary" />
+              Sua Sequência
+            </CardTitle>
+            <CardDescription>
+              Mantenha o ritmo acessando a plataforma diariamente.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <StreakDisplay showLongest />
+          </CardContent>
+        </Card>
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Personal Info */}
           <Card>
