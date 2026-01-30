@@ -78,11 +78,11 @@ const plans: Plan[] = [
   {
     name: "PROFESSIONAL",
     description: "Diagnóstico completo + NEXUS",
-    priceMonthly: 1997,
-    priceAnnual: 19970,
+    priceMonthly: 2997,
+    priceAnnual: 29970,
     highlighted: true,
     popular: true,
-    cnpjLimit: "5 CNPJs • 5 Usuários",
+    cnpjLimit: "5 CNPJs • 4 Usuários",
     features: [
       { text: "Clara AI ilimitada", included: true },
       { text: "Score Tributário", included: true, limitText: "Ilimitado" },
