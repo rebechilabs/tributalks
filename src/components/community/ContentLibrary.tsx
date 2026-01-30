@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Video, Download, ExternalLink, Lock } from "lucide-react";
+import { CONFIG } from "@/config/site";
 
 interface ContentItem {
   id: string;
@@ -9,6 +10,7 @@ interface ContentItem {
   description: string;
   type: "guide" | "template" | "video" | "checklist";
   url?: string;
+  circleUrl?: string;
   isNew?: boolean;
   comingSoon?: boolean;
 }
@@ -20,6 +22,7 @@ const contentItems: ContentItem[] = [
     description: "Tudo o que CEOs e CFOs precisam saber sobre o CBS, IBS e Split Payment.",
     type: "guide",
     url: "/documento-comercial",
+    circleUrl: `${CONFIG.CIRCLE_COMMUNITY}/c/biblioteca`,
     isNew: true,
   },
   {
@@ -28,12 +31,14 @@ const contentItems: ContentItem[] = [
     description: "15 itens essenciais para adequar seu fluxo de caixa antes de 2026.",
     type: "checklist",
     url: "/checklist-reforma",
+    circleUrl: `${CONFIG.CIRCLE_COMMUNITY}/c/biblioteca`,
   },
   {
     id: "3",
     title: "Template: Apresentação para Diretoria",
     description: "Slides prontos para apresentar o impacto da reforma ao conselho.",
     type: "template",
+    circleUrl: `${CONFIG.CIRCLE_COMMUNITY}/c/biblioteca`,
     comingSoon: true,
   },
   {
@@ -41,6 +46,7 @@ const contentItems: ContentItem[] = [
     title: "Webinar: Impacto nos Regimes Tributários",
     description: "Gravação do webinar com especialistas sobre Lucro Real vs Presumido pós-reforma.",
     type: "video",
+    circleUrl: `${CONFIG.CIRCLE_COMMUNITY}/c/biblioteca`,
     comingSoon: true,
   },
   {
@@ -48,6 +54,7 @@ const contentItems: ContentItem[] = [
     title: "Planilha: Simulador de Fluxo de Caixa",
     description: "Calcule o impacto do Split Payment no seu capital de giro.",
     type: "template",
+    circleUrl: `${CONFIG.CIRCLE_COMMUNITY}/c/biblioteca`,
     comingSoon: true,
   },
 ];
@@ -59,12 +66,34 @@ const typeConfig = {
   checklist: { icon: FileText, label: "Checklist", color: "bg-muted text-muted-foreground" },
 };
 
-export const ContentLibrary = () => {
+interface ContentLibraryProps {
+  isProfessional?: boolean;
+}
+
+export const ContentLibrary = ({ isProfessional = false }: ContentLibraryProps) => {
+  const getItemUrl = (item: ContentItem) => {
+    if (item.comingSoon) return undefined;
+    // Professional+ users are redirected to Circle
+    if (isProfessional && item.circleUrl) return item.circleUrl;
+    return item.url;
+  };
+
+  const isExternal = (url?: string) => url?.startsWith("http");
+
   return (
     <div className="space-y-4">
+      {isProfessional && (
+        <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 mb-4">
+          <p className="text-xs text-muted-foreground">
+            <strong className="text-foreground">Professional+:</strong> Seus conteúdos exclusivos estão disponíveis no Circle, 
+            onde você também pode interagir com outros membros.
+          </p>
+        </div>
+      )}
       {contentItems.map((item) => {
         const config = typeConfig[item.type];
         const Icon = config.icon;
+        const itemUrl = getItemUrl(item);
 
         return (
           <Card key={item.id} className={item.comingSoon ? "opacity-60" : ""}>
@@ -92,7 +121,7 @@ export const ContentLibrary = () => {
                     </Button>
                   ) : (
                     <Button variant="ghost" size="sm" asChild>
-                      <a href={item.url} target={item.url?.startsWith("http") ? "_blank" : undefined}>
+                      <a href={itemUrl} target={isExternal(itemUrl) ? "_blank" : undefined} rel={isExternal(itemUrl) ? "noopener noreferrer" : undefined}>
                         <ExternalLink className="w-4 h-4" />
                       </a>
                     </Button>
