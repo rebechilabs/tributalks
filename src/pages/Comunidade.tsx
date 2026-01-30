@@ -124,41 +124,6 @@ const Comunidade = () => {
             />
           )}
 
-          {/* Webinars - NAVIGATOR+ */}
-          {isNavigator ? (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                    <Calendar className="w-6 h-6 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-foreground">Webinars Mensais</h3>
-                      <Badge variant="secondary" className="text-xs">{PLAN_LABELS.NAVIGATOR}+</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Participe de sessões ao vivo com especialistas em tributação.
-                      Próximos temas incluem Split Payment, Reforma Tributária e mais.
-                    </p>
-                    <div className="bg-muted/50 rounded-lg p-4">
-                      <p className="text-sm text-foreground font-medium">Próximo webinar:</p>
-                      <p className="text-sm text-muted-foreground">
-                        "Preparando seu caixa para o Split Payment" — Em breve
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <LockedFeatureCard
-              icon={<Calendar className="w-6 h-6 text-muted-foreground" />}
-              title="Webinars Mensais"
-              description="Sessões ao vivo exclusivas com especialistas em tributação. Temas como Split Payment, Reforma Tributária e estratégias de planejamento."
-              minPlan="NAVIGATOR"
-            />
-          )}
 
           {/* Content Library - NAVIGATOR+ */}
           {isNavigator ? (
@@ -174,7 +139,7 @@ const Comunidade = () => {
                       <Badge variant="secondary" className="text-xs">{PLAN_LABELS.NAVIGATOR}+</Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Materiais exclusivos para membros: guias, templates, checklists e webinars gravados.
+                      Materiais exclusivos para membros: guias, templates e checklists.
                     </p>
                   </div>
                 </div>
@@ -185,7 +150,7 @@ const Comunidade = () => {
             <LockedFeatureCard
               icon={<BookOpen className="w-6 h-6 text-muted-foreground" />}
               title="Biblioteca de Conteúdos"
-              description="Materiais premium: guias práticos, templates de planilhas, checklists de compliance e gravações de webinars anteriores."
+              description="Materiais premium: guias práticos, templates de planilhas e checklists de compliance."
               minPlan="NAVIGATOR"
             />
           )}

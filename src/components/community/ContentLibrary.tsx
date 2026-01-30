@@ -41,14 +41,6 @@ const contentItems: ContentItem[] = [
     circleUrl: `${CONFIG.CIRCLE_COMMUNITY}/c/biblioteca`,
     comingSoon: true,
   },
-  {
-    id: "4",
-    title: "Webinar: Impacto nos Regimes Tributários",
-    description: "Gravação do webinar com especialistas sobre Lucro Real vs Presumido pós-reforma.",
-    type: "video",
-    circleUrl: `${CONFIG.CIRCLE_COMMUNITY}/c/biblioteca`,
-    comingSoon: true,
-  },
 ];
 
 const typeConfig = {
