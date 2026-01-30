@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 export function CTASection() {
   return (
-    <section className="py-24 relative overflow-hidden bg-primary">
+    <section className="py-16 md:py-24 relative overflow-hidden bg-primary">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
         <div
@@ -18,20 +18,20 @@ export function CTASection() {
       <div className="container mx-auto px-4 md:px-6 lg:px-8 relative">
         <div className="max-w-3xl mx-auto text-center">
           {/* Icon */}
-          <div className="flex justify-center mb-6">
-            <div className="p-4 rounded-full bg-primary-foreground/10">
-              <Navigation className="w-10 h-10 text-primary-foreground" />
+          <div className="flex justify-center mb-4 md:mb-6">
+            <div className="p-3 md:p-4 rounded-full bg-primary-foreground/10">
+              <Navigation className="w-8 h-8 md:w-10 md:h-10 text-primary-foreground" />
             </div>
           </div>
 
           {/* Heading */}
-          <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-6">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary-foreground mb-4 md:mb-6 px-4">
             Pronto para navegar pela reforma
-            <br />
-            com confiança?
+            <br className="hidden sm:block" />
+            <span className="sm:hidden"> </span>com confiança?
           </h2>
 
-          <p className="text-lg text-primary-foreground/80 mb-8">
+          <p className="text-base md:text-lg text-primary-foreground/80 mb-6 md:mb-8 px-4">
             Saiba onde você está, para onde a reforma vai te levar, e o que fazer em cada etapa.
           </p>
 
@@ -39,15 +39,15 @@ export function CTASection() {
           <Link to="/cadastro">
             <Button
               size="lg"
-              className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-semibold px-8 py-6 text-lg group"
+              className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-semibold px-6 md:px-8 py-5 md:py-6 text-base md:text-lg group"
             >
               Começar minha jornada
-              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-4 h-4 md:w-5 md:h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>
 
           {/* Guarantee Text */}
-          <p className="text-sm text-primary-foreground/80 mt-6">
+          <p className="text-xs md:text-sm text-primary-foreground/80 mt-4 md:mt-6">
             Sem cartão. Sem compromisso. Cancele quando quiser.
           </p>
         </div>

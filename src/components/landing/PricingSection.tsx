@@ -126,23 +126,23 @@ export function PricingSection() {
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("mensal");
 
   return (
-    <section id="planos" className="py-24 bg-background">
+    <section id="planos" className="py-16 md:py-24 bg-background">
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+        <div className="text-center mb-8 md:mb-12">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3 md:mb-4">
             Escolha seu plano
           </h2>
-          <p className="text-muted-foreground text-lg">
-            Teste grátis por 7 dias com cartão. Cancele quando quiser.
+          <p className="text-muted-foreground text-base md:text-lg px-4">
+            Teste grátis por 7 dias. Cancele quando quiser.
           </p>
         </div>
 
         {/* Billing Toggle */}
-        <div className="flex items-center justify-center gap-4 mb-12">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-8 md:mb-12">
           <div className="inline-flex items-center bg-secondary rounded-lg p-1">
             <button
               onClick={() => setBillingPeriod("mensal")}
-              className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+              className={`px-4 md:px-6 py-2 rounded-md text-sm font-medium transition-all ${
                 billingPeriod === "mensal"
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground"
@@ -152,7 +152,7 @@ export function PricingSection() {
             </button>
             <button
               onClick={() => setBillingPeriod("anual")}
-              className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+              className={`px-4 md:px-6 py-2 rounded-md text-sm font-medium transition-all ${
                 billingPeriod === "anual"
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground"
@@ -168,8 +168,9 @@ export function PricingSection() {
           )}
         </div>
 
-        {/* Plans Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+        {/* Plans Grid - Horizontal scroll on mobile */}
+        <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pb-4 md:pb-0 scrollbar-hide">
+          <div className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-7xl mx-auto min-w-max md:min-w-0">
           {plans.map((plan, index) => {
             const price =
               billingPeriod === "mensal" ? plan.priceMonthly : plan.priceAnnual;
@@ -183,7 +184,7 @@ export function PricingSection() {
             return (
               <div
                 key={plan.name}
-                className={`relative bg-card rounded-xl p-6 border-2 transition-all duration-300 animate-fade-in-up ${
+                className={`relative bg-card rounded-xl p-5 md:p-6 border-2 transition-all duration-300 animate-fade-in-up w-[280px] md:w-auto flex-shrink-0 md:flex-shrink ${
                   plan.highlighted
                     ? "border-primary"
                     : "border-border hover:border-border-light"
@@ -193,7 +194,7 @@ export function PricingSection() {
                 {/* Popular Badge */}
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-semibold">
+                    <div className="inline-flex items-center gap-1 px-2 md:px-3 py-1 rounded-full bg-primary text-primary-foreground text-[10px] md:text-xs font-semibold whitespace-nowrap">
                       <Star className="w-3 h-3" />
                       MAIS POPULAR
                     </div>
@@ -203,7 +204,7 @@ export function PricingSection() {
                 {/* Trial Badge for Starter */}
                 {plan.trialDays && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-success text-success-foreground text-xs font-semibold">
+                    <div className="inline-flex items-center gap-1 px-2 md:px-3 py-1 rounded-full bg-success text-success-foreground text-[10px] md:text-xs font-semibold whitespace-nowrap">
                       <Sparkles className="w-3 h-3" />
                       {plan.trialDays} DIAS GRÁTIS
                     </div>
@@ -211,67 +212,67 @@ export function PricingSection() {
                 )}
 
                 {/* Plan Header */}
-                <div className="text-center mb-6 pt-2">
-                  <h3 className="text-lg font-bold text-foreground mb-1">
+                <div className="text-center mb-4 md:mb-6 pt-2">
+                  <h3 className="text-base md:text-lg font-bold text-foreground mb-1">
                     {plan.name}
                   </h3>
-                  <p className="text-sm text-muted-foreground mb-4">
+                  <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
                     {plan.description}
                   </p>
                   <div className="flex items-baseline justify-center gap-1">
                     {plan.isEnterprise ? (
-                      <span className="text-2xl font-bold text-foreground">
+                      <span className="text-xl md:text-2xl font-bold text-foreground">
                         Sob consulta
                       </span>
                     ) : (
                       <>
-                        <span className="text-4xl font-bold text-foreground">
+                        <span className="text-3xl md:text-4xl font-bold text-foreground">
                           R${billingPeriod === "mensal" ? price.toLocaleString('pt-BR') : Math.round(price / 12).toLocaleString('pt-BR')}
                         </span>
-                        <span className="text-muted-foreground">/mês</span>
+                        <span className="text-muted-foreground text-sm">/mês</span>
                       </>
                     )}
                   </div>
                   {billingPeriod === "anual" && price > 0 && !plan.isEnterprise && (
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-[10px] md:text-xs text-muted-foreground mt-1">
                       R${price.toLocaleString('pt-BR')} cobrado anualmente
                     </p>
                   )}
-                  <p className="text-xs text-primary mt-2 font-medium">
+                  <p className="text-[10px] md:text-xs text-primary mt-2 font-medium">
                     {plan.cnpjLimit}
                   </p>
                 </div>
 
                 {/* Divider */}
-                <div className="border-t border-border mb-6" />
+                <div className="border-t border-border mb-4 md:mb-6" />
 
                 {/* Features */}
-                <ul className="space-y-3 mb-6">
+                <ul className="space-y-2 md:space-y-3 mb-4 md:mb-6">
                   {plan.features.map((feature) => (
                     <li key={feature.text} className={`flex items-start gap-2 ${feature.isSubItem ? "ml-4" : ""}`}>
                       {feature.isSubItem ? (
-                        <span className="w-5 flex-shrink-0" />
+                        <span className="w-4 md:w-5 flex-shrink-0" />
                       ) : plan.isEnterprise && feature.included === true ? (
-                        <Diamond className="w-5 h-5 text-primary flex-shrink-0" />
+                        <Diamond className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0 mt-0.5" />
                       ) : feature.included === true ? (
-                        <Check className="w-5 h-5 text-success flex-shrink-0" />
+                        <Check className="w-4 h-4 md:w-5 md:h-5 text-success flex-shrink-0 mt-0.5" />
                       ) : feature.included === "limited" ? (
-                        <Check className="w-5 h-5 text-warning flex-shrink-0" />
+                        <Check className="w-4 h-4 md:w-5 md:h-5 text-warning flex-shrink-0 mt-0.5" />
                       ) : (
-                        <X className="w-5 h-5 text-muted-foreground/50 flex-shrink-0" />
+                        <X className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground/50 flex-shrink-0 mt-0.5" />
                       )}
                       <div className="flex flex-col">
                         <span
-                          className={
+                          className={`text-sm md:text-base ${
                             feature.included
                               ? "text-foreground"
                               : "text-muted-foreground/50"
-                          }
+                          }`}
                         >
                           {feature.text}
                         </span>
                         {feature.limitText && (
-                          <span className={`text-xs mt-0.5 ${plan.isEnterprise ? "text-muted-foreground" : feature.included === "limited" ? "text-warning" : "text-success"}`}>
+                          <span className={`text-[10px] md:text-xs mt-0.5 ${plan.isEnterprise ? "text-muted-foreground" : feature.included === "limited" ? "text-warning" : "text-success"}`}>
                             {plan.isEnterprise ? feature.limitText : `(${feature.limitText})`}
                           </span>
                         )}
@@ -320,11 +321,17 @@ export function PricingSection() {
               </div>
             );
           })}
+          </div>
         </div>
 
+        {/* Scroll hint for mobile */}
+        <p className="text-center text-xs text-muted-foreground mt-2 md:hidden">
+          ← Deslize para ver todos os planos →
+        </p>
+
         {/* Trust Badges */}
-        <div className="mt-16">
-          <p className="text-center text-sm text-muted-foreground mb-6">
+        <div className="mt-10 md:mt-16">
+          <p className="text-center text-xs md:text-sm text-muted-foreground mb-4 md:mb-6">
             Sua segurança é nossa prioridade
           </p>
           <TrustBadges variant="full" className="max-w-4xl mx-auto" />

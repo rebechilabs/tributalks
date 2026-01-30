@@ -99,44 +99,44 @@ const features = [
 
 export function FeaturesSection() {
   return (
-    <section id="funcionalidades" className="py-24 bg-background">
+    <section id="funcionalidades" className="py-16 md:py-24 bg-background">
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <Badge variant="outline" className="mb-4 text-primary border-primary">
+        <div className="text-center mb-10 md:mb-16">
+          <Badge variant="outline" className="mb-3 md:mb-4 text-primary border-primary text-xs md:text-sm">
             Ferramentas do GPS Tributário
           </Badge>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3 md:mb-4 px-2">
             Tudo que você precisa para
-            <br />
-            navegar pela <span className="text-primary">reforma</span>
+            <br className="hidden sm:block" />
+            <span className="sm:hidden"> </span>navegar pela <span className="text-primary">reforma</span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto px-4">
             De simuladores a diagnósticos completos — ferramentas que transformam
-            a complexidade da reforma em ações claras para o seu negócio.
+            a complexidade da reforma em ações claras.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 max-w-7xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5 max-w-7xl mx-auto">
           {features.map((feature, index) => (
             <div
               key={feature.title}
-              className="group bg-card rounded-xl p-5 border border-border hover:border-primary/50 transition-all duration-300 animate-fade-in-up"
+              className="group bg-card rounded-xl p-3 md:p-5 border border-border hover:border-primary/50 transition-all duration-300 animate-fade-in-up"
               style={{ animationDelay: `${index * 50}ms` }}
             >
-              <div className="flex items-start justify-between mb-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <feature.icon className="w-6 h-6 text-primary" />
+              <div className="flex items-start justify-between mb-2 md:mb-3">
+                <div className="p-1.5 md:p-2 rounded-lg bg-primary/10">
+                  <feature.icon className="w-5 h-5 md:w-6 md:h-6 text-primary" />
                 </div>
                 {feature.badge && (
-                  <Badge variant={feature.badgeVariant} className="text-xs">
+                  <Badge variant={feature.badgeVariant} className="text-[10px] md:text-xs px-1.5 md:px-2">
                     {feature.badge}
                   </Badge>
                 )}
               </div>
-              <h3 className="text-lg font-bold text-foreground mb-2">
+              <h3 className="text-sm md:text-lg font-bold text-foreground mb-1 md:mb-2 leading-tight">
                 {feature.title}
               </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <p className="text-xs md:text-sm text-muted-foreground leading-relaxed line-clamp-3 md:line-clamp-none">
                 {feature.description}
               </p>
             </div>
