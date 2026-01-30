@@ -46,32 +46,34 @@ const Comunidade = () => {
         </div>
 
         <div className="grid gap-6">
-          {/* WhatsApp Group - Disponível para TODOS */}
-          <Card className="border-primary/20">
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
-                  <MessageCircle className="w-6 h-6 text-secondary" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold text-foreground">Grupo WhatsApp</h3>
-                    <Badge variant="outline" className="text-xs">Aberto</Badge>
+          {/* WhatsApp Group - Apenas para usuários sem NAVIGATOR */}
+          {!isNavigator && (
+            <Card className="border-primary/20">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
+                    <MessageCircle className="w-6 h-6 text-secondary" />
                   </div>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Conecte-se com outros empresários do middle market. Compartilhe experiências, 
-                    tire dúvidas e faça networking básico com a comunidade.
-                  </p>
-                  <Button asChild className="gap-2">
-                    <a href={COMMUNITY_URL} target="_blank" rel="noopener noreferrer">
-                      Entrar no grupo
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                  </Button>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-foreground">Grupo WhatsApp</h3>
+                      <Badge variant="outline" className="text-xs">Aberto</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Conecte-se com outros empresários do middle market. Compartilhe experiências, 
+                      tire dúvidas e faça networking básico com a comunidade.
+                    </p>
+                    <Button asChild className="gap-2">
+                      <a href={COMMUNITY_URL} target="_blank" rel="noopener noreferrer">
+                        Entrar no grupo
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Circle Community - NAVIGATOR+ */}
           {isNavigator ? (
