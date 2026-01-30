@@ -1501,12 +1501,15 @@ export type Database = {
         Row: {
           cnae: string | null
           created_at: string | null
+          current_streak: number | null
           email: string | null
           empresa: string | null
           estado: string | null
           extra_seats_purchased: number | null
           faturamento_mensal: number | null
           id: string
+          last_access_date: string | null
+          longest_streak: number | null
           max_seats: number | null
           nome: string | null
           notif_consultorias: boolean | null
@@ -1527,12 +1530,15 @@ export type Database = {
         Insert: {
           cnae?: string | null
           created_at?: string | null
+          current_streak?: number | null
           email?: string | null
           empresa?: string | null
           estado?: string | null
           extra_seats_purchased?: number | null
           faturamento_mensal?: number | null
           id?: string
+          last_access_date?: string | null
+          longest_streak?: number | null
           max_seats?: number | null
           nome?: string | null
           notif_consultorias?: boolean | null
@@ -1553,12 +1559,15 @@ export type Database = {
         Update: {
           cnae?: string | null
           created_at?: string | null
+          current_streak?: number | null
           email?: string | null
           empresa?: string | null
           estado?: string | null
           extra_seats_purchased?: number | null
           faturamento_mensal?: number | null
           id?: string
+          last_access_date?: string | null
+          longest_streak?: number | null
           max_seats?: number | null
           nome?: string | null
           notif_consultorias?: boolean | null
@@ -2289,6 +2298,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_achievements: {
+        Row: {
+          achieved_at: string | null
+          achievement_code: string
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          achieved_at?: string | null
+          achievement_code: string
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          achieved_at?: string | null
+          achievement_code?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_credits: {
         Row: {
           balance: number
@@ -2314,6 +2347,42 @@ export type Database = {
           id?: string
           purchase_count?: number
           total_purchased?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_onboarding_progress: {
+        Row: {
+          checklist_items: Json | null
+          completed_at: string | null
+          created_at: string | null
+          first_mission_completed: boolean | null
+          id: string
+          started_at: string | null
+          tour_completed: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          checklist_items?: Json | null
+          completed_at?: string | null
+          created_at?: string | null
+          first_mission_completed?: boolean | null
+          id?: string
+          started_at?: string | null
+          tour_completed?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          checklist_items?: Json | null
+          completed_at?: string | null
+          created_at?: string | null
+          first_mission_completed?: boolean | null
+          id?: string
+          started_at?: string | null
+          tour_completed?: boolean | null
           updated_at?: string | null
           user_id?: string
         }

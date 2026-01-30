@@ -71,3 +71,6 @@ verify_jwt = false
 
 [functions.send-weekly-digest]
 verify_jwt = false
+
+[functions.check-achievements]
+verify_jwt = false
