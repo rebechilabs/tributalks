@@ -25,6 +25,7 @@ import { NextRelevantDeadline } from "@/components/dashboard/NextRelevantDeadlin
 import { ClaraContextualSuggestion } from "@/components/common/ClaraContextualSuggestion";
 import { OnboardingChecklist, FirstMission, GuidedTour } from "@/components/onboarding";
 import { StreakDisplay } from "@/components/achievements";
+import { SwitchCompanyCard } from "@/components/profile/SwitchCompanyCard";
 import { useExecutiveData } from "@/hooks/useExecutiveData";
 import { useUserProgress } from "@/hooks/useUserProgress";
 import { useAchievements } from "@/hooks/useAchievements";
@@ -430,8 +431,9 @@ const Dashboard = () => {
           </div>
         </section>
 
-        {/* Plan Status Card */}
-        <Card className="mb-8 border-primary/20">
+        {/* Plan Status + Switch Company */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <Card className="md:col-span-2 border-primary/20">
           <CardContent className="pt-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex-1">
@@ -470,6 +472,13 @@ const Dashboard = () => {
             </div>
           </CardContent>
         </Card>
+        
+          {/* Switch Company Card */}
+          <SwitchCompanyCard 
+            companyName={userProgress?.companyName}
+            cnpj={userProgress?.cnpj}
+          />
+        </div>
 
         {/* Tool Groups */}
         <div className="space-y-10">

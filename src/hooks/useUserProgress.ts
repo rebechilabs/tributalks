@@ -10,6 +10,10 @@ export interface UserProgressData {
   hasOpportunities: boolean;
   hasWorkflow: boolean;
   
+  // Company data
+  companyName: string | null;
+  cnpj: string | null;
+  
   // Data summaries
   scoreGrade: string | null;
   scoreTotal: number | null;
@@ -44,6 +48,8 @@ export function useUserProgress(): UserProgressData {
     hasDre: false,
     hasOpportunities: false,
     hasWorkflow: false,
+    companyName: null,
+    cnpj: null,
     scoreGrade: null,
     scoreTotal: null,
     scoreDate: null,
@@ -68,6 +74,7 @@ export function useUserProgress(): UserProgressData {
       try {
         // Fetch all data in parallel
         const [
+          companyResult,
           scoreResult,
           xmlResult,
           dreResult,
@@ -76,6 +83,13 @@ export function useUserProgress(): UserProgressData {
           creditsResult,
           simulationResult,
         ] = await Promise.all([
+          // Company profile
+          supabase
+            .from('company_profile')
+            .select('razao_social, nome_fantasia, cnpj_principal')
+            .eq('user_id', user.id)
+            .maybeSingle(),
+          
           // Latest tax score
           supabase
             .from('tax_score_history')
@@ -186,12 +200,18 @@ export function useUserProgress(): UserProgressData {
           new Date(b.date!).getTime() - new Date(a.date!).getTime()
         )[0] || { type: null, date: null, description: null, link: null };
 
+        // Process company
+        const companyName = companyResult.data?.nome_fantasia || companyResult.data?.razao_social || null;
+        const cnpj = companyResult.data?.cnpj_principal || null;
+
         setData({
           hasScore,
           hasXmls,
           hasDre,
           hasOpportunities,
           hasWorkflow,
+          companyName,
+          cnpj,
           scoreGrade,
           scoreTotal,
           scoreDate,
