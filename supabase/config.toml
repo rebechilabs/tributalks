@@ -77,3 +77,6 @@ verify_jwt = false
 
 [functions.process-sped-contribuicoes]
 verify_jwt = false
+
+[functions.process-dctf]
+verify_jwt = false

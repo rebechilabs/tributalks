@@ -1024,6 +1024,128 @@ export type Database = {
         }
         Relationships: []
       }
+      dctf_debitos: {
+        Row: {
+          codigo_receita: string
+          created_at: string | null
+          credito_vinculado: number | null
+          dctf_id: string
+          descricao_tributo: string | null
+          id: string
+          pagamento_vinculado: number | null
+          periodo_apuracao: string | null
+          saldo_devedor: number | null
+          status_quitacao: string | null
+          user_id: string
+          valor_juros: number | null
+          valor_multa: number | null
+          valor_principal: number | null
+          valor_total: number | null
+        }
+        Insert: {
+          codigo_receita: string
+          created_at?: string | null
+          credito_vinculado?: number | null
+          dctf_id: string
+          descricao_tributo?: string | null
+          id?: string
+          pagamento_vinculado?: number | null
+          periodo_apuracao?: string | null
+          saldo_devedor?: number | null
+          status_quitacao?: string | null
+          user_id: string
+          valor_juros?: number | null
+          valor_multa?: number | null
+          valor_principal?: number | null
+          valor_total?: number | null
+        }
+        Update: {
+          codigo_receita?: string
+          created_at?: string | null
+          credito_vinculado?: number | null
+          dctf_id?: string
+          descricao_tributo?: string | null
+          id?: string
+          pagamento_vinculado?: number | null
+          periodo_apuracao?: string | null
+          saldo_devedor?: number | null
+          status_quitacao?: string | null
+          user_id?: string
+          valor_juros?: number | null
+          valor_multa?: number | null
+          valor_principal?: number | null
+          valor_total?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dctf_debitos_dctf_id_fkey"
+            columns: ["dctf_id"]
+            isOneToOne: false
+            referencedRelation: "dctf_declaracoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dctf_declaracoes: {
+        Row: {
+          ano_calendario: number
+          arquivo_nome: string | null
+          cnpj: string
+          created_at: string | null
+          gap_identificado: number | null
+          id: string
+          mes_referencia: number | null
+          periodo_apuracao: string
+          razao_social: string | null
+          retificadora: boolean | null
+          status: string | null
+          tipo_declaracao: string | null
+          total_creditos_vinculados: number | null
+          total_debitos_declarados: number | null
+          total_pagamentos: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ano_calendario: number
+          arquivo_nome?: string | null
+          cnpj: string
+          created_at?: string | null
+          gap_identificado?: number | null
+          id?: string
+          mes_referencia?: number | null
+          periodo_apuracao: string
+          razao_social?: string | null
+          retificadora?: boolean | null
+          status?: string | null
+          tipo_declaracao?: string | null
+          total_creditos_vinculados?: number | null
+          total_debitos_declarados?: number | null
+          total_pagamentos?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ano_calendario?: number
+          arquivo_nome?: string | null
+          cnpj?: string
+          created_at?: string | null
+          gap_identificado?: number | null
+          id?: string
+          mes_referencia?: number | null
+          periodo_apuracao?: string
+          razao_social?: string | null
+          retificadora?: boolean | null
+          status?: string | null
+          tipo_declaracao?: string | null
+          total_creditos_vinculados?: number | null
+          total_debitos_declarados?: number | null
+          total_pagamentos?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       erp_checklist: {
         Row: {
           id: string
