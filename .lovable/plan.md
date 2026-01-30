@@ -1,54 +1,64 @@
 
-# Ajuste dos Planos Anuais Navigator e Professional
 
-## Resumo
+# Plano de Correção: Reconhecimento de Voz na DRE Inteligente
 
-Os planos anuais do **NAVIGATOR** e **PROFESSIONAL** não serão oferecidos por enquanto. Vou ajustar a configuração e a interface para refletir isso corretamente.
+## Problema Identificado
 
----
+Analisando o código e os logs do console, encontrei **dois bugs críticos**:
 
-## O que será feito
+### 1. Erro de Ref no TooltipTrigger
+O console mostra: *"Function components cannot be given refs"*
+- O ícone `HelpCircle` do Lucide é um componente funcional que não aceita `ref`
+- O `TooltipTrigger asChild` tenta passar uma ref para o filho, causando erro
 
-### 1. Atualizar Configuração (`src/config/site.ts`)
-- Comentar os links anuais como "Não disponível" em vez de apontar para `/cadastro`
-- Redirecionar para o link mensal como fallback
+### 2. Conflito de Instância do Reconhecimento de Voz
+O hook `useSpeechRecognition` tem um problema de arquitetura:
+- Cada campo (Vendas, Serviços, etc.) cria sua própria instância do hook
+- Porém, o navegador só permite **uma sessão de reconhecimento de voz ativa por vez**
+- Quando você clica no microfone de um campo, ele pode interferir com outro
 
-### 2. Ajustar Seção de Preços (`src/components/landing/PricingSection.tsx`)
-- Quando o usuário selecionar **Anual** para Navigator ou Professional:
-  - Usar o **link mensal** como fallback
-  - Ou exibir um aviso de "Disponível apenas no plano mensal"
+## Solução Proposta
 
----
+### Etapa 1: Corrigir o erro de ref no tooltip
+Envolver o `HelpCircle` em um `<span>` que pode receber refs:
 
-## Comportamento esperado
-
-| Plano | Mensal | Anual |
-|-------|--------|-------|
-| **STARTER** | Link Mercado Pago | Link Mercado Pago |
-| **NAVIGATOR** | Link Mercado Pago | Usa link mensal (fallback) |
-| **PROFESSIONAL** | Link Mercado Pago | Usa link mensal (fallback) |
-| **ENTERPRISE** | WhatsApp | WhatsApp |
-
----
-
-## Detalhes técnicos
-
-**Arquivo:** `src/config/site.ts`
-```typescript
-// Navigator - Apenas mensal disponível por enquanto
-NAVIGATOR_MENSAL: "https://www.mercadopago.com.br/subscriptions/checkout?...",
-NAVIGATOR_ANUAL: "", // Não disponível - usar mensal
-
-// Professional - Apenas mensal disponível por enquanto  
-PROFESSIONAL_MENSAL: "https://www.mercadopago.com.br/subscriptions/checkout?...",
-PROFESSIONAL_ANUAL: "", // Não disponível - usar mensal
+```tsx
+<TooltipTrigger asChild>
+  <span className="cursor-help">
+    <HelpCircle className="h-4 w-4 text-muted-foreground" />
+  </span>
+</TooltipTrigger>
 ```
 
-**Arquivo:** `src/components/landing/PricingSection.tsx`
-- Adicionar lógica para fallback: se `linkAnnual` estiver vazio, usar `linkMonthly`
-- O toggle "Anual" continuará funcionando normalmente para Starter
+### Etapa 2: Refatorar o hook para criar instância por chamada
+Mover a criação do `SpeechRecognition` para dentro de `startListening`:
 
----
+```tsx
+const startListening = useCallback(() => {
+  // Criar nova instância a cada chamada
+  const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognitionAPI) return;
+  
+  const recognition = new SpeechRecognitionAPI();
+  // Configurar e iniciar...
+}, []);
+```
 
-## Tempo estimado
-~5 minutos
+### Etapa 3: Adicionar gerenciamento de estado robusto
+- Limpar qualquer sessão anterior antes de iniciar nova
+- Garantir que o transcript seja processado corretamente por campo
+
+## Arquivos a Modificar
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/components/dre/VoiceCurrencyInput.tsx` | Corrigir TooltipTrigger para usar span wrapper |
+| `src/hooks/useSpeechRecognition.ts` | Refatorar para criar instância por sessão (não no mount) |
+
+## Impacto
+
+Após as correções:
+- Cada campo poderá ditar valores independentemente
+- Não haverá mais warnings no console
+- O ditado número a número funcionará conforme esperado (ex: "cinco zero zero" → 500)
+
