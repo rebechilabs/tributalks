@@ -16,7 +16,14 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { ClaraCard } from "@/components/dashboard/ClaraCard";
 import { ExecutiveSummaryCard } from "@/components/dashboard/ExecutiveSummaryCard";
 import { ExpiringBenefitsAlert } from "@/components/dashboard/ExpiringBenefitsAlert";
+import { ProgressSummary } from "@/components/dashboard/ProgressSummary";
+import { DataSummaryCards } from "@/components/dashboard/DataSummaryCards";
+import { NextStepRecommendation } from "@/components/dashboard/NextStepRecommendation";
+import { LastActivityCard } from "@/components/dashboard/LastActivityCard";
+import { InProgressWorkflows } from "@/components/dashboard/InProgressWorkflows";
+import { NextRelevantDeadline } from "@/components/dashboard/NextRelevantDeadline";
 import { useExecutiveData } from "@/hooks/useExecutiveData";
+import { useUserProgress } from "@/hooks/useUserProgress";
 
 interface CalcItem {
   id: string;
@@ -199,6 +206,9 @@ const Dashboard = () => {
   const [simulations, setSimulations] = useState<Simulation[]>([]);
   const [simulationsThisMonth, setSimulationsThisMonth] = useState(0);
   const [loading, setLoading] = useState(true);
+  
+  // New progress hook
+  const userProgress = useUserProgress();
 
   const rawPlan = profile?.plano || 'FREE';
   const currentPlan = LEGACY_PLAN_MAP[rawPlan] || 'FREE';
@@ -299,9 +309,27 @@ const Dashboard = () => {
         <ExpiringBenefitsAlert />
 
         {/* TribuChat - Clara Card (integra o CTA "Por onde começo") */}
-        <div className="mb-8">
+        <div className="mb-6">
           <ClaraCard />
         </div>
+
+        {/* Progresso do Usuário - Nova seção */}
+        <ProgressSummary progress={userProgress} />
+        
+        {/* Cards de Resumo de Dados */}
+        <DataSummaryCards progress={userProgress} />
+        
+        {/* Próximo Passo Recomendado */}
+        <NextStepRecommendation progress={userProgress} />
+        
+        {/* Workflows em Andamento */}
+        <InProgressWorkflows />
+        
+        {/* Última Atividade */}
+        <LastActivityCard progress={userProgress} />
+        
+        {/* Próximo Prazo Relevante */}
+        <NextRelevantDeadline />
 
         {/* Resumo Executivo - Semáforo do CEO/CFO */}
         <ExecutiveSummaryCardWrapper currentPlan={currentPlan} userId={user?.id} />
