@@ -3248,6 +3248,13 @@ export type Database = {
         Args: { _owner_id: string; _user_id: string }
         Returns: boolean
       }
+      validate_referral_code: {
+        Args: { code_to_check: string }
+        Returns: {
+          referrer_id: string
+          valid: boolean
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

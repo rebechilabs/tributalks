@@ -147,19 +147,17 @@ export function useReferral() {
   }, [user?.id, fetchOrCreateCode, fetchReferrals]);
 
   // Valida se um código de indicação existe (para uso no cadastro)
+  // Usa função RPC segura ao invés de SELECT direto na tabela
   const validateReferralCode = async (code: string): Promise<{ valid: boolean; referrerId?: string }> => {
     try {
       const { data, error } = await supabase
-        .from('referral_codes')
-        .select('user_id, code')
-        .eq('code', code.toUpperCase())
-        .maybeSingle();
+        .rpc('validate_referral_code', { code_to_check: code.toUpperCase() });
 
-      if (error || !data) {
+      if (error || !data || data.length === 0 || !data[0]?.valid) {
         return { valid: false };
       }
 
-      return { valid: true, referrerId: data.user_id };
+      return { valid: true, referrerId: data[0].referrer_id };
     } catch {
       return { valid: false };
     }
