@@ -14,7 +14,7 @@ const faqs = [
   {
     question: "Preciso de cartão para começar?",
     answer:
-      "Não. O plano FREE é completamente gratuito e não requer cartão de crédito. Você só precisa informar dados de pagamento se decidir fazer upgrade para um plano pago.",
+      "Sim. Para ativar o período de teste gratuito de 7 dias do plano Starter, é necessário cadastrar um cartão de crédito no Mercado Pago. Você pode cancelar a qualquer momento durante o trial sem ser cobrado.",
   },
   {
     question: "Posso cancelar quando quiser?",
