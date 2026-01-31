@@ -88,13 +88,25 @@ const Cadastro = () => {
     try {
       await signUp(formData.email, formData.senha, formData.nome);
       
+      // Aguardar sessão ser estabelecida antes de continuar
+      let attempts = 0;
+      const maxAttempts = 20; // 10 segundos max
+      
+      while (attempts < maxAttempts) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          console.log('[Cadastro] Session established:', session.user.id);
+          break;
+        }
+        await new Promise(resolve => setTimeout(resolve, 500));
+        attempts++;
+      }
+      
       // Registra a indicação se houver código válido
       if (validRefCode) {
-        // Busca o usuário recém-criado
         const { data: { user: newUser } } = await supabase.auth.getUser();
         
         if (newUser) {
-          // Busca o indicador
           const { data: refData } = await supabase
             .from('referral_codes')
             .select('user_id, total_referrals')
@@ -102,7 +114,6 @@ const Cadastro = () => {
             .single();
           
           if (refData && refData.user_id !== newUser.id) {
-            // Insere a indicação
             await supabase
               .from('referrals')
               .insert({
@@ -112,7 +123,6 @@ const Cadastro = () => {
                 status: 'pending',
               });
             
-            // Incrementa contador
             await supabase
               .from('referral_codes')
               .update({ total_referrals: (refData.total_referrals || 0) + 1 })
@@ -138,10 +148,15 @@ const Cadastro = () => {
           ? "Você foi indicado por um amigo! Bem-vindo ao TribuTalks." 
           : "Bem-vindo ao TribuTalks. Vamos configurar seu perfil.",
       });
+      
+      // Navegar apenas após confirmar sessão
       navigate('/onboarding');
     } catch (error: any) {
+      console.error('[Cadastro] Error:', error);
       if (error.message?.includes('already registered')) {
         setGeneralError('Este e-mail já está cadastrado');
+      } else if (error.message?.includes('Password is known to be weak')) {
+        setGeneralError('Esta senha foi comprometida em vazamentos. Use outra senha.');
       } else {
         setGeneralError('Erro ao criar conta. Tente novamente.');
       }
