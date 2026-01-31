@@ -86,7 +86,7 @@ const features = [
     title: "Clara AI — Copiloto Tributário",
     description:
       "Tire dúvidas tributárias em linguagem simples, a qualquer hora, sem esperar.",
-    badge: "IA",
+    badge: "AI",
     badgeVariant: "secondary" as const,
   },
   {
