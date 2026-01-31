@@ -82,11 +82,11 @@ export default function Nexus() {
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-foreground text-lg">
-                  🎯 Desbloqueie insights personalizados
+                  🚀 Esta é uma das ferramentas mais importantes da plataforma
                 </h3>
                 <p className="text-sm text-muted-foreground mt-1.5 mb-4">
-                  Com poucos dados, a Clara pode identificar oportunidades de economia tributária 
-                  específicas para sua empresa. Leva menos de 5 minutos.
+                  Para desbloquear insights personalizados e identificar oportunidades de economia 
+                  tributária específicas para sua empresa, preencha seu DRE. Leva apenas 3 minutos.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   {!hasData.dre && (
