@@ -1,106 +1,200 @@
 
 
-# Melhoria UX: Período Dinâmico nas Perguntas do DRE Wizard
+# Notificação de Novos Assinantes por E-mail
 
-## Contexto
+## Objetivo
 
-Atualmente o usuário seleciona mês/ano no header (linhas 214-217), mas as perguntas são genéricas:
-- "Quanto sua empresa vendeu **neste período**?" (linha 124)
-- "Quanto custou o que você vendeu?" (linha 149)
-- etc.
+Enviar e-mail para `alexandre@rebechisilva.com.br` sempre que um novo assinante contratar qualquer plano.
 
-## Antes vs Depois
+## Informações no E-mail
 
-| Antes | Depois |
-|-------|--------|
-| "Quanto sua empresa vendeu **neste período**?" | "Quanto sua empresa vendeu em **Jan/2026**?" |
-| "Quanto custou o que você vendeu?" | "Quanto custou o que você vendeu em **Jan/2026**?" |
-| "Quanto você gasta para manter a empresa?" | "Quanto você gastou para manter a empresa em **Jan/2026**?" |
-| "Receitas e despesas financeiras" | "Receitas e despesas financeiras de **Jan/2026**" |
-| "Como sua empresa paga impostos?" | "Como sua empresa pagou impostos em **Jan/2026**?" |
+| Campo | Descrição | Exemplo |
+|-------|-----------|---------|
+| **Plano** | STARTER, NAVIGATOR ou PROFESSIONAL | PROFESSIONAL |
+| **Frequência** | Mensal ou Anual | Anual |
+| **Valor pago** | Em reais | R$ 2.997,00 |
+| **Nome do cliente** | Se disponível | João da Silva |
+| **E-mail do cliente** | Sempre disponível | joao@empresa.com |
+| **Data/hora** | Horário de Brasília | 31/01/2026, 14:32 |
+| **ID Stripe** | Para referência | cus_Qx7890abc |
 
 ## Implementação
 
-### Arquivo: `src/components/dre/DREWizard.tsx`
+### 1. Adicionar Plano STARTER no Webhook
 
-**1. Criar helper para formatar período (após linha 78):**
+**Arquivo:** `supabase/functions/stripe-webhook/index.ts`
 
-```tsx
-const getPeriodLabel = () => {
-  const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-  return `${monthNames[selectedMonth - 1]}/${selectedYear}`;
-};
+Adicionar mapeamento do STARTER nas linhas 16-22:
+
+```typescript
+const PRICE_TO_PLAN: Record<string, string> = {
+  // Starter plans
+  [Deno.env.get('STRIPE_PRICE_STARTER_MONTHLY') || 'price_starter_monthly']: 'STARTER',
+  [Deno.env.get('STRIPE_PRICE_STARTER_ANNUAL') || 'price_starter_annual']: 'STARTER',
+  // Navigator plans
+  [Deno.env.get('STRIPE_PRICE_NAVIGATOR_MONTHLY') || 'price_navigator_monthly']: 'NAVIGATOR',
+  // ... resto permanece igual
+}
 ```
 
-**2. Atualizar textos do Step 1 (linha 124):**
+### 2. Criar Edge Function de Notificação
 
-| Elemento | Antes | Depois |
-|----------|-------|--------|
-| Título | "Quanto sua empresa vendeu neste período?" | `Quanto sua empresa vendeu em ${getPeriodLabel()}?` |
-| Subtítulo | "Informe os valores totais de vendas do mês selecionado" | `Informe os valores totais de vendas de ${getPeriodLabel()}` |
+**Arquivo:** `supabase/functions/notify-new-subscriber/index.ts`
 
-**3. Atualizar textos do Step 2 (linha 149):**
+```typescript
+import { Resend } from "npm:resend@2.0.0";
 
-| Elemento | Antes | Depois |
-|----------|-------|--------|
-| Título | "Quanto custou o que você vendeu?" | `Quanto custou o que você vendeu em ${getPeriodLabel()}?` |
-| Subtítulo | "Custos diretamente ligados aos produtos ou serviços vendidos" | `Custos diretamente ligados às vendas de ${getPeriodLabel()}` |
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
-**4. Atualizar textos do Step 3 (linha 169):**
+const ADMIN_EMAIL = "alexandre@rebechisilva.com.br";
 
-| Elemento | Antes | Depois |
-|----------|-------|--------|
-| Título | "Quanto você gasta para manter a empresa?" | `Quanto você gastou para manter a empresa em ${getPeriodLabel()}?` |
-| Subtítulo | "Despesas operacionais do dia a dia" | `Despesas operacionais de ${getPeriodLabel()}` |
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
 
-**5. Atualizar textos do Step 4 (linha 180):**
+  try {
+    const { email, nome, plano, valor, periodo, stripeCustomerId, timestamp } = await req.json();
+    
+    const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+    
+    const planEmoji = {
+      'STARTER': '🌱',
+      'NAVIGATOR': '🧭', 
+      'PROFESSIONAL': '🚀',
+    }[plano] || '📋';
+    
+    await resend.emails.send({
+      from: "TribuTalks <suporte@tributalks.com.br>",
+      to: [ADMIN_EMAIL],
+      subject: `${planEmoji} Nova Assinatura: ${plano} (${periodo})`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #16a34a;">${planEmoji} Nova Assinatura!</h2>
+          
+          <div style="background: #f0fdf4; padding: 16px; border-radius: 8px; margin: 16px 0;">
+            <p style="margin: 4px 0;"><strong>📋 Plano:</strong> ${plano} (${periodo})</p>
+            <p style="margin: 4px 0;"><strong>💰 Valor:</strong> R$ ${valor.toFixed(2)}</p>
+          </div>
+          
+          <div style="background: #f8fafc; padding: 16px; border-radius: 8px; margin: 16px 0;">
+            <p style="margin: 4px 0;"><strong>👤 Cliente:</strong> ${nome || 'Não informado'}</p>
+            <p style="margin: 4px 0;"><strong>📧 E-mail:</strong> ${email}</p>
+          </div>
+          
+          <div style="color: #64748b; font-size: 12px; margin-top: 16px;">
+            <p>📅 Data: ${timestamp}</p>
+            <p>🔗 ID Stripe: ${stripeCustomerId}</p>
+          </div>
+        </div>
+      `,
+    });
 
-| Elemento | Antes | Depois |
-|----------|-------|--------|
-| Título | "Receitas e despesas financeiras" | `Receitas e despesas financeiras de ${getPeriodLabel()}` |
-| Subtítulo | "Juros, tarifas bancárias e outros custos financeiros" | `Juros, tarifas e custos financeiros de ${getPeriodLabel()}` |
+    console.log(`Admin notification sent: ${plano} subscription for ${email}`);
+    
+    return new Response(JSON.stringify({ success: true }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  } catch (error) {
+    console.error('Error sending notification:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+});
+```
 
-**6. Atualizar textos do Step 5 (linha 192):**
+### 3. Integrar no Webhook do Stripe
 
-| Elemento | Antes | Depois |
-|----------|-------|--------|
-| Título | "Como sua empresa paga impostos?" | `Como sua empresa pagou impostos em ${getPeriodLabel()}?` |
-| Subtítulo | "Selecione o regime tributário e informe os impostos pagos" | `Regime tributário e impostos de ${getPeriodLabel()}` |
+**Arquivo:** `supabase/functions/stripe-webhook/index.ts`
 
-## Arquivos a Modificar
+Após a linha 117 (depois de `console.log(`Updated user...`)`), adicionar:
+
+```typescript
+// Notificar admin sobre nova assinatura
+try {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
+  
+  if (supabaseUrl && anonKey) {
+    const interval = subscription.items.data[0]?.price?.recurring?.interval;
+    
+    fetch(`${supabaseUrl}/functions/v1/notify-new-subscriber`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${anonKey}`,
+      },
+      body: JSON.stringify({
+        email: session.customer_email,
+        nome: session.customer_details?.name || null,
+        plano: plano,
+        valor: (session.amount_total || 0) / 100,
+        periodo: interval === 'year' ? 'Anual' : 'Mensal',
+        stripeCustomerId: session.customer,
+        timestamp: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+      }),
+    }).catch(err => console.log('Admin notification sent (async):', err?.message || 'ok'));
+  }
+} catch (notifyErr) {
+  console.log('Could not send admin notification:', notifyErr);
+}
+```
+
+### 4. Registrar Nova Função
+
+**Arquivo:** `supabase/config.toml`
+
+```toml
+[functions.notify-new-subscriber]
+verify_jwt = false
+```
+
+## Arquivos a Criar/Modificar
 
 | Arquivo | Ação |
 |---------|------|
-| `src/components/dre/DREWizard.tsx` | Adicionar `getPeriodLabel()` e atualizar textos das 5 etapas |
+| `supabase/functions/notify-new-subscriber/index.ts` | Criar |
+| `supabase/functions/stripe-webhook/index.ts` | Modificar (linhas 16-22 e após 117) |
+| `supabase/config.toml` | Adicionar configuração |
 
-## Benefícios
+## Secrets Utilizados
 
-- **Clareza imediata**: O usuário sabe exatamente a qual período está respondendo
-- **Contexto sempre visível**: Período aparece tanto no header quanto nas perguntas
-- **Evita confusão**: Ao preencher múltiplos meses, não há dúvida sobre qual período está sendo editado
-- **UX mais pessoal**: Perguntas direcionadas ao período específico
+| Secret | Status |
+|--------|--------|
+| `RESEND_API_KEY` | ✅ Já configurado |
+| `STRIPE_PRICE_STARTER_MONTHLY` | ⚠️ Adicionar (se houver) |
+| `STRIPE_PRICE_STARTER_ANNUAL` | ⚠️ Adicionar (se houver) |
 
-## Resultado Visual Esperado
+## Exemplo de E-mail
 
 ```text
-┌──────────────────────────────────────────────────────────────────┐
-│  DRE Inteligente                           [ Jan ▼] [ 2026 ▼]   │
-│  Preencha os dados e receba um diagnóstico completo             │
-├──────────────────────────────────────────────────────────────────┤
-│  ○ ────── ● ────── ○ ────── ○ ────── ○                          │
-│  Vendas   Custos  Despesas  Financ.  Impostos                   │
-├──────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  🛒 Suas Vendas                                                  │
-│                                                                  │
-│  Quanto sua empresa vendeu em Jan/2026?                          │
-│  Informe os valores totais de vendas de Jan/2026                │
-│                                                                  │
-│  ┌─────────────────────┐  ┌─────────────────────┐               │
-│  │ Vendas de produtos  │  │ Vendas de serviços  │               │
-│  │ R$ ____________     │  │ R$ ____________     │               │
-│  └─────────────────────┘  └─────────────────────┘               │
-│                                                                  │
-└──────────────────────────────────────────────────────────────────┘
+De: TribuTalks <suporte@tributalks.com.br>
+Para: alexandre@rebechisilva.com.br
+Assunto: 🚀 Nova Assinatura: PROFESSIONAL (Anual)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 Nova Assinatura!
+
+📋 Plano: PROFESSIONAL (Anual)
+💰 Valor: R$ 2.997,00
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+👤 Cliente: João da Silva
+📧 E-mail: joao@empresa.com
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📅 Data: 31/01/2026, 14:32
+🔗 ID Stripe: cus_Qx7890abc
 ```
+
+## Cobertura
+
+- ✅ STARTER (mensal/anual)
+- ✅ NAVIGATOR (mensal/anual)
+- ✅ PROFESSIONAL (mensal/anual)
+- ✅ Compra de créditos avulsos
+- ✅ Compra de assentos adicionais
 
