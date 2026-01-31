@@ -188,7 +188,7 @@ src/
 ├── pages/
 │   ├── Dashboard.tsx          # Home logada
 │   ├── Nexus.tsx              # Centro de Comando
-│   ├── TribuBot.tsx           # Interface Clara AI
+│   ├── ClaraAI.tsx            # Interface Clara AI (Copiloto Tributário)
 │   ├── Indicar.tsx            # Programa de Indicação
 │   ├── calculadora/           # Calculadoras (RTC, NBS, Split)
 │   └── admin/                 # Painel administrativo

@@ -36,7 +36,7 @@ export type MenuElement = MenuGroup | MenuDivider;
 // Clara AI - Item fixo em TODOS os planos (AI First)
 export const CLARA_AI_ITEM: MenuItem = {
   label: 'Clara AI',
-  href: '/tribubot',
+  href: '/clara-ai',
   icon: Sparkles,
   badge: '⌘K',
   badgeVariant: 'default',
