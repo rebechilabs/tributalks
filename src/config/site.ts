@@ -8,7 +8,7 @@ export const CONFIG = {
     NAVIGATOR_MENSAL: "https://buy.stripe.com/aFa8wI3V8e9U7PR9iSbo403",
     NAVIGATOR_ANUAL: "https://buy.stripe.com/fZu9AM63g2rcc67gLkbo404",
     // Professional - R$2.997/mês
-    PROFESSIONAL_MENSAL: "/cadastro?plan=professional",
+    PROFESSIONAL_MENSAL: "https://buy.stripe.com/dRmfZa2R4e9U4DFeDcbo40a",
     PROFESSIONAL_ANUAL: "https://buy.stripe.com/3cI9AM3V89TEgmn2Uubo406",
     // Enterprise - Sob consulta (WhatsApp direto)
     ENTERPRISE: "https://wa.me/5511914523971",

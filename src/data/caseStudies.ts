@@ -26,8 +26,8 @@ export interface CaseStudy {
 export const caseStudies: CaseStudy[] = [
   {
     id: "1",
-    slug: "distribuidora-alimentos-sp",
-    company: "Distribuidora Alimentos SP",
+    slug: "distribuidora-alimentos",
+    company: "Distribuidora de Alimentos",
     sector: "Atacado & Distribuição",
     sectorIcon: "Package",
     challenge: "Com faturamento de R$ 45 milhões/ano e operações em 5 estados, a empresa enfrentava dificuldades em acompanhar os benefícios fiscais estaduais e identificar créditos não aproveitados de PIS/COFINS sobre fretes.",
@@ -39,12 +39,12 @@ export const caseStudies: CaseStudy[] = [
     ],
     testimonial: {
       quote: "O TribuTalks transformou nossa gestão fiscal. Em 3 meses recuperamos o investimento de 2 anos de assinatura.",
-      author: "Carlos Mendes",
+      author: "C.M.",
       role: "Diretor Financeiro",
     },
     timeline: "3 meses para implementação completa",
     toolsUsed: ["Importador de XMLs", "Radar de Créditos", "DRE Inteligente", "Painel Executivo"],
-    fullStory: `A Distribuidora Alimentos SP é uma empresa familiar fundada em 1998 que atua no segmento de distribuição de alimentos secos e refrigerados para o varejo em São Paulo, Minas Gerais, Rio de Janeiro, Paraná e Santa Catarina.
+    fullStory: `Uma distribuidora de alimentos é uma empresa familiar fundada em 1998 que atua no segmento de distribuição de alimentos secos e refrigerados para o varejo em São Paulo, Minas Gerais, Rio de Janeiro, Paraná e Santa Catarina.
 
 **O Desafio**
 
@@ -72,8 +72,8 @@ A empresa recuperou R$ 847.000 em créditos que estavam "esquecidos" e passou a 
   },
   {
     id: "2",
-    slug: "clinica-oftalmologica-rj",
-    company: "Clínica Oftalmológica Rio",
+    slug: "clinica-oftalmologica",
+    company: "Clínica Oftalmológica",
     sector: "Saúde",
     sectorIcon: "Heart",
     challenge: "Clínica médica com 12 oftalmologistas e faturamento de R$ 8 milhões/ano operando no Lucro Presumido, sem clareza se era o regime mais vantajoso.",
@@ -85,12 +85,12 @@ A empresa recuperou R$ 847.000 em créditos que estavam "esquecidos" e passou a 
     ],
     testimonial: {
       quote: "Descobrimos que estávamos pagando impostos a mais há anos. O comparativo de regimes mostrou exatamente onde otimizar.",
-      author: "Dra. Fernanda Lima",
+      author: "F.L.",
       role: "Sócia-Administradora",
     },
     timeline: "45 dias para análise e implementação",
     toolsUsed: ["Comparativo de Regimes", "Score Tributário", "Oportunidades Fiscais"],
-    fullStory: `A Clínica Oftalmológica Rio é referência em cirurgias refrativas e tratamento de catarata no Rio de Janeiro, com 15 anos de mercado.
+    fullStory: `Uma clínica oftalmológica é referência em cirurgias refrativas e tratamento de catarata, com 15 anos de mercado.
 
 **O Desafio**
 
@@ -117,8 +117,8 @@ A clínica economizou R$ 156.000/ano com a otimização do regime tributário e 
   },
   {
     id: "3",
-    slug: "industria-metalurgica-mg",
-    company: "Metalúrgica Belo Horizonte",
+    slug: "industria-metalurgica",
+    company: "Indústria Metalúrgica",
     sector: "Indústria",
     sectorIcon: "Factory",
     challenge: "Indústria metalúrgica com R$ 28 milhões de faturamento anual não aproveitava créditos de energia elétrica e tinha dúvidas sobre a transição para CBS/IBS.",
@@ -130,12 +130,12 @@ A clínica economizou R$ 156.000/ano com a otimização do regime tributário e 
     ],
     testimonial: {
       quote: "A análise de NCMs mostrou que 23% dos nossos produtos terão alíquota reduzida. Isso muda completamente nosso planejamento.",
-      author: "Roberto Andrade",
+      author: "R.A.",
       role: "Controller",
     },
     timeline: "60 dias para diagnóstico completo",
     toolsUsed: ["Importador de XMLs", "Radar de Créditos", "Calculadora RTC", "CBS/IBS & NCM"],
-    fullStory: `A Metalúrgica Belo Horizonte fabrica peças automotivas e equipamentos industriais, exportando 15% da produção para a América Latina.
+    fullStory: `Uma indústria metalúrgica fabrica peças automotivas e equipamentos industriais, exportando 15% da produção para a América Latina.
 
 **O Desafio**
 
@@ -162,8 +162,8 @@ A empresa recuperou R$ 234.000 em créditos de energia e agora tem clareza total
   },
   {
     id: "4",
-    slug: "startup-saas-sp",
-    company: "TechFlow SaaS",
+    slug: "startup-software-b2b",
+    company: "Startup de Software B2B",
     sector: "Tecnologia",
     sectorIcon: "Code",
     challenge: "Startup de software B2B com crescimento de 200% ao ano precisava entender a tributação de serviços digitais e preparar-se para a Reforma Tributária.",
@@ -175,16 +175,16 @@ A empresa recuperou R$ 234.000 em créditos de energia e agora tem clareza total
     ],
     testimonial: {
       quote: "Como founders técnicos, não entendíamos nada de tributação. A Clara AI virou nosso 'contador virtual' disponível 24/7.",
-      author: "Marina Costa",
-      role: "CEO & Co-founder",
+      author: "M.C.",
+      role: "CEO",
     },
     timeline: "Implementação contínua desde o mês 1",
     toolsUsed: ["Clara AI", "Score Tributário", "Comparativo de Regimes", "Timeline 2026-2033"],
-    fullStory: `A TechFlow é uma startup de software B2B que oferece soluções de automação para empresas de médio porte, fundada em 2023 por dois engenheiros.
+    fullStory: `Uma startup de software B2B oferece soluções de automação para empresas de médio porte, fundada em 2023 por dois engenheiros.
 
 **O Desafio**
 
-Como founders sem background em gestão, Marina e seu sócio não entendiam as complexidades da tributação brasileira. Estavam no Simples Nacional mas não sabiam se deveriam migrar com o crescimento acelerado.
+Como founders sem background em gestão, os sócios não entendiam as complexidades da tributação brasileira. Estavam no Simples Nacional mas não sabiam se deveriam migrar com o crescimento acelerado.
 
 **A Descoberta**
 
