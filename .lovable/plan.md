@@ -1,89 +1,110 @@
 
-# Atualizar Link Stripe + Remover Nomes de Empresas (OAB)
+# Reestruturar Comunidade com Newsletter + Badges
 
-## Resumo das Alterações
+## Visão Geral
 
-Duas correções importantes:
-1. Adicionar link Stripe correto para Professional Mensal
-2. Remover todos os nomes de empresas dos testemunhos para cumprir o código de ética da OAB
+Reorganizar a página de Comunidade para incluir:
+1. **Newsletter TribuTalks News** - Disponível para TODOS os planos (primeiro da lista)
+2. **Grupo WhatsApp** - Exclusivo NAVIGATOR
+3. **Comunidade Circle** - Exclusivo PROFESSIONAL+ com badge "NOVO"
+4. **Biblioteca de Conteúdos** - Mantém NAVIGATOR+
 
 ---
 
-## 1. Atualizar Link Stripe
+## Alterações no Arquivo: `src/pages/Comunidade.tsx`
 
-### Arquivo: `src/config/site.ts`
-
-**Linha 11** - Atualizar o link do Professional Mensal:
+### 1. Adicionar imports necessários
 
 ```typescript
-// Antes
-PROFESSIONAL_MENSAL: "/cadastro?plan=professional",
+import { Mail } from "lucide-react";
+import { NewsletterForm } from "@/components/common/NewsletterForm";
+```
 
-// Depois
-PROFESSIONAL_MENSAL: "https://buy.stripe.com/dRmfZa2R4e9U4DFeDcbo40a",
+### 2. Nova estrutura de cards (ordem)
+
+| # | Card | Acesso | Badge |
+|---|------|--------|-------|
+| 1 | Newsletter TribuTalks News | TODOS | - |
+| 2 | Grupo WhatsApp | NAVIGATOR | NAVIGATOR |
+| 3 | Comunidade Circle | PROFESSIONAL+ | NOVO |
+| 4 | Biblioteca de Conteúdos | NAVIGATOR+ | NAVIGATOR+ |
+
+### 3. Card da Newsletter (novo - antes do WhatsApp)
+
+```tsx
+{/* Newsletter - Todos os planos */}
+<Card className="border-primary/20">
+  <CardContent className="pt-6">
+    <div className="flex items-start gap-4">
+      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+        <Mail className="w-6 h-6 text-primary" />
+      </div>
+      <div className="flex-1">
+        <div className="flex items-center gap-2 mb-1">
+          <h3 className="font-semibold text-foreground">TribuTalks News</h3>
+          <Badge variant="outline" className="text-xs">Todos os planos</Badge>
+        </div>
+        <p className="text-sm text-muted-foreground mb-4">
+          Newsletter semanal com análises exclusivas sobre a Reforma Tributária. 
+          Toda terça-feira às 07h07 no seu email.
+        </p>
+        <NewsletterForm variant="compact" />
+      </div>
+    </div>
+  </CardContent>
+</Card>
+```
+
+### 4. Atualizar Circle Community com badge "NOVO"
+
+Linha ~96 - Adicionar badge "NOVO" após o badge PROFESSIONAL+:
+
+```tsx
+<div className="flex items-center gap-2 mb-1">
+  <h3 className="font-semibold text-foreground">Comunidade Circle</h3>
+  <Badge variant="secondary" className="text-xs">{PLAN_LABELS.PROFESSIONAL}+</Badge>
+  <Badge className="text-xs bg-primary text-primary-foreground">NOVO</Badge>
+</div>
 ```
 
 ---
 
-## 2. Remover Nomes de Empresas dos Testemunhos
+## Resultado Visual Final
 
-### Arquivo: `src/components/landing/SocialProofSection.tsx`
+```text
+┌─────────────────────────────────────────────┐
+│  📧 TribuTalks News                         │
+│  [Todos os planos]                          │
+│  Newsletter semanal...                      │
+│  [Formulário de inscrição]                  │
+└─────────────────────────────────────────────┘
 
-**Linhas 3-37** - Remover campo `company` e ajustar estrutura:
+┌─────────────────────────────────────────────┐
+│  💬 Grupo WhatsApp                          │
+│  [NAVIGATOR]                                │
+│  Networking informal...                     │
+│  [Entrar no grupo]                          │
+└─────────────────────────────────────────────┘
 
-| Antes | Depois |
-|-------|--------|
-| Carlos Mendes, CFO, Logística Norte | C.M., CFO, Setor de Logística |
-| Fernanda Lima, CFO, TechSul | F.L., CFO, Setor de Tecnologia |
-| Ricardo Alves, Dir. Financeiro, Indústria ABC | R.A., Dir. Financeiro, Setor Industrial |
+┌─────────────────────────────────────────────┐
+│  👥 Comunidade Circle                       │
+│  [PROFESSIONAL+] [NOVO]                     │
+│  Networking premium...                      │
+│  [Acessar comunidade]                       │
+└─────────────────────────────────────────────┘
 
-**Mudanças específicas**:
-- Trocar nomes completos por iniciais (C.M., F.L., R.A.)
-- Remover campo `company` 
-- Renomear para mostrar setor em vez de empresa
-- Ajustar exibição para `{testimonial.role}, {testimonial.sector}`
-
----
-
-### Arquivo: `src/data/caseStudies.ts`
-
-**Todos os 4 estudos de caso** - Substituir nomes de empresas por descrições genéricas:
-
-| Antes | Depois |
-|-------|--------|
-| Distribuidora Alimentos SP | Distribuidora de Alimentos |
-| Clínica Oftalmológica Rio | Clínica Oftalmológica |
-| Metalúrgica Belo Horizonte | Indústria Metalúrgica |
-| TechFlow SaaS | Startup de Software B2B |
-
-**Nos testimoniais**:
-
-| Antes | Depois |
-|-------|--------|
-| Carlos Mendes, Diretor Financeiro | C.M., Diretor Financeiro |
-| Dra. Fernanda Lima, Sócia-Administradora | F.L., Sócia-Administradora |
-| Roberto Andrade, Controller | R.A., Controller |
-| Marina Costa, CEO & Co-founder | M.C., CEO |
-
-**Nos slugs e fullStory**:
-- Atualizar slugs para versões genéricas
-- Remover menções específicas de nomes no texto narrativo
+┌─────────────────────────────────────────────┐
+│  📚 Biblioteca de Conteúdos                 │
+│  [NAVIGATOR+]                               │
+│  Guias, templates...                        │
+└─────────────────────────────────────────────┘
+```
 
 ---
 
-## Arquivos Afetados
+## Benefícios
 
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/config/site.ts` | Link Stripe Professional Mensal |
-| `src/components/landing/SocialProofSection.tsx` | Anonimizar testemunhos |
-| `src/data/caseStudies.ts` | Anonimizar 4 estudos de caso + testemunhos |
-
----
-
-## Resultado Final
-
-- Botões de plano Professional abrirão Stripe corretamente
-- Todos os testemunhos mostrarão apenas iniciais + cargo + setor
-- Nenhum nome de empresa identificável será exibido
-- Conformidade total com o código de ética da OAB
+- **Newsletter para todos**: Mesmo usuários Starter recebem valor desde o primeiro dia
+- **Hierarquia clara**: Progressão natural de benefícios conforme o plano
+- **Badge "NOVO"**: Destaca a comunidade Circle como novidade, incentivando upgrade
+- **Consistência visual**: Usa o componente NewsletterForm já existente
