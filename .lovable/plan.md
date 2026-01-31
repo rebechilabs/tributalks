@@ -1,70 +1,69 @@
 
 
-# Plano: Atualizar botão do Hero Section para Trial Stripe
+# Plano: Tornar Cards de Jornada Clicáveis
 
 ## Situação Atual
 
-Existem 2 CTAs na Landing Page com comportamentos diferentes:
+| Elemento | Comportamento |
+|----------|---------------|
+| Card inteiro | Não clicável |
+| Botão "Plano X →" | Leva ao Stripe ✅ |
 
-| Componente | Botão | Destino |
-|------------|-------|---------|
-| `HeroSection.tsx` (topo) | "Começar Diagnóstico Gratuito" | `/cadastro` |
-| `CTASection.tsx` (final) | "Testar Grátis por 7 Dias" ✅ | Stripe Trial |
+O usuário espera que clicar em qualquer parte do card leve ao checkout do Stripe.
+
+---
 
 ## Alteração Proposta
 
-### Arquivo: `src/components/landing/HeroSection.tsx`
+### Arquivo: `src/components/landing/JourneysSection.tsx`
 
-**1. Adicionar import do CONFIG (linha 4)**
+**Transformar o container do card em um link clicável**
+
+Vou envolver todo o card com uma tag `<a>` que aponta para o link do Stripe, mantendo o visual atual mas tornando toda a área clicável.
+
+**1. Alterar o container do card (linhas 82-168)**
+
 ```tsx
 // ANTES
-import logoHero from "@/assets/logo-tributalks-hero.jpg";
+<div
+  key={journey.id}
+  className={`relative bg-card rounded-xl p-6 md:p-8 border-2 transition-all duration-300 ${...}`}
+>
+  {/* conteúdo */}
+</div>
 
 // DEPOIS
-import logoHero from "@/assets/logo-tributalks-hero.jpg";
-import { CONFIG } from "@/config/site";
-```
-
-**2. Alterar o botão principal (linhas 75-83)**
-```tsx
-// ANTES
-<Link to="/cadastro">
-  <Button
-    size="lg"
-    className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-8 py-6 text-lg group"
-  >
-    Começar Diagnóstico Gratuito
-    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-  </Button>
-</Link>
-
-// DEPOIS
-<a href={CONFIG.PAYMENT_LINKS.STARTER_MENSAL} target="_blank" rel="noopener noreferrer">
-  <Button
-    size="lg"
-    className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-8 py-6 text-lg group"
-  >
-    Testar Grátis por 7 Dias
-    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-  </Button>
+<a
+  key={journey.id}
+  href={journey.link}
+  target="_blank"
+  rel="noopener noreferrer"
+  className={`relative bg-card rounded-xl p-6 md:p-8 border-2 transition-all duration-300 block cursor-pointer hover:shadow-lg ${...}`}
+>
+  {/* conteúdo */}
 </a>
 ```
+
+**2. Manter o botão interno (opcional visual)**
+
+O botão continuará visível como elemento de UI, mas toda a área do card será clicável.
 
 ---
 
 ## Resultado Final
 
-Após a alteração, ambos os CTAs (topo e final da página) terão:
-- **Texto**: "Testar Grátis por 7 Dias"
-- **Destino**: Link Stripe para trial de 7 dias do plano Starter
-- **Comportamento**: Abre em nova aba
+Após a alteração:
+- ✅ Clicar em **qualquer parte** do card leva ao Stripe
+- ✅ O botão continua visível como indicador de ação
+- ✅ Efeito hover no card inteiro (shadow)
+- ✅ Abre em nova aba
 
 ---
 
 ## Resumo das Alterações
 
-| Arquivo | Modificações |
+| Arquivo | Modificação |
 |---------|-------------|
-| `HeroSection.tsx` | Adicionar import CONFIG + Trocar Link/texto do botão |
-| **Total** | 2 alterações em 1 arquivo |
+| `JourneysSection.tsx` | Trocar `<div>` por `<a>` no container do card |
+| **Total** | 1 alteração em 1 arquivo |
 
