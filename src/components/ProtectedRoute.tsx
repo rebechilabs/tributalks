@@ -8,9 +8,34 @@ interface ProtectedRouteProps {
 }
 
 /**
+ * Determina a rota padrão baseada no plano do usuário
+ * Professional/Premium → NEXUS (valor executivo imediato)
+ * Navigator/Básico → Dashboard (jornada educacional)
+ * Starter → Score (diagnóstico rápido)
+ * Free → Dashboard (upsell)
+ */
+const getDefaultRoute = (plano: string | null | undefined): string => {
+  switch (plano?.toUpperCase()) {
+    case 'PROFISSIONAL':
+    case 'PROFESSIONAL':
+    case 'PREMIUM':
+    case 'ENTERPRISE':
+      return '/dashboard/nexus';
+    case 'NAVIGATOR':
+    case 'BASICO':
+      return '/dashboard';
+    case 'STARTER':
+      return '/dashboard/score-tributario';
+    case 'FREE':
+    default:
+      return '/dashboard';
+  }
+};
+
+/**
  * ProtectedRoute - Protege rotas que requerem autenticação
  * Usa o hook useAuth para verificar estado de autenticação
- * Evita verificações redundantes de sessão
+ * Redireciona por plano após onboarding completo
  */
 export const ProtectedRoute = ({ children, requireOnboarding = true }: ProtectedRouteProps) => {
   const location = useLocation();
@@ -35,7 +60,6 @@ export const ProtectedRoute = ({ children, requireOnboarding = true }: Protected
   }
 
   // Aguardar o perfil carregar antes de decidir sobre onboarding
-  // Isso evita redirects prematuros quando o usuário vem do pagamento
   if (requireOnboarding && profile === null) {
     console.log('[ProtectedRoute] Waiting for profile to load...');
     return (
@@ -52,6 +76,20 @@ export const ProtectedRoute = ({ children, requireOnboarding = true }: Protected
   if (requireOnboarding && profile && !profile.onboarding_complete && location.pathname !== '/onboarding') {
     console.log('[ProtectedRoute] Needs onboarding, redirecting');
     return <Navigate to="/onboarding" replace />;
+  }
+
+  // Redirect por plano na primeira visita ao dashboard genérico
+  // Apenas se estiver acessando /dashboard diretamente (não subrotas)
+  if (
+    profile?.onboarding_complete &&
+    location.pathname === '/dashboard' &&
+    !location.state?.skipPlanRedirect
+  ) {
+    const defaultRoute = getDefaultRoute(profile.plano);
+    if (defaultRoute !== '/dashboard') {
+      console.log('[ProtectedRoute] Redirecting to plan default route:', defaultRoute);
+      return <Navigate to={defaultRoute} state={{ skipPlanRedirect: true }} replace />;
+    }
   }
 
   return <>{children}</>;
