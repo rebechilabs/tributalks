@@ -1,97 +1,37 @@
 
-
-# Plano: Substituir Emojis por Ícones Lucide
+# Plano: Substituir Emojis Restantes na Landing Page
 
 ## Resumo
 
-Trocar todos os emojis usados no projeto por ícones SVG do Lucide React para manter consistência visual e melhorar a escalabilidade (ícones são configuráveis em tamanho/cor).
+Trocar os últimos emojis que ainda existem nos componentes da Landing Page por ícones Lucide React.
 
 ---
 
 ## Arquivos a Modificar
 
-### 1. Landing Page (Alta Prioridade)
+### 1. JourneysSection.tsx
 
-| Arquivo | Emojis Atuais | Ícones Lucide |
-|---------|---------------|---------------|
-| `JourneysSection.tsx` | 🎯 📊 🎛️ ⭐ 💡 | `Target`, `BarChart3`, `Gauge`, `Star`, `Lightbulb` |
-| `HeroSection.tsx` | ⭐ 4.8/5 | `Star` (já usa parcialmente) |
+| Linha | Emoji Atual | Ícone Lucide | Contexto |
+|-------|-------------|--------------|----------|
+| 9, 28, 48 | 🎯, 📊, 🎛️ | Remover `emoji` property | Já tem `icon` com componente correto |
+| 64 | ⭐ MAIS POPULAR | `Star` + texto | Badge do plano popular |
+| 157 | 💡 ROI médio | `Lightbulb` | Dica de ROI no footer do card |
 
-### 2. Command Palette (Alta Prioridade)
+### 2. HeroSection.tsx
 
-| Arquivo | Emojis Atuais | Ícones Lucide |
-|---------|---------------|---------------|
-| `commandPaletteTools.ts` | 🎛️ 🔍 💼 📈 🔗 📊 📰 👥 ✅ 🧮 📄 🔄 🎯 💳 ⚖️ 📅 🏠 🤖 👤 🎁 ❓ | `Gauge`, `Search`, `Briefcase`, `TrendingUp`, `Link`, `BarChart3`, `Newspaper`, `Users`, `CheckSquare`, `Calculator`, `FileText`, `RefreshCw`, `Target`, `CreditCard`, `Scale`, `Calendar`, `Home`, `Bot`, `User`, `Gift`, `HelpCircle` |
-| `CommandPalette.tsx` | Renderiza `tool.icon` como string | Renderiza como componente React |
-
-### 3. Achievements (Média Prioridade)
-
-| Arquivo | Emojis Atuais | Ícones Lucide |
-|---------|---------------|---------------|
-| `useAchievements.ts` | 🎯 ⭐ 📈 📄 📚 💰 💎 ✅ 🏅 👥 🔥 🌟 📊 🔍 | `Target`, `Star`, `TrendingUp`, `FileText`, `Library`, `DollarSign`, `Gem`, `CheckSquare`, `Medal`, `Users`, `Flame`, `Sparkles`, `BarChart3`, `Search` |
-| `AchievementBadge.tsx` | Renderiza emoji como texto | Renderiza ícone como SVG |
-
-### 4. DRE Wizard (Média Prioridade)
-
-| Arquivo | Emojis Atuais | Ícones Lucide |
-|---------|---------------|---------------|
-| `DREWizard.tsx` | 🛒 📦 💼 🏦 🏛️ | `ShoppingCart`, `Package`, `Briefcase`, `Landmark`, `Building2` (já importa os ícones, só precisa remover `emoji`) |
-
-### 5. Opportunity Detail Card (Baixa Prioridade)
-
-| Arquivo | Emojis Atuais | Ícones Lucide |
-|---------|---------------|---------------|
-| `OpportunityDetailCard.tsx` | ✅ 🔴 🔄 ⚠️ 🔍 🛡️ 🚨 ➖ | `CheckCircle2`, `XCircle`, `RefreshCw`, `AlertTriangle`, `Search`, `Shield`, `AlertOctagon`, `Minus` |
-
-### 6. Floating Assistant (Baixa Prioridade)
-
-| Arquivo | Mudança |
-|---------|---------|
-| `FloatingAssistant.tsx` | Os emojis estão dentro de strings de texto (mensagens). Manter como texto é aceitável aqui, pois são mensagens dinâmicas de chat. **Opcional: deixar como está.** |
+| Linha | Emoji Atual | Ícone Lucide | Contexto |
+|-------|-------------|--------------|----------|
+| 142 | ⭐ 4.8/5 | `Star` (já importado) | Avaliação média no social proof |
 
 ---
 
-## Estratégia de Implementação
+## Mudanças Detalhadas
 
-### Passo 1: Criar mapa de ícones centralizado
+### JourneysSection.tsx
 
-```typescript
-// src/lib/iconMap.ts
-import { Target, BarChart3, Gauge, ... } from "lucide-react";
+**Passo 1**: Remover propriedade `emoji` dos objetos `journeys` (linhas 9, 28, 48)
 
-export const ICON_MAP = {
-  target: Target,
-  barChart: BarChart3,
-  gauge: Gauge,
-  // ...
-} as const;
-```
-
-### Passo 2: Atualizar `commandPaletteTools.ts`
-
-Mudar o tipo de `icon: string` para `icon: keyof typeof ICON_MAP` e renderizar dinamicamente:
-
-```typescript
-// Antes
-{ id: 'nexus', icon: '🎛️', ... }
-
-// Depois  
-{ id: 'nexus', icon: 'gauge', ... }
-```
-
-### Passo 3: Atualizar `CommandPalette.tsx`
-
-```tsx
-// Antes
-<span className="text-xl">{tool.icon}</span>
-
-// Depois
-const IconComponent = ICON_MAP[tool.icon];
-<IconComponent className="w-5 h-5 text-primary" />
-```
-
-### Passo 4: Atualizar `JourneysSection.tsx`
-
+**Passo 2**: Alterar renderização do ícone (linha 103):
 ```tsx
 // Antes
 <div className="text-4xl mb-4">{journey.emoji}</div>
@@ -102,104 +42,51 @@ const IconComponent = ICON_MAP[tool.icon];
 </div>
 ```
 
-### Passo 5: Atualizar `useAchievements.ts`
-
-Mudar de emoji string para componente de ícone:
-
-```typescript
+**Passo 3**: Alterar badge "MAIS POPULAR" (linha 64, 96):
+```tsx
 // Antes
-first_score: { icon: "🎯", ... }
+badge: "⭐ MAIS POPULAR"
+{journey.badge}
 
 // Depois
-first_score: { icon: Target, ... }
+badge: "MAIS POPULAR"
+<Star className="w-4 h-4" /> {journey.badge}
 ```
 
-### Passo 6: Atualizar `AchievementBadge.tsx`
+**Passo 4**: Alterar ROI hint (linha 157):
+```tsx
+// Antes
+💡 {journey.roi}
 
-Renderizar o ícone como componente React em vez de texto.
+// Depois
+<Lightbulb className="w-4 h-4 inline mr-1" /> {journey.roi}
+```
 
-### Passo 7: Limpar `DREWizard.tsx`
+### HeroSection.tsx
 
-Remover propriedade `emoji` dos steps (já usa `icon` corretamente).
+**Passo 1**: Alterar avaliação média (linha 142):
+```tsx
+// Antes
+<strong className="text-2xl text-foreground">⭐ 4.8/5</strong>
 
-### Passo 8: Atualizar `OpportunityDetailCard.tsx`
-
-Substituir mapeamento de status com ícones Lucide.
-
----
-
-## Detalhes Técnicos
-
-### Mapeamento Completo de Emojis → Ícones
-
-| Emoji | Nome Semântico | Ícone Lucide |
-|-------|----------------|--------------|
-| 🎯 | Target/Goal | `Target` |
-| 📊 | Chart/Analytics | `BarChart3` |
-| 🎛️ | Dashboard/Control | `Gauge` |
-| ⭐ | Star/Featured | `Star` |
-| 💡 | Idea/Tip | `Lightbulb` |
-| 🔍 | Search | `Search` |
-| 💼 | Business/Briefcase | `Briefcase` |
-| 📈 | Trending Up | `TrendingUp` |
-| 🔗 | Link/Connect | `Link` |
-| 📰 | News | `Newspaper` |
-| 👥 | Users/Team | `Users` |
-| ✅ | Check/Done | `CheckSquare` ou `CheckCircle2` |
-| 🧮 | Calculator | `Calculator` |
-| 📄 | Document | `FileText` |
-| 🔄 | Refresh/Sync | `RefreshCw` |
-| 💳 | Credit Card | `CreditCard` |
-| ⚖️ | Scale/Compare | `Scale` |
-| 📅 | Calendar | `Calendar` |
-| 🏠 | Home | `Home` |
-| 🤖 | Robot/AI | `Bot` |
-| 👤 | User/Profile | `User` |
-| 🎁 | Gift/Reward | `Gift` |
-| ❓ | Help/Question | `HelpCircle` |
-| 💰 | Money/Credits | `DollarSign` |
-| 💎 | Premium/Gem | `Gem` |
-| 🏅 | Medal/Award | `Medal` |
-| 🔥 | Fire/Streak | `Flame` |
-| 🌟 | Sparkle | `Sparkles` |
-| 📚 | Library/Books | `Library` |
-| 🔴 | Error/Critical | `XCircle` |
-| ⚠️ | Warning | `AlertTriangle` |
-| 🛡️ | Shield/Protected | `Shield` |
-| 🚨 | Alert/Urgent | `AlertOctagon` |
-| ➖ | Neutral | `Minus` |
-| 🛒 | Shopping | `ShoppingCart` |
-| 📦 | Package | `Package` |
-| 🏦 | Bank | `Landmark` |
-| 🏛️ | Building/Gov | `Building2` |
-
----
-
-## Ordem de Execução
-
-1. **Criar `src/lib/iconMap.ts`** — Centraliza todos os ícones
-2. **Atualizar `commandPaletteTools.ts`** — Maior impacto visual (Command Palette)
-3. **Atualizar `CommandPalette.tsx`** — Renderização dos ícones
-4. **Atualizar `JourneysSection.tsx`** — Landing page (visibilidade alta)
-5. **Atualizar `HeroSection.tsx`** — Trocar ⭐ restante
-6. **Atualizar `useAchievements.ts`** — Sistema de conquistas
-7. **Atualizar `AchievementBadge.tsx`** — Renderização dos badges
-8. **Atualizar `DREWizard.tsx`** — Remover emojis duplicados
-9. **Atualizar `OpportunityDetailCard.tsx`** — Status de oportunidades
+// Depois
+<div className="flex items-center gap-1">
+  <Star className="w-5 h-5 text-primary fill-primary" />
+  <strong className="text-2xl text-foreground">4.8/5</strong>
+</div>
+```
 
 ---
 
 ## Resultado Esperado
 
-- Consistência visual em toda a aplicação
-- Ícones escaláveis e configuráveis (tamanho, cor, stroke)
-- Melhor acessibilidade (SVGs com aria-labels)
-- Código mais manutenível (ícones centralizados)
-- Aparência mais profissional/empresarial
+- Zero emojis em toda a Landing Page
+- Consistência visual com ícones SVG escaláveis
+- Ícones configuráveis em tamanho/cor via props
+- Melhor controle de design e acessibilidade
 
 ---
 
-## Estimativa de Tempo
+## Estimativa
 
-~2-3 horas de implementação
-
+~15-20 minutos de implementação
