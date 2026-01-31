@@ -1,136 +1,193 @@
 
-# Correção: Remover Opção Anual dos Planos Navigator e Professional
+
+# Correção: Fluxo de Redirecionamento Após Pagamento
 
 ## Problema Identificado
-Os planos Navigator e Professional estão exibindo preços anuais calculados (R$ 1.081/mês e R$ 2.498/mês) quando o toggle "Anual" é selecionado, mas esses planos **não possuem** opção anual real no Mercado Pago. Isso pode confundir o usuário, pois ao clicar, será redirecionado para o plano mensal.
+
+Quando você completa uma compra no Mercado Pago:
+1. O Mercado Pago redireciona de volta para o site
+2. A página de confirmação tenta ir para o Dashboard
+3. O Dashboard verifica se o onboarding está completo
+4. Se o perfil ainda não atualizou (race condition), você é mandado de volta para onboarding/cadastro
+
+**Causa raiz**: O sistema não espera o perfil atualizar antes de redirecionar.
 
 ## Solução Proposta
-Modificar a interface para que Navigator e Professional mostrem **apenas o preço mensal**, mesmo quando o toggle "Anual" estiver selecionado. A badge "2 meses grátis" só aparecerá para o plano Starter (que tem plano anual real).
+
+### 1. Tornar a página de confirmação inteligente
+A página `/pagamento/confirmacao` precisa:
+- Verificar se o usuário está logado
+- Atualizar o perfil do banco antes de redirecionar
+- Aguardar a sincronização antes de ir para o Dashboard
+
+### 2. Evitar redirect para dashboard sem onboarding
+Se o usuário veio do pagamento mas ainda não fez onboarding, direcionar para onboarding primeiro.
 
 ## Alterações Necessárias
 
-### 1. src/components/landing/PricingSection.tsx
+### Arquivo 1: src/pages/PagamentoConfirmacao.tsx
 
-**A. Adicionar propriedade `hasAnnual` ao tipo `Plan`:**
+Adicionar verificação de autenticação e refresh do perfil:
+
 ```typescript
-interface Plan {
-  // ... campos existentes
-  hasAnnual?: boolean; // indica se o plano tem opção anual
+// Adicionar imports
+import { useAuth } from "@/hooks/useAuth";
+import { Loader2 } from "lucide-react";
+
+// Dentro do componente:
+const { user, profile, loading, refreshProfile } = useAuth();
+
+// Efeito para refresh do perfil quando chegar na página
+useEffect(() => {
+  if (user && !loading) {
+    // Força atualização do perfil para pegar mudanças do webhook
+    refreshProfile();
+  }
+}, [user, loading]);
+
+// Modificar a lógica de redirect
+useEffect(() => {
+  if (config.redirectDelay) {
+    // ... countdown logic existente ...
+    
+    // No momento do redirect, verificar onboarding
+    const targetUrl = profile?.onboarding_complete 
+      ? "/dashboard" 
+      : "/onboarding";
+    navigate(targetUrl);
+  }
+}, [config.redirectDelay, navigate, profile]);
+```
+
+### Arquivo 2: src/components/ProtectedRoute.tsx
+
+Adicionar tratamento especial para usuários vindos de pagamento:
+
+```typescript
+// Se usuário veio da página de pagamento, dar tempo para o perfil sincronizar
+if (requireOnboarding && !profile) {
+  // Aguardar perfil carregar antes de decidir redirect
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    </div>
+  );
 }
 ```
 
-**B. Marcar apenas Starter com `hasAnnual: true`:**
+### Arquivo 3: src/hooks/useAuth.tsx
+
+Melhorar a função `refreshProfile` para forçar uma nova busca:
+
 ```typescript
-{
-  name: "STARTER",
-  hasAnnual: true, // Starter tem plano anual
-  // ...
-}
+const refreshProfile = async () => {
+  if (user) {
+    // Pequeno delay para dar tempo ao webhook processar
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const profileData = await fetchProfile(user.id);
+    setProfile(profileData);
+  }
+};
 ```
 
-**C. Ajustar lógica de exibição de preço:**
-- Se `hasAnnual` for `false/undefined`, sempre mostrar preço mensal
-- Se `hasAnnual` for `true`, seguir lógica atual do toggle
+## Fluxo Corrigido
 
-**D. Ajustar texto "cobrado anualmente":**
-- Só exibir para planos com `hasAnnual: true`
+```text
+Usuário no Mercado Pago
+         ↓
+    Completa pagamento
+         ↓
+    Webhook processa (background)
+         ↓
+    Redirect → /pagamento/confirmacao?status=approved
+         ↓
+    Página chama refreshProfile()
+         ↓
+    Aguarda perfil atualizar
+         ↓
+    Verifica onboarding_complete?
+         ↓
+    ┌──── SIM ────┐     ┌──── NÃO ────┐
+    ↓             ↓     ↓             ↓
+/dashboard    /onboarding
+```
 
-**E. Opcional: Mostrar indicador visual**
-- Adicionar texto discreto "(somente mensal)" abaixo do preço para Navigator e Professional quando toggle anual estiver ativo
+## Comportamento Esperado
 
-## Comportamento Esperado Após Correção
-
-| Plano | Toggle Mensal | Toggle Anual |
-|-------|--------------|--------------|
-| Starter | R$ 397/mês | R$ 331/mês (R$ 3.970/ano) |
-| Navigator | R$ 1.297/mês | R$ 1.297/mês *(somente mensal)* |
-| Professional | R$ 2.997/mês | R$ 2.997/mês *(somente mensal)* |
-| Enterprise | Sob consulta | Sob consulta |
+- Após pagar, você vê a tela de confirmação
+- O sistema atualiza seus dados automaticamente
+- Você é redirecionado para o lugar certo (dashboard se já fez onboarding, ou onboarding se ainda não fez)
+- Sem loops de redirecionamento
 
 ## Seção Técnica
 
-### Mudanças no tipo Plan (linhas 17-31):
+### PagamentoConfirmacao.tsx - Mudanças completas:
+
 ```typescript
-interface Plan {
-  name: string;
-  description: string;
-  priceMonthly: number;
-  priceAnnual: number;
-  highlighted?: boolean;
-  popular?: boolean;
-  isEnterprise?: boolean;
-  trialDays?: number;
-  hasAnnual?: boolean; // NOVO: indica disponibilidade de plano anual
-  features: PlanFeature[];
-  ctaText: string;
-  linkMonthly: string;
-  linkAnnual: string;
-  cnpjLimit: string;
+import { useEffect, useState } from "react";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+// ... outros imports
+
+export default function PagamentoConfirmacao() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { user, profile, loading, refreshProfile } = useAuth();
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Refresh profile when arriving at page to get latest data from webhook
+  useEffect(() => {
+    const doRefresh = async () => {
+      if (user && !loading && !isRefreshing) {
+        setIsRefreshing(true);
+        await refreshProfile();
+        setIsRefreshing(false);
+      }
+    };
+    doRefresh();
+  }, [user, loading]);
+
+  // Auto-redirect countdown - só começa após refresh
+  useEffect(() => {
+    if (config.redirectDelay && !loading && !isRefreshing) {
+      // ... countdown logic ...
+      
+      // Determina destino baseado no estado do perfil
+      const targetUrl = profile?.onboarding_complete 
+        ? "/dashboard" 
+        : "/onboarding";
+      navigate(targetUrl);
+    }
+  }, [config.redirectDelay, navigate, profile, loading, isRefreshing]);
+
+  // Loading state enquanto verifica
+  if (loading || isRefreshing) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // ... resto do componente
 }
 ```
 
-### Atualização dos planos (linhas 33-123):
+### ProtectedRoute.tsx - Aguardar perfil:
+
 ```typescript
-// STARTER - adicionar hasAnnual: true
-{
-  name: "STARTER",
-  hasAnnual: true,
-  // ... resto igual
-}
-
-// NAVIGATOR - remover priceAnnual (ou deixar 0)
-{
-  name: "NAVIGATOR",
-  priceAnnual: 0, // Sem plano anual
-  // ... resto igual
-}
-
-// PROFESSIONAL - remover priceAnnual (ou deixar 0)
-{
-  name: "PROFESSIONAL",
-  priceAnnual: 0, // Sem plano anual
-  // ... resto igual
+// Após verificar loading, antes de verificar onboarding:
+if (requireOnboarding && profile === null && user) {
+  // Profile ainda carregando, aguardar
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="flex flex-col items-center gap-4">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="text-muted-foreground">Carregando perfil...</p>
+      </div>
+    </div>
+  );
 }
 ```
 
-### Lógica de exibição de preço (linhas 175-181):
-```typescript
-// Verificar se plano tem opção anual disponível
-const effectiveBillingPeriod = plan.hasAnnual ? billingPeriod : "mensal";
-const price = effectiveBillingPeriod === "mensal" 
-  ? plan.priceMonthly 
-  : plan.priceAnnual;
-const link = effectiveBillingPeriod === "mensal" 
-  ? plan.linkMonthly 
-  : plan.linkAnnual;
-```
-
-### Exibição do preço (linhas 229-240):
-```typescript
-<span className="text-3xl md:text-4xl font-bold text-foreground">
-  R${effectiveBillingPeriod === "mensal" 
-    ? price.toLocaleString('pt-BR') 
-    : Math.round(price / 12).toLocaleString('pt-BR')}
-</span>
-<span className="text-muted-foreground text-sm">/mês</span>
-
-{/* Mostrar "cobrado anualmente" apenas para planos com anual */}
-{effectiveBillingPeriod === "anual" && price > 0 && (
-  <p className="text-xs text-muted-foreground mt-1">
-    R${price.toLocaleString('pt-BR')} cobrado anualmente
-  </p>
-)}
-
-{/* Indicador "somente mensal" quando toggle anual está ativo mas plano não tem anual */}
-{billingPeriod === "anual" && !plan.hasAnnual && !plan.isEnterprise && (
-  <p className="text-xs text-muted-foreground/70 mt-1 italic">
-    (disponível apenas mensal)
-  </p>
-)}
-```
-
-## Impacto Visual
-- Quando usuário selecionar "Anual", apenas Starter mostrará desconto
-- Navigator e Professional manterão preço mensal com indicação discreta
-- Badge "2 meses grátis" continua aparecendo (Starter aproveita)
-- Fluxo de checkout fica transparente (usuário sabe o que está contratando)
