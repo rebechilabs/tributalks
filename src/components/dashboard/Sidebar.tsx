@@ -227,9 +227,9 @@ export function Sidebar() {
   return (
     <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-card border-r border-border">
       {/* Logo */}
-      <div className="h-16 flex items-center px-6 border-b border-border">
+      <div className="h-20 flex items-center px-6 border-b border-border">
         <Link to="/dashboard" className="flex items-center gap-2">
-          <img src={logoTributalks} alt="TribuTalks" className="h-8 w-auto" />
+          <img src={logoTributalks} alt="TribuTalks" className="h-16 w-auto" />
         </Link>
       </div>
 
