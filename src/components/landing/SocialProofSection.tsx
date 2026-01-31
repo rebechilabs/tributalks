@@ -2,9 +2,9 @@ import { Star } from "lucide-react";
 
 const testimonials = [
   {
-    name: "Carlos Mendes",
+    name: "C.M.",
     role: "CFO",
-    company: "Logística Norte",
+    sector: "Setor de Logística",
     revenue: "Faturamento: R$ 8M/ano",
     avatar: "CM",
     metric: "R$ 127k",
@@ -13,9 +13,9 @@ const testimonials = [
     quote: "Em 48 horas o Radar encontrou créditos que meu contador não tinha visto em 2 anos. ROI de 42x no primeiro mês.",
   },
   {
-    name: "Fernanda Lima",
+    name: "F.L.",
     role: "CFO",
-    company: "TechSul",
+    sector: "Setor de Tecnologia",
     revenue: "Faturamento: R$ 15M/ano",
     avatar: "FL",
     metric: "4,2pp",
@@ -24,9 +24,9 @@ const testimonials = [
     quote: "O DRE Inteligente mostrou que 3 produtos estavam em NCM errado. Corrigimos e salvamos 4,2 pontos de margem.",
   },
   {
-    name: "Ricardo Alves",
+    name: "R.A.",
     role: "Dir. Financeiro",
-    company: "Indústria ABC",
+    sector: "Setor Industrial",
     revenue: "Faturamento: R$ 42M/ano",
     avatar: "RA",
     metric: "R$ 340k",
@@ -62,7 +62,7 @@ export function SocialProofSection() {
                 </div>
                 <div>
                   <strong className="text-foreground">{testimonial.name}</strong>
-                  <p className="text-sm text-muted-foreground">{testimonial.role}, {testimonial.company}</p>
+                  <p className="text-sm text-muted-foreground">{testimonial.role}, {testimonial.sector}</p>
                   <p className="text-xs text-muted-foreground/70">{testimonial.revenue}</p>
                 </div>
               </div>
