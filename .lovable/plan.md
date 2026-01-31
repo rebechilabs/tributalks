@@ -1,58 +1,43 @@
 
+# Corrigir "Premium" para "Professional"
 
-# Remover Frases do Plano Enterprise
+## Problema
 
-## Resumo
-
-Remover 5 itens da lista de features do plano Enterprise na seção de preços.
-
----
-
-## Features a Remover
-
-| Linha | Feature |
-|-------|---------|
-| 113 | "Clara AI ilimitada" |
-| 114 | "Tudo do Professional +" |
-| 115 | "Painel Executivo Multi-empresa" |
-| 118 | "API de integração dedicada" |
-| 119 | "SLA prioritário" |
+O termo "Premium" aparece em dois lugares na página de Contato, mas o plano correto é "Professional".
 
 ---
 
-## Features que Permanecem
+## Correções
 
-Apos a remocao, o plano Enterprise tera apenas:
-
-1. **Consultoria com Rebechi & Silva Advogados**
-2. **White Label** (seu logo, cores, dominio)
+| Local | Linha | Texto Atual | Texto Corrigido |
+|-------|-------|-------------|-----------------|
+| FAQ | 77 | `"Como agendar minhas consultorias (Premium)?"` | `"Como agendar minhas consultorias (Professional)?"` |
+| Horário | 288 | `"• Premium: prioritário"` | `"• Professional: prioritário"` |
 
 ---
 
-## Codigo
+## Código
 
-```typescript
-// Antes (linhas 112-120)
-features: [
-  { text: "Clara AI ilimitada", included: true },
-  { text: "Tudo do Professional +", included: true },
-  { text: "Painel Executivo Multi-empresa", included: true },
-  { text: "Consultoria com Rebechi & Silva Advogados", included: true },
-  { text: "White Label", included: true, limitText: "(seu logo, cores, domínio)" },
-  { text: "API de integração dedicada", included: true },
-  { text: "SLA prioritário", included: true },
-],
+```tsx
+// Linha 77 - FAQ
+// Antes
+"Como agendar minhas consultorias (Premium)?",
 
 // Depois
-features: [
-  { text: "Consultoria com Rebechi & Silva Advogados", included: true },
-  { text: "White Label", included: true, limitText: "(seu logo, cores, domínio)" },
-],
+"Como agendar minhas consultorias (Professional)?",
+```
+
+```tsx
+// Linha 288 - Horário de Atendimento
+// Antes
+<p className="text-sm">• Premium: prioritário</p>
+
+// Depois
+<p className="text-sm">• Professional: prioritário</p>
 ```
 
 ---
 
 ## Arquivo Alterado
 
-- `src/components/landing/PricingSection.tsx` (linhas 112-120)
-
+- `src/pages/Contato.tsx` (linhas 77 e 288)
