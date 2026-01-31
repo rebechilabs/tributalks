@@ -480,4 +480,22 @@ CREATE POLICY "Users can update own profile"
 
 ---
 
+## Notas Técnicas - Referências Legadas
+
+### Tabela tributbot_messages
+A tabela `tributbot_messages` no banco de dados mantém o nome original por razões de compatibilidade. 
+Esta tabela armazena o histórico de mensagens da Clara AI. O nome interno não afeta a experiência do usuário.
+
+### Feature Key
+A feature key `clara_ai` substituiu `tribubot` em:
+- `src/hooks/useFeatureAccess.ts`
+- `src/hooks/useUserCredits.ts`
+
+Novos registros usam `clara_ai`, mas registros históricos podem conter `tribubot`.
+
+### Redirect Legado
+A rota `/tribubot` redireciona automaticamente para `/clara-ai` para manter compatibilidade com links antigos.
+
+---
+
 Este documento cobre tanto a **visão de negócio** (ferramentas, planos, jornadas) quanto a **visão técnica** (arquitetura, código, integrações) do TribuTalks.
