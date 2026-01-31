@@ -171,7 +171,7 @@ export function PricingSection() {
         </div>
 
         {/* Plans Grid - Horizontal scroll on mobile */}
-        <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pb-4 md:pb-0 scrollbar-hide">
+        <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pt-4 pb-4 md:pb-0 scrollbar-hide">
           <div className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-7xl mx-auto min-w-max md:min-w-0">
           {plans.map((plan, index) => {
             // Verificar se plano tem opção anual disponível
