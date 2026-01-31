@@ -65,6 +65,7 @@ import MargemAtiva from "./pages/dashboard/MargemAtiva";
 
 // Admin
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminMonitoring from "./pages/admin/AdminMonitoring";
 import AdminPilulas from "./pages/admin/AdminPilulas";
 import AdminPrazos from "./pages/admin/AdminPrazos";
 import AdminUsuarios from "./pages/admin/AdminUsuarios";
@@ -365,6 +366,14 @@ const App = () => (
                   <AdminDashboard />
                 </ProtectedRoute>
               } 
+            />
+            <Route 
+              path="/admin/monitoring" 
+              element={
+                <ProtectedRoute>
+                  <AdminMonitoring />
+                </ProtectedRoute>
+              }
             />
             <Route 
               path="/admin/pilulas" 
