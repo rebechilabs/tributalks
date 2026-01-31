@@ -60,7 +60,7 @@ export type FeatureKey =
   | 'relatorios_pdf'        // NAVIGATOR+
   | 'erp_conexao'           // PROFESSIONAL+
   // IA e Documentos
-  | 'tribubot'              // Clara AI: STARTER: 30/dia, NAVIGATOR: 100/dia, PROFESSIONAL+: ilimitado
+  | 'clara_ai'              // Clara AI: STARTER: 30/dia, NAVIGATOR: 100/dia, PROFESSIONAL+: ilimitado
   | 'document_analyzer'     // NAVIGATOR+ (Analisador de Documentos)
   | 'workflows'             // NAVIGATOR+ (Workflows Guiados)
   // Extras
@@ -103,7 +103,7 @@ export const FEATURE_CONFIG: Record<FeatureKey, FeatureConfig> = {
   erp_conexao: { minPlan: 'PROFESSIONAL' },
   
   // IA e Documentos - Limites específicos de Clara AI por plano são controlados em useUserCredits
-  tribubot: { minPlan: 'STARTER', usageKey: 'tribubot_messages_daily' },
+  clara_ai: { minPlan: 'STARTER', usageKey: 'clara_ai_messages_daily' },
   document_analyzer: { minPlan: 'NAVIGATOR' },
   workflows: { minPlan: 'NAVIGATOR' },
   

@@ -29,7 +29,7 @@ import Dashboard from "./pages/Dashboard";
 import Upgrade from "./pages/Upgrade";
 import Perfil from "./pages/Perfil";
 import Historico from "./pages/Historico";
-import TribuBot from "./pages/TribuBot";
+import ClaraAI from "./pages/ClaraAI";
 import Comunidade from "./pages/Comunidade";
 import Configuracoes from "./pages/Configuracoes";
 import NoticiasReforma from "./pages/NoticiasReforma";
@@ -163,13 +163,15 @@ const App = () => (
               } 
             />
             <Route 
-              path="/tribubot" 
+              path="/clara-ai" 
               element={
                 <ProtectedRoute>
-                  <TribuBot />
+                  <ClaraAI />
                 </ProtectedRoute>
               } 
             />
+            {/* Redirect legado /tribubot → /clara-ai */}
+            <Route path="/tribubot" element={<ProtectedRoute><ClaraAI /></ProtectedRoute>} />
             <Route 
               path="/comunidade" 
               element={

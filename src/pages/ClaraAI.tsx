@@ -23,7 +23,7 @@ const SUGGESTIONS = [
   "Qual a diferença entre Presumido e Real?",
 ];
 
-const TribuBot = () => {
+const ClaraAI = () => {
   const { profile, user } = useAuth();
   const { credits, consumeCredit, refetch: refetchCredits } = useUserCredits();
   const balance = credits?.balance ?? 0;
@@ -387,4 +387,4 @@ Como posso te ajudar hoje?`,
   );
 };
 
-export default TribuBot;
+export default ClaraAI;

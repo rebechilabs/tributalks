@@ -140,7 +140,7 @@ const toolGroups: ToolGroup[] = [
       { 
         name: 'Clara AI', 
         description: 'Copiloto de decisão tributária',
-        href: '/tribubot', 
+        href: '/clara-ai', 
         icon: Sparkles,
         badge: 'IA',
         requiredPlan: 'NAVIGATOR'

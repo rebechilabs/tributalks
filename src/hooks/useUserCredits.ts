@@ -158,7 +158,7 @@ export function useUserCredits() {
         .from('credit_usage')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
-        .eq('feature', 'tribubot')
+        .eq('feature', 'clara_ai')
         .gte('created_at', today.toISOString());
 
       if (countError) throw countError;
@@ -169,7 +169,7 @@ export function useUserCredits() {
     }
   };
 
-  const consumeCredit = async (feature: string = 'tribubot', metadata: object = {}): Promise<boolean> => {
+  const consumeCredit = async (feature: string = 'clara_ai', metadata: object = {}): Promise<boolean> => {
     if (!user) return false;
     
     // Professional+ users have unlimited access

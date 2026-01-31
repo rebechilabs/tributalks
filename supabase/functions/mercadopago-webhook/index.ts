@@ -383,7 +383,7 @@ async function addCreditsToUser(email: string, credits: number, paymentId: strin
       message: `${credits} créditos Clara foram adicionados à sua conta.`,
       type: 'success',
       category: 'sistema',
-      action_url: '/tribubot',
+      action_url: '/clara-ai',
     })
   }
 }

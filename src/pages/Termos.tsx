@@ -77,7 +77,7 @@ export default function Termos() {
               </ul>
             </div>
             <p><strong>5.3.</strong> Os valores apresentados nas calculadoras são ESTIMATIVAS baseadas em médias de mercado e nos dados informados pelo Usuário. Os resultados reais podem variar significativamente.</p>
-            <p><strong>5.4.</strong> O TribuBot (assistente de IA) fornece informações gerais sobre tributação. Suas respostas NÃO substituem o aconselhamento de um profissional qualificado.</p>
+            <p><strong>5.4.</strong> A Clara AI (copiloto de decisão tributária) fornece informações gerais sobre tributação. Suas respostas NÃO substituem o aconselhamento de um profissional qualificado.</p>
             <div className="bg-warning/10 border border-warning/20 rounded-lg p-4 my-4">
               <p className="text-warning font-medium">5.5. ANTES DE TOMAR QUALQUER DECISÃO TRIBUTÁRIA, CONTÁBIL OU FINANCEIRA, O USUÁRIO DEVE CONSULTAR UM PROFISSIONAL HABILITADO (contador, advogado tributarista ou consultor financeiro).</p>
             </div>

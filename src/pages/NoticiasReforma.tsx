@@ -693,7 +693,7 @@ export default function Noticias() {
                       Simular impacto
                     </Button>
                   </Link>
-                  <Link to="/tribubot">
+                  <Link to="/clara-ai">
                     <Button variant="outline" size="sm">
                       <Sparkles className="w-4 h-4 mr-2" />
                       Perguntar à Clara AI

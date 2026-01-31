@@ -167,9 +167,9 @@ export function TribuTalksPitchPdf() {
         outputs: "Lista de oportunidades com match score, economia estimada, complexidade, tempo de implementação, pauta para contador"
       },
       {
-        name: "TribuBot (IA 24/7)",
+        name: "Clara AI (Copiloto Tributário)",
         badge: "IA",
-        desc: "Assistente de inteligência artificial especializado em tributação brasileira, disponível 24/7.",
+        desc: "Copiloto de decisão tributária com IA, disponível 24/7 para tirar dúvidas em linguagem natural.",
         inputs: "Perguntas em linguagem natural sobre tributação, reforma, regimes, obrigações",
         outputs: "Respostas contextualizadas ao perfil da empresa, com referências legais quando aplicável"
       },
@@ -259,7 +259,7 @@ export function TribuTalksPitchPdf() {
     addBullet("API oficial da Receita Federal (RTC) para alíquotas CBS/IBS/IS");
     addBullet("Stripe para pagamentos e gestão de assinaturas");
     addBullet("Resend para envio de emails transacionais");
-    addBullet("Lovable AI Gateway para modelos Gemini e GPT (TribuBot)");
+    addBullet("Lovable AI Gateway para modelos Gemini e GPT (Clara AI)");
 
     checkPage();
     addSpacer(8);
@@ -303,10 +303,10 @@ export function TribuTalksPitchPdf() {
     addTitle("5. O Papel da Inteligência Artificial", 16);
     addParagraph("A IA é um componente central da TribuTalks, utilizada em múltiplas camadas:");
 
-    addSubtitle("TribuBot — Assistente Conversacional");
+    addSubtitle("Clara AI — Copiloto de Decisão Tributária");
     addBullet("Modelo: Google Gemini 3 Flash (via Lovable AI Gateway)");
     addBullet("Contexto personalizado: perfil da empresa, setor, regime, faturamento");
-    addBullet("Limite por plano: 10 msgs/dia (Básico), ilimitado (Profissional+)");
+    addBullet("Limite por plano: 30 msgs/dia (Starter), ilimitado (Professional+)");
     addBullet("Histórico persistido para continuidade de conversas");
 
     addSpacer(4);
@@ -335,9 +335,9 @@ export function TribuTalksPitchPdf() {
 
     const plans = [
       { name: "FREE", price: "R$0/mês", features: "1 simulação/mês, só Comparativo de Regimes + Calculadora RTC" },
-      { name: "BÁSICO", price: "R$199/mês", features: "Simulações ilimitadas, todas calculadoras, TribuBot 10 msgs/dia, Notícias" },
-      { name: "PROFISSIONAL", price: "R$297/mês", features: "Tudo do Básico + TribuBot ilimitado + PDF + Comunidade" },
-      { name: "PREMIUM", price: "R$1.997/mês", features: "Tudo + 2 consultorias/mês + Alertas personalizados + Prioridade em recursos" },
+      { name: "STARTER", price: "R$397/mês", features: "Simulações ilimitadas, todas calculadoras, Clara AI 30 msgs/dia" },
+      { name: "NAVIGATOR", price: "R$1.297/mês", features: "Tudo do Starter + Clara AI 100 msgs/dia + Notícias + Comunidade" },
+      { name: "PROFESSIONAL", price: "R$2.997/mês", features: "Tudo + Clara AI ilimitada + PDF + NEXUS + Radar Créditos" },
     ];
 
     for (const plan of plans) {
