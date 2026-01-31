@@ -1,100 +1,106 @@
 
 
-# Correção: Depoimentos e Social Proof
+# Melhoria UX: Período Dinâmico nas Perguntas do DRE Wizard
 
-## O Problema Identificado
+## Contexto
 
-Você está apontando uma questão crítica: **depoimentos com nomes completos fictícios podem ser enganosos ou até ilegais** (publicidade enganosa). Mesmo com iniciais, ainda podem parecer depoimentos reais.
+Atualmente o usuário seleciona mês/ano no header (linhas 214-217), mas as perguntas são genéricas:
+- "Quanto sua empresa vendeu **neste período**?" (linha 124)
+- "Quanto custou o que você vendeu?" (linha 149)
+- etc.
 
-## Estado Atual no Código
-
-O código já usa iniciais (C.M., F.L., R.A.), mas falta clareza de que são **exemplos ilustrativos baseados em casos reais**.
-
-## Opções de Solução
-
-### Opção A: Manter Iniciais + Adicionar Disclaimer
-
-Adicionar texto pequeno abaixo dos depoimentos:
-```
-*Resultados representativos baseados em casos reais. 
-Nomes alterados para preservar confidencialidade.
-```
-
-### Opção B: Transformar em "Casos de Sucesso" Anônimos
-
-Remover nomes completamente e focar nas métricas:
+## Antes vs Depois
 
 | Antes | Depois |
 |-------|--------|
-| C.M., CFO, Logística | **Empresa de Logística** (R$ 8M/ano) |
-| F.L., CFO, Tecnologia | **Empresa de Tecnologia** (R$ 15M/ano) |
-| R.A., Dir. Financeiro | **Indústria** (R$ 42M/ano) |
+| "Quanto sua empresa vendeu **neste período**?" | "Quanto sua empresa vendeu em **Jan/2026**?" |
+| "Quanto custou o que você vendeu?" | "Quanto custou o que você vendeu em **Jan/2026**?" |
+| "Quanto você gasta para manter a empresa?" | "Quanto você gastou para manter a empresa em **Jan/2026**?" |
+| "Receitas e despesas financeiras" | "Receitas e despesas financeiras de **Jan/2026**" |
+| "Como sua empresa paga impostos?" | "Como sua empresa pagou impostos em **Jan/2026**?" |
 
-### Opção C: Usar Métricas Agregadas (Mais Seguro)
+## Implementação
 
-Substituir depoimentos individuais por dados agregados:
-- "1.500+ empresas identificaram média de R$ 47k em créditos"
-- "ROI médio de 12x no primeiro ano"
-- "93% dos usuários recomendam"
+### Arquivo: `src/components/dre/DREWizard.tsx`
+
+**1. Criar helper para formatar período (após linha 78):**
+
+```tsx
+const getPeriodLabel = () => {
+  const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  return `${monthNames[selectedMonth - 1]}/${selectedYear}`;
+};
+```
+
+**2. Atualizar textos do Step 1 (linha 124):**
+
+| Elemento | Antes | Depois |
+|----------|-------|--------|
+| Título | "Quanto sua empresa vendeu neste período?" | `Quanto sua empresa vendeu em ${getPeriodLabel()}?` |
+| Subtítulo | "Informe os valores totais de vendas do mês selecionado" | `Informe os valores totais de vendas de ${getPeriodLabel()}` |
+
+**3. Atualizar textos do Step 2 (linha 149):**
+
+| Elemento | Antes | Depois |
+|----------|-------|--------|
+| Título | "Quanto custou o que você vendeu?" | `Quanto custou o que você vendeu em ${getPeriodLabel()}?` |
+| Subtítulo | "Custos diretamente ligados aos produtos ou serviços vendidos" | `Custos diretamente ligados às vendas de ${getPeriodLabel()}` |
+
+**4. Atualizar textos do Step 3 (linha 169):**
+
+| Elemento | Antes | Depois |
+|----------|-------|--------|
+| Título | "Quanto você gasta para manter a empresa?" | `Quanto você gastou para manter a empresa em ${getPeriodLabel()}?` |
+| Subtítulo | "Despesas operacionais do dia a dia" | `Despesas operacionais de ${getPeriodLabel()}` |
+
+**5. Atualizar textos do Step 4 (linha 180):**
+
+| Elemento | Antes | Depois |
+|----------|-------|--------|
+| Título | "Receitas e despesas financeiras" | `Receitas e despesas financeiras de ${getPeriodLabel()}` |
+| Subtítulo | "Juros, tarifas bancárias e outros custos financeiros" | `Juros, tarifas e custos financeiros de ${getPeriodLabel()}` |
+
+**6. Atualizar textos do Step 5 (linha 192):**
+
+| Elemento | Antes | Depois |
+|----------|-------|--------|
+| Título | "Como sua empresa paga impostos?" | `Como sua empresa pagou impostos em ${getPeriodLabel()}?` |
+| Subtítulo | "Selecione o regime tributário e informe os impostos pagos" | `Regime tributário e impostos de ${getPeriodLabel()}` |
 
 ## Arquivos a Modificar
 
-| Arquivo | Mudança |
-|---------|---------|
-| `HeroSection.tsx` | Linhas 99-109 - ajustar card de social proof |
-| `SocialProofSection.tsx` | Linhas 3-37 - ajustar dados dos testimonials |
-| `TestimonialsSection.tsx` | Linhas 3-25 - ajustar dados dos testimonials |
+| Arquivo | Ação |
+|---------|------|
+| `src/components/dre/DREWizard.tsx` | Adicionar `getPeriodLabel()` e atualizar textos das 5 etapas |
 
-## Recomendação
+## Benefícios
 
-**Opção A + B combinadas**: Manter o formato atual com iniciais, mas:
-1. Mudar de "C.M." para apenas setor/porte
-2. Adicionar disclaimer: "*Casos ilustrativos baseados em resultados reais de clientes."
+- **Clareza imediata**: O usuário sabe exatamente a qual período está respondendo
+- **Contexto sempre visível**: Período aparece tanto no header quanto nas perguntas
+- **Evita confusão**: Ao preencher múltiplos meses, não há dúvida sobre qual período está sendo editado
+- **UX mais pessoal**: Perguntas direcionadas ao período específico
 
-## Implementação Proposta
+## Resultado Visual Esperado
 
-### HeroSection.tsx (linhas 97-109)
-
-```tsx
-// Remover nome individual, focar em setor/resultado
-<div className="flex items-center gap-3 mb-4">
-  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-    <TrendingUp className="w-6 h-6 text-primary" />
-  </div>
-  <div>
-    <strong className="text-foreground">Empresa de Logística</strong>
-    <p className="text-sm text-muted-foreground">Faturamento R$ 8M/ano</p>
-  </div>
-</div>
+```text
+┌──────────────────────────────────────────────────────────────────┐
+│  DRE Inteligente                           [ Jan ▼] [ 2026 ▼]   │
+│  Preencha os dados e receba um diagnóstico completo             │
+├──────────────────────────────────────────────────────────────────┤
+│  ○ ────── ● ────── ○ ────── ○ ────── ○                          │
+│  Vendas   Custos  Despesas  Financ.  Impostos                   │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  🛒 Suas Vendas                                                  │
+│                                                                  │
+│  Quanto sua empresa vendeu em Jan/2026?                          │
+│  Informe os valores totais de vendas de Jan/2026                │
+│                                                                  │
+│  ┌─────────────────────┐  ┌─────────────────────┐               │
+│  │ Vendas de produtos  │  │ Vendas de serviços  │               │
+│  │ R$ ____________     │  │ R$ ____________     │               │
+│  └─────────────────────┘  └─────────────────────┘               │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
 ```
-
-### SocialProofSection.tsx
-
-```tsx
-const testimonials = [
-  {
-    sector: "Logística",
-    revenue: "R$ 8M/ano",
-    // Remover "name: C.M."
-    ...
-  }
-];
-
-// Adicionar ao final da seção:
-<p className="text-xs text-muted-foreground text-center mt-8">
-  *Casos ilustrativos baseados em resultados reais. 
-  Valores podem variar conforme perfil da empresa.
-</p>
-```
-
-### TestimonialsSection.tsx
-
-Mesma abordagem: remover iniciais, manter apenas cargo/setor, adicionar disclaimer.
-
-## Resultado Final
-
-- Sem nomes que pareçam pessoas reais
-- Foco nos resultados e setores
-- Disclaimer legal protege a empresa
-- Credibilidade mantida através de métricas agregadas
 
