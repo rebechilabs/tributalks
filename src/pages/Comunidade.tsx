@@ -1,12 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Lock, Sparkles, ExternalLink, MessageCircle, Calendar, BookOpen, Shield } from "lucide-react";
+import { Users, Lock, Sparkles, ExternalLink, MessageCircle, BookOpen, Shield, Mail } from "lucide-react";
 import { ContentLibrary } from "@/components/community/ContentLibrary";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Link } from "react-router-dom";
 import { usePlanAccess, PLAN_LABELS } from "@/hooks/useFeatureAccess";
 import { CONFIG } from "@/config/site";
+import { NewsletterForm } from "@/components/common/NewsletterForm";
 
 const COMMUNITY_URL = "https://chat.whatsapp.com/BbdIWJqap2FHmj90zfz5l3";
 
@@ -46,6 +47,28 @@ const Comunidade = () => {
         </div>
 
         <div className="grid gap-6">
+          {/* Newsletter - Todos os planos */}
+          <Card className="border-primary/20">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <Mail className="w-6 h-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-semibold text-foreground">TribuTalks News</h3>
+                    <Badge variant="outline" className="text-xs">Todos os planos</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Newsletter semanal com análises exclusivas sobre a Reforma Tributária. 
+                    Toda terça-feira às 07h07 no seu email.
+                  </p>
+                  <NewsletterForm variant="compact" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* WhatsApp Group - Apenas para NAVIGATOR (não PROFESSIONAL+) */}
           {isNavigator && !isProfessional ? (
             <Card className="border-primary/20">
@@ -94,6 +117,7 @@ const Comunidade = () => {
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold text-foreground">Comunidade Circle</h3>
                       <Badge variant="secondary" className="text-xs">{PLAN_LABELS.PROFESSIONAL}+</Badge>
+                      <Badge className="text-xs bg-primary text-primary-foreground">NOVO</Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mb-2">
                       Networking exclusivo para CFOs e gestores financeiros. 
