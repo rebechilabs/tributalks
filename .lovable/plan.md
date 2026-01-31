@@ -1,81 +1,70 @@
 
-# Plano: Remover configuração "Lembretes de consultorias"
 
-## Resumo
-Remover a opção de configuração "Lembretes de consultorias" da página de Configurações, já que essa funcionalidade não existe no sistema.
+# Plano: Atualizar botão do Hero Section para Trial Stripe
+
+## Situação Atual
+
+Existem 2 CTAs na Landing Page com comportamentos diferentes:
+
+| Componente | Botão | Destino |
+|------------|-------|---------|
+| `HeroSection.tsx` (topo) | "Começar Diagnóstico Gratuito" | `/cadastro` |
+| `CTASection.tsx` (final) | "Testar Grátis por 7 Dias" ✅ | Stripe Trial |
+
+## Alteração Proposta
+
+### Arquivo: `src/components/landing/HeroSection.tsx`
+
+**1. Adicionar import do CONFIG (linha 4)**
+```tsx
+// ANTES
+import logoHero from "@/assets/logo-tributalks-hero.jpg";
+
+// DEPOIS
+import logoHero from "@/assets/logo-tributalks-hero.jpg";
+import { CONFIG } from "@/config/site";
+```
+
+**2. Alterar o botão principal (linhas 75-83)**
+```tsx
+// ANTES
+<Link to="/cadastro">
+  <Button
+    size="lg"
+    className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-8 py-6 text-lg group"
+  >
+    Começar Diagnóstico Gratuito
+    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+  </Button>
+</Link>
+
+// DEPOIS
+<a href={CONFIG.PAYMENT_LINKS.STARTER_MENSAL} target="_blank" rel="noopener noreferrer">
+  <Button
+    size="lg"
+    className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-8 py-6 text-lg group"
+  >
+    Testar Grátis por 7 Dias
+    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+  </Button>
+</a>
+```
 
 ---
 
-## Alterações Necessárias
+## Resultado Final
 
-### Arquivo: `src/pages/Configuracoes.tsx`
-
-**1. Remover propriedade do estado inicial (linhas 29-33)**
-```tsx
-// ANTES
-const [notifications, setNotifications] = useState({
-  novidades: profile?.notif_novidades ?? true,
-  legislacao: profile?.notif_legislacao ?? true,
-  consultorias: profile?.notif_consultorias ?? true,
-});
-
-// DEPOIS
-const [notifications, setNotifications] = useState({
-  novidades: profile?.notif_novidades ?? true,
-  legislacao: profile?.notif_legislacao ?? true,
-});
-```
-
-**2. Remover do useEffect de sincronização (linhas 57-61)**
-```tsx
-// ANTES
-setNotifications({
-  novidades: profile?.notif_novidades ?? true,
-  legislacao: profile?.notif_legislacao ?? true,
-  consultorias: profile?.notif_consultorias ?? true,
-});
-
-// DEPOIS
-setNotifications({
-  novidades: profile?.notif_novidades ?? true,
-  legislacao: profile?.notif_legislacao ?? true,
-});
-```
-
-**3. Remover bloco de UI do Switch (linhas 231-247)**
-```tsx
-// REMOVER completamente este bloco:
-              
-<div className="flex items-center justify-between">
-  <div className="space-y-1">
-    <Label htmlFor="notif-consultorias" className="font-medium">
-      Lembretes de consultorias
-    </Label>
-    <p className="text-sm text-muted-foreground">
-      Lembrar de usar consultorias disponíveis (Premium)
-    </p>
-  </div>
-  <Switch 
-    id="notif-consultorias" 
-    checked={notifications.consultorias}
-    onCheckedChange={(v) => handleNotificationChange('consultorias', v)}
-    disabled={profile?.plano !== 'PREMIUM'}
-  />
-</div>
-```
+Após a alteração, ambos os CTAs (topo e final da página) terão:
+- **Texto**: "Testar Grátis por 7 Dias"
+- **Destino**: Link Stripe para trial de 7 dias do plano Starter
+- **Comportamento**: Abre em nova aba
 
 ---
 
 ## Resumo das Alterações
 
-| Local | Ação |
-|-------|------|
-| Estado inicial `notifications` | Remover `consultorias` |
-| useEffect de sincronização | Remover `consultorias` |
-| Bloco de UI (Switch) | Remover completamente |
-| **Total** | 3 modificações em 1 arquivo |
+| Arquivo | Modificações |
+|---------|-------------|
+| `HeroSection.tsx` | Adicionar import CONFIG + Trocar Link/texto do botão |
+| **Total** | 2 alterações em 1 arquivo |
 
----
-
-## Nota
-A coluna `notif_consultorias` na tabela `profiles` no banco de dados pode ser mantida sem problema — ela simplesmente não será mais usada pela interface.
