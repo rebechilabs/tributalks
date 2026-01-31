@@ -1,92 +1,32 @@
 
-# Plano: Substituir Emojis Restantes na Landing Page
+# Atualizar Link Stripe do Plano Starter Anual
 
 ## Resumo
 
-Trocar os últimos emojis que ainda existem nos componentes da Landing Page por ícones Lucide React.
+Substituir o placeholder `/cadastro?plan=starter&billing=annual` pelo link real do Stripe para o plano Starter Anual (R$ 3.970/ano).
 
 ---
 
-## Arquivos a Modificar
+## Mudança
 
-### 1. JourneysSection.tsx
-
-| Linha | Emoji Atual | Ícone Lucide | Contexto |
-|-------|-------------|--------------|----------|
-| 9, 28, 48 | 🎯, 📊, 🎛️ | Remover `emoji` property | Já tem `icon` com componente correto |
-| 64 | ⭐ MAIS POPULAR | `Star` + texto | Badge do plano popular |
-| 157 | 💡 ROI médio | `Lightbulb` | Dica de ROI no footer do card |
-
-### 2. HeroSection.tsx
-
-| Linha | Emoji Atual | Ícone Lucide | Contexto |
-|-------|-------------|--------------|----------|
-| 142 | ⭐ 4.8/5 | `Star` (já importado) | Avaliação média no social proof |
+| Arquivo | Linha | Valor Atual | Novo Valor |
+|---------|-------|-------------|------------|
+| `src/config/site.ts` | 6 | `/cadastro?plan=starter&billing=annual` | `https://buy.stripe.com/00wbIU4Zc5Do1rt1Qqbo401` |
 
 ---
 
-## Mudanças Detalhadas
+## Código
 
-### JourneysSection.tsx
-
-**Passo 1**: Remover propriedade `emoji` dos objetos `journeys` (linhas 9, 28, 48)
-
-**Passo 2**: Alterar renderização do ícone (linha 103):
-```tsx
-// Antes
-<div className="text-4xl mb-4">{journey.emoji}</div>
+```typescript
+// Antes (linha 6)
+STARTER_ANUAL: "/cadastro?plan=starter&billing=annual",
 
 // Depois
-<div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-  <journey.icon className="w-6 h-6 text-primary" />
-</div>
-```
-
-**Passo 3**: Alterar badge "MAIS POPULAR" (linha 64, 96):
-```tsx
-// Antes
-badge: "⭐ MAIS POPULAR"
-{journey.badge}
-
-// Depois
-badge: "MAIS POPULAR"
-<Star className="w-4 h-4" /> {journey.badge}
-```
-
-**Passo 4**: Alterar ROI hint (linha 157):
-```tsx
-// Antes
-💡 {journey.roi}
-
-// Depois
-<Lightbulb className="w-4 h-4 inline mr-1" /> {journey.roi}
-```
-
-### HeroSection.tsx
-
-**Passo 1**: Alterar avaliação média (linha 142):
-```tsx
-// Antes
-<strong className="text-2xl text-foreground">⭐ 4.8/5</strong>
-
-// Depois
-<div className="flex items-center gap-1">
-  <Star className="w-5 h-5 text-primary fill-primary" />
-  <strong className="text-2xl text-foreground">4.8/5</strong>
-</div>
+STARTER_ANUAL: "https://buy.stripe.com/00wbIU4Zc5Do1rt1Qqbo401",
 ```
 
 ---
 
-## Resultado Esperado
+## Resultado
 
-- Zero emojis em toda a Landing Page
-- Consistência visual com ícones SVG escaláveis
-- Ícones configuráveis em tamanho/cor via props
-- Melhor controle de design e acessibilidade
-
----
-
-## Estimativa
-
-~15-20 minutos de implementação
+Quando usuários clicarem no botão de assinatura anual do plano Starter, serão redirecionados diretamente para o checkout do Stripe.
