@@ -9,7 +9,7 @@ const stats = [
   {
     icon: Users,
     value: "+270.000",
-    label: "seguidores",
+    label: "seguidores nas redes sociais",
   },
   {
     icon: Building,
