@@ -730,22 +730,39 @@ serve(async (req) => {
   }
 
   try {
+    // STEP 1: Validate authentication
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ 
+        error: 'unauthorized',
+        message: 'Token de autenticação obrigatório'
+      }), { 
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
-    const { user_id } = await req.json()
+    // STEP 2: Validate token and get authenticated user
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
 
-    if (!user_id) {
+    if (authError || !user) {
       return new Response(JSON.stringify({ 
-        error: 'missing_user_id',
-        message: 'User ID is required'
+        error: 'invalid_token',
+        message: 'Token de autenticação inválido ou expirado'
       }), { 
-        status: 400,
+        status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
+
+    // STEP 3: Use authenticated user ID (ignore body user_id for security)
+    const user_id = user.id
 
     // 1. FETCH PROFILE
     const { data: profile, error: profileError } = await supabase
