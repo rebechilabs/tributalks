@@ -1,28 +1,24 @@
 import { Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useStreak } from "@/hooks/useStreak";
+import type { StreakData } from "@/hooks/useDashboardData";
 
 interface StreakDisplayProps {
+  streakData?: StreakData;
   showLongest?: boolean;
   className?: string;
 }
 
-export function StreakDisplay({ showLongest = false, className }: StreakDisplayProps) {
-  const { currentStreak, longestStreak, isLoading } = useStreak();
-
-  if (isLoading) {
-    return null;
-  }
-
-  const streak = currentStreak;
-  const isActive = streak > 0;
+export function StreakDisplay({ streakData, showLongest = false, className }: StreakDisplayProps) {
+  const currentStreak = streakData?.currentStreak || 0;
+  const longestStreak = streakData?.longestStreak || 0;
+  const isActive = currentStreak > 0;
 
   // Determine fire intensity based on streak
   const getFireColor = () => {
-    if (streak >= 30) return "text-purple-500";
-    if (streak >= 14) return "text-orange-500";
-    if (streak >= 7) return "text-yellow-500";
-    if (streak >= 3) return "text-amber-500";
+    if (currentStreak >= 30) return "text-purple-500";
+    if (currentStreak >= 14) return "text-orange-500";
+    if (currentStreak >= 7) return "text-yellow-500";
+    if (currentStreak >= 3) return "text-amber-500";
     return "text-muted-foreground";
   };
 
@@ -42,7 +38,7 @@ export function StreakDisplay({ showLongest = false, className }: StreakDisplayP
         <span className={cn(
           isActive ? getFireColor() : "text-muted-foreground"
         )}>
-          {streak}
+          {currentStreak}
         </span>
       </div>
       

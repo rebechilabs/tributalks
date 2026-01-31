@@ -1,34 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
-  Wallet, AlertTriangle, Trophy, ArrowRight, Lock, 
+  Wallet, Trophy, ArrowRight, Lock, 
   TrendingUp, ShieldCheck, ShieldAlert, ShieldX,
   Lightbulb, FileDown, Loader2
 } from "lucide-react";
-import { ThermometerData } from "@/hooks/useExecutiveData";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import type { ThermometerData, ScoreAction } from "@/hooks/useDashboardData";
 
 interface ExecutiveSummaryCardProps {
   thermometerData: ThermometerData | null;
+  scoreActions: ScoreAction[];
   loading?: boolean;
   userPlan: string;
-}
-
-interface ScoreAction {
-  id: string;
-  action_code: string;
-  action_title: string;
-  action_description: string | null;
-  link_to: string | null;
-  points_gain: number | null;
-  economia_estimada: number | null;
-  priority: number | null;
 }
 
 // Mapeamento de planos para acesso ao Painel Executivo
@@ -100,10 +89,7 @@ function getRiskLabel(nivel: 'baixo' | 'medio' | 'alto' | null): string {
   return labels[nivel] || nivel;
 }
 
-export function ExecutiveSummaryCard({ thermometerData, loading, userPlan }: ExecutiveSummaryCardProps) {
-  const { user } = useAuth();
-  const [actions, setActions] = useState<ScoreAction[]>([]);
-  const [actionsLoading, setActionsLoading] = useState(true);
+export function ExecutiveSummaryCard({ thermometerData, scoreActions, loading, userPlan }: ExecutiveSummaryCardProps) {
   const [pdfLoading, setPdfLoading] = useState(false);
   
   const normalizedPlan = LEGACY_PLAN_MAP[userPlan] || 'FREE';
@@ -112,35 +98,6 @@ export function ExecutiveSummaryCard({ thermometerData, loading, userPlan }: Exe
   const scoreColors = getScoreColor(thermometerData?.scoreGrade || null);
   const riskColors = getRiskColor(thermometerData?.riscoNivel || null);
   const RiskIcon = riskColors.icon;
-
-  // Fetch recommended actions
-  useEffect(() => {
-    if (!user?.id) {
-      setActionsLoading(false);
-      return;
-    }
-
-    const fetchActions = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('score_actions')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('status', 'pending')
-          .order('priority', { ascending: true })
-          .limit(3);
-
-        if (error) throw error;
-        setActions(data || []);
-      } catch (error) {
-        console.error('Error fetching actions:', error);
-      } finally {
-        setActionsLoading(false);
-      }
-    };
-
-    fetchActions();
-  }, [user?.id]);
 
   // Generate PDF handler
   const handleGeneratePdf = async () => {
@@ -157,11 +114,9 @@ export function ExecutiveSummaryCard({ thermometerData, loading, userPlan }: Exe
 
       if (error) throw error;
 
-      // The edge function should return a PDF or a URL
       if (data?.url) {
         window.open(data.url, '_blank');
       } else if (data?.html) {
-        // Open HTML in new window for print/PDF
         const printWindow = window.open('', '_blank');
         if (printWindow) {
           printWindow.document.write(data.html);
@@ -331,14 +286,14 @@ export function ExecutiveSummaryCard({ thermometerData, loading, userPlan }: Exe
         </div>
 
         {/* Ações Recomendadas */}
-        {actions.length > 0 && (
+        {scoreActions.length > 0 && (
           <div className="mb-4 p-4 rounded-xl bg-muted/30 border border-border/50">
             <div className="flex items-center gap-2 mb-3">
               <Lightbulb className="w-4 h-4 text-primary" />
               <span className="text-sm font-medium text-foreground">Ações Recomendadas</span>
             </div>
             <div className="space-y-2">
-              {actions.map((action, index) => (
+              {scoreActions.map((action, index) => (
                 <Link 
                   key={action.id}
                   to={action.link_to || '/dashboard/score-tributario'}

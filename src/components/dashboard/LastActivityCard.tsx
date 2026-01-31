@@ -1,9 +1,8 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Clock, ArrowRight, Trophy, FileText, BarChart3, Lightbulb, Workflow, Calculator } from "lucide-react";
 import { formatDistanceBrasilia } from "@/lib/dateUtils";
-import { UserProgressData } from "@/hooks/useUserProgress";
+import type { UserProgressData } from "@/hooks/useDashboardData";
 
 interface LastActivityCardProps {
   progress: UserProgressData;
@@ -28,21 +27,6 @@ const ACTIVITY_LABELS: Record<string, string> = {
 };
 
 export function LastActivityCard({ progress }: LastActivityCardProps) {
-  if (progress.loading) {
-    return (
-      <Card className="border-border/50 mb-6">
-        <CardContent className="pt-4 pb-4">
-          <div className="flex items-center gap-3">
-            <Skeleton className="w-8 h-8 rounded-lg" />
-            <div className="flex-1">
-              <Skeleton className="h-3 w-24 mb-2" />
-              <Skeleton className="h-4 w-48" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   const { lastActivity } = progress;
 

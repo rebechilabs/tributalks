@@ -1,9 +1,10 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Calculator, Wallet, Scale, FileText, Users, Calendar, 
   Lock, ArrowRight, Clock, Sparkles, Upload, Target, BarChart3,
@@ -26,19 +27,8 @@ import { ClaraContextualSuggestion } from "@/components/common/ClaraContextualSu
 import { OnboardingChecklist, FirstMission, GuidedTour } from "@/components/onboarding";
 import { StreakDisplay } from "@/components/achievements";
 import { SwitchCompanyCard } from "@/components/profile/SwitchCompanyCard";
-import { useExecutiveData } from "@/hooks/useExecutiveData";
-import { useUserProgress } from "@/hooks/useUserProgress";
+import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAchievements } from "@/hooks/useAchievements";
-
-interface CalcItem {
-  id: string;
-  slug: string;
-  nome: string;
-  descricao: string;
-  icone: string;
-  status: string;
-  ordem: number;
-}
 
 interface Simulation {
   id: string;
@@ -191,17 +181,24 @@ const PLAN_HIERARCHY: Record<string, number> = {
   'ENTERPRISE': 3,
 };
 
-// Wrapper para o ExecutiveSummaryCard com dados do hook
-function ExecutiveSummaryCardWrapper({ currentPlan, userId }: { currentPlan: string; userId?: string }) {
-  const { thermometerData, loading } = useExecutiveData(userId);
-  
+// Dashboard Skeleton for loading state
+function DashboardSkeleton() {
   return (
-    <div className="mb-8">
-      <ExecutiveSummaryCard 
-        thermometerData={thermometerData} 
-        loading={loading} 
-        userPlan={currentPlan} 
-      />
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <Skeleton className="h-8 w-48 mb-2" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <Skeleton className="h-8 w-16 rounded-full" />
+      </div>
+      <Skeleton className="h-32 w-full mb-6 rounded-lg" />
+      <Skeleton className="h-24 w-full mb-6 rounded-lg" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <Skeleton className="h-32 rounded-lg" />
+        <Skeleton className="h-32 rounded-lg" />
+        <Skeleton className="h-32 rounded-lg" />
+      </div>
     </div>
   );
 }
@@ -211,19 +208,24 @@ const Dashboard = () => {
   const location = useLocation();
   const [simulations, setSimulations] = useState<Simulation[]>([]);
   const [simulationsThisMonth, setSimulationsThisMonth] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [simulationsLoading, setSimulationsLoading] = useState(true);
   
-  // New progress hook
-  const userProgress = useUserProgress();
+  // Consolidated dashboard data hook - single batch request
+  const { data: dashboardData, isLoading: dashboardLoading } = useDashboardData();
   
-  // Achievements - check on mount
+  // Lazy achievement check (only once per session)
   const { checkAchievements } = useAchievements();
+  const achievementChecked = useRef(false);
   
   useEffect(() => {
-    if (user?.id) {
-      checkAchievements();
+    if (user?.id && !achievementChecked.current && !dashboardLoading) {
+      achievementChecked.current = true;
+      // Delay achievement check to not block initial render
+      setTimeout(() => {
+        checkAchievements();
+      }, 2000);
     }
-  }, [user?.id]);
+  }, [user?.id, dashboardLoading]);
 
   const rawPlan = profile?.plano || 'FREE';
   const currentPlan = LEGACY_PLAN_MAP[rawPlan] || 'FREE';
@@ -236,8 +238,9 @@ const Dashboard = () => {
     return userLevel >= requiredLevel;
   };
 
+  // Fetch simulations separately (less critical, can load after)
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchSimulations = async () => {
       if (user) {
         const { data: simsData } = await supabase
           .from('simulations')
@@ -264,10 +267,10 @@ const Dashboard = () => {
         setSimulationsThisMonth(count || 0);
       }
 
-      setLoading(false);
+      setSimulationsLoading(false);
     };
 
-    fetchData();
+    fetchSimulations();
   }, [user]);
 
   const formatCurrency = (value: number) => {
@@ -307,6 +310,37 @@ const Dashboard = () => {
 
   const progressPercent = planLimit === -1 ? 0 : Math.min((simulationsThisMonth / planLimit) * 100, 100);
 
+  // Show skeleton while loading critical data
+  if (dashboardLoading) {
+    return (
+      <DashboardLayout title="Dashboard">
+        <DashboardSkeleton />
+      </DashboardLayout>
+    );
+  }
+
+  // Extract data from consolidated hook
+  const userProgress = dashboardData?.userProgress || {
+    hasScore: false,
+    hasXmls: false,
+    hasDre: false,
+    hasOpportunities: false,
+    hasWorkflow: false,
+    companyName: null,
+    cnpj: null,
+    scoreGrade: null,
+    scoreTotal: null,
+    scoreDate: null,
+    xmlCount: 0,
+    creditsTotal: 0,
+    dreDate: null,
+    opportunitiesCount: 0,
+    workflowsCompleted: 0,
+    workflowsInProgress: 0,
+    lastActivity: { type: null, date: null, description: null, link: null },
+    progressPercent: 0,
+  };
+
   return (
     <DashboardLayout title="Dashboard">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -320,7 +354,7 @@ const Dashboard = () => {
               Bem-vindo ao seu painel de inteligência tributária.
             </p>
           </div>
-          <StreakDisplay showLongest />
+          <StreakDisplay streakData={dashboardData?.streakData} showLongest />
         </div>
         
         {/* Onboarding - First Mission (appears for new users) */}
@@ -334,7 +368,7 @@ const Dashboard = () => {
         </div>
 
         {/* Alerta de Benefícios em Extinção */}
-        <ExpiringBenefitsAlert />
+        <ExpiringBenefitsAlert benefits={dashboardData?.expiringBenefits || []} />
 
         {/* TribuChat - Clara Card (integra o CTA "Por onde começo") */}
         <div className="mb-6" data-tour="clara-card">
@@ -354,19 +388,26 @@ const Dashboard = () => {
         <NextStepRecommendation progress={userProgress} />
         
         {/* Workflows em Andamento */}
-        <InProgressWorkflows />
+        <InProgressWorkflows workflows={dashboardData?.inProgressWorkflows || []} />
         
         {/* Última Atividade */}
         <LastActivityCard progress={userProgress} />
         
         {/* Próximo Prazo Relevante */}
-        <NextRelevantDeadline />
+        <NextRelevantDeadline prazo={dashboardData?.nextDeadline || null} />
 
         {/* Sugestão Contextual da Clara */}
         <ClaraContextualSuggestion currentRoute={location.pathname} className="mb-6" />
 
         {/* Resumo Executivo - Semáforo do CEO/CFO */}
-        <ExecutiveSummaryCardWrapper currentPlan={currentPlan} userId={user?.id} />
+        <div className="mb-8">
+          <ExecutiveSummaryCard 
+            thermometerData={dashboardData?.thermometerData || null} 
+            scoreActions={dashboardData?.scoreActions || []}
+            loading={false} 
+            userPlan={currentPlan} 
+          />
+        </div>
 
         {/* GPS DA REFORMA - Section right after Clara */}
         <section className="mb-8">

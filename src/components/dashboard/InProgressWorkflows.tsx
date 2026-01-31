@@ -1,13 +1,10 @@
-import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
-import { Workflow, ArrowRight, Clock, CheckCircle2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { Workflow, ArrowRight, Clock } from "lucide-react";
 import { formatDistanceBrasilia } from "@/lib/dateUtils";
+import type { WorkflowProgressItem } from "@/hooks/useDashboardData";
 
 // Workflow definitions matching WorkflowsGuiados.tsx
 const WORKFLOW_DEFINITIONS: Record<string, { title: string; totalSteps: number }> = {
@@ -17,63 +14,11 @@ const WORKFLOW_DEFINITIONS: Record<string, { title: string; totalSteps: number }
   'planejamento-caixa': { title: 'Planejamento de Caixa na Transição', totalSteps: 5 },
 };
 
-interface WorkflowProgress {
-  id: string;
-  workflow_id: string;
-  current_step_index: number;
-  completed_steps: string[]; // Array comes as strings from Supabase
-  updated_at: string;
+interface InProgressWorkflowsProps {
+  workflows: WorkflowProgressItem[];
 }
 
-export function InProgressWorkflows() {
-  const { user } = useAuth();
-  const [workflows, setWorkflows] = useState<WorkflowProgress[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!user?.id) {
-      setLoading(false);
-      return;
-    }
-
-    const fetchWorkflows = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('workflow_progress')
-          .select('id, workflow_id, current_step_index, completed_steps, updated_at')
-          .eq('user_id', user.id)
-          .is('completed_at', null)
-          .order('updated_at', { ascending: false })
-          .limit(3);
-
-        if (error) throw error;
-        
-        setWorkflows(data || []);
-      } catch (error) {
-        console.error('Error fetching workflows:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchWorkflows();
-  }, [user?.id]);
-
-  if (loading) {
-    return (
-      <Card className="mb-6 border-amber-500/30">
-        <CardContent className="pt-4 pb-4">
-          <div className="flex items-center gap-3 mb-3">
-            <Skeleton className="w-8 h-8 rounded-lg" />
-            <Skeleton className="h-5 w-40" />
-          </div>
-          <Skeleton className="h-3 w-full mb-2" />
-          <Skeleton className="h-8 w-24" />
-        </CardContent>
-      </Card>
-    );
-  }
-
+export function InProgressWorkflows({ workflows }: InProgressWorkflowsProps) {
   // No in-progress workflows
   if (workflows.length === 0) {
     return null;
