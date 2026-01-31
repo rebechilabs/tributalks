@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Shield } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowRight, Heart } from "lucide-react";
+import { CONFIG } from "@/config/site";
 
 export function CTASection() {
   return (
@@ -20,35 +20,35 @@ export function CTASection() {
           {/* Icon */}
           <div className="flex justify-center mb-4 md:mb-6">
             <div className="p-3 md:p-4 rounded-full bg-primary-foreground/10">
-              <Shield className="w-8 h-8 md:w-10 md:h-10 text-primary-foreground" />
+              <Heart className="w-8 h-8 md:w-10 md:h-10 text-primary-foreground" />
             </div>
           </div>
 
           {/* Heading */}
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary-foreground mb-4 md:mb-6 px-4">
-            Pronto para proteger seu caixa
+            Descubra a saúde fiscal
             <br className="hidden sm:block" />
-            <span className="sm:hidden"> </span>da Reforma Tributária?
+            <span className="sm:hidden"> </span>da sua empresa
           </h2>
 
           <p className="text-base md:text-lg text-primary-foreground/80 mb-6 md:mb-8 px-4">
-            Empresas preparadas economizam 34% a mais. Não espere seus concorrentes saírem na frente.
+            Faça um diagnóstico completo e veja quanto sua empresa pode economizar com a Reforma Tributária.
           </p>
 
           {/* CTA Button */}
-          <Link to="/cadastro">
+          <a href={CONFIG.PAYMENT_LINKS.STARTER_MENSAL} target="_blank" rel="noopener noreferrer">
             <Button
               size="lg"
               className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-semibold px-8 py-6 text-lg group"
             >
-              Começar Diagnóstico Gratuito
+              Testar Grátis por 7 Dias
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
-          </Link>
+          </a>
 
           {/* Guarantee Text */}
           <p className="text-xs md:text-sm text-primary-foreground/80 mt-4 md:mt-6">
-            7 dias grátis • Cancele quando quiser • Sem surpresas
+            Acesso completo ao plano Starter • Cancele quando quiser • Sem surpresas
           </p>
         </div>
       </div>
