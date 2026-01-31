@@ -1,218 +1,135 @@
 
 
-# Diagnóstico: Dashboard Lento - Múltiplas Queries Paralelas
+# Correção: Carregamento Lento do Perfil
 
 ## Problema Identificado
 
-O Dashboard está lento porque faz **mais de 30 queries** ao banco de dados simultaneamente quando carrega. Cada componente faz suas próprias requisições independentes:
+Após preencher todas as informações no perfil, a página demora porque:
 
-### Contagem de Queries por Componente
+1. **O hook `useAuth` aguarda 500ms artificialmente** no `refreshProfile` 
+2. **Componentes fazem queries independentes**:
+   - `AchievementList` → busca todos os achievements do usuário
+   - `NotificationBell` → busca notificações 
+3. **`StreakDisplay` não recebe dados** - foi refatorado para props, mas a página de Perfil não passa dados
 
-| Componente | Queries | Tabelas Consultadas |
-|------------|---------|---------------------|
-| Dashboard (principal) | 2 | simulations (2x) |
-| useUserProgress | 8 | company_profile, tax_score_history, xml_imports, company_dre, company_opportunities, workflow_progress, identified_credits, simulations |
-| useExecutiveData | 9 | profiles, tax_score, company_dre, credit_analysis_summary, identified_credits, score_actions, company_opportunities, company_profile, sector_benchmarks |
-| useAchievements | 2 | user_achievements + Edge Function |
-| useOnboardingProgress | 1 | user_onboarding_progress |
-| useStreak | 1 | profiles |
-| ExpiringBenefitsAlert | 1 | company_opportunities (com join) |
-| InProgressWorkflows | 1 | workflow_progress |
-| NextRelevantDeadline | 2 | company_profile + prazos_reforma |
-| ExecutiveSummaryCard | 1 | score_actions |
-| NotificationBell | 1 | notifications |
-| DashboardLayout | 0 | (usa useAuth que já carregou) |
-
-**Total: ~29 queries + 1 Edge Function call**
-
-### Problemas Adicionais
-
-1. **Dados Duplicados**: O mesmo dado é buscado várias vezes:
-   - `profiles` → useStreak, useExecutiveData
-   - `company_profile` → useUserProgress, useExecutiveData, NextRelevantDeadline
-   - `company_opportunities` → useUserProgress, useExecutiveData, ExpiringBenefitsAlert
-   - `workflow_progress` → useUserProgress, InProgressWorkflows
-   - `score_actions` → useExecutiveData, ExecutiveSummaryCard
-
-2. **Queries Sequenciais**: Alguns hooks aguardam outros antes de iniciar
-
-3. **Edge Function**: `check-achievements` é chamada no mount
-
-## Solução Proposta
-
-### Estratégia: Data Fetching Centralizado
-
-Criar um **único hook consolidado** que busca todos os dados necessários em uma única chamada paralela, eliminando redundâncias.
-
-### Arquitetura
+### Fluxo Atual (Problema)
 
 ```text
-┌─────────────────────────────────────────────────────────┐
-│                      Dashboard                           │
-│                          │                               │
-│              useDashboardData() ◄── NOVO HOOK           │
-│                          │                               │
-│     ┌────────────────────┼────────────────────┐         │
-│     ▼                    ▼                    ▼         │
-│ Promise.all([                                           │
-│   profiles,                                             │
-│   company_profile,                                      │
-│   tax_score,                                            │
-│   company_dre,                                          │
-│   xml_imports (count),                                  │
-│   company_opportunities,                                │
-│   workflow_progress,                                    │
-│   identified_credits,                                   │
-│   simulations,                                          │
-│   score_actions,                                        │
-│   notifications,                                        │
-│   prazos_reforma,                                       │
-│   user_onboarding_progress,                             │
-│   user_achievements                                     │
-│ ])                                                      │
-│                          │                               │
-│                 SINGLE BATCH REQUEST                     │
-│                          │                               │
-│     ┌────────────────────┼────────────────────┐         │
-│     ▼                    ▼                    ▼         │
-│ [Componentes recebem dados via props]                   │
-└─────────────────────────────────────────────────────────┘
+Usuário clica "Salvar"
+        ↓
+    Atualiza profiles no banco (OK)
+        ↓
+    Chama refreshProfile()
+        ↓
+    Aguarda 500ms (DESNECESSÁRIO!)
+        ↓
+    Busca perfil do banco
+        ↓
+    AchievementList faz sua query
+    NotificationBell faz sua query
+        ↓
+    Página finalmente carrega
 ```
 
-### Mudanças Técnicas
+## Solução
 
-#### 1. Criar Hook Consolidado: `useDashboardData.ts`
+### 1. Remover delay artificial no refreshProfile
+
+O delay de 500ms foi adicionado para o fluxo de pagamento, mas não é necessário no contexto do perfil:
 
 ```typescript
-// src/hooks/useDashboardData.ts
-interface DashboardData {
-  // Profile & Company
-  profile: ProfileData | null;
-  companyProfile: CompanyProfile | null;
-  
-  // Score & Health
-  taxScore: TaxScore | null;
-  scoreActions: ScoreAction[];
-  achievements: Achievement[];
-  
-  // Financial
-  dre: CompanyDre | null;
-  credits: IdentifiedCredit[];
-  opportunities: CompanyOpportunity[];
-  
-  // Activity
-  workflows: WorkflowProgress[];
-  simulations: Simulation[];
-  xmlCount: number;
-  
-  // Alerts
-  notifications: Notification[];
-  upcomingDeadlines: Prazo[];
-  onboardingProgress: OnboardingProgress | null;
-  
-  // Computed values (calculados localmente)
-  thermometerData: ThermometerData;
-  userProgress: UserProgressData;
-  expiringBenefits: ExpiringBenefit[];
-}
+// src/hooks/useAuth.tsx
+// ANTES:
+const refreshProfile = async () => {
+  if (user) {
+    await new Promise(resolve => setTimeout(resolve, 500)); // ← REMOVER
+    const profileData = await fetchProfile(user.id);
+    setProfile(profileData);
+  }
+};
 
-export function useDashboardData() {
+// DEPOIS:
+const refreshProfile = async () => {
+  if (user) {
+    const profileData = await fetchProfile(user.id);
+    setProfile(profileData);
+  }
+};
+```
+
+### 2. Criar hook leve para página de Perfil
+
+Criar um `useProfilePageData` que busca apenas os dados essenciais para a página de perfil:
+
+```typescript
+// src/hooks/useProfilePageData.ts
+export function useProfilePageData() {
   const { user } = useAuth();
   
   return useQuery({
-    queryKey: ['dashboard-data', user?.id],
+    queryKey: ['profile-page-data', user?.id],
     queryFn: async () => {
-      // Uma única chamada Promise.all com todas as queries
-      const [profile, company, score, ...] = await Promise.all([
-        supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
-        supabase.from('company_profile').select('*').eq('user_id', userId).maybeSingle(),
-        // ... todas as outras queries
+      const [achievements, streakData] = await Promise.all([
+        supabase.from("user_achievements").select("*").eq("user_id", userId),
+        supabase.from("profiles")
+          .select("current_streak, longest_streak, last_access_date")
+          .eq("user_id", userId)
+          .maybeSingle()
       ]);
       
-      // Processar e retornar dados consolidados
-      return processedData;
+      return { achievements: achievements.data || [], streakData: streakData.data };
     },
     enabled: !!user?.id,
-    staleTime: 60000, // Cache por 1 minuto
+    staleTime: 60000,
   });
 }
 ```
 
-#### 2. Atualizar Dashboard para Usar Hook Único
+### 3. Atualizar página de Perfil
+
+Usar o novo hook e passar dados via props:
 
 ```typescript
-// src/pages/Dashboard.tsx
-const Dashboard = () => {
-  const { data, loading, refetch } = useDashboardData();
-  
-  if (loading) return <DashboardSkeleton />;
-  
-  return (
-    <DashboardLayout>
-      <ProgressSummary progress={data.userProgress} />
-      <ExecutiveSummaryCard thermometerData={data.thermometerData} />
-      <InProgressWorkflows workflows={data.workflows} />
-      {/* Componentes recebem dados via props */}
-    </DashboardLayout>
-  );
-};
+// src/pages/Perfil.tsx
+const { data: pageData, isLoading: pageLoading } = useProfilePageData();
+
+// Passar dados para componentes
+<AchievementListOptimized achievements={pageData?.achievements} />
+<StreakDisplay streakData={pageData?.streakData} showLongest />
 ```
 
-#### 3. Refatorar Componentes para Receber Props
+### 4. Criar versão otimizada de AchievementList
 
-```typescript
-// Antes (cada componente busca seus dados)
-export function InProgressWorkflows() {
-  const [workflows, setWorkflows] = useState([]);
-  useEffect(() => { fetchWorkflows(); }, []);
-  // ...
-}
+Criar `AchievementListOptimized` que recebe dados via props em vez de buscar internamente.
 
-// Depois (recebe dados via props)
-export function InProgressWorkflows({ workflows }: { workflows: WorkflowProgress[] }) {
-  // Apenas renderiza, sem fetch
-}
+## Arquivos a Modificar
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/hooks/useAuth.tsx` | Remover delay de 500ms do refreshProfile |
+| `src/hooks/useProfilePageData.ts` | **Criar** - Hook consolidado para página de perfil |
+| `src/pages/Perfil.tsx` | Usar novo hook e passar dados via props |
+| `src/components/achievements/AchievementList.tsx` | Aceitar achievements via props (opcional, com fallback) |
+
+## Benefícios Esperados
+
+| Métrica | Antes | Depois |
+|---------|-------|--------|
+| Delay artificial | 500ms | 0ms |
+| Queries ao salvar | 3+ | 1 |
+| Tempo de "Salvando..." | ~2s | ~500ms |
+
+## Fluxo Corrigido
+
+```text
+Usuário clica "Salvar"
+        ↓
+    Atualiza profiles (imediato)
+        ↓
+    refreshProfile() sem delay
+        ↓
+    Dados do cache do React Query são usados
+        ↓
+    Toast de sucesso (instantâneo)
 ```
-
-### Benefícios Esperados
-
-| Métrica | Antes | Depois | Melhoria |
-|---------|-------|--------|----------|
-| Queries ao DB | ~29 | ~14 | -52% |
-| Roundtrips de rede | ~29 | 1 | -97% |
-| Dados duplicados | 8 tabelas | 0 | -100% |
-| Tempo de carregamento | ~2-4s | ~500ms | -75% |
-
-### Arquivos a Modificar
-
-1. **Criar**: `src/hooks/useDashboardData.ts` - Hook consolidado
-2. **Editar**: `src/pages/Dashboard.tsx` - Usar novo hook
-3. **Editar**: `src/components/dashboard/ExecutiveSummaryCard.tsx` - Receber props
-4. **Editar**: `src/components/dashboard/InProgressWorkflows.tsx` - Receber props
-5. **Editar**: `src/components/dashboard/NextRelevantDeadline.tsx` - Receber props
-6. **Editar**: `src/components/dashboard/ExpiringBenefitsAlert.tsx` - Receber props
-7. **Editar**: `src/components/onboarding/OnboardingChecklist.tsx` - Receber props
-8. **Editar**: `src/components/achievements/StreakDisplay.tsx` - Receber props
-
-### Otimização Adicional: Edge Function `check-achievements`
-
-Mover a chamada para um momento posterior (lazy load) em vez de no mount:
-
-```typescript
-// Só verifica achievements quando o usuário interage
-const checkAchievementsLazy = useCallback(() => {
-  if (!hasChecked.current) {
-    checkAchievements();
-    hasChecked.current = true;
-  }
-}, []);
-```
-
-### Plano de Implementação
-
-1. Criar `useDashboardData.ts` com todas as queries consolidadas
-2. Atualizar Dashboard para usar o novo hook
-3. Converter componentes para receber dados via props (um por um)
-4. Remover hooks antigos que não são mais necessários em outros lugares
-5. Testar performance
 
