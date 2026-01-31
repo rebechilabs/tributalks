@@ -29,7 +29,6 @@ const Configuracoes = () => {
   const [notifications, setNotifications] = useState({
     novidades: profile?.notif_novidades ?? true,
     legislacao: profile?.notif_legislacao ?? true,
-    consultorias: profile?.notif_consultorias ?? true,
   });
 
   // Load company profile for CNPJ data
@@ -57,7 +56,6 @@ const Configuracoes = () => {
     setNotifications({
       novidades: profile?.notif_novidades ?? true,
       legislacao: profile?.notif_legislacao ?? true,
-      consultorias: profile?.notif_consultorias ?? true,
     });
   }, [profile]);
 
@@ -226,23 +224,6 @@ const Configuracoes = () => {
                   id="notif-legislacao" 
                   checked={notifications.legislacao}
                   onCheckedChange={(v) => handleNotificationChange('legislacao', v)}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label htmlFor="notif-consultorias" className="font-medium">
-                    Lembretes de consultorias
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Lembrar de usar consultorias disponíveis (Premium)
-                  </p>
-                </div>
-                <Switch 
-                  id="notif-consultorias" 
-                  checked={notifications.consultorias}
-                  onCheckedChange={(v) => handleNotificationChange('consultorias', v)}
-                  disabled={profile?.plano !== 'PREMIUM'}
                 />
               </div>
             </CardContent>
