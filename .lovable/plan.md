@@ -1,162 +1,99 @@
 
+# Plano: Renomear TribuBot para Clara AI
 
-# Atualizar Nome da Plataforma
+## Resumo Executivo
 
-## Objetivo
+Vamos unificar a nomenclatura do assistente de IA em toda a plataforma, substituindo todas as referências a "TribuBot" pelo nome correto: **Clara AI**.
 
-Substituir todas as referências a **"PIT"** e **"PIT - Plataforma de Inteligência Tributária"** por **"TribuTalks Inteligência Tributária"** em todo o código, documentação e textos legais.
+## Alterações Necessárias
+
+### 1. Renomear Arquivo Principal
+**Arquivo:** `src/pages/TribuBot.tsx` → `src/pages/ClaraAI.tsx`
+
+- Renomear o componente de `TribuBot` para `ClaraAI`
+- Manter toda a lógica e funcionalidade existente
+
+### 2. Atualizar Rotas (App.tsx)
+**Arquivo:** `src/App.tsx`
+
+- Alterar import de `TribuBot` para `ClaraAI`
+- Alterar rota de `/tribubot` para `/clara-ai`
+- Atualizar referência do componente
+
+### 3. Atualizar Menu de Navegação
+**Arquivo:** `src/data/menuConfig.ts`
+
+- Linha 39: Alterar `href: '/tribubot'` para `href: '/clara-ai'`
+
+### 4. Atualizar Página de Notícias
+**Arquivo:** `src/pages/NoticiasReforma.tsx`
+
+- Alterar link de `/tribubot` para `/clara-ai`
+
+### 5. Atualizar Feature Access Hook
+**Arquivo:** `src/hooks/useFeatureAccess.ts`
+
+- Linhas 63, 106: Alterar `tribubot` para `clara_ai` (nome interno da feature)
+- Atualizar comentários descritivos
+
+### 6. Atualizar User Credits Hook
+**Arquivo:** `src/hooks/useUserCredits.ts`
+
+- Linhas 161, 172: Alterar feature default de `'tribubot'` para `'clara_ai'`
+
+### 7. Atualizar Termos de Uso
+**Arquivo:** `src/pages/Termos.tsx`
+
+- Linha 80: Alterar "O TribuBot (assistente de IA)" para "A Clara AI (copiloto de decisão tributária)"
+
+### 8. Atualizar Documentação Comercial
+**Arquivo:** `src/components/docs/TribuTalksPitchPdf.tsx`
+
+Alterar múltiplas referências:
+- "TribuBot (IA 24/7)" → "Clara AI (Copiloto Tributário)"
+- "TribuBot — Assistente Conversacional" → "Clara AI — Copiloto de Decisão Tributária"
+- "TribuBot 10 msgs/dia" → "Clara AI 30 msgs/dia" (plano Básico)
+- "TribuBot ilimitado" → "Clara AI ilimitada" (plano Profissional)
+
+### 9. Atualizar Webhook MercadoPago
+**Arquivo:** `supabase/functions/mercadopago-webhook/index.ts`
+
+- Linha 386: Alterar `action_url: '/tribubot'` para `action_url: '/clara-ai'`
+
+### 10. Atualizar Documentação
+**Arquivo:** `docs/TRIBUTALKS_DOCUMENTATION.md`
+
+- Linha 191: Alterar "TribuBot.tsx" para "ClaraAI.tsx" e atualizar comentário
 
 ---
 
-## Arquivos a Modificar
+## Detalhes Técnicos
+
+### Tabela no Banco de Dados
+A tabela `tributbot_messages` mencionada no código será mantida como está (sem renomear), pois:
+- Renomear tabelas requer migração de dados
+- O nome da tabela é interno e não visível ao usuário
+- Evita riscos de perda de dados históricos
+
+### Migrações Existentes
+As migrações SQL que referenciam `feature = 'tribubot'` continuarão funcionando, mas novos registros usarão `'clara_ai'`. Uma migração opcional pode ser criada para atualizar registros antigos se desejado.
+
+### Compatibilidade de URLs
+Recomendação: Adicionar redirect de `/tribubot` para `/clara-ai` para não quebrar links antigos salvos pelos usuários.
+
+---
+
+## Arquivos Afetados (Total: 10)
 
 | Arquivo | Tipo de Alteração |
 |---------|-------------------|
-| `src/components/landing/FeaturesSection.tsx` | Badge "Ferramentas da PIT" → "TribuTalks Inteligência Tributária" |
-| `src/components/common/FloatingAssistant.tsx` | Textos da Clara que mencionam "PIT" |
-| `src/components/cases/CaseStudyPdf.tsx` | Rodapé do PDF |
-| `src/components/checklist/ChecklistReportPdf.tsx` | Rodapé do PDF |
-| `src/pages/Dashboard.tsx` | Comentários e seção da plataforma |
-| `supabase/functions/mercadopago-webhook/index.ts` | E-mail de boas-vindas |
-| `src/pages/Termos.tsx` | Termos de Uso (seção 5.1) |
-| `src/pages/Privacidade.tsx` | Política de Privacidade |
-| `src/components/landing/FAQSection.tsx` | Perguntas frequentes |
+| `src/pages/TribuBot.tsx` | Renomear para ClaraAI.tsx |
+| `src/App.tsx` | Import e rota |
+| `src/data/menuConfig.ts` | URL do menu |
+| `src/pages/NoticiasReforma.tsx` | Link para Clara |
+| `src/hooks/useFeatureAccess.ts` | Nome da feature |
+| `src/hooks/useUserCredits.ts` | Nome da feature |
+| `src/pages/Termos.tsx` | Texto legal |
+| `src/components/docs/TribuTalksPitchPdf.tsx` | Documentação comercial |
+| `supabase/functions/mercadopago-webhook/index.ts` | URL de notificação |
 | `docs/TRIBUTALKS_DOCUMENTATION.md` | Documentação técnica |
-
----
-
-## Detalhes por Arquivo
-
-### 1. FeaturesSection.tsx (Landing Page)
-
-**Linha 114**
-```text
-De: "Ferramentas da PIT"
-Para: "TribuTalks Inteligência Tributária"
-```
-
----
-
-### 2. FloatingAssistant.tsx (Clara AI)
-
-**Linha 80** — Mensagem para NAVIGATOR:
-```text
-De: "...acesso completo à PIT - Plataforma de Inteligência Tributária..."
-Para: "...acesso completo ao TribuTalks Inteligência Tributária..."
-```
-
-**Linha 416** — Saudação inicial:
-```text
-De: "...qualquer ferramenta da PIT..."
-Para: "...qualquer ferramenta do TribuTalks..."
-```
-
----
-
-### 3. CaseStudyPdf.tsx (PDF de Estudos de Caso)
-
-**Linha 168**
-```text
-De: "TribuTalks - PIT - Plataforma de Inteligência Tributária"
-Para: "TribuTalks Inteligência Tributária"
-```
-
----
-
-### 4. ChecklistReportPdf.tsx (PDF do Checklist)
-
-**Linha 243**
-```text
-De: "| PIT - Plataforma de Inteligência Tributária"
-Para: "| TribuTalks Inteligência Tributária"
-```
-
----
-
-### 5. Dashboard.tsx (Comentários internos)
-
-**Linha 57** e **438** — Comentários de código:
-```text
-De: "// PIT - Plataforma de Inteligência Tributária"
-Para: "// TribuTalks Inteligência Tributária"
-```
-
----
-
-### 6. mercadopago-webhook/index.ts (E-mail de boas-vindas)
-
-**Linha 429**
-```text
-De: "O TribuTalks é a PIT - Plataforma de Inteligência Tributária — uma plataforma completa..."
-Para: "O TribuTalks é a plataforma de Inteligência Tributária — uma solução completa..."
-```
-
-**Linha 492**
-```text
-De: "TribuTalks - PIT - Plataforma de Inteligência Tributária"
-Para: "TribuTalks Inteligência Tributária"
-```
-
----
-
-### 7. Termos.tsx (Termos de Uso)
-
-**Linha 69** (Seção 5.1)
-```text
-De: "A TribuTalks é uma plataforma de inteligência tributária..."
-Para: "O TribuTalks Inteligência Tributária é uma plataforma..."
-```
-
-Garantir que todo o documento use linguagem consistente.
-
----
-
-### 8. Privacidade.tsx (Política de Privacidade)
-
-Verificar menções à plataforma e manter consistência com o novo nome.
-
----
-
-### 9. FAQSection.tsx (Perguntas Frequentes)
-
-O FAQ já usa "TribuTalks" corretamente, mas vou verificar se há alguma menção a "PIT" que precise ser ajustada.
-
----
-
-### 10. TRIBUTALKS_DOCUMENTATION.md
-
-**Linha 15**
-```text
-De: "GPS com timeline, calculadoras e alertas"
-Para: "Plataforma com timeline, calculadoras e alertas"
-```
-
----
-
-## Memória do Sistema
-
-Após a implementação, atualizar a memória do projeto para refletir:
-
-```text
-A ferramenta anteriormente conhecida como "GPS da Reforma Tributária" 
-e depois "PIT - Plataforma de Inteligência Tributária" foi renomeada 
-para "TribuTalks Inteligência Tributária".
-```
-
----
-
-## Resumo das Substituições
-
-| Texto Antigo | Texto Novo |
-|--------------|------------|
-| PIT - Plataforma de Inteligência Tributária | TribuTalks Inteligência Tributária |
-| Ferramentas da PIT | TribuTalks Inteligência Tributária |
-| à PIT / da PIT / na PIT | ao TribuTalks / do TribuTalks / no TribuTalks |
-| GPS da Reforma Tributária | *(já foi removido anteriormente)* |
-
----
-
-## Arquivos que NÃO serão alterados
-
-Referências a "Split Payment" e outros termos que contêm "PIT" como parte de outra palavra (ex: `capital`, `hospital`, `capitalize`) não serão tocados.
-
