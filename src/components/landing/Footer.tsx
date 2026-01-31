@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { CONFIG } from "@/config/site";
 import logoTributalks from "@/assets/logo-tributalks.png";
 import { TrustBadges } from "./TrustBadges";
-import { Linkedin, Phone, Mail } from "lucide-react";
+import { Linkedin, Instagram, Youtube, Phone, Mail } from "lucide-react";
 import { NewsletterForm } from "@/components/common/NewsletterForm";
 
 export function Footer() {
@@ -47,6 +47,24 @@ export function Footer() {
             >
               <Linkedin className="h-4 w-4" />
               LinkedIn
+            </a>
+            <a
+              href={CONFIG.INSTAGRAM}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 hover:text-primary transition-colors"
+            >
+              <Instagram className="h-4 w-4" />
+              Instagram
+            </a>
+            <a
+              href={CONFIG.YOUTUBE}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 hover:text-primary transition-colors"
+            >
+              <Youtube className="h-4 w-4" />
+              YouTube
             </a>
           </div>
 

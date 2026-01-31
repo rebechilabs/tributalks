@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { CONFIG } from "@/config/site";
 import logo from "@/assets/logo-tributalks.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -245,7 +246,7 @@ export default function Contato() {
               <span className="font-medium text-primary">REDES SOCIAIS</span>
               <div className="flex items-center gap-4">
                 <a
-                  href="https://www.linkedin.com/company/tributalks/"
+                  href={CONFIG.LINKEDIN}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
@@ -253,7 +254,7 @@ export default function Contato() {
                   <Linkedin className="h-5 w-5" />
                 </a>
                 <a
-                  href="https://instagram.com/tributech"
+                  href={CONFIG.INSTAGRAM}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
@@ -261,7 +262,7 @@ export default function Contato() {
                   <Instagram className="h-5 w-5" />
                 </a>
                 <a
-                  href="https://youtube.com/@tributech"
+                  href={CONFIG.YOUTUBE}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
