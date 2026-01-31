@@ -168,7 +168,7 @@ export function TribuTalksPitchPdf() {
       },
       {
         name: "Clara AI (Copiloto Tributário)",
-        badge: "IA",
+        badge: "AI",
         desc: "Copiloto de decisão tributária com IA, disponível 24/7 para tirar dúvidas em linguagem natural.",
         inputs: "Perguntas em linguagem natural sobre tributação, reforma, regimes, obrigações",
         outputs: "Respostas contextualizadas ao perfil da empresa, com referências legais quando aplicável"

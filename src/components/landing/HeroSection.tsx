@@ -56,7 +56,7 @@ export function HeroSection() {
               {[
                 { icon: TrendingUp, text: "Identifique créditos ocultos", sub: "Média de R$ 47k recuperados por empresa" },
                 { icon: Shield, text: "Proteja sua margem", sub: "Veja impacto exato de CBS/IBS no lucro" },
-                { icon: Zap, text: "Decisões com IA", sub: "Clara AI responde dúvidas 24/7" },
+                { icon: Zap, text: "Decisões com Clara AI", sub: "Sua copiloto tributária 24/7" },
               ].map((benefit) => (
                 <div key={benefit.text} className="flex items-start gap-3 text-left">
                   <div className="bg-success/20 text-success rounded-full p-2 flex-shrink-0">

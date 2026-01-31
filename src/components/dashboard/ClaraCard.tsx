@@ -42,12 +42,12 @@ export function ClaraCard() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-0.5">
-              Assistente IA
+              Clara AI
             </p>
             <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
               Clara
               <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
-                IA
+                AI
               </span>
             </CardTitle>
             <CardDescription className="text-sm mt-0.5">
