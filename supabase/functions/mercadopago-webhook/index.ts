@@ -426,7 +426,7 @@ async function sendProfessionalWelcomeEmail(email: string) {
 
   <h2 style="color: #1a1a2e; border-bottom: 2px solid #eee; padding-bottom: 10px;">O que você acabou de adquirir:</h2>
   
-  <p>O TribuTalks é o <strong>GPS da Reforma Tributária</strong> — uma plataforma completa que mostra em tempo real como a transição de 2026 a 2033 vai impactar sua empresa.</p>
+  <p>O TribuTalks é a <strong>PIT - Plataforma de Inteligência Tributária</strong> — uma plataforma completa que mostra em tempo real como a transição de 2026 a 2033 vai impactar sua empresa.</p>
 
   <p><strong>Você tem acesso a:</strong></p>
 
@@ -459,12 +459,12 @@ async function sendProfessionalWelcomeEmail(email: string) {
     <li style="margin-bottom: 10px;"><strong>Converse com a Clara</strong><br>
     <span style="color: #666;">Clique no ícone de chat e faça sua primeira pergunta sobre a Reforma.</span></li>
     
-    <li style="margin-bottom: 10px;"><strong>Entre na Comunidade Exclusiva</strong><br>
-    <span style="color: #666;">Junte-se ao GPS da Reforma Tributária — nossa comunidade 100% gratuita para assinantes Professional.</span></li>
+    <li style="margin-bottom: 10px;"><strong>Entre na TribuTalks Connect</strong><br>
+    <span style="color: #666;">Junte-se à comunidade exclusiva — 100% gratuita para assinantes Professional.</span></li>
   </ol>
 
   <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 25px; margin: 30px 0; text-align: center;">
-    <h3 style="color: white; margin: 0 0 15px 0;">🚀 Entre na Comunidade Exclusiva</h3>
+    <h3 style="color: white; margin: 0 0 15px 0;">🚀 Entre na TribuTalks Connect</h3>
     <p style="color: rgba(255,255,255,0.9); margin: 0 0 20px 0;">
       Lá você terá:<br>
       ✅ Network qualificado com empresários e profissionais tributários<br>
@@ -489,7 +489,7 @@ async function sendProfessionalWelcomeEmail(email: string) {
   <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
   
   <p style="font-size: 12px; color: #999; text-align: center;">
-    TribuTalks - O GPS da Reforma Tributária<br>
+    TribuTalks - PIT - Plataforma de Inteligência Tributária<br>
     Rebechi & Silva Produções | São Paulo, SP
   </p>
 

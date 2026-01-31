@@ -36,7 +36,7 @@ const PLANS = [
       'Calculadora NBS (Serviços)',
       'Analisador de Documentos',
       'Workflows Guiados',
-      'Comunidade Circle',
+      'TribuTalks Connect',
       'Clara AI (60 msgs/dia)',
     ],
     highlight: true,

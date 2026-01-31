@@ -115,7 +115,7 @@ const Comunidade = () => {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-foreground">Comunidade Circle</h3>
+                      <h3 className="font-semibold text-foreground">TribuTalks Connect</h3>
                       <Badge variant="secondary" className="text-xs">{PLAN_LABELS.PROFESSIONAL}+</Badge>
                       <Badge className="text-xs bg-primary text-primary-foreground">NOVO</Badge>
                     </div>
@@ -142,7 +142,7 @@ const Comunidade = () => {
           ) : (
             <LockedFeatureCard
               icon={<Users className="w-6 h-6 text-muted-foreground" />}
-              title="Comunidade Circle"
+              title="TribuTalks Connect"
               description="Networking exclusivo para CFOs e gestores financeiros. Discussões aprofundadas e conexões estratégicas."
               minPlan="PROFESSIONAL"
             />
