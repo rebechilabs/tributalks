@@ -172,7 +172,7 @@ export function JourneysSection() {
         {/* Enterprise Note */}
         <div className="text-center mt-12 p-6 bg-card rounded-lg border border-border max-w-2xl mx-auto">
           <p className="text-muted-foreground">
-            <strong className="text-foreground">Grupos econômicos ou faturamento R$ 100M+?</strong>{" "}
+            <strong className="text-foreground">Grupos econômicos ou faturamento R$ 10M+?</strong>{" "}
             Conheça o{" "}
             <Link to="/contato" className="text-primary font-semibold hover:underline">
               Plano Enterprise
