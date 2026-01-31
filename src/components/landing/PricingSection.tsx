@@ -23,6 +23,7 @@ interface Plan {
   popular?: boolean;
   isEnterprise?: boolean;
   trialDays?: number;
+  hasAnnual?: boolean;
   features: PlanFeature[];
   ctaText: string;
   linkMonthly: string;
@@ -37,6 +38,7 @@ const plans: Plan[] = [
     priceMonthly: 397,
     priceAnnual: 3970,
     trialDays: 7,
+    hasAnnual: true,
     cnpjLimit: "1 CNPJ • 1 Usuário",
     features: [
       { text: "Clara AI (Assistente)", included: "limited", limitText: "30 msgs/dia" },
@@ -172,11 +174,12 @@ export function PricingSection() {
         <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pb-4 md:pb-0 scrollbar-hide">
           <div className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-7xl mx-auto min-w-max md:min-w-0">
           {plans.map((plan, index) => {
+            // Verificar se plano tem opção anual disponível
+            const effectiveBillingPeriod = plan.hasAnnual ? billingPeriod : "mensal";
             const price =
-              billingPeriod === "mensal" ? plan.priceMonthly : plan.priceAnnual;
-            // Fallback: se link anual estiver vazio, usa link mensal
+              effectiveBillingPeriod === "mensal" ? plan.priceMonthly : plan.priceAnnual;
             const link =
-              billingPeriod === "mensal" 
+              effectiveBillingPeriod === "mensal" 
                 ? plan.linkMonthly 
                 : (plan.linkAnnual || plan.linkMonthly);
             const isExternal = link.startsWith("http");
@@ -227,15 +230,22 @@ export function PricingSection() {
                     ) : (
                       <>
                         <span className="text-3xl md:text-4xl font-bold text-foreground">
-                          R${billingPeriod === "mensal" ? price.toLocaleString('pt-BR') : Math.round(price / 12).toLocaleString('pt-BR')}
+                          R${effectiveBillingPeriod === "mensal" ? price.toLocaleString('pt-BR') : Math.round(price / 12).toLocaleString('pt-BR')}
                         </span>
                         <span className="text-muted-foreground text-sm">/mês</span>
                       </>
                     )}
                   </div>
-                  {billingPeriod === "anual" && price > 0 && !plan.isEnterprise && (
+                  {/* Mostrar "cobrado anualmente" apenas para planos com anual */}
+                  {effectiveBillingPeriod === "anual" && price > 0 && !plan.isEnterprise && (
                     <p className="text-[10px] md:text-xs text-muted-foreground mt-1">
                       R${price.toLocaleString('pt-BR')} cobrado anualmente
+                    </p>
+                  )}
+                  {/* Indicador "somente mensal" quando toggle anual está ativo mas plano não tem anual */}
+                  {billingPeriod === "anual" && !plan.hasAnnual && !plan.isEnterprise && (
+                    <p className="text-[10px] md:text-xs text-muted-foreground/70 mt-1 italic">
+                      (disponível apenas mensal)
                     </p>
                   )}
                   <p className="text-[10px] md:text-xs text-primary mt-2 font-medium">
