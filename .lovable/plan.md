@@ -1,484 +1,404 @@
 
-# TribuTalks — Documentação Completa para Empresário/Dev
+
+# Plano de Implementação Atualizado: 3 Prioridades Estratégicas
+## Incorporando Alertas Críticos do Consultor
+
+---
 
 ## Resumo Executivo
 
-O TribuTalks é uma **plataforma SaaS de inteligência tributária** voltada para CEOs e CFOs de empresas com faturamento acima de R$ 1 milhão/mês. A plataforma ajuda empresas a se prepararem para a **Reforma Tributária brasileira** (2026-2033), oferecendo simuladores, diagnósticos, IA assistente e comunidade.
+Este plano implementa as 3 mudanças estratégicas validadas, com os 4 alertas críticos do consultor incorporados como requisitos obrigatórios.
+
+| Prioridade | Feature | Esforço | Impacto | Sprint |
+|------------|---------|---------|---------|--------|
+| 1 | NEXUS como Primeira Tela | P (3-5h) | Altíssimo | 1 |
+| 2 | Diagnóstico Rápido | M (2 sprints) | Crítico | 2-3 |
+| 3 | Clara com Cache Inteligente | M (1-2 sprints) | Alto | 4 |
+
+**ROI Projetado:** R$ 1,15M em 12 meses (economia IA + aumento conversão + redução churn)
 
 ---
 
-# PARTE 1: VISÃO DO EMPRESÁRIO
+## Sprint 1: NEXUS como Primeira Tela (Dias 1-7)
 
-## Proposta de Valor
+### Objetivo
+Usuários Professional e Enterprise acessam diretamente o NEXUS ao fazer login, vendo valor executivo em 5 segundos.
 
-| Problema | Solução TribuTalks |
-|----------|-------------------|
-| Reforma Tributária complexa (EC 132/2023, LC 214/2025) | GPS com timeline, calculadoras e alertas |
-| Falta de visibilidade sobre impacto no caixa | NEXUS: 8 KPIs em tempo real |
-| Créditos tributários não aproveitados | Radar de Créditos (24 regras automatizadas) |
-| Precificação sem considerar novos impostos | PriceGuard com gross-up reverso |
-| Dúvidas tributárias fora do horário comercial | Clara AI 24/7 |
+### Arquivos a Modificar
 
----
+**1. `src/components/ProtectedRoute.tsx`**
+- Adicionar função `getDefaultRoute(profile)` que retorna rota baseada no plano
+- Lógica de redirect condicional após verificar onboarding completo
 
-## Planos e Preços
-
-| Plano | Preço | CNPJs | Usuários | Destaques |
-|-------|-------|-------|----------|-----------|
-| **STARTER** | R$ 397/mês | 1 | 1 | Clara AI (30 msgs/dia), Score, Split Payment, Calculadora RTC |
-| **NAVIGATOR** | R$ 1.297/mês | 2 | 2 | + Notícias, Timeline, Workflows, Comunidade Circle |
-| **PROFESSIONAL** | R$ 2.997/mês | 5 | 4 | + XMLs, Radar Créditos, DRE, NEXUS, 61+ Oportunidades, ERP |
-| **ENTERPRISE** | Sob consulta | ∞ | ∞ | + Consultoria jurídica (Rebechi & Silva), White Label, API |
-
----
-
-## Ferramentas por Categoria
-
-### Etapa 1: ENTENDER
-| Ferramenta | Descrição | Plano Mínimo |
-|------------|-----------|--------------|
-| Score Tributário | Avalia saúde fiscal em 11 perguntas (nota A+ a E) | FREE |
-| Timeline 2026-2033 | Calendário de marcos da Reforma | FREE |
-| Notícias da Reforma | Feed curado + "Pílula do Dia" | NAVIGATOR |
-
-### Etapa 2: SIMULAR
-| Ferramenta | Descrição | Plano Mínimo |
-|------------|-----------|--------------|
-| Simulador Split Payment | Impacto no fluxo de caixa | FREE |
-| Comparativo de Regimes | Simples vs Presumido vs Real | FREE |
-| Calculadora RTC (NCM) | CBS + IBS + IS por produto | FREE |
-| Calculadora NBS (Serviços) | Novos tributos para serviços | NAVIGATOR |
-
-### Etapa 3: DIAGNOSTICAR
-| Ferramenta | Descrição | Plano Mínimo |
-|------------|-----------|--------------|
-| DRE Inteligente | Demonstrativo + impacto da Reforma no lucro | PROFESSIONAL |
-| Radar de Créditos | 24 regras que identificam créditos em XMLs | PROFESSIONAL |
-| Motor de Oportunidades | 61+ incentivos fiscais mapeados | PROFESSIONAL |
-| Suite Margem Ativa | OMC-AI (compras) + PriceGuard (vendas) | PROFESSIONAL |
-
-### Etapa 4: COMANDAR
-| Ferramenta | Descrição | Plano Mínimo |
-|------------|-----------|--------------|
-| NEXUS | 8 KPIs consolidados + insights automáticos | PROFESSIONAL |
-| Painel Executivo | Relatórios PDF + consultoria jurídica | ENTERPRISE |
-
-### EXTRAS
-| Ferramenta | Descrição | Plano Mínimo |
-|------------|-----------|--------------|
-| Clara AI | Copiloto de decisão tributária | STARTER |
-| Analisador de Documentos | IA analisa contratos | NAVIGATOR |
-| Workflows Guiados | Jornadas estruturadas (4 roteiros) | NAVIGATOR |
-| Comunidade Circle | Network + fóruns + lives | NAVIGATOR |
-| Checklist da Reforma | Avalia prontidão operacional | NAVIGATOR |
-
----
-
-## Sistema de Notificações
-
-| Tipo | Descrição |
-|------|-----------|
-| Sino no Header | Contador de não lidas + lista de notificações |
-| Categorias | geral, reforma, indicacao, sistema |
-| Realtime | Sincronização instantânea via WebSocket |
-| E-mails | Apenas métricas diárias (admin) e contatos diretos |
-
----
-
-## Programa de Indicação
-
-| Indicações Qualificadas | Desconto |
-|-------------------------|----------|
-| 1+ | 5% |
-| 3+ | 10% |
-| 5+ | 15% |
-| 10+ | 20% |
-
-- Código único no formato `TRIBXXXX`
-- Link de indicação para `/cadastro?ref=CODIGO`
-- Status: pending → qualified (30 dias pagos) → rewarded
-
----
-
-## Comunidade e Acessos
-
-| Plano | Acesso |
-|-------|--------|
-| NAVIGATOR | Grupo de WhatsApp |
-| PROFESSIONAL+ | Circle (GPS da Reforma Tributária) |
-
-Ao assinar Professional, o usuário recebe automaticamente:
-- E-mail de boas-vindas via Resend
-- Link pessoal para entrar na comunidade Circle
-- Tag `professional_subscriber` no Beehiiv (para automações)
-
----
-
-## Newsletter (Beehiiv)
-
-- **Tributalks News**: Newsletter semanal com curadoria de notícias
-- Tags: `professional_subscriber` para automação de boas-vindas
-- Integração via API Beehiiv no webhook de assinatura
-
----
-
-## Onboarding e Gamificação
-
-### First Mission
-- Missão inicial personalizada por regime tributário
-- Simples Nacional, Presumido ou Real têm fluxos diferentes
-
-### Guided Tour
-- 5 etapas visuais via `react-joyride`
-- Apresenta Clara, ferramentas principais e comunidade
-
-### Achievements (14 badges)
-- Sistema de conquistas por uso de ferramentas
-- Streaks diários de acesso
-
-### Onboarding Checklist
-- Aparece nos primeiros 7 dias
-- Guia para completar perfil, score, DRE, etc.
-
----
-
-## Roadmap 2026+
-
-| Feature | Status |
-|---------|--------|
-| Dashboard Analytics (KPIs avançados) | Planejado |
-| Multi-empresa (gestão de grupo) | Planejado |
-| App Mobile (iOS/Android) | Planejado |
-
----
-
-# PARTE 2: VISÃO TÉCNICA (DEV)
-
-## Stack Tecnológico
-
-| Camada | Tecnologia |
-|--------|------------|
-| Frontend | React 18 + Vite + TypeScript |
-| Estilização | Tailwind CSS + shadcn/ui |
-| Estado | TanStack Query + Context API |
-| Backend | Supabase (Lovable Cloud) |
-| Edge Functions | Deno (Supabase Functions) |
-| AI | Claude Sonnet 4 via Lovable AI |
-| Pagamentos | Mercado Pago (subscriptions) |
-| E-mail | Resend (transacional) + Beehiiv (newsletter) |
-| Comunidade | Circle.so |
-| PWA | vite-plugin-pwa |
-
----
-
-## Estrutura de Arquivos
-
-```text
-src/
-├── components/
-│   ├── ui/                    # shadcn/ui (50+ componentes)
-│   ├── landing/               # Página de vendas
-│   ├── dashboard/             # Layout + cards do dashboard
-│   ├── nexus/                 # NEXUS Command Center
-│   ├── credits/               # Radar de Créditos
-│   ├── dre/                   # DRE Inteligente
-│   ├── onboarding/            # FirstMission, GuidedTour, Checklist
-│   ├── achievements/          # Badges e Streaks
-│   ├── referral/              # Programa de Indicação
-│   └── common/                # Componentes compartilhados
-├── pages/
-│   ├── Dashboard.tsx          # Home logada
-│   ├── Nexus.tsx              # Centro de Comando
-│   ├── TribuBot.tsx           # Interface Clara AI
-│   ├── Indicar.tsx            # Programa de Indicação
-│   ├── calculadora/           # Calculadoras (RTC, NBS, Split)
-│   └── admin/                 # Painel administrativo
-├── hooks/
-│   ├── useAuth.tsx            # Autenticação + perfil
-│   ├── useNexusData.ts        # 8 KPIs do NEXUS
-│   ├── useReferral.ts         # Sistema de indicação
-│   ├── useNotifications.ts    # Notificações realtime
-│   ├── useAchievements.ts     # Sistema de badges
-│   └── useFeatureAccess.ts    # Controle de acesso por plano
-├── data/
-│   ├── toolsManual.ts         # Base de conhecimento (18 ferramentas)
-│   └── checklistReformaItems.ts
-├── config/
-│   └── site.ts                # Links Mercado Pago, contatos
-└── integrations/
-    └── supabase/
-        ├── client.ts          # Cliente Supabase
-        └── types.ts           # Tipos gerados automaticamente
+```
+Plano           → Rota Padrão
+---------------------------------
+PROFESSIONAL    → /dashboard/nexus
+ENTERPRISE      → /dashboard/nexus
+NAVIGATOR       → /dashboard (educacional)
+STARTER         → /dashboard/score-tributario
+FREE            → /dashboard (upsell)
+null/undefined  → /dashboard (fallback seguro)
 ```
 
----
+**2. `src/pages/Nexus.tsx`**
+- Ajustar prompt de "dados faltantes" para ser mais amigável na primeira visita
+- Adicionar CTA contextual com estimativa de tempo: "Preencher dados agora (5 min)"
+- Melhorar o card de alerta com linguagem de valor, não de cobrança
 
-## Supabase Functions (Edge Functions)
+### Critérios de Sucesso
+- [ ] Redirect funciona para todos os 5 tipos de plano
+- [ ] Fallback seguro se `profile.plano` for null/undefined
+- [ ] NEXUS carrega em menos de 3s (mesmo vazio)
+- [ ] Prompt de dados faltantes é amigável, não intimidador
 
-| Função | Descrição |
-|--------|-----------|
-| `clara-assistant` | Orquestra Clara AI (Claude Sonnet 4) |
-| `mercadopago-webhook` | Processa assinaturas + envia e-mail welcome |
-| `calculate-rtc` | Calcula CBS/IBS/IS via API Gov |
-| `calculate-tax-score` | Gera score tributário (0-1000) |
-| `analyze-credits` | Identifica créditos em XMLs |
-| `process-xml-batch` | Processa lote de XMLs |
-| `process-dre` | Calcula DRE + impacto reforma |
-| `match-opportunities` | Matching perfil × 61 oportunidades |
-| `erp-sync` | Sincroniza Omie, Bling, Conta Azul |
-| `send-executive-report` | Gera relatório PDF executivo |
-| `fetch-news` | Busca notícias de fontes tributárias |
-| `process-referral-rewards` | Aplica descontos de indicação |
-| `subscribe-newsletter` | Integra Beehiiv |
+### Risco: Zero
+É apenas um redirect condicional. Fallback para `/dashboard` garante que ninguém fica preso.
 
 ---
 
-## Tabelas Supabase (Principais)
+## Sprint 2-3: Diagnóstico Rápido (Dias 8-28)
 
-| Tabela | Descrição |
-|--------|-----------|
-| `profiles` | Usuários + plano + stripe/mp IDs |
-| `company_profile` | Perfil completo da empresa (100+ campos) |
-| `company_dre` | DREs + cálculos + impacto reforma |
-| `tax_score` | Score tributário + dimensões |
-| `identified_credits` | Créditos encontrados nos XMLs |
-| `company_opportunities` | Match usuário × oportunidades |
-| `notifications` | Sistema de notificações |
-| `referral_codes` | Códigos de indicação |
-| `referrals` | Registro de indicações |
-| `erp_connections` | Conexões com ERPs |
-| `erp_sync_logs` | Logs de sincronização |
+### Objetivo
+Novo usuário vê resultado de diagnóstico com dados reais em menos de **2 minutos** (não 60s - conforme alerta do consultor).
 
----
+### ALERTA INCORPORADO: Promessa Realista
+> "Prometa menos de 2 minutos, entregue em 60s quando possível."
 
-## Clara AI — Arquitetura v4
+### Arquivos a Criar
 
-### Prompt Mestre (3 camadas)
+**1. Novo Componente: `src/components/onboarding/QuickDiagnosticModal.tsx`**
 
-1. **Decision Core** (25 heurísticas)
-   - Princípios de como a Clara interpreta cenários tributários
-   - Ex: "Crédito bem usado vale mais que alíquota baixa"
+Características obrigatórias (conforme alerta do consultor):
+- **Modal verdadeiramente obrigatório**: Usar propriedades do Radix Dialog para bloquear fechamento
+  - `onOpenChange={() => {}}` - ignora tentativas de fechar
+  - `onEscapeKeyDown={(e) => e.preventDefault()}` - bloqueia ESC
+  - `onPointerDownOutside={(e) => e.preventDefault()}` - bloqueia click fora
+  - Sem botão X no header
+- **Único escape**: Botão "Pular por enquanto" que salva `diagnostic_pending = true`
+- **Feedback contínuo** com mensagens progressivas (reutilizar padrão de `ImportProgressBar.tsx`):
+  ```
+  0s:  "Iniciando análise..."
+  10s: "Processando notas fiscais..."
+  30s: "Identificando créditos tributários..."
+  50s: "Calculando impacto na margem..."
+  70s: "Gerando insights finais..."
+  90s: "Quase lá! Preparando seu painel..."
+  ```
+- **Validação pré-processamento**: Verificar XMLs antes de processar
+  - Extensão .xml válida
+  - Tamanho máximo 500KB por arquivo
+  - Mínimo 3 arquivos para diagnóstico completo
+  - Feedback imediato de erros
 
-2. **Knowledge Core** (conhecimento factual)
-   - EC 132/2023, LC 214/2025
-   - Cronograma 2026-2033
-   - Alíquotas, reduções, Simples Nacional, Split Payment
+**2. Nova Edge Function: `supabase/functions/quick-diagnostic/index.ts`**
 
-3. **Tool Contexts** (18 ferramentas)
-   - Cada ferramenta tem: nome, descrição, passo-a-passo
-   - Usado para ajuda contextual
-
-### Fluxo de Resposta
-
-```text
-Mensagem do usuário
-       ↓
-Detecta tópico (TOPIC_KEYWORDS)
-       ↓
-Verifica escopo do plano (PLAN_TOOL_SCOPE)
-       ↓
-Se fora do escopo → resposta educada de upgrade
-       ↓
-Se simples (saudação) → usa CLARA_CORE_SLIM
-Se complexa → usa CLARA_CORE_FULL
-       ↓
-Adiciona disclaimer jurídico (se necessário)
-       ↓
-Streaming SSE para frontend
-```
-
-### Guardrails
-
-- **Limite OAB**: Nunca emite parecer jurídico
-- **Proteção anti-jailbreak**: Ignora tentativas de override
-- **Linguagem de cenário**: "Este cenário tende a..." em vez de "Você deve..."
-
----
-
-## Sistema de Autenticação
+Arquitetura de timeout (conforme alerta do consultor):
+- **Hard timeout de 85s** (permite até 90s com buffer para resposta)
+- Execução paralela com `Promise.all`:
+  - `analyzeCredits()` - timeout individual de 25s
+  - `projectCashflow()` - timeout individual de 30s
+  - `calculateMarginImpact()` - timeout individual de 25s
+- **Resultado parcial garantido**: Se alguma análise falhar ou timeout, retorna o que conseguiu
+- Usar `Promise.race` para garantir resposta dentro do timeout
 
 ```typescript
-// useAuth.tsx
-interface AuthContextType {
-  user: User | null;
-  session: Session | null;
-  profile: Profile | null;
-  loading: boolean;
-  signUp: (email, password, nome) => Promise<void>;
-  signIn: (email, password) => Promise<void>;
-  signInWithMagicLink: (email) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
-  signOut: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
+// Estrutura do retorno
+interface DiagnosticResult {
+  status: 'complete' | 'partial' | 'error';
+  credits?: { total: number; items: CreditItem[] };
+  cashflow?: { risk: 'low' | 'medium' | 'high'; impact_q2_2027: number };
+  margin?: { current: number; projected: number; delta_pp: number };
+  insights: string[];
+  processing_time_ms: number;
 }
 ```
 
-- Supabase Auth (email/password, magic link, OAuth Google)
-- Perfil carregado automaticamente após login
-- `ProtectedRoute.tsx` garante onboarding completo
+**3. Nova tabela Supabase: `diagnostic_results`**
+- Armazenar resultados para não reprocessar
+- Campos: user_id, result_json, source (xml/erp), created_at
+- TTL de 7 dias antes de expirar e sugerir re-análise
+
+### Fluxo de Integração
+
+**Arquivo: `src/pages/Onboarding.tsx`**
+- Após `handleSubmit` bem-sucedido:
+  - Setar `localStorage.setItem('needs_quick_diagnostic', 'true')`
+  - Redirect para rota apropriada (NEXUS para Professional, Dashboard para outros)
+
+**Arquivo: `src/pages/Nexus.tsx` e `src/pages/Dashboard.tsx`**
+- No mount, verificar flag `needs_quick_diagnostic`
+- Se true, abrir `QuickDiagnosticModal` automaticamente
+- Após completar ou pular, remover flag
+- Se usuário pulou anteriormente (`diagnostic_pending = true`), mostrar banner persistente
+
+### Critérios de Sucesso
+- [ ] 80%+ dos usuários completam diagnóstico
+- [ ] Time-to-value médio de 90 segundos
+- [ ] Modal não pode ser fechado sem interação explícita
+- [ ] Resultado parcial funciona mesmo com timeout
+- [ ] Validação de XMLs evita processamento desnecessário
 
 ---
 
-## Sistema de Notificações
+## Sprint 4: Clara com Cache Inteligente (Dias 29-42)
 
-```typescript
-// useNotifications.ts
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: "info" | "success" | "warning" | "alert";
-  category: "geral" | "reforma" | "indicacao" | "sistema";
-  read: boolean;
-  action_url?: string;
-}
-```
+### Objetivo
+Reduzir custo de IA em 60%+ mantendo qualidade de resposta, com validação de cache para evitar informações desatualizadas.
 
-- Realtime via Supabase Channels
-- Persiste na tabela `notifications`
-- `NotificationBell.tsx` no header mostra contador
+### ALERTAS INCORPORADOS
 
----
+**1. Cache com TTL Inteligente por Categoria**
+> "Um erro em alíquota pode custar milhões pro cliente"
 
-## NEXUS — 8 KPIs
+**2. Teste A/B de Qualidade Gemini vs Sonnet**
+> "Economia segura: 45%, qualidade garantida"
 
-```typescript
-interface NexusKpiData {
-  fluxoCaixa: { valor, variacao, status };
-  receitaMensal: { valor, variacaoPercent, status };
-  margemContribuicao: { valor, status };
-  margemLiquida: { valor, projecao2027, status };
-  impactoTributarioCaixa: { valor, dataVencimento, status };
-  impactoTributarioMargem: { valorPp, percentualReceita, status };
-  creditosDisponiveis: { valor, percentualAproveitado, status };
-  riscoFiscal: { score, nivel, status };
-}
-```
-
-- Status: `success` (verde) | `warning` (amarelo) | `danger` (vermelho)
-- Insights automáticos baseados em cruzamento de KPIs
-
----
-
-## Integrações ERP
-
-| ERP | Módulos Sincronizados |
-|-----|----------------------|
-| Omie | NF-e, Produtos, Financeiro, Empresa |
-| Bling | NF-e, Produtos |
-| Conta Azul | NF-e, Financeiro |
-| Tiny | NF-e, Produtos |
-| Sankhya | NF-e, Financeiro |
-| TOTVS | NF-e, Financeiro |
-
-- Padrão Strategy na Edge Function `erp-sync`
-- Normaliza dados para schema unificado
-- Auto-sync configurável (frequência em horas)
-
----
-
-## Webhooks e Pagamentos
-
-### Mercado Pago
-
-```typescript
-// mercadopago-webhook/index.ts
-// Eventos tratados:
-// - subscription.authorized → ativa plano + envia welcome email
-// - subscription.cancelled → desativa plano
-
-// Welcome Email (Professional):
-await sendProfessionalWelcomeEmail(payerEmail);
-// Envia via Resend com link Circle
-```
-
----
-
-## Variáveis de Ambiente
-
-| Variável | Uso |
-|----------|-----|
-| `VITE_SUPABASE_URL` | URL do Supabase |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Chave pública |
-| `RESEND_API_KEY` | Envio de e-mails |
-| `BEEHIIV_API_KEY` | Newsletter |
-| `MERCADOPAGO_ACCESS_TOKEN` | Pagamentos |
-| `LOVABLE_API_KEY` | IA (Clara AI) |
-
----
-
-## RLS (Row Level Security)
-
-Todas as tabelas de usuário têm RLS ativo:
+### Nova Tabela Supabase: `clara_cache`
 
 ```sql
--- Exemplo: profiles
-CREATE POLICY "Users can view own profile"
-  ON profiles FOR SELECT
-  USING (auth.uid() = user_id);
+CREATE TABLE clara_cache (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  query_hash TEXT UNIQUE NOT NULL,
+  query_normalized TEXT NOT NULL,
+  response TEXT NOT NULL,
+  category TEXT NOT NULL, -- 'definition', 'aliquot', 'deadline', 'procedure'
+  ttl_days INTEGER NOT NULL DEFAULT 7,
+  requires_validation BOOLEAN DEFAULT false,
+  hit_count INTEGER DEFAULT 1,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  -- Disclaimer obrigatório
+  generated_at_label TEXT GENERATED ALWAYS AS (
+    '[Resposta gerada em ' || TO_CHAR(created_at, 'DD/MM/YYYY') || '. Legislação pode ter mudado.]'
+  ) STORED
+);
 
-CREATE POLICY "Users can update own profile"
-  ON profiles FOR UPDATE
-  USING (auth.uid() = user_id);
+CREATE INDEX idx_clara_cache_hash ON clara_cache(query_hash);
+CREATE INDEX idx_clara_cache_category ON clara_cache(category);
 ```
 
+**TTL por Categoria (conforme alerta):**
+| Categoria | TTL | Requer Validação | Exemplo |
+|-----------|-----|------------------|---------|
+| definition | 90 dias | Não | "O que é CBS?" |
+| aliquot | 7 dias | Sim | "Qual alíquota de IBS?" |
+| deadline | 1 dia | Sim | "Quando entra Split Payment?" |
+| procedure | 30 dias | Não | "Como importar XMLs?" |
+| calculation | **Nunca cachear** | - | Qualquer cálculo personalizado |
+
+### Modificação: `supabase/functions/clara-assistant/index.ts`
+
+**Nova função: `classifyQueryComplexity()`**
+```typescript
+type QueryComplexity = 'cache' | 'simple' | 'complex';
+
+function classifyQueryComplexity(message: string, context: UserContext): QueryComplexity {
+  const lowerMessage = message.toLowerCase();
+  
+  // NUNCA CACHEAR: queries com contexto pessoal
+  const personalPatterns = [/meu|minha|nossa empresa/i, /considerando|baseado|dado que/i];
+  if (personalPatterns.some(p => p.test(message)) || context.hasDRE || context.hasXML) {
+    return 'complex';
+  }
+  
+  // FAQ patterns (cache)
+  const faqPatterns = [
+    /^o que (é|são)/i,
+    /^qual (a|o)? (alíquota|prazo|data)/i,
+    /^quando (começa|entra|inicia)/i,
+    /^quem (pode|deve)/i,
+    /^como funciona/i,
+    /^pode explicar/i,
+  ];
+  
+  if (message.length < 100 && faqPatterns.some(p => p.test(message))) {
+    return 'cache';
+  }
+  
+  // Complex signals
+  const complexSignals = [
+    message.length > 200,
+    /cenário|simul|compar|estrat|analis/i.test(message),
+    message.includes('?') && message.split('?').length > 2, // múltiplas perguntas
+  ];
+  
+  if (complexSignals.filter(Boolean).length >= 2) {
+    return 'complex';
+  }
+  
+  return 'simple';
+}
+```
+
+**Nova função: `getCategoryFromQuery()`**
+```typescript
+function getCategoryFromQuery(query: string): CacheCategory {
+  if (/alíquota|percentual|taxa/i.test(query)) return 'aliquot';
+  if (/prazo|data|quando|até/i.test(query)) return 'deadline';
+  if (/o que é|significa|definição/i.test(query)) return 'definition';
+  if (/como|passo|procedimento/i.test(query)) return 'procedure';
+  return 'definition'; // default mais seguro
+}
+```
+
+**Nova função: `shouldInvalidateCache()`**
+```typescript
+async function shouldInvalidateCache(entry: CacheEntry): Promise<boolean> {
+  const ageMs = Date.now() - new Date(entry.created_at).getTime();
+  const maxAgeMs = entry.ttl_days * 24 * 60 * 60 * 1000;
+  
+  if (ageMs > maxAgeMs) return true;
+  
+  if (entry.requires_validation && entry.category === 'aliquot') {
+    // Futura integração: checar atualizações legislativas
+    // Por ora, invalidar se mais de 7 dias para alíquotas
+    return ageMs > 7 * 24 * 60 * 60 * 1000;
+  }
+  
+  return false;
+}
+```
+
+**Lógica de Roteamento Atualizada:**
+```typescript
+// Fluxo principal
+const complexity = classifyQueryComplexity(message, userContext);
+
+switch(complexity) {
+  case 'cache':
+    const cached = await getCachedResponse(message);
+    if (cached && !await shouldInvalidateCache(cached)) {
+      // Adicionar disclaimer de data
+      return cached.response + '\n\n' + cached.generated_at_label;
+    }
+    // Fallback para simple se não tem cache
+    
+  case 'simple':
+    // Usar Lovable AI com google/gemini-2.5-flash (mais barato)
+    // Custo: ~R$ 0,30 por query
+    // Salvar no cache após resposta
+    
+  case 'complex':
+    // Usar Claude Sonnet 4 (modelo atual)
+    // Custo: ~R$ 3,00 por query
+    // NÃO salvar no cache (resposta personalizada)
+}
+```
+
+### ALERTA INCORPORADO: Teste A/B de Qualidade
+
+Antes de commit definitivo no Gemini para queries simples:
+1. Durante 14 dias, rotear 50% para Gemini, 50% para Sonnet
+2. Medir:
+   - NPS por grupo
+   - Taxa de follow-up (usuário perguntou de novo?)
+   - Thumbs up/down se implementado
+3. Critério: Se NPS cai mais de 5 pontos com Gemini, manter Sonnet para todo resto
+
+### Cache Warm-Up Inicial
+
+Script para popular cache com 100 FAQs comuns antes do lançamento:
+- Fonte: histórico de conversas com Clara
+- Fonte: perguntas do TribuTalks Podcast
+- Fonte: FAQs do blog e lives
+
+### Projeção de Economia
+
+| Cenário | Custo/usuário/mês | Economia vs Atual |
+|---------|-------------------|-------------------|
+| Atual (100% Sonnet) | R$ 36 | - |
+| Conservador (cache + teste A/B) | R$ 18 | 50% |
+| Otimista (cache + Gemini validado) | R$ 12 | 67% |
+
 ---
 
-## Logs e Monitoramento
+## Sprint 5: Validação e Ajustes (Dias 43-50)
 
-| Tabela | Descrição |
-|--------|-----------|
-| `erp_sync_logs` | Logs de sincronização ERP |
-| `executive_report_logs` | Envios de relatório executivo |
-| `mp_subscription_events` | Eventos do Mercado Pago |
-| `credit_usage` | Uso de créditos Clara AI |
+### Dashboard de Monitoramento
 
----
+Criar painel admin para acompanhar as 3 mudanças:
 
-## PWA
+```
+┌────────────────────────────────────────┐
+│ NEXUS FIRST - Últimos 7 dias          │
+├────────────────────────────────────────┤
+│ Professional → NEXUS primeiro: 87%    │
+│ Tempo até primeira ação: 23s          │
+│ vs. grupo controle: +67% engagement   │
+└────────────────────────────────────────┘
 
-- Configurado via `vite-plugin-pwa`
-- Ícones: `/pwa-192x192.png`, `/pwa-512x512.png`
-- Service worker para cache e offline
-- Componente `PWAUpdater.tsx` para notificar atualizações
+┌────────────────────────────────────────┐
+│ DIAGNÓSTICO RÁPIDO - Últimos 7 dias   │
+├────────────────────────────────────────┤
+│ Taxa de conclusão: 73%                │
+│ Tempo médio: 78s                      │
+│ Upload XML: 65% | Conexão ERP: 35%    │
+│ Taxa de "Pular": 27%                  │
+└────────────────────────────────────────┘
 
----
+┌────────────────────────────────────────┐
+│ CLARA CACHE - Últimos 7 dias          │
+├────────────────────────────────────────┤
+│ Hit rate: 42%                         │
+│ Cache: 42% | Gemini: 31% | Sonnet: 27%│
+│ Custo/usuário: R$ 14,20/mês           │
+│ Economia vs. baseline: 61%            │
+└────────────────────────────────────────┘
+```
 
-## Performance
-
-- **useDashboardData**: Requisição única batch para dados do dashboard
-- **TanStack Query**: Cache e refetch inteligente
-- **Lazy loading**: Componentes pesados carregados sob demanda
-- **Realtime seletivo**: Apenas tabelas críticas (notifications)
-
----
-
-## Arquivos de Configuração
-
-| Arquivo | Descrição |
-|---------|-----------|
-| `tailwind.config.ts` | Tema customizado + variáveis CSS |
-| `vite.config.ts` | Build config + PWA |
-| `supabase/config.toml` | Configuração Supabase |
-| `src/config/site.ts` | Links de pagamento + contatos |
-
----
-
-## Testes
-
-- `vitest` configurado
-- Testes de Edge Functions via `supabase--test-edge-functions`
-- Arquivos de teste em `src/test/` e `*_test.ts`
+### Entrevistas com Usuários
+- 5 entrevistas com Professional ativos (D7 pós-onboarding)
+- Foco: "Qual foi seu momento 'aha'?" e "O que ainda não está claro?"
 
 ---
 
-## Deploy
+## Checklist Pré-Lançamento
 
-- **Frontend**: Lovable (auto-deploy no commit)
-- **Backend**: Lovable Cloud (Edge Functions auto-deploy)
-- **Domínio Live**: `https://tributechai.lovable.app`
-- **Preview**: `https://id-preview--*.lovable.app`
+### Sprint 1 (NEXUS First)
+- [ ] Testado redirect para todos os 5 planos
+- [ ] Fallback funciona se plano = null
+- [ ] NEXUS carrega em menos de 3s
+- [ ] Prompt "dados faltantes" é amigável
+
+### Sprint 2-3 (Diagnóstico Rápido)
+- [ ] Modal não pode ser fechado sem interação explícita
+- [ ] Validação de XMLs antes de processar
+- [ ] Timeout de 85s testado com dados reais
+- [ ] Resultado parcial gera NEXUS utilizável
+- [ ] Feedback progressivo a cada 10-20s
+- [ ] Flag `diagnostic_pending` persiste corretamente
+
+### Sprint 4 (Clara Cache)
+- [ ] Tabela `clara_cache` criada com TTL por categoria
+- [ ] Classificador testado com 50+ queries reais
+- [ ] Disclaimer de data aparece em respostas de cache
+- [ ] Teste A/B Gemini vs Sonnet configurado
+- [ ] Cache warm-up com 100 FAQs populado
 
 ---
 
-Este documento cobre tanto a **visão de negócio** (ferramentas, planos, jornadas) quanto a **visão técnica** (arquitetura, código, integrações) do TribuTalks.
+## Métricas de Sucesso (45 dias)
+
+| Métrica | Baseline | Meta |
+|---------|----------|------|
+| Time-to-Value | ~5 min | < 2 min |
+| Engagement D1 | N/A | +40% |
+| Conversão Trial→Pago | N/A | +25% |
+| Custo IA/usuário | R$ 36/mês | < R$ 18/mês |
+| NPS | N/A | > 50 |
+
+---
+
+## Impacto Financeiro Projetado (12 meses)
+
+| Métrica | Valor |
+|---------|-------|
+| Economia IA | R$ 613k/ano |
+| Receita adicional (conversão) | R$ 400k/ano |
+| Receita retida (churn) | R$ 137k/ano |
+| **Total** | **R$ 1,15M/ano** |
+
+**ROI: 14x sobre investimento de ~R$ 80k (300h dev)**
+
