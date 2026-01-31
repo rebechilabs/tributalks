@@ -267,9 +267,9 @@ async function handleSubscriptionEvent(preapprovalId: string, action: string) {
           action_url: '/dashboard',
         })
 
-        // If PROFESSIONAL plan, add tag to Beehiiv for welcome email automation
+        // If PROFESSIONAL plan, send welcome email with Circle invite
         if (planName === 'PROFESSIONAL') {
-          await addBeehiivTag(payerEmail, 'professional_subscriber')
+          await sendProfessionalWelcomeEmail(payerEmail)
         }
 
         // Trigger referral processing
@@ -388,93 +388,125 @@ async function addCreditsToUser(email: string, credits: number, paymentId: strin
   }
 }
 
-// Add tag to Beehiiv subscriber for automation triggers
-async function addBeehiivTag(email: string, tag: string) {
-  const apiKey = Deno.env.get('BEEHIIV_API_KEY')
-  const publicationId = Deno.env.get('BEEHIIV_PUBLICATION_ID')
+// Send welcome email to Professional subscribers with Circle invite
+async function sendProfessionalWelcomeEmail(email: string) {
+  const resendApiKey = Deno.env.get('RESEND_API_KEY')
 
-  if (!apiKey || !publicationId) {
-    console.log('Beehiiv credentials not configured, skipping tag')
+  if (!resendApiKey) {
+    console.log('RESEND_API_KEY not configured, skipping welcome email')
     return
   }
 
   try {
-    // First, get the subscriber by email
-    const searchResponse = await fetch(
-      `https://api.beehiiv.com/v2/publications/${publicationId}/subscriptions?email=${encodeURIComponent(email)}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    )
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'TribuTalks <noreply@tributalks.com.br>',
+        to: [email],
+        subject: '🎉 Bem-vindo(a) ao TribuTalks Professional — Seu acesso exclusivo está liberado!',
+        html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bem-vindo ao TribuTalks Professional</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  
+  <div style="text-align: center; margin-bottom: 30px;">
+    <h1 style="color: #1a1a2e; margin-bottom: 10px;">🎉 Parabéns por se juntar ao TribuTalks Professional!</h1>
+  </div>
 
-    if (!searchResponse.ok) {
-      console.error('Failed to search Beehiiv subscriber:', searchResponse.status)
-      return
-    }
+  <p>Você agora faz parte de um grupo seleto de profissionais que estão se preparando estrategicamente para a Reforma Tributária.</p>
 
-    const searchData = await searchResponse.json()
-    const subscriber = searchData.data?.[0]
+  <h2 style="color: #1a1a2e; border-bottom: 2px solid #eee; padding-bottom: 10px;">O que você acabou de adquirir:</h2>
+  
+  <p>O TribuTalks é o <strong>GPS da Reforma Tributária</strong> — uma plataforma completa que mostra em tempo real como a transição de 2026 a 2033 vai impactar sua empresa.</p>
 
-    if (!subscriber) {
-      // Subscriber not found, create with tag
-      console.log(`Subscriber ${email} not found in Beehiiv, creating with tag`)
-      
-      const createResponse = await fetch(
-        `https://api.beehiiv.com/v2/publications/${publicationId}/subscriptions`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: email,
-            reactivate_existing: true,
-            send_welcome_email: false,
-            custom_fields: [
-              { name: 'professional_subscriber', value: 'true' }
-            ],
-          }),
-        }
-      )
+  <p><strong>Você tem acesso a:</strong></p>
 
-      if (createResponse.ok) {
-        console.log(`Created Beehiiv subscriber ${email} with tag ${tag}`)
-      } else {
-        console.error('Failed to create Beehiiv subscriber:', createResponse.status)
-      }
-      return
-    }
-
-    // Update existing subscriber with tag via custom field
-    const subscriptionId = subscriber.id
+  <ul style="list-style: none; padding: 0;">
+    <li style="margin-bottom: 15px;">📊 <strong>NEXUS — Painel Executivo Inteligente</strong><br>
+    <span style="color: #666;">Veja 8 KPIs críticos em uma tela: fluxo de caixa, margem líquida, impacto tributário no caixa, impacto na margem, créditos disponíveis, risco fiscal e mais.</span></li>
     
-    const updateResponse = await fetch(
-      `https://api.beehiiv.com/v2/publications/${publicationId}/subscriptions/${subscriptionId}`,
-      {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          custom_fields: [
-            { name: 'professional_subscriber', value: 'true' }
-          ],
-        }),
-      }
-    )
+    <li style="margin-bottom: 15px;">🤖 <strong>Clara AI — Copiloto Tributário</strong><br>
+    <span style="color: #666;">Tire dúvidas sobre CBS, IBS, split payment, regimes de transição. A Clara domina toda a legislação da Reforma e te orienta em linguagem clara.</span></li>
+    
+    <li style="margin-bottom: 15px;">🔗 <strong>Integrações com ERPs</strong><br>
+    <span style="color: #666;">Conecte Omie, Bling ou Conta Azul e seus dados sincronizam automaticamente. Sem trabalho manual.</span></li>
+    
+    <li style="margin-bottom: 15px;">💡 <strong>Radar de Créditos</strong><br>
+    <span style="color: #666;">Identifica créditos tributários que você pode estar deixando na mesa. Economize dinheiro que já é seu.</span></li>
+    
+    <li style="margin-bottom: 15px;">📈 <strong>Calculadora RTC</strong><br>
+    <span style="color: #666;">Simule cenários: o que acontece se você trocar de fornecedor? E se ajustar o preço? E se mudar de regime? Veja o impacto antes de decidir.</span></li>
+  </ul>
 
-    if (updateResponse.ok) {
-      console.log(`Added tag ${tag} to Beehiiv subscriber ${email}`)
+  <h2 style="color: #1a1a2e; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 30px;">Seus próximos passos:</h2>
+
+  <ol style="padding-left: 20px;">
+    <li style="margin-bottom: 10px;"><strong>Conecte seu ERP</strong> (Omie, Bling ou Conta Azul)<br>
+    <span style="color: #666;">Entre em Configurações > Integrações e siga o tutorial de 5 minutos.</span></li>
+    
+    <li style="margin-bottom: 10px;"><strong>Explore o NEXUS</strong><br>
+    <span style="color: #666;">Acesse o Painel Executivo e veja os 8 KPIs da sua empresa em tempo real.</span></li>
+    
+    <li style="margin-bottom: 10px;"><strong>Converse com a Clara</strong><br>
+    <span style="color: #666;">Clique no ícone de chat e faça sua primeira pergunta sobre a Reforma.</span></li>
+    
+    <li style="margin-bottom: 10px;"><strong>Entre na Comunidade Exclusiva</strong><br>
+    <span style="color: #666;">Junte-se ao GPS da Reforma Tributária — nossa comunidade 100% gratuita para assinantes Professional.</span></li>
+  </ol>
+
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 25px; margin: 30px 0; text-align: center;">
+    <h3 style="color: white; margin: 0 0 15px 0;">🚀 Entre na Comunidade Exclusiva</h3>
+    <p style="color: rgba(255,255,255,0.9); margin: 0 0 20px 0;">
+      Lá você terá:<br>
+      ✅ Network qualificado com empresários e profissionais tributários<br>
+      ✅ Tire dúvidas diretamente com especialistas e colegas<br>
+      ✅ Biblioteca de documentos com materiais exclusivos<br>
+      ✅ Discussões em tempo real sobre as mudanças da reforma
+    </p>
+    <a href="https://tributalksconnect.circle.so/c/boas-vindas-ao-gps" 
+       style="display: inline-block; background: white; color: #667eea; padding: 15px 30px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
+      👉 Clique aqui para entrar na comunidade
+    </a>
+    <p style="color: rgba(255,255,255,0.7); font-size: 12px; margin: 15px 0 0 0;">
+      Este link é pessoal e exclusivo — funciona apenas para o seu email.
+    </p>
+  </div>
+
+  <p style="margin-top: 30px;">Nos vemos lá dentro!</p>
+
+  <p>Abraços,<br>
+  <strong>Equipe TribuTalks</strong></p>
+
+  <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+  
+  <p style="font-size: 12px; color: #999; text-align: center;">
+    TribuTalks - O GPS da Reforma Tributária<br>
+    Rebechi & Silva Produções | São Paulo, SP
+  </p>
+
+</body>
+</html>
+        `,
+      }),
+    })
+
+    if (response.ok) {
+      console.log(`Welcome email sent to Professional subscriber ${email}`)
     } else {
-      console.error('Failed to update Beehiiv subscriber:', updateResponse.status)
+      const errorData = await response.text()
+      console.error('Failed to send welcome email:', response.status, errorData)
     }
 
   } catch (error) {
-    console.error('Error adding Beehiiv tag:', error)
+    console.error('Error sending Professional welcome email:', error)
   }
 }
