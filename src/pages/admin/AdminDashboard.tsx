@@ -13,7 +13,8 @@ import {
   Lightbulb,
   Calendar,
   TrendingUp,
-  ArrowRight
+  ArrowRight,
+  BarChart3
 } from "lucide-react";
 
 interface AdminStats {
@@ -157,6 +158,14 @@ export default function AdminDashboard() {
 
   const adminModules = [
     {
+      title: 'Monitoramento Estratégico',
+      description: 'Métricas das mudanças estratégicas implementadas',
+      href: '/admin/monitoring',
+      icon: BarChart3,
+      count: null,
+      highlight: true,
+    },
+    {
       title: 'Pílulas da Reforma',
       description: 'Gerenciar pílulas diárias de conhecimento',
       href: '/admin/pilulas',
@@ -252,24 +261,35 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {adminModules.map((module) => {
             const Icon = module.icon;
+            const isHighlight = 'highlight' in module && module.highlight;
             return (
-              <Card key={module.href} className="hover:border-primary/30 transition-colors">
+              <Card 
+                key={module.href} 
+                className={`hover:border-primary/30 transition-colors ${isHighlight ? 'border-primary/40 bg-gradient-to-br from-primary/5 to-transparent' : ''}`}
+              >
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isHighlight ? 'bg-primary/20' : 'bg-primary/10'}`}>
                       <Icon className="w-6 h-6 text-primary" />
                     </div>
-                    <span className="text-2xl font-bold text-muted-foreground">
-                      {module.count}
-                    </span>
+                    {module.count !== null && (
+                      <span className="text-2xl font-bold text-muted-foreground">
+                        {module.count}
+                      </span>
+                    )}
+                    {isHighlight && (
+                      <span className="px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                        Novo
+                      </span>
+                    )}
                   </div>
                   <CardTitle className="text-lg mt-3">{module.title}</CardTitle>
                   <CardDescription>{module.description}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button asChild className="w-full">
+                  <Button asChild className="w-full" variant={isHighlight ? "default" : "outline"}>
                     <Link to={module.href}>
-                      Gerenciar
+                      {isHighlight ? 'Ver Métricas' : 'Gerenciar'}
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Link>
                   </Button>
