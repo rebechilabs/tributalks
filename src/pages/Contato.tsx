@@ -74,7 +74,7 @@ const FAQ_ITEMS = [
     resposta: 'Na tela de login, clique em "Esqueci minha senha" e siga as instruções enviadas para seu e-mail.',
   },
   {
-    pergunta: "Como agendar minhas consultorias (Premium)?",
+    pergunta: "Como agendar minhas consultorias (Professional)?",
     resposta: 'Acesse o menu Consultorias no painel e clique em "Agendar". Você será direcionado para escolher um horário disponível.',
   },
   {
@@ -285,7 +285,7 @@ export default function Contato() {
                     <span className="text-foreground/70">Prazo de resposta:</span>
                   </p>
                   <p className="text-sm">• Básico/Pro: até 48h úteis</p>
-                  <p className="text-sm">• Premium: prioritário</p>
+                  <p className="text-sm">• Professional: prioritário</p>
                 </div>
               </div>
             </div>
