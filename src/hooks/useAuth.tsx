@@ -69,8 +69,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshProfile = async () => {
     if (user) {
-      // Small delay to give webhook time to process
-      await new Promise(resolve => setTimeout(resolve, 500));
       console.log('[Auth] Refreshing profile for user:', user.id);
       const profileData = await fetchProfile(user.id);
       console.log('[Auth] Profile refreshed:', profileData?.plano, 'onboarding:', profileData?.onboarding_complete);

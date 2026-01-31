@@ -5,8 +5,39 @@ import { AchievementBadge } from "./AchievementBadge";
 import { useAchievements } from "@/hooks/useAchievements";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function AchievementList() {
-  const { achievements, earnedCount, totalCount, progress, isLoading } = useAchievements();
+interface AchievementData {
+  code: string;
+  icon: string;
+  name: string;
+  description: string;
+  tier: 'bronze' | 'silver' | 'gold' | 'platinum';
+  earned: boolean;
+  earnedAt?: string;
+}
+
+interface AchievementListProps {
+  achievements?: AchievementData[];
+  earnedCount?: number;
+  totalCount?: number;
+  progress?: number;
+  isLoading?: boolean;
+}
+
+export function AchievementList({ 
+  achievements: propAchievements,
+  earnedCount: propEarnedCount,
+  totalCount: propTotalCount,
+  progress: propProgress,
+  isLoading: propIsLoading,
+}: AchievementListProps = {}) {
+  // Only fetch if no props provided (fallback behavior)
+  const hookData = useAchievements();
+  
+  const achievements = propAchievements ?? hookData.achievements;
+  const earnedCount = propEarnedCount ?? hookData.earnedCount;
+  const totalCount = propTotalCount ?? hookData.totalCount;
+  const progress = propProgress ?? hookData.progress;
+  const isLoading = propIsLoading ?? hookData.isLoading;
 
   if (isLoading) {
     return (

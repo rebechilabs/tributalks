@@ -3,14 +3,24 @@ import { cn } from "@/lib/utils";
 import type { StreakData } from "@/hooks/useDashboardData";
 
 interface StreakDisplayProps {
+  // Can receive streakData object or individual props
   streakData?: StreakData;
+  currentStreak?: number;
+  longestStreak?: number;
   showLongest?: boolean;
   className?: string;
 }
 
-export function StreakDisplay({ streakData, showLongest = false, className }: StreakDisplayProps) {
-  const currentStreak = streakData?.currentStreak || 0;
-  const longestStreak = streakData?.longestStreak || 0;
+export function StreakDisplay({ 
+  streakData, 
+  currentStreak: propCurrentStreak,
+  longestStreak: propLongestStreak,
+  showLongest = false, 
+  className 
+}: StreakDisplayProps) {
+  // Support both streakData object and individual props
+  const currentStreak = propCurrentStreak ?? streakData?.currentStreak ?? 0;
+  const longestStreak = propLongestStreak ?? streakData?.longestStreak ?? 0;
   const isActive = currentStreak > 0;
 
   // Determine fire intensity based on streak

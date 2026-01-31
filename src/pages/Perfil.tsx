@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { AchievementList, StreakDisplay } from "@/components/achievements";
+import { useProfilePageData } from "@/hooks/useProfilePageData";
 import { CONFIG } from "@/config/site";
 
 const ESTADOS = [
@@ -49,6 +50,7 @@ const PLANO_INFO: Record<string, { label: string; preco: string; cor: string }> 
 
 const Perfil = () => {
   const { user, profile, refreshProfile, signOut } = useAuth();
+  const { data: pageData, isLoading: pageLoading } = useProfilePageData();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -138,7 +140,13 @@ const Perfil = () => {
     <DashboardLayout title="Meu Perfil">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Achievements Section */}
-        <AchievementList />
+        <AchievementList 
+          achievements={pageData?.achievements}
+          earnedCount={pageData?.earnedCount}
+          totalCount={pageData?.totalCount}
+          progress={pageData?.progress}
+          isLoading={pageLoading}
+        />
         
         {/* Streak display */}
         <Card>
@@ -152,7 +160,11 @@ const Perfil = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <StreakDisplay showLongest />
+            <StreakDisplay 
+              currentStreak={pageData?.streakData?.current_streak ?? 0}
+              longestStreak={pageData?.streakData?.longest_streak ?? 0}
+              showLongest 
+            />
           </CardContent>
         </Card>
 
