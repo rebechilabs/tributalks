@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingCart, Package, Briefcase, Landmark, Calculator, ChevronRight, ChevronLeft, Loader2, CheckCircle2, Users, Building2, Settings, BarChart3 } from 'lucide-react';
+import { ShoppingCart, Package, Briefcase, Landmark, Calculator, ChevronRight, ChevronLeft, Loader2, CheckCircle2, Users, Building2, Settings, BarChart3, Tag } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -8,10 +8,12 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { VoiceCurrencyInput } from './VoiceCurrencyInput';
+import { ProductCatalogStep, type ProductCatalogItem } from './ProductCatalogStep';
 
 interface DREFormData {
   vendas_produtos: number;
@@ -59,6 +61,7 @@ const steps = [
   { id: 3, title: 'Despesas', icon: Briefcase },
   { id: 4, title: 'Financeiro', icon: Landmark },
   { id: 5, title: 'Impostos', icon: Calculator },
+  { id: 6, title: 'Produtos', icon: Tag, optional: true },
 ];
 
 interface DREWizardProps {
@@ -72,6 +75,7 @@ export function DREWizard({ onComplete, initialData }: DREWizardProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<DREFormData>({ ...initialFormData, ...initialData });
   const [loading, setLoading] = useState(false);
+  const [productCatalog, setProductCatalog] = useState<ProductCatalogItem[]>([]);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
@@ -102,6 +106,28 @@ export function DREWizard({ onComplete, initialData }: DREWizardProps) {
     if (!user) { toast.error('Você precisa estar logado'); return; }
     setLoading(true);
     try {
+      // Save product catalog if any items were added
+      if (productCatalog.length > 0) {
+        const catalogItems = productCatalog.map(item => ({
+          user_id: user.id,
+          tipo: item.tipo,
+          ncm_code: item.ncm_code || null,
+          ncm_descricao: item.ncm_descricao || null,
+          nbs_categoria: item.nbs_categoria || null,
+          nome: item.nome,
+          percentual_receita: item.percentual_receita || 0,
+        }));
+        
+        const { error: catalogError } = await supabase
+          .from('user_product_catalog')
+          .upsert(catalogItems, { onConflict: 'user_id,ncm_code', ignoreDuplicates: true });
+        
+        if (catalogError) {
+          console.error('Error saving product catalog:', catalogError);
+          // Don't fail the whole process, just log the error
+        }
+      }
+
       const response = await supabase.functions.invoke('process-dre', {
         body: { inputs: formData, cnae_code: profile?.cnae || null, period: { type: 'monthly', month: selectedMonth, year: selectedYear } }
       });
@@ -208,6 +234,16 @@ export function DREWizard({ onComplete, initialData }: DREWizardProps) {
             <div className="flex items-center space-x-2 p-4 bg-primary/5 border border-primary/20 rounded-lg"><Switch id="simular_reforma" checked={formData.simular_reforma} onCheckedChange={(checked) => handleInputChange('simular_reforma', checked)} /><div><Label htmlFor="simular_reforma" className="text-primary flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Ver impacto da Reforma Tributária</Label><p className="text-xs text-muted-foreground">Simula como ficará sua carga tributária após 2027</p></div></div>
           </div>
         );
+      case 6:
+        return (
+          <ProductCatalogStep
+            items={productCatalog}
+            onChange={setProductCatalog}
+            onSkip={handleSubmit}
+            onFinish={handleSubmit}
+            loading={loading}
+          />
+        );
       default: return null;
     }
   };
@@ -235,13 +271,19 @@ export function DREWizard({ onComplete, initialData }: DREWizardProps) {
             );
           })}
         </div>
-        <Progress value={(currentStep / 5) * 100} className="h-2" />
+        <Progress value={(currentStep / 6) * 100} className="h-2" />
       </div>
-      <Card><CardHeader className="pb-4"><CardTitle className="flex items-center gap-2 text-lg">{(() => { const StepIcon = steps[currentStep - 1].icon; return <StepIcon className="w-5 h-5 text-primary" />; })()} {steps[currentStep - 1].title}</CardTitle></CardHeader><CardContent>{renderStep()}</CardContent></Card>
-      <div className="flex justify-between mt-6">
-        <Button variant="outline" onClick={() => setCurrentStep(prev => prev - 1)} disabled={currentStep === 1}><ChevronLeft className="h-4 w-4 mr-2" />Voltar</Button>
-        {currentStep < 5 ? (<Button onClick={() => setCurrentStep(prev => prev + 1)}>Próximo<ChevronRight className="h-4 w-4 ml-2" /></Button>) : (<Button onClick={handleSubmit} disabled={loading}>{loading ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" />Calculando...</>) : (<><Calculator className="h-4 w-4 mr-2" />Gerar DRE e Diagnóstico</>)}</Button>)}
-      </div>
+      <Card><CardHeader className="pb-4"><CardTitle className="flex items-center gap-2 text-lg">{(() => { const StepIcon = steps[currentStep - 1].icon; return <StepIcon className="w-5 h-5 text-primary" />; })()} {steps[currentStep - 1].title} {(steps[currentStep - 1] as { optional?: boolean }).optional && <Badge variant="secondary" className="ml-2">Opcional</Badge>}</CardTitle></CardHeader><CardContent>{renderStep()}</CardContent></Card>
+      {currentStep < 6 && (
+        <div className="flex justify-between mt-6">
+          <Button variant="outline" onClick={() => setCurrentStep(prev => prev - 1)} disabled={currentStep === 1}><ChevronLeft className="h-4 w-4 mr-2" />Voltar</Button>
+          {currentStep < 5 ? (
+            <Button onClick={() => setCurrentStep(prev => prev + 1)}>Próximo<ChevronRight className="h-4 w-4 ml-2" /></Button>
+          ) : (
+            <Button onClick={() => setCurrentStep(6)}>Próximo<ChevronRight className="h-4 w-4 ml-2" /></Button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
