@@ -14,6 +14,9 @@ const supabaseAdmin = createClient(
 
 // Map Stripe price IDs to plan names
 const PRICE_TO_PLAN: Record<string, string> = {
+  // Starter plans
+  [Deno.env.get('STRIPE_PRICE_STARTER_MONTHLY') || 'price_starter_monthly']: 'STARTER',
+  [Deno.env.get('STRIPE_PRICE_STARTER_ANNUAL') || 'price_starter_annual']: 'STARTER',
   // Navigator plans
   [Deno.env.get('STRIPE_PRICE_NAVIGATOR_MONTHLY') || 'price_navigator_monthly']: 'NAVIGATOR',
   [Deno.env.get('STRIPE_PRICE_NAVIGATOR_ANNUAL') || 'price_navigator_annual']: 'NAVIGATOR',
@@ -116,21 +119,39 @@ serve(async (req) => {
           } else {
             console.log(`Updated user ${profiles[0].user_id} to plan ${plano}`)
             
-            // Trigger referral processing asynchronously
-            try {
-              const supabaseUrl = Deno.env.get('SUPABASE_URL')
-              const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
-              if (supabaseUrl && anonKey) {
-                fetch(`${supabaseUrl}/functions/v1/process-referral-rewards`, {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${anonKey}`,
-                  },
-                }).catch(err => console.log('Referral processing triggered (async):', err?.message || 'ok'))
-              }
-            } catch (refErr) {
-              console.log('Could not trigger referral processing:', refErr)
+            // Trigger referral processing and admin notification asynchronously
+            const supabaseUrl = Deno.env.get('SUPABASE_URL')
+            const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
+            
+            if (supabaseUrl && anonKey) {
+              // Process referral rewards
+              fetch(`${supabaseUrl}/functions/v1/process-referral-rewards`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${anonKey}`,
+                },
+              }).catch(err => console.log('Referral processing triggered (async):', err?.message || 'ok'))
+              
+              // Notify admin about new subscription
+              const interval = subscription.items.data[0]?.price?.recurring?.interval
+              fetch(`${supabaseUrl}/functions/v1/notify-new-subscriber`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${anonKey}`,
+                },
+                body: JSON.stringify({
+                  email: session.customer_email,
+                  nome: session.customer_details?.name || null,
+                  plano: plano,
+                  valor: (session.amount_total || 0) / 100,
+                  periodo: interval === 'year' ? 'Anual' : 'Mensal',
+                  stripeCustomerId: session.customer,
+                  timestamp: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+                  tipo: 'assinatura',
+                }),
+              }).catch(err => console.log('Admin notification sent (async):', err?.message || 'ok'))
             }
           }
         }
@@ -181,6 +202,30 @@ serve(async (req) => {
               console.error('Failed to add credits:', creditError)
             } else {
               console.log(`Added ${creditsAmount} credits to user ${userId}`)
+              
+              // Notify admin about credit purchase
+              const supabaseUrl = Deno.env.get('SUPABASE_URL')
+              const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
+              if (supabaseUrl && anonKey) {
+                fetch(`${supabaseUrl}/functions/v1/notify-new-subscriber`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${anonKey}`,
+                  },
+                  body: JSON.stringify({
+                    email: session.customer_email,
+                    nome: session.customer_details?.name || null,
+                    plano: 'CRÉDITOS',
+                    valor: (session.amount_total || 0) / 100,
+                    periodo: 'Avulso',
+                    stripeCustomerId: session.customer as string,
+                    timestamp: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+                    tipo: 'creditos',
+                    quantidade: creditsAmount,
+                  }),
+                }).catch(err => console.log('Credit purchase notification sent (async):', err?.message || 'ok'))
+              }
             }
 
             // Log the purchase
@@ -232,6 +277,30 @@ serve(async (req) => {
               console.error('Failed to add seat:', updateError)
             } else {
               console.log(`Added ${seatInfo.seats} seat(s) to user ${userId} (plan: ${seatInfo.plan})`)
+              
+              // Notify admin about seat purchase
+              const supabaseUrl = Deno.env.get('SUPABASE_URL')
+              const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
+              if (supabaseUrl && anonKey) {
+                fetch(`${supabaseUrl}/functions/v1/notify-new-subscriber`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${anonKey}`,
+                  },
+                  body: JSON.stringify({
+                    email: session.customer_email,
+                    nome: session.customer_details?.name || null,
+                    plano: seatInfo.plan,
+                    valor: (session.amount_total || 0) / 100,
+                    periodo: 'Avulso',
+                    stripeCustomerId: session.customer as string,
+                    timestamp: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+                    tipo: 'assento',
+                    quantidade: seatInfo.seats,
+                  }),
+                }).catch(err => console.log('Seat purchase notification sent (async):', err?.message || 'ok'))
+              }
             }
           }
         }
