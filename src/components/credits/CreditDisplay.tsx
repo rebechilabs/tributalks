@@ -168,7 +168,7 @@ function CreditPurchaseDialog({
       )}
 
       <p className="text-xs text-center text-muted-foreground">
-        Pagamento seguro via Stripe. Créditos não expiram.
+        Pagamento seguro via Stripe. <strong>Créditos não expiram</strong> — use quando quiser, enquanto durarem.
       </p>
     </DialogContent>
   );

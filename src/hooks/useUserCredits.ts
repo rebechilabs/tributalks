@@ -26,22 +26,22 @@ export function getCreditPackages(): CreditPackage[] {
     {
       id: 'credits_30',
       credits: 30,
-      price: 74.90,
-      priceFormatted: 'R$ 74,90',
+      price: 80.00,
+      priceFormatted: 'R$ 80,00',
       paymentLink: CONFIG.PAYMENT_LINKS.CREDITS_30 || '',
     },
     {
       id: 'credits_50',
       credits: 50,
-      price: 109.90,
-      priceFormatted: 'R$ 109,90',
+      price: 130.00,
+      priceFormatted: 'R$ 130,00',
       paymentLink: CONFIG.PAYMENT_LINKS.CREDITS_50 || '',
     },
     {
       id: 'credits_100',
       credits: 100,
-      price: 199.90,
-      priceFormatted: 'R$ 199,90',
+      price: 250.00,
+      priceFormatted: 'R$ 250,00',
       paymentLink: CONFIG.PAYMENT_LINKS.CREDITS_100 || '',
     },
   ];
