@@ -163,7 +163,7 @@ Ao assinar Professional, o usuário recebe automaticamente:
 | Backend | Supabase (Lovable Cloud) |
 | Edge Functions | Deno (Supabase Functions) |
 | AI | Claude Sonnet 4 via Lovable AI |
-| Pagamentos | Mercado Pago (subscriptions) |
+| Pagamentos | Stripe (subscriptions + one-off) |
 | E-mail | Resend (transacional) + Beehiiv (newsletter) |
 | Comunidade | Circle.so |
 | PWA | vite-plugin-pwa |
@@ -203,7 +203,7 @@ src/
 │   ├── toolsManual.ts         # Base de conhecimento (18 ferramentas)
 │   └── checklistReformaItems.ts
 ├── config/
-│   └── site.ts                # Links Mercado Pago, contatos
+│   └── site.ts                # Links Stripe, contatos
 └── integrations/
     └── supabase/
         ├── client.ts          # Cliente Supabase
@@ -217,7 +217,7 @@ src/
 | Função | Descrição |
 |--------|-----------|
 | `clara-assistant` | Orquestra Clara AI (Claude Sonnet 4) |
-| `mercadopago-webhook` | Processa assinaturas + envia e-mail welcome |
+| `stripe-webhook` | Processa assinaturas Stripe + envia e-mail welcome |
 | `calculate-rtc` | Calcula CBS/IBS/IS via API Gov |
 | `calculate-tax-score` | Gera score tributário (0-1000) |
 | `analyze-credits` | Identifica créditos em XMLs |
@@ -378,13 +378,14 @@ interface NexusKpiData {
 
 ## Webhooks e Pagamentos
 
-### Mercado Pago
+### Stripe
 
 ```typescript
-// mercadopago-webhook/index.ts
+// stripe-webhook/index.ts
 // Eventos tratados:
-// - subscription.authorized → ativa plano + envia welcome email
-// - subscription.cancelled → desativa plano
+// - checkout.session.completed → ativa plano + envia welcome email
+// - customer.subscription.updated → atualiza plano
+// - customer.subscription.deleted → desativa plano
 
 // Welcome Email (Professional):
 await sendProfessionalWelcomeEmail(payerEmail);
@@ -401,7 +402,7 @@ await sendProfessionalWelcomeEmail(payerEmail);
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Chave pública |
 | `RESEND_API_KEY` | Envio de e-mails |
 | `BEEHIIV_API_KEY` | Newsletter |
-| `MERCADOPAGO_ACCESS_TOKEN` | Pagamentos |
+| `STRIPE_SECRET_KEY` | Pagamentos (via Lovable Stripe connector) |
 | `LOVABLE_API_KEY` | IA (Clara AI) |
 
 ---
@@ -429,7 +430,7 @@ CREATE POLICY "Users can update own profile"
 |--------|-----------|
 | `erp_sync_logs` | Logs de sincronização ERP |
 | `executive_report_logs` | Envios de relatório executivo |
-| `mp_subscription_events` | Eventos do Mercado Pago |
+| `stripe_subscription_events` | Eventos do Stripe |
 | `credit_usage` | Uso de créditos Clara AI |
 
 ---
