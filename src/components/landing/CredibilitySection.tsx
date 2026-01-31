@@ -1,4 +1,4 @@
-import { TrendingUp, BookOpen, Users, Building } from "lucide-react";
+import { TrendingUp, Users, Building, Scale } from "lucide-react";
 
 const stats = [
   {
@@ -26,10 +26,25 @@ export function CredibilitySection() {
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3 md:mb-4">
             Quem está por trás
           </h2>
+          
+          {/* Founder highlight */}
+          <div className="flex flex-col items-center gap-4 mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full">
+              <Scale className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-primary">
+                Powered by Rebechi & Silva Advogados Associados
+              </span>
+            </div>
+          </div>
+          
           <p className="text-sm md:text-lg text-muted-foreground max-w-3xl mx-auto px-4">
-            TribuTalks é uma iniciativa da{" "}
+            TribuTalks é liderado por{" "}
+            <span className="text-foreground font-semibold">
+              Dr. Alexandre Silva
+            </span>
+            , Founder & CEO da{" "}
             <span className="text-primary font-medium">
-              Rebechi & Silva Advogados
+              Rebechi & Silva Advogados Associados
             </span>
             , escritório especializado em planejamento tributário para o middle
             market brasileiro.
