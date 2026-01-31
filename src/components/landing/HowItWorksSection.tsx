@@ -1,41 +1,43 @@
-import { UserPlus, Building2, Trophy } from "lucide-react";
+import { Upload, Search, Gauge, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const steps = [
   {
     number: "1",
-    icon: UserPlus,
-    title: "Crie sua conta gratuita",
-    description: "Em menos de 1 minuto",
+    icon: Upload,
+    title: "Diagnóstico Rápido",
+    description: "Faça upload de 3 XMLs ou conecte seu ERP. Em 2 minutos você vê o impacto real da Reforma.",
   },
   {
     number: "2",
-    icon: Building2,
-    title: "Preencha os dados da sua empresa",
-    description: "Informações básicas do negócio",
+    icon: Search,
+    title: "Identifique Oportunidades",
+    description: "Radar analisa automaticamente e encontra créditos tributários não aproveitados (média R$ 47k).",
   },
   {
     number: "3",
-    icon: Trophy,
-    title: "Receba seu Score",
-    description: "Avaliação fiscal em 5 dimensões",
+    icon: Gauge,
+    title: "Tome Decisões Informadas",
+    description: "NEXUS consolida 8 KPIs executivos. Clara AI responde dúvidas 24/7. Você comanda, não reage.",
   },
 ];
 
 export function HowItWorksSection() {
   return (
-    <section id="como-funciona" className="py-24 bg-background">
+    <section id="como-funciona" className="py-16 md:py-24 bg-background">
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
-        <div className="text-center mb-16">
+        <div className="text-center mb-12 md:mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Como funciona
+            Do Cadastro ao Resultado em 3 Passos
           </h2>
-          <p className="text-muted-foreground max-w-xl mx-auto">
-            Do cadastro ao seu score completo em menos de 10 min
+          <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+            Simples, rápido e com resultado imediato.
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto">
-          <div className="grid md:grid-cols-3 gap-8 relative">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 md:gap-12 relative">
             {/* Connecting Line - Desktop Only */}
             <div className="hidden md:block absolute top-8 left-[16.67%] right-[16.67%] h-0.5 bg-border" />
 
@@ -46,23 +48,40 @@ export function HowItWorksSection() {
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 {/* Step Number Circle */}
-                <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center mb-4 relative z-10">
+                <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center mb-6 relative z-10">
                   <span className="text-2xl font-bold text-primary-foreground">
                     {step.number}
                   </span>
                 </div>
 
-                {/* Step Title */}
-                <p className="text-foreground font-semibold mb-1">{step.title}</p>
-                <p className="text-sm text-muted-foreground">{step.description}</p>
+                {/* Step Content */}
+                <h3 className="text-xl font-bold text-foreground mb-3">
+                  {step.title}
+                </h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  {step.description}
+                </p>
 
                 {/* Arrow for mobile */}
                 {index < steps.length - 1 && (
-                  <div className="md:hidden text-primary text-2xl my-2">↓</div>
+                  <div className="md:hidden text-primary text-2xl my-4">↓</div>
                 )}
               </div>
             ))}
           </div>
+        </div>
+
+        {/* CTA */}
+        <div className="text-center mt-12">
+          <Link to="/cadastro">
+            <Button
+              size="lg"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-10 py-6 text-lg group"
+            >
+              Começar Meu Diagnóstico Gratuito
+              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </Link>
         </div>
       </div>
     </section>
