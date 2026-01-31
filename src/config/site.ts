@@ -3,7 +3,7 @@ export const CONFIG = {
   PAYMENT_LINKS: {
     // Starter - R$397/mês ou R$3.970/ano (7 dias grátis)
     STARTER_MENSAL: "/cadastro?plan=starter",
-    STARTER_ANUAL: "/cadastro?plan=starter&billing=annual",
+    STARTER_ANUAL: "https://buy.stripe.com/00wbIU4Zc5Do1rt1Qqbo401",
     // Navigator - R$1.297/mês
     NAVIGATOR_MENSAL: "/cadastro?plan=navigator",
     NAVIGATOR_ANUAL: "/cadastro?plan=navigator&billing=annual",
