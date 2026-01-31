@@ -1,89 +1,30 @@
 
-# Adicionar Links das Redes Sociais
+# Atualizar Label de Seguidores
 
-## Resumo
+## Alteração
 
-Atualizar os links das redes sociais em toda a aplicação para apontar para os endereços corretos do TribuTalks.
-
----
-
-## URLs Corretas
-
-| Rede | URL |
-|------|-----|
-| LinkedIn | https://www.linkedin.com/company/tributalks |
-| Instagram | https://www.instagram.com/tributalks |
-| YouTube | https://www.youtube.com/@tributalksnews |
+Modificar o texto do label de "+270.000 seguidores" para deixar claro que são seguidores nas redes sociais.
 
 ---
 
-## Alterações
+## Arquivo: src/components/landing/CredibilitySection.tsx
 
-### 1. src/config/site.ts
-
-Adicionar Instagram e YouTube às configurações centralizadas:
+**Linha 12** - Alterar o label:
 
 ```typescript
-// Antes (linha 35-36)
-// Social
-LINKEDIN: "https://www.linkedin.com/company/tributalks/",
-
-// Depois
-// Social
-LINKEDIN: "https://www.linkedin.com/company/tributalks",
-INSTAGRAM: "https://www.instagram.com/tributalks",
-YOUTUBE: "https://www.youtube.com/@tributalksnews",
-```
-
----
-
-### 2. src/pages/Contato.tsx
-
-Atualizar os links hardcoded para usar o CONFIG (linhas 246-270):
-
-```tsx
 // Antes
-<a href="https://www.linkedin.com/company/tributalks/">
-<a href="https://instagram.com/tributech">
-<a href="https://youtube.com/@tributech">
+label: "seguidores",
 
 // Depois
-<a href={CONFIG.LINKEDIN}>
-<a href={CONFIG.INSTAGRAM}>
-<a href={CONFIG.YOUTUBE}>
+label: "seguidores nas redes sociais",
 ```
 
 ---
 
-### 3. src/components/landing/Footer.tsx
+## Resultado Visual
 
-Adicionar ícones de Instagram e YouTube ao footer:
-
-```tsx
-// Adicionar imports
-import { Linkedin, Instagram, Youtube, Phone, Mail } from "lucide-react";
-
-// Adicionar links na seção de contato
-<a href={CONFIG.LINKEDIN}>
-  <Linkedin className="h-4 w-4" />
-  LinkedIn
-</a>
-<a href={CONFIG.INSTAGRAM}>
-  <Instagram className="h-4 w-4" />
-  Instagram
-</a>
-<a href={CONFIG.YOUTUBE}>
-  <Youtube className="h-4 w-4" />
-  YouTube
-</a>
-```
-
----
-
-## Arquivos Alterados
-
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/config/site.ts` | Adicionar INSTAGRAM e YOUTUBE |
-| `src/pages/Contato.tsx` | Usar CONFIG para os links |
-| `src/components/landing/Footer.tsx` | Adicionar Instagram e YouTube |
+| Métrica | Valor | Label Atualizado |
+|---------|-------|------------------|
+| Economia | +R$380M | economia gerada |
+| Seguidores | +270.000 | **seguidores nas redes sociais** |
+| Empresas | +1.500 | empresas atendidas no Brasil |
