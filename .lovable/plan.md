@@ -1,38 +1,58 @@
 
 
-# Corrigir Badge "7 Dias Grátis" Cortado
+# Remover Frases do Plano Enterprise
 
-## Problema
+## Resumo
 
-O badge "7 DIAS GRÁTIS" usa posicionamento absoluto com `-top-3` (12px acima do card), mas o container com `overflow-x-auto` na seção de preços está cortando elementos que ultrapassam seus limites.
-
-## Solução
-
-Adicionar padding-top ao container de scroll para dar espaço aos badges que ficam acima dos cards.
+Remover 5 itens da lista de features do plano Enterprise na seção de preços.
 
 ---
 
-## Mudança
+## Features a Remover
 
-| Arquivo | Linha | Valor Atual | Novo Valor |
-|---------|-------|-------------|------------|
-| `src/components/landing/PricingSection.tsx` | 174 | `overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pb-4` | `overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pt-4 pb-4` |
+| Linha | Feature |
+|-------|---------|
+| 113 | "Clara AI ilimitada" |
+| 114 | "Tudo do Professional +" |
+| 115 | "Painel Executivo Multi-empresa" |
+| 118 | "API de integração dedicada" |
+| 119 | "SLA prioritário" |
 
 ---
 
-## Código
+## Features que Permanecem
 
-```tsx
-// Antes (linha 174)
-<div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pb-4 md:pb-0 scrollbar-hide">
+Apos a remocao, o plano Enterprise tera apenas:
 
-// Depois  
-<div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pt-4 pb-4 md:pb-0 scrollbar-hide">
+1. **Consultoria com Rebechi & Silva Advogados**
+2. **White Label** (seu logo, cores, dominio)
+
+---
+
+## Codigo
+
+```typescript
+// Antes (linhas 112-120)
+features: [
+  { text: "Clara AI ilimitada", included: true },
+  { text: "Tudo do Professional +", included: true },
+  { text: "Painel Executivo Multi-empresa", included: true },
+  { text: "Consultoria com Rebechi & Silva Advogados", included: true },
+  { text: "White Label", included: true, limitText: "(seu logo, cores, domínio)" },
+  { text: "API de integração dedicada", included: true },
+  { text: "SLA prioritário", included: true },
+],
+
+// Depois
+features: [
+  { text: "Consultoria com Rebechi & Silva Advogados", included: true },
+  { text: "White Label", included: true, limitText: "(seu logo, cores, domínio)" },
+],
 ```
 
 ---
 
-## Resultado
+## Arquivo Alterado
 
-O badge "7 DIAS GRÁTIS" ficará totalmente visível, sem cortes, tanto em mobile quanto em desktop.
+- `src/components/landing/PricingSection.tsx` (linhas 112-120)
 
