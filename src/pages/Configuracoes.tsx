@@ -6,12 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Settings, Bell, Shield, Download, AlertTriangle, Loader2, CheckCircle, ExternalLink } from "lucide-react";
+import { Settings, Bell, Shield, Download, AlertTriangle, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { SeatManagement } from "@/components/settings/SeatManagement";
 import { CnpjGroupManager } from "@/components/profile/CnpjGroupManager";
+import { ThemeSwitcher } from "@/components/settings/ThemeSwitcher";
 
 const Configuracoes = () => {
   const { user, profile, refreshProfile, signOut } = useAuth();
@@ -180,6 +181,9 @@ const Configuracoes = () => {
 
           {/* Seat Management - Multi-user access */}
           <SeatManagement />
+
+          {/* Theme Switcher */}
+          <ThemeSwitcher />
 
           {/* Notifications */}
           <Card>
