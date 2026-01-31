@@ -13,7 +13,7 @@ export const CONFIG = {
     // Enterprise - Sob consulta (WhatsApp direto)
     ENTERPRISE: "https://wa.me/5511914523971",
     // Pacotes de créditos Clara (1 crédito = 1 conversa) - via Stripe
-    CREDITS_30: "/cadastro?credits=30",
+    CREDITS_30: "https://buy.stripe.com/6oU7sE77k4zk8TVfHgbo407",
     CREDITS_50: "/cadastro?credits=50",
     CREDITS_100: "/cadastro?credits=100",
     // Extra seats for multi-user plans - R$ 247/mês por usuário adicional
