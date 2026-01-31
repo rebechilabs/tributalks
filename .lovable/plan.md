@@ -1,102 +1,117 @@
 
 
-# Plano: Rotação Diária das Pílulas da Reforma
+# Plano: Padronização "Clara AI" e Correção do CTA da Landing Page
 
-## Problema Identificado
+## 1. Status Atual
 
-| Campo | Situação Atual |
-|-------|----------------|
-| Pílulas cadastradas | 5 (todas ativas) |
-| `data_exibicao` | Todas com valor `null` |
-| Comportamento | Sempre mostra a mesma pílula |
+### CTA Section (Saúde Fiscal)
+O código já está correto em `src/components/landing/CTASection.tsx`:
+- Título: "Descubra a saúde fiscal da sua empresa"
+- Botão: "Testar Grátis por 7 Dias" → link Stripe Starter
+- Ícone: Heart (coração)
 
-A lógica atual busca pílulas onde `data_exibicao = hoje` ou `data_exibicao = null`, mas como nenhuma tem data específica e o `limit(1)` sempre retorna a primeira da query, não há rotação.
+**Ação do usuário**: Fazer **hard reload** (Ctrl+Shift+R / Cmd+Shift+R) e **rolar até o final da página** para ver o CTA.
 
-## Solução Proposta: Rotação Automática por Dia
+---
 
-Usar o **dia do ano** para criar uma rotação automática entre as pílulas disponíveis, sem precisar agendar cada uma manualmente.
+## 2. Padronização para "Clara AI"
 
-### Lógica de Rotação
+Localizei 5 arquivos que usam "IA" isolado ou "Assistente IA" que devem ser alterados para manter consistência com a marca "Clara AI":
 
-```typescript
-// Calcular dia do ano (1-365)
-const dayOfYear = Math.floor(
-  (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000
-);
+| Arquivo | Antes | Depois |
+|---------|-------|--------|
+| `src/components/dashboard/ClaraCard.tsx` | `Assistente IA` | `Clara AI` |
+| `src/components/dashboard/ClaraCard.tsx` | Badge `IA` | Badge `AI` |
+| `src/components/landing/FeaturesSection.tsx` | Badge `IA` | Badge `AI` |
+| `src/components/landing/HeroSection.tsx` | `Decisões com IA` | `Decisões com Clara AI` |
+| `src/components/docs/TribuTalksPitchPdf.tsx` | Badge `IA` | Badge `AI` |
 
-// Índice baseado no dia, ciclando entre as pílulas disponíveis
-const pilulas = [...]; // todas as pílulas ativas
-const indice = dayOfYear % pilulas.length;
-const pilulaDoDia = pilulas[indice];
-```
+---
 
-### Prioridade de Exibição
+## 3. Alterações Detalhadas
 
-1. **Primeiro**: Pílula com `data_exibicao = hoje` (agendamento manual)
-2. **Segundo**: Rotação automática entre pílulas com `data_exibicao = null`
+### Arquivo 1: `src/components/dashboard/ClaraCard.tsx`
 
-## Alterações Técnicas
-
-### Arquivo: `src/pages/NoticiasReforma.tsx`
-
-```typescript
-// ANTES (linhas 160-181)
-const today = new Date().toISOString().split('T')[0];
-const { data: pilulas } = await supabase
-  .from('pilulas_reforma')
-  .select('*')
-  .eq('ativo', true)
-  .or(`data_exibicao.eq.${today},data_exibicao.is.null`)
-  .limit(1);
+**Linha 45**: Subtítulo acima do nome
+```tsx
+// ANTES
+<p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-0.5">
+  Assistente IA
+</p>
 
 // DEPOIS
-const today = new Date().toISOString().split('T')[0];
-
-// 1. Verificar se há pílula agendada para hoje
-const { data: agendada } = await supabase
-  .from('pilulas_reforma')
-  .select('*')
-  .eq('ativo', true)
-  .eq('data_exibicao', today)
-  .limit(1);
-
-if (agendada && agendada.length > 0) {
-  setPilulaDoDia(agendada[0]);
-} else {
-  // 2. Rotação automática entre pílulas sem data específica
-  const { data: pilulas } = await supabase
-    .from('pilulas_reforma')
-    .select('*')
-    .eq('ativo', true)
-    .is('data_exibicao', null)
-    .order('created_at', { ascending: true });
-
-  if (pilulas && pilulas.length > 0) {
-    // Calcular dia do ano para rotação
-    const startOfYear = new Date(new Date().getFullYear(), 0, 0);
-    const dayOfYear = Math.floor(
-      (Date.now() - startOfYear.getTime()) / 86400000
-    );
-    const indice = dayOfYear % pilulas.length;
-    setPilulaDoDia(pilulas[indice]);
-  }
-}
+<p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-0.5">
+  Clara AI
+</p>
 ```
 
-## Resultado Esperado
+**Linhas 49-51**: Badge ao lado do nome "Clara"
+```tsx
+// ANTES
+<span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+  IA
+</span>
 
-| Dia do Ano | Pílula Exibida (5 cadastradas) |
-|------------|-------------------------------|
-| 1, 6, 11... | CBS substitui PIS/COFINS |
-| 2, 7, 12... | Split Payment obrigatório |
-| 3, 8, 13... | Crédito amplo e imediato |
-| 4, 9, 14... | Transição até 2033 |
-| 5, 10, 15... | Imposto Seletivo |
+// DEPOIS  
+<span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+  AI
+</span>
+```
 
-## Benefícios
+### Arquivo 2: `src/components/landing/FeaturesSection.tsx`
 
-- **Rotação automática**: Uma pílula diferente a cada dia
-- **Agendamento opcional**: Admin pode forçar pílula específica em data específica
-- **Zero configuração**: Funciona automaticamente com as pílulas existentes
-- **Ciclo contínuo**: Quando acabar, volta do início
+**Linha 89**: Badge da feature Clara AI
+```tsx
+// ANTES
+badge: "IA",
+
+// DEPOIS
+badge: "AI",
+```
+
+### Arquivo 3: `src/components/landing/HeroSection.tsx`
+
+**Linha 59**: Benefício no Hero
+```tsx
+// ANTES
+{ icon: Zap, text: "Decisões com IA", sub: "Clara AI responde dúvidas 24/7" },
+
+// DEPOIS
+{ icon: Zap, text: "Decisões com Clara AI", sub: "Sua copiloto tributária 24/7" },
+```
+
+### Arquivo 4: `src/components/docs/TribuTalksPitchPdf.tsx`
+
+**Linha 171**: Badge no PDF comercial
+```tsx
+// ANTES
+badge: "IA",
+
+// DEPOIS
+badge: "AI",
+```
+
+---
+
+## 4. Padrão Final de Nomenclatura
+
+| Contexto | Formato |
+|----------|---------|
+| Nome completo do produto | **Clara AI** |
+| Badges visuais (chips) | **AI** |
+| Descrições | "Copiloto tributário", "Sua copiloto tributária" |
+| Rotas | `/clara-ai` (mantém) |
+| Feature key interno | `clara_ai` (mantém) |
+
+---
+
+## 5. Resumo das Alterações
+
+| Arquivo | Modificações |
+|---------|-------------|
+| `ClaraCard.tsx` | 2 alterações (subtítulo + badge) |
+| `FeaturesSection.tsx` | 1 alteração (badge) |
+| `HeroSection.tsx` | 1 alteração (texto benefício) |
+| `TribuTalksPitchPdf.tsx` | 1 alteração (badge PDF) |
+| **Total** | **5 alterações em 4 arquivos** |
 
