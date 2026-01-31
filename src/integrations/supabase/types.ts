@@ -80,6 +80,51 @@ export type Database = {
         }
         Relationships: []
       }
+      clara_cache: {
+        Row: {
+          category: string
+          created_at: string | null
+          hit_count: number | null
+          id: string
+          model_used: string | null
+          query_hash: string
+          query_normalized: string
+          requires_validation: boolean | null
+          response: string
+          tokens_saved: number | null
+          ttl_days: number
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string | null
+          hit_count?: number | null
+          id?: string
+          model_used?: string | null
+          query_hash: string
+          query_normalized: string
+          requires_validation?: boolean | null
+          response: string
+          tokens_saved?: number | null
+          ttl_days?: number
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          hit_count?: number | null
+          id?: string
+          model_used?: string | null
+          query_hash?: string
+          query_normalized?: string
+          requires_validation?: boolean | null
+          response?: string
+          tokens_saved?: number | null
+          ttl_days?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       company_dre: {
         Row: {
           calc_custo_produtos_vendidos: number | null
