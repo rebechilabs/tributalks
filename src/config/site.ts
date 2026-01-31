@@ -16,9 +16,8 @@ export const CONFIG = {
     CREDITS_30: "/cadastro?credits=30",
     CREDITS_50: "/cadastro?credits=50",
     CREDITS_100: "/cadastro?credits=100",
-    // Extra seats for multi-user plans
-    SEAT_PROFESSIONAL: "/cadastro",
-    SEAT_ENTERPRISE: "/cadastro",
+    // Extra seats for multi-user plans - R$ 247/mês por usuário adicional
+    SEAT_ADDITIONAL: "https://buy.stripe.com/dRmdR2ajwd5Q6LNcv4bo400",
   },
   // Contact Info
   CONTACT_EMAIL: "suporte@tributalks.com.br",
