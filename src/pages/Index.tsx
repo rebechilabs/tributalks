@@ -2,6 +2,7 @@ import { Header } from "@/components/landing/Header";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { JourneysSection } from "@/components/landing/JourneysSection";
 import { SocialProofSection } from "@/components/landing/SocialProofSection";
+import { CredibilitySection } from "@/components/landing/CredibilitySection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { ROICalculatorSection } from "@/components/landing/ROICalculatorSection";
 import { IntegrationsSection } from "@/components/landing/IntegrationsSection";
@@ -18,6 +19,7 @@ const Index = () => {
         <HeroSection />
         <JourneysSection />
         <SocialProofSection />
+        <CredibilitySection />
         <HowItWorksSection />
         <ROICalculatorSection />
         <IntegrationsSection />
