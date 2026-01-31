@@ -1146,6 +1146,77 @@ export type Database = {
         }
         Relationships: []
       }
+      diagnostic_results: {
+        Row: {
+          cashflow_impact_q2_2027: number | null
+          cashflow_risk: string | null
+          created_at: string | null
+          credits_items: Json | null
+          credits_total: number | null
+          erp_connection_id: string | null
+          expires_at: string | null
+          id: string
+          insights: Json | null
+          margin_current: number | null
+          margin_delta_pp: number | null
+          margin_projected: number | null
+          processing_time_ms: number | null
+          source: string
+          status: string
+          updated_at: string | null
+          user_id: string
+          xmls_processed: number | null
+        }
+        Insert: {
+          cashflow_impact_q2_2027?: number | null
+          cashflow_risk?: string | null
+          created_at?: string | null
+          credits_items?: Json | null
+          credits_total?: number | null
+          erp_connection_id?: string | null
+          expires_at?: string | null
+          id?: string
+          insights?: Json | null
+          margin_current?: number | null
+          margin_delta_pp?: number | null
+          margin_projected?: number | null
+          processing_time_ms?: number | null
+          source?: string
+          status?: string
+          updated_at?: string | null
+          user_id: string
+          xmls_processed?: number | null
+        }
+        Update: {
+          cashflow_impact_q2_2027?: number | null
+          cashflow_risk?: string | null
+          created_at?: string | null
+          credits_items?: Json | null
+          credits_total?: number | null
+          erp_connection_id?: string | null
+          expires_at?: string | null
+          id?: string
+          insights?: Json | null
+          margin_current?: number | null
+          margin_delta_pp?: number | null
+          margin_projected?: number | null
+          processing_time_ms?: number | null
+          source?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+          xmls_processed?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnostic_results_erp_connection_id_fkey"
+            columns: ["erp_connection_id"]
+            isOneToOne: false
+            referencedRelation: "erp_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       erp_checklist: {
         Row: {
           id: string

@@ -187,6 +187,10 @@ const Onboarding = () => {
           title: "Perfil configurado!",
           description: "Você está pronto para usar as calculadoras.",
         });
+        
+        // Set flag for quick diagnostic modal
+        localStorage.setItem('needs_quick_diagnostic', 'true');
+        
         setIsSaved(true);
       }
       

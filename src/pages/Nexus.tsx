@@ -1,18 +1,53 @@
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { NexusHeader, NexusGrid, NexusInsightsSection } from '@/components/nexus';
 import { useNexusData } from '@/hooks/useNexusData';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Link } from 'react-router-dom';
-import { BarChart3, Trophy } from 'lucide-react';
+import { BarChart3, Trophy, AlertCircle } from 'lucide-react';
+import { QuickDiagnosticModal } from '@/components/onboarding';
 
 export default function Nexus() {
   const { kpiData, insights, loading, lastUpdate, refresh, hasData } = useNexusData();
+  const [showQuickDiagnostic, setShowQuickDiagnostic] = useState(false);
+  const [showDiagnosticPending, setShowDiagnosticPending] = useState(false);
+
+  // Check for diagnostic flags on mount
+  useEffect(() => {
+    const needsDiagnostic = localStorage.getItem('needs_quick_diagnostic');
+    const diagnosticPending = localStorage.getItem('diagnostic_pending');
+    
+    if (needsDiagnostic === 'true') {
+      setShowQuickDiagnostic(true);
+    } else if (diagnosticPending === 'true') {
+      setShowDiagnosticPending(true);
+    }
+  }, []);
+
+  const handleDiagnosticComplete = () => {
+    setShowQuickDiagnostic(false);
+    setShowDiagnosticPending(false);
+    refresh(); // Refresh NEXUS data
+  };
+
+  const handleDiagnosticSkip = () => {
+    setShowQuickDiagnostic(false);
+    setShowDiagnosticPending(true);
+  };
 
   const showDataPrompt = !loading && (!hasData.dre || !hasData.score);
 
   return (
     <DashboardLayout>
+      {/* Quick Diagnostic Modal */}
+      <QuickDiagnosticModal
+        open={showQuickDiagnostic}
+        onComplete={handleDiagnosticComplete}
+        onSkip={handleDiagnosticSkip}
+      />
+      
       <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
         {/* Header */}
         <NexusHeader
@@ -21,8 +56,25 @@ export default function Nexus() {
           loading={loading}
         />
 
+        {/* Pending diagnostic banner */}
+        {showDiagnosticPending && (
+          <Alert className="mb-6 border-warning/50 bg-warning/10">
+            <AlertCircle className="h-4 w-4 text-warning" />
+            <AlertDescription className="flex items-center justify-between w-full">
+              <span>Complete seu diagnóstico para ver insights personalizados</span>
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => setShowQuickDiagnostic(true)}
+              >
+                Completar agora
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Data prompt if missing critical data - friendly value-focused language */}
-        {showDataPrompt && (
+        {showDataPrompt && !showDiagnosticPending && (
           <Card className="p-5 mb-6 border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
@@ -57,7 +109,7 @@ export default function Nexus() {
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
                   Seus dados são criptografados e nunca compartilhados
                 </p>
               </div>
