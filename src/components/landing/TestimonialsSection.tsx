@@ -4,23 +4,23 @@ const testimonials = [
   {
     quote:
       "Descobri em 5 minutos que estou no regime errado. Potencial de economia: R$47k/ano.",
-    author: "C.M.",
-    role: "CEO",
-    sector: "Logística",
+    sector: "Empresa de Logística",
+    revenue: "R$ 8M/ano",
+    icon: "📦",
   },
   {
     quote:
       "Finalmente entendi quanto o Split Payment vai impactar meu caixa. Números que ninguém tinha me mostrado.",
-    author: "F.L.",
-    role: "CFO",
-    sector: "Tecnologia",
+    sector: "Empresa de Tecnologia",
+    revenue: "R$ 15M/ano",
+    icon: "💻",
   },
   {
     quote:
       "A Clara AI respondeu em 10 segundos uma dúvida que eu ia pagar R$500 pra um consultor.",
-    author: "R.A.",
-    role: "Diretor Financeiro",
     sector: "Indústria",
+    revenue: "R$ 42M/ano",
+    icon: "🏭",
   },
 ];
 
@@ -37,7 +37,7 @@ export function TestimonialsSection() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 max-w-6xl mx-auto">
           {testimonials.map((testimonial, index) => (
             <div
-              key={testimonial.author}
+              key={testimonial.sector}
               className="relative bg-secondary rounded-xl p-5 md:p-8 border border-border hover:border-primary/50 transition-all duration-300 animate-fade-in-up"
               style={{ animationDelay: `${index * 100}ms` }}
             >
@@ -49,19 +49,19 @@ export function TestimonialsSection() {
                 {testimonial.quote}
               </blockquote>
 
-              {/* Author */}
+              {/* Sector Info */}
               <div className="flex items-center gap-3 md:gap-4">
                 <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                  <span className="text-primary font-semibold text-base md:text-lg">
-                    {testimonial.author.charAt(0)}
+                  <span className="text-xl md:text-2xl">
+                    {testimonial.icon}
                   </span>
                 </div>
                 <div>
                   <div className="font-bold text-foreground text-sm md:text-base">
-                    {testimonial.author}
+                    {testimonial.sector}
                   </div>
                   <div className="text-xs md:text-sm text-muted-foreground">
-                    {testimonial.role} · {testimonial.sector}
+                    Faturamento: {testimonial.revenue}
                   </div>
                 </div>
               </div>
@@ -78,6 +78,11 @@ export function TestimonialsSection() {
             </div>
           ))}
         </div>
+
+        {/* Disclaimer */}
+        <p className="text-xs text-muted-foreground/70 text-center mt-8">
+          *Casos ilustrativos baseados em resultados reais de clientes.
+        </p>
       </div>
     </section>
   );

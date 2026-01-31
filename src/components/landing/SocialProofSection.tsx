@@ -2,33 +2,27 @@ import { Star } from "lucide-react";
 
 const testimonials = [
   {
-    name: "C.M.",
-    role: "CFO",
-    sector: "Setor de Logística",
-    revenue: "Faturamento: R$ 8M/ano",
-    avatar: "CM",
+    sector: "Empresa de Logística",
+    revenue: "R$ 8M/ano",
+    icon: "📦",
     metric: "R$ 127k",
     metricLabel: "Créditos ICMS-ST identificados",
     metricColor: "text-success",
-    quote: "Em 48 horas o Radar encontrou créditos que meu contador não tinha visto em 2 anos. ROI de 42x no primeiro mês.",
+    quote: "Em 48 horas o Radar encontrou créditos que estavam sendo perdidos há 2 anos. ROI de 42x no primeiro mês.",
   },
   {
-    name: "F.L.",
-    role: "CFO",
-    sector: "Setor de Tecnologia",
-    revenue: "Faturamento: R$ 15M/ano",
-    avatar: "FL",
+    sector: "Empresa de Tecnologia",
+    revenue: "R$ 15M/ano",
+    icon: "💻",
     metric: "4,2pp",
     metricLabel: "Margem protegida com reclassificação",
     metricColor: "text-primary",
     quote: "O DRE Inteligente mostrou que 3 produtos estavam em NCM errado. Corrigimos e salvamos 4,2 pontos de margem.",
   },
   {
-    name: "R.A.",
-    role: "Dir. Financeiro",
-    sector: "Setor Industrial",
-    revenue: "Faturamento: R$ 42M/ano",
-    avatar: "RA",
+    sector: "Indústria",
+    revenue: "R$ 42M/ano",
+    icon: "🏭",
     metric: "R$ 340k",
     metricLabel: "Economia anual identificada",
     metricColor: "text-success",
@@ -52,18 +46,17 @@ export function SocialProofSection() {
         <div className="grid md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
           {testimonials.map((testimonial) => (
             <div
-              key={testimonial.name}
+              key={testimonial.sector}
               className="bg-card rounded-xl p-6 shadow-lg border border-border hover:border-primary/50 transition-all"
             >
               {/* Header */}
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                  <span className="text-primary font-semibold">{testimonial.avatar}</span>
+                  <span className="text-2xl">{testimonial.icon}</span>
                 </div>
                 <div>
-                  <strong className="text-foreground">{testimonial.name}</strong>
-                  <p className="text-sm text-muted-foreground">{testimonial.role}, {testimonial.sector}</p>
-                  <p className="text-xs text-muted-foreground/70">{testimonial.revenue}</p>
+                  <strong className="text-foreground">{testimonial.sector}</strong>
+                  <p className="text-sm text-muted-foreground">Faturamento: {testimonial.revenue}</p>
                 </div>
               </div>
 
@@ -91,6 +84,11 @@ export function SocialProofSection() {
             </div>
           ))}
         </div>
+
+        {/* Disclaimer */}
+        <p className="text-xs text-muted-foreground/70 text-center mt-8">
+          *Casos ilustrativos baseados em resultados reais. Valores podem variar conforme perfil da empresa.
+        </p>
 
         {/* Total Savings */}
         <div className="text-center mt-12">

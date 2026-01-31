@@ -96,16 +96,16 @@ export function HeroSection() {
           <div className="bg-card rounded-2xl shadow-2xl p-6 md:p-8 border border-border animate-fade-in-up animation-delay-300">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="text-primary font-semibold text-lg">CM</span>
+                <TrendingUp className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <strong className="text-foreground">C.M.</strong>
-                <p className="text-sm text-muted-foreground">CFO, Setor de Logística</p>
+                <strong className="text-foreground">Empresa de Logística</strong>
+                <p className="text-sm text-muted-foreground">Faturamento R$ 8M/ano</p>
               </div>
             </div>
 
             <blockquote className="text-lg text-foreground mb-4 leading-relaxed">
-              "Em 48 horas identificamos <strong className="text-primary">R$ 127 mil em créditos</strong> que nosso contador não tinha visto. O TribuTalks se pagou <strong className="text-primary">42 vezes</strong> no primeiro mês."
+              "Em 48 horas identificamos <strong className="text-primary">R$ 127 mil em créditos</strong> que estavam sendo perdidos. O TribuTalks se pagou <strong className="text-primary">42 vezes</strong> no primeiro mês."
             </blockquote>
 
             <div className="flex items-center gap-1 text-primary mb-4">
@@ -147,6 +147,11 @@ export function HeroSection() {
                 </div>
               </div>
             </div>
+
+            {/* Disclaimer */}
+            <p className="text-xs text-muted-foreground/70 text-center mt-4">
+              *Caso ilustrativo baseado em resultados reais de clientes.
+            </p>
           </div>
         </div>
       </div>
