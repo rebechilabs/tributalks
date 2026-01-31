@@ -18,7 +18,13 @@ import {
   FileText,
   Gift,
   Microscope,
-  Globe
+  Globe,
+  XCircle,
+  RefreshCw,
+  Search,
+  AlertOctagon,
+  Minus,
+  type LucideIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -75,19 +81,19 @@ const CATEGORY_LABELS: Record<string, string> = {
   pd: 'P&D / Inovação',
 };
 
-const REFORMA_STATUS: Record<string, { icon: string; label: string; color: string }> = {
-  mantido: { icon: '✅', label: 'Mantido', color: 'text-green-600' },
-  extinto: { icon: '🔴', label: 'Extinto Gradualmente', color: 'text-red-500' },
-  substituido: { icon: '🔄', label: 'Substituído', color: 'text-yellow-600' },
-  em_adaptacao: { icon: '⚠️', label: 'Em Adaptação', color: 'text-orange-500' },
-  em_analise: { icon: '🔍', label: 'Em Análise', color: 'text-muted-foreground' },
+const REFORMA_STATUS: Record<string, { icon: LucideIcon; label: string; color: string }> = {
+  mantido: { icon: CheckCircle2, label: 'Mantido', color: 'text-green-600' },
+  extinto: { icon: XCircle, label: 'Extinto Gradualmente', color: 'text-red-500' },
+  substituido: { icon: RefreshCw, label: 'Substituído', color: 'text-yellow-600' },
+  em_adaptacao: { icon: AlertTriangle, label: 'Em Adaptação', color: 'text-orange-500' },
+  em_analise: { icon: Search, label: 'Em Análise', color: 'text-muted-foreground' },
 };
 
-const LC_STATUS: Record<string, { icon: string; label: string; color: string }> = {
-  protegido: { icon: '🛡️', label: 'Protegido', color: 'text-green-600' },
-  afetado: { icon: '⚠️', label: 'Afetado LC 224/2025', color: 'text-yellow-600' },
-  critico: { icon: '🚨', label: 'Crítico - Ação Urgente', color: 'text-red-500' },
-  neutro: { icon: '➖', label: 'Sem Alteração', color: 'text-muted-foreground' },
+const LC_STATUS: Record<string, { icon: LucideIcon; label: string; color: string }> = {
+  protegido: { icon: Shield, label: 'Protegido', color: 'text-green-600' },
+  afetado: { icon: AlertTriangle, label: 'Afetado LC 224/2025', color: 'text-yellow-600' },
+  critico: { icon: AlertOctagon, label: 'Crítico - Ação Urgente', color: 'text-red-500' },
+  neutro: { icon: Minus, label: 'Sem Alteração', color: 'text-muted-foreground' },
 };
 
 export function OpportunityDetailCard({ 
@@ -215,13 +221,19 @@ export function OpportunityDetailCard({
             <div className="flex flex-wrap gap-3 text-xs">
               {opportunity.futuro_reforma && REFORMA_STATUS[opportunity.futuro_reforma] && (
                 <div className={cn("flex items-center gap-1.5 px-2 py-1 rounded-full bg-background border", REFORMA_STATUS[opportunity.futuro_reforma].color)}>
-                  <span>{REFORMA_STATUS[opportunity.futuro_reforma].icon}</span>
+                  {(() => {
+                    const StatusIcon = REFORMA_STATUS[opportunity.futuro_reforma].icon;
+                    return <StatusIcon className="h-3.5 w-3.5" />;
+                  })()}
                   <span>Reforma: {REFORMA_STATUS[opportunity.futuro_reforma].label}</span>
                 </div>
               )}
               {opportunity.status_lc_224_2025 && opportunity.status_lc_224_2025 !== 'neutro' && LC_STATUS[opportunity.status_lc_224_2025] && (
                 <div className={cn("flex items-center gap-1.5 px-2 py-1 rounded-full bg-background border", LC_STATUS[opportunity.status_lc_224_2025].color)}>
-                  <span>{LC_STATUS[opportunity.status_lc_224_2025].icon}</span>
+                  {(() => {
+                    const LcIcon = LC_STATUS[opportunity.status_lc_224_2025].icon;
+                    return <LcIcon className="h-3.5 w-3.5" />;
+                  })()}
                   <span>{LC_STATUS[opportunity.status_lc_224_2025].label}</span>
                 </div>
               )}
