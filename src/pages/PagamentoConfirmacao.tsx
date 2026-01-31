@@ -1,12 +1,16 @@
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, XCircle, ArrowRight, RefreshCw, Home, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 type PaymentStatus = "approved" | "pending" | "rejected" | "unknown";
+
+interface ProfileData {
+  onboarding_complete: boolean | null;
+}
 
 const STATUS_CONFIG: Record<PaymentStatus, {
   icon: typeof CheckCircle2;
@@ -58,10 +62,10 @@ const STATUS_CONFIG: Record<PaymentStatus, {
 export default function PagamentoConfirmacao() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user, profile, loading: authLoading, refreshProfile } = useAuth();
   const [countdown, setCountdown] = useState<number | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const hasRefreshed = useRef(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const hasInitialized = useRef(false);
 
   // Parse Mercado Pago redirect parameters
   const status = searchParams.get("status") || searchParams.get("collection_status");
@@ -85,25 +89,52 @@ export default function PagamentoConfirmacao() {
   const config = STATUS_CONFIG[paymentStatus];
   const Icon = config.icon;
 
-  // Refresh profile when arriving at page to get latest data from webhook
+  // Fetch profile directly from Supabase (avoids AuthProvider dependency for public route)
   useEffect(() => {
-    const doRefresh = async () => {
-      if (user && !authLoading && !hasRefreshed.current) {
-        hasRefreshed.current = true;
-        setIsRefreshing(true);
-        console.log('[PagamentoConfirmacao] Refreshing profile after payment...');
-        await refreshProfile();
-        console.log('[PagamentoConfirmacao] Profile refreshed');
-        setIsRefreshing(false);
+    const fetchProfile = async () => {
+      if (hasInitialized.current) return;
+      hasInitialized.current = true;
+
+      try {
+        console.log('[PagamentoConfirmacao] Checking session...');
+        
+        // Small delay to give webhook time to process
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          console.log('[PagamentoConfirmacao] User found, fetching profile...');
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('onboarding_complete')
+            .eq('user_id', user.id)
+            .maybeSingle();
+          
+          console.log('[PagamentoConfirmacao] Profile:', profileData);
+          setProfile(profileData);
+        } else {
+          console.log('[PagamentoConfirmacao] No user session');
+        }
+      } catch (error) {
+        console.error('[PagamentoConfirmacao] Error:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
-    doRefresh();
-  }, [user, authLoading, refreshProfile]);
 
-  // Auto-redirect countdown - only starts after profile refresh
+    fetchProfile();
+  }, []);
+
+  // Determine target URL based on profile state
+  const getTargetUrl = () => {
+    if (!profile) return "/login";
+    return profile.onboarding_complete ? "/dashboard" : "/onboarding";
+  };
+
+  // Auto-redirect countdown - only starts after profile is loaded
   useEffect(() => {
-    // Wait for auth and profile refresh to complete
-    if (authLoading || isRefreshing) return;
+    if (isLoading) return;
     
     if (config.redirectDelay) {
       const seconds = Math.ceil(config.redirectDelay / 1000);
@@ -113,10 +144,7 @@ export default function PagamentoConfirmacao() {
         setCountdown((prev) => {
           if (prev === null || prev <= 1) {
             clearInterval(interval);
-            // Determine target based on profile state
-            const targetUrl = profile?.onboarding_complete 
-              ? "/dashboard" 
-              : "/onboarding";
+            const targetUrl = getTargetUrl();
             console.log('[PagamentoConfirmacao] Redirecting to:', targetUrl);
             navigate(targetUrl);
             return null;
@@ -127,19 +155,21 @@ export default function PagamentoConfirmacao() {
 
       return () => clearInterval(interval);
     }
-  }, [config.redirectDelay, navigate, profile, authLoading, isRefreshing]);
+  }, [config.redirectDelay, navigate, isLoading, profile]);
 
-  // Show loading while auth is initializing or profile is refreshing
-  if (authLoading || isRefreshing) {
+  // Show loading while fetching profile
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Atualizando seu perfil...</p>
+          <p className="text-muted-foreground">Verificando seu pagamento...</p>
         </div>
       </div>
     );
   }
+
+  const targetUrl = getTargetUrl();
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -166,7 +196,7 @@ export default function PagamentoConfirmacao() {
               <div className="bg-muted/50 rounded-lg p-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">ID do pagamento:</span>
-                  <span className="font-mono">{paymentId}</span>
+                  <span className="font-mono text-xs">{paymentId}</span>
                 </div>
                 {paymentType && (
                   <div className="flex justify-between mt-1">
@@ -196,29 +226,21 @@ export default function PagamentoConfirmacao() {
               )}
 
               <Button
-                asChild
                 variant={config.showRetry ? "outline" : "default"}
                 className="w-full"
-                onClick={() => {
-                  const targetUrl = profile?.onboarding_complete 
-                    ? "/dashboard" 
-                    : "/onboarding";
-                  navigate(targetUrl);
-                }}
+                onClick={() => navigate(targetUrl)}
               >
-                <Link to={profile?.onboarding_complete ? "/dashboard" : "/onboarding"}>
-                  {config.showRetry ? (
-                    <>
-                      <Home className="w-4 h-4 mr-2" />
-                      Continuar
-                    </>
-                  ) : (
-                    <>
-                      Continuar
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </>
-                  )}
-                </Link>
+                {config.showRetry ? (
+                  <>
+                    <Home className="w-4 h-4 mr-2" />
+                    Continuar
+                  </>
+                ) : (
+                  <>
+                    Continuar
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                )}
               </Button>
             </div>
 
