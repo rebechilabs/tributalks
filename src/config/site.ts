@@ -33,7 +33,9 @@ export const CONFIG = {
     zip: "01139-003",
   },
   // Social
-  LINKEDIN: "https://www.linkedin.com/company/tributalks/",
+  LINKEDIN: "https://www.linkedin.com/company/tributalks",
+  INSTAGRAM: "https://www.instagram.com/tributalks",
+  YOUTUBE: "https://www.youtube.com/@tributalksnews",
   // Community
   CIRCLE_COMMUNITY: "https://tributalksconnect.circle.so",
   // Calendly
