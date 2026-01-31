@@ -2305,6 +2305,48 @@ export type Database = {
         }
         Relationships: []
       }
+      rtc_rate_cache: {
+        Row: {
+          aliquota_cbs: number | null
+          aliquota_ibs_mun: number | null
+          aliquota_ibs_uf: number | null
+          aliquota_is: number | null
+          created_at: string | null
+          expires_at: string | null
+          fetched_at: string | null
+          id: string
+          municipio_ibge: number
+          ncm: string
+          uf: string
+        }
+        Insert: {
+          aliquota_cbs?: number | null
+          aliquota_ibs_mun?: number | null
+          aliquota_ibs_uf?: number | null
+          aliquota_is?: number | null
+          created_at?: string | null
+          expires_at?: string | null
+          fetched_at?: string | null
+          id?: string
+          municipio_ibge: number
+          ncm: string
+          uf: string
+        }
+        Update: {
+          aliquota_cbs?: number | null
+          aliquota_ibs_mun?: number | null
+          aliquota_ibs_uf?: number | null
+          aliquota_is?: number | null
+          created_at?: string | null
+          expires_at?: string | null
+          fetched_at?: string | null
+          id?: string
+          municipio_ibge?: number
+          ncm?: string
+          uf?: string
+        }
+        Relationships: []
+      }
       score_actions: {
         Row: {
           action_code: string

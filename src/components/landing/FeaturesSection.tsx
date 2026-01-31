@@ -1,10 +1,18 @@
 import { 
   Scale, Wallet, Sparkles, FileText, Users, 
-  Calculator, Upload, Target, BarChart3, Trophy, Newspaper, Clock, Navigation, MapPin, TrendingUp
+  Calculator, Upload, Target, BarChart3, Trophy, Newspaper, Clock, Navigation, MapPin, TrendingUp, Shield
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const features = [
+  {
+    icon: Shield,
+    title: "Suíte Margem Ativa 2026",
+    description:
+      "Simule preços pós-reforma com alíquotas reais da Receita Federal. Proteja sua margem antes que seja tarde.",
+    badge: "NOVO",
+    badgeVariant: "default" as const,
+  },
   {
     icon: Wallet,
     title: "Simulador Split Payment",
