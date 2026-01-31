@@ -79,9 +79,12 @@ export function JourneysSection() {
 
         <div className="grid md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
           {journeys.map((journey) => (
-            <div
+            <a
               key={journey.id}
-              className={`relative bg-card rounded-xl p-6 md:p-8 border-2 transition-all duration-300 ${
+              href={journey.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`relative bg-card rounded-xl p-6 md:p-8 border-2 transition-all duration-300 block cursor-pointer hover:shadow-lg ${
                 journey.highlighted
                   ? "border-primary bg-gradient-to-b from-primary/5 to-card"
                   : "border-border hover:border-primary/50"
@@ -165,7 +168,7 @@ export function JourneysSection() {
                   </p>
                 )}
               </div>
-            </div>
+            </a>
           ))}
         </div>
 
