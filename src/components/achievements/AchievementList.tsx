@@ -1,13 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Trophy } from "lucide-react";
+import { Trophy, Gem, Medal, Award } from "lucide-react";
 import { AchievementBadge } from "./AchievementBadge";
 import { useAchievements } from "@/hooks/useAchievements";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { LucideIcon } from "lucide-react";
 
 interface AchievementData {
   code: string;
-  icon: string;
+  icon: LucideIcon;
   name: string;
   description: string;
   tier: 'bronze' | 'silver' | 'gold' | 'platinum';
@@ -82,11 +83,11 @@ export function AchievementList({
         {Object.entries(tiers).map(([tier, tierAchievements]) => (
           tierAchievements.length > 0 && (
             <div key={tier} className="space-y-3">
-              <h4 className="text-sm font-medium text-muted-foreground capitalize">
-                {tier === "platinum" && "💎 Platina"}
-                {tier === "gold" && "🥇 Ouro"}
-                {tier === "silver" && "🥈 Prata"}
-                {tier === "bronze" && "🥉 Bronze"}
+              <h4 className="text-sm font-medium text-muted-foreground capitalize flex items-center gap-2">
+                {tier === "platinum" && <><Gem className="w-4 h-4 text-cyan-400" /> Platina</>}
+                {tier === "gold" && <><Medal className="w-4 h-4 text-yellow-500" /> Ouro</>}
+                {tier === "silver" && <><Medal className="w-4 h-4 text-slate-400" /> Prata</>}
+                {tier === "bronze" && <><Award className="w-4 h-4 text-amber-600" /> Bronze</>}
               </h4>
               <div className="flex flex-wrap gap-3">
                 {tierAchievements.map((achievement) => (

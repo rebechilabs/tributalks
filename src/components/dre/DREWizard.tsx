@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingCart, Package, Briefcase, Landmark, Calculator, ChevronRight, ChevronLeft, Loader2 } from 'lucide-react';
+import { ShoppingCart, Package, Briefcase, Landmark, Calculator, ChevronRight, ChevronLeft, Loader2, CheckCircle2, Users, Building2, Settings, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -54,11 +54,11 @@ const initialFormData: DREFormData = {
 };
 
 const steps = [
-  { id: 1, title: 'Suas Vendas', icon: ShoppingCart, emoji: '🛒' },
-  { id: 2, title: 'Custos', icon: Package, emoji: '📦' },
-  { id: 3, title: 'Despesas', icon: Briefcase, emoji: '💼' },
-  { id: 4, title: 'Financeiro', icon: Landmark, emoji: '🏦' },
-  { id: 5, title: 'Impostos', icon: Calculator, emoji: '🏛️' },
+  { id: 1, title: 'Suas Vendas', icon: ShoppingCart },
+  { id: 2, title: 'Custos', icon: Package },
+  { id: 3, title: 'Despesas', icon: Briefcase },
+  { id: 4, title: 'Financeiro', icon: Landmark },
+  { id: 5, title: 'Impostos', icon: Calculator },
 ];
 
 interface DREWizardProps {
@@ -158,7 +158,7 @@ export function DREWizard({ onComplete, initialData }: DREWizardProps) {
                 <div className="flex justify-between"><span>Receita Líquida:</span><span>{formatCurrency(receitaLiquida)}</span></div>
                 <div className="flex justify-between text-muted-foreground"><span>(-) Custos:</span><span>{formatCurrency(custosTotal)}</span></div>
                 <div className="flex justify-between font-bold pt-2 border-t"><span>= Lucro Bruto:</span><span className={lucroBruto >= 0 ? 'text-emerald-600' : 'text-red-600'}>{formatCurrency(lucroBruto)}</span></div>
-                <div className="flex justify-between text-sm"><span>Margem Bruta:</span><span className={margemBruta >= 30 ? 'text-emerald-600' : 'text-amber-600'}>{margemBruta.toFixed(1)}% {margemBruta >= 30 ? '✅' : '⚠️'}</span></div>
+                <div className="flex justify-between text-sm items-center"><span>Margem Bruta:</span><span className={`flex items-center gap-1 ${margemBruta >= 30 ? 'text-emerald-600' : 'text-amber-600'}`}>{margemBruta.toFixed(1)}% {margemBruta >= 30 ? <CheckCircle2 className="w-4 h-4" /> : <span className="text-amber-500">⚠</span>}</span></div>
               </div>
             </CardContent></Card>
           </div>
@@ -168,9 +168,9 @@ export function DREWizard({ onComplete, initialData }: DREWizardProps) {
           <div className="space-y-6">
             <div><h3 className="text-lg font-semibold mb-2">Quanto você gasta para manter a empresa?</h3><p className="text-sm text-muted-foreground mb-6">Despesas operacionais do dia a dia</p></div>
             <div className="space-y-6">
-              <div><h4 className="text-sm font-medium text-muted-foreground mb-3">👥 Pessoas</h4><div className="grid gap-4 md:grid-cols-2"><VoiceCurrencyInput label="Salários + encargos" field="salarios_encargos" value={getNumValue('salarios_encargos')} onChange={(v) => handleInputChange('salarios_encargos', v)} tooltip="Folha de pagamento" /><VoiceCurrencyInput label="Pró-labore dos sócios" field="prolabore" value={getNumValue('prolabore')} onChange={(v) => handleInputChange('prolabore', v)} tooltip="Retiradas mensais dos sócios" /></div></div>
-              <div><h4 className="text-sm font-medium text-muted-foreground mb-3">🏢 Estrutura</h4><div className="grid gap-4 md:grid-cols-3"><VoiceCurrencyInput label="Aluguel" field="aluguel" value={getNumValue('aluguel')} onChange={(v) => handleInputChange('aluguel', v)} /><VoiceCurrencyInput label="Energia, água, internet" field="energia_agua_internet" value={getNumValue('energia_agua_internet')} onChange={(v) => handleInputChange('energia_agua_internet', v)} /><VoiceCurrencyInput label="Software e assinaturas" field="software" value={getNumValue('software')} onChange={(v) => handleInputChange('software', v)} /></div></div>
-              <div><h4 className="text-sm font-medium text-muted-foreground mb-3">⚙️ Operação</h4><div className="grid gap-4 md:grid-cols-3"><VoiceCurrencyInput label="Marketing" field="marketing" value={getNumValue('marketing')} onChange={(v) => handleInputChange('marketing', v)} /><VoiceCurrencyInput label="Contador, advogado" field="contador_juridico" value={getNumValue('contador_juridico')} onChange={(v) => handleInputChange('contador_juridico', v)} /><VoiceCurrencyInput label="Viagens, alimentação" field="viagens" value={getNumValue('viagens')} onChange={(v) => handleInputChange('viagens', v)} /><VoiceCurrencyInput label="Manutenção" field="manutencao" value={getNumValue('manutencao')} onChange={(v) => handleInputChange('manutencao', v)} /><VoiceCurrencyInput label="Frete e logística" field="frete" value={getNumValue('frete')} onChange={(v) => handleInputChange('frete', v)} /><VoiceCurrencyInput label="Outras despesas" field="outras_despesas" value={getNumValue('outras_despesas')} onChange={(v) => handleInputChange('outras_despesas', v)} /></div></div>
+              <div><h4 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2"><Users className="w-4 h-4" /> Pessoas</h4><div className="grid gap-4 md:grid-cols-2"><VoiceCurrencyInput label="Salários + encargos" field="salarios_encargos" value={getNumValue('salarios_encargos')} onChange={(v) => handleInputChange('salarios_encargos', v)} tooltip="Folha de pagamento" /><VoiceCurrencyInput label="Pró-labore dos sócios" field="prolabore" value={getNumValue('prolabore')} onChange={(v) => handleInputChange('prolabore', v)} tooltip="Retiradas mensais dos sócios" /></div></div>
+              <div><h4 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2"><Building2 className="w-4 h-4" /> Estrutura</h4><div className="grid gap-4 md:grid-cols-3"><VoiceCurrencyInput label="Aluguel" field="aluguel" value={getNumValue('aluguel')} onChange={(v) => handleInputChange('aluguel', v)} /><VoiceCurrencyInput label="Energia, água, internet" field="energia_agua_internet" value={getNumValue('energia_agua_internet')} onChange={(v) => handleInputChange('energia_agua_internet', v)} /><VoiceCurrencyInput label="Software e assinaturas" field="software" value={getNumValue('software')} onChange={(v) => handleInputChange('software', v)} /></div></div>
+              <div><h4 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2"><Settings className="w-4 h-4" /> Operação</h4><div className="grid gap-4 md:grid-cols-3"><VoiceCurrencyInput label="Marketing" field="marketing" value={getNumValue('marketing')} onChange={(v) => handleInputChange('marketing', v)} /><VoiceCurrencyInput label="Contador, advogado" field="contador_juridico" value={getNumValue('contador_juridico')} onChange={(v) => handleInputChange('contador_juridico', v)} /><VoiceCurrencyInput label="Viagens, alimentação" field="viagens" value={getNumValue('viagens')} onChange={(v) => handleInputChange('viagens', v)} /><VoiceCurrencyInput label="Manutenção" field="manutencao" value={getNumValue('manutencao')} onChange={(v) => handleInputChange('manutencao', v)} /><VoiceCurrencyInput label="Frete e logística" field="frete" value={getNumValue('frete')} onChange={(v) => handleInputChange('frete', v)} /><VoiceCurrencyInput label="Outras despesas" field="outras_despesas" value={getNumValue('outras_despesas')} onChange={(v) => handleInputChange('outras_despesas', v)} /></div></div>
             </div>
           </div>
         );
@@ -200,7 +200,7 @@ export function DREWizard({ onComplete, initialData }: DREWizardProps) {
             </div>
             <div className="flex items-center space-x-2 p-4 bg-muted rounded-lg"><Switch id="calcular_auto" checked={formData.calcular_auto} onCheckedChange={(checked) => handleInputChange('calcular_auto', checked)} /><Label htmlFor="calcular_auto">Calcular impostos automaticamente</Label></div>
             {!formData.calcular_auto && <VoiceCurrencyInput label="Impostos sobre vendas (PIS, COFINS, ICMS, ISS)" field="impostos_vendas" value={getNumValue('impostos_vendas')} onChange={(v) => handleInputChange('impostos_vendas', v)} tooltip="Valor total de impostos sobre o faturamento" />}
-            <div className="flex items-center space-x-2 p-4 bg-primary/5 border border-primary/20 rounded-lg"><Switch id="simular_reforma" checked={formData.simular_reforma} onCheckedChange={(checked) => handleInputChange('simular_reforma', checked)} /><div><Label htmlFor="simular_reforma" className="text-primary">📊 Ver impacto da Reforma Tributária</Label><p className="text-xs text-muted-foreground">Simula como ficará sua carga tributária após 2027</p></div></div>
+            <div className="flex items-center space-x-2 p-4 bg-primary/5 border border-primary/20 rounded-lg"><Switch id="simular_reforma" checked={formData.simular_reforma} onCheckedChange={(checked) => handleInputChange('simular_reforma', checked)} /><div><Label htmlFor="simular_reforma" className="text-primary flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Ver impacto da Reforma Tributária</Label><p className="text-xs text-muted-foreground">Simula como ficará sua carga tributária após 2027</p></div></div>
           </div>
         );
       default: return null;
@@ -218,16 +218,21 @@ export function DREWizard({ onComplete, initialData }: DREWizardProps) {
       </div>
       <div className="mb-8">
         <div className="flex justify-between mb-2">
-          {steps.map((step) => (
-            <div key={step.id} className={`flex flex-col items-center ${step.id === currentStep ? 'text-primary' : 'text-muted-foreground'}`}>
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg mb-1 ${step.id < currentStep ? 'bg-primary text-primary-foreground' : step.id === currentStep ? 'bg-primary/20 border-2 border-primary' : 'bg-muted'}`}>{step.id < currentStep ? '✓' : step.emoji}</div>
-              <span className="text-xs hidden sm:block">{step.title}</span>
-            </div>
-          ))}
+          {steps.map((step) => {
+            const StepIcon = step.icon;
+            return (
+              <div key={step.id} className={`flex flex-col items-center ${step.id === currentStep ? 'text-primary' : 'text-muted-foreground'}`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1 ${step.id < currentStep ? 'bg-primary text-primary-foreground' : step.id === currentStep ? 'bg-primary/20 border-2 border-primary' : 'bg-muted'}`}>
+                  {step.id < currentStep ? <CheckCircle2 className="w-5 h-5" /> : <StepIcon className="w-5 h-5" />}
+                </div>
+                <span className="text-xs hidden sm:block">{step.title}</span>
+              </div>
+            );
+          })}
         </div>
         <Progress value={(currentStep / 5) * 100} className="h-2" />
       </div>
-      <Card><CardHeader className="pb-4"><CardTitle className="flex items-center gap-2 text-lg">{steps[currentStep - 1].emoji} {steps[currentStep - 1].title}</CardTitle></CardHeader><CardContent>{renderStep()}</CardContent></Card>
+      <Card><CardHeader className="pb-4"><CardTitle className="flex items-center gap-2 text-lg">{(() => { const StepIcon = steps[currentStep - 1].icon; return <StepIcon className="w-5 h-5 text-primary" />; })()} {steps[currentStep - 1].title}</CardTitle></CardHeader><CardContent>{renderStep()}</CardContent></Card>
       <div className="flex justify-between mt-6">
         <Button variant="outline" onClick={() => setCurrentStep(prev => prev - 1)} disabled={currentStep === 1}><ChevronLeft className="h-4 w-4 mr-2" />Voltar</Button>
         {currentStep < 5 ? (<Button onClick={() => setCurrentStep(prev => prev + 1)}>Próximo<ChevronRight className="h-4 w-4 ml-2" /></Button>) : (<Button onClick={handleSubmit} disabled={loading}>{loading ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" />Calculando...</>) : (<><Calculator className="h-4 w-4 mr-2" />Gerar DRE e Diagnóstico</>)}</Button>)}

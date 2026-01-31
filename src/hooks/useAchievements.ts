@@ -2,6 +2,23 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import type { Json } from "@/integrations/supabase/types";
+import {
+  Target,
+  Star,
+  TrendingUp,
+  FileText,
+  Library,
+  DollarSign,
+  Gem,
+  CheckSquare,
+  Medal,
+  Users,
+  Flame,
+  Sparkles,
+  BarChart3,
+  Search,
+  type LucideIcon,
+} from "lucide-react";
 
 interface AchievementMetadata {
   name: string;
@@ -17,91 +34,91 @@ interface Achievement {
 
 // Achievement definitions for display
 export const ACHIEVEMENT_DEFINITIONS: Record<string, { 
-  icon: string; 
+  icon: LucideIcon; 
   name: string; 
   description: string;
   tier: 'bronze' | 'silver' | 'gold' | 'platinum';
 }> = {
   first_score: {
-    icon: "🎯",
+    icon: Target,
     name: "Primeiro Score",
     description: "Calculou o Score Tributário pela primeira vez",
     tier: "bronze",
   },
   score_a_plus: {
-    icon: "⭐",
+    icon: Star,
     name: "Score A+",
     description: "Atingiu nota A+ no Score Tributário",
     tier: "gold",
   },
   score_improved: {
-    icon: "📈",
+    icon: TrendingUp,
     name: "Score Melhorou!",
     description: "Seu Score subiu 10+ pontos",
     tier: "silver",
   },
   xml_100: {
-    icon: "📄",
+    icon: FileText,
     name: "100 XMLs",
     description: "Importou 100 notas fiscais",
     tier: "bronze",
   },
   xml_1000: {
-    icon: "📚",
+    icon: Library,
     name: "1.000 XMLs",
     description: "Importou 1.000 notas fiscais",
     tier: "silver",
   },
   credits_10k: {
-    icon: "💰",
+    icon: DollarSign,
     name: "R$10k em Créditos",
     description: "Identificou R$10.000+ em créditos",
     tier: "silver",
   },
   credits_100k: {
-    icon: "💎",
+    icon: Gem,
     name: "R$100k em Créditos",
     description: "Identificou R$100.000+ em créditos",
     tier: "platinum",
   },
   workflow_complete: {
-    icon: "✅",
+    icon: CheckSquare,
     name: "Workflow Completo",
     description: "Completou seu primeiro Workflow",
     tier: "bronze",
   },
   workflow_all: {
-    icon: "🏅",
+    icon: Medal,
     name: "Mestre dos Workflows",
     description: "Completou todos os 4 Workflows",
     tier: "gold",
   },
   referral_3: {
-    icon: "👥",
+    icon: Users,
     name: "Embaixador",
     description: "Indicou 3 amigos",
     tier: "silver",
   },
   streak_5: {
-    icon: "🔥",
+    icon: Flame,
     name: "5 Dias Seguidos",
     description: "Acessou por 5 dias consecutivos",
     tier: "bronze",
   },
   streak_30: {
-    icon: "🌟",
+    icon: Sparkles,
     name: "Dedicação Total",
     description: "Acessou por 30 dias consecutivos",
     tier: "gold",
   },
   first_dre: {
-    icon: "📊",
+    icon: BarChart3,
     name: "Primeira DRE",
     description: "Completou sua primeira análise DRE",
     tier: "bronze",
   },
   opportunities_explorer: {
-    icon: "🔍",
+    icon: Search,
     name: "Explorador",
     description: "Descobriu 5+ oportunidades",
     tier: "silver",

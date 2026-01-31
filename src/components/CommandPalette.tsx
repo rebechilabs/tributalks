@@ -4,6 +4,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 import { ALL_TOOLS, canAccessTool, filterTools, CommandTool } from '@/data/commandPaletteTools';
+import { ICON_MAP } from '@/lib/iconMap';
 import { Lock, Search, ArrowRight, Command } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -165,6 +166,7 @@ export function CommandPalette() {
             filteredTools.map((tool, index) => {
               const hasAccess = canAccessTool(tool, userPlan);
               const isSelected = index === selectedIndex;
+              const IconComponent = ICON_MAP[tool.icon];
               
               return (
                 <button
@@ -179,7 +181,9 @@ export function CommandPalette() {
                   )}
                 >
                   {/* Icon */}
-                  <span className="text-xl shrink-0">{tool.icon}</span>
+                  <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                    <IconComponent className="w-4 h-4 text-primary" />
+                  </div>
                   
                   {/* Content */}
                   <div className="flex-1 min-w-0">
