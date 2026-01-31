@@ -1,12 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Skeleton } from "@/components/ui/skeleton";
 import { 
-  CheckCircle2, Circle, Trophy, FileText, BarChart3, 
+  CheckCircle2, Trophy, FileText, BarChart3, 
   Lightbulb, Workflow, TrendingUp 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { UserProgressData } from "@/hooks/useUserProgress";
+import type { UserProgressData } from "@/hooks/useDashboardData";
 
 interface ProgressSummaryProps {
   progress: UserProgressData;
@@ -21,24 +20,6 @@ const JOURNEY_STEPS = [
 ] as const;
 
 export function ProgressSummary({ progress }: ProgressSummaryProps) {
-  if (progress.loading) {
-    return (
-      <Card className="mb-6 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Skeleton className="w-8 h-8 rounded-full" />
-            <Skeleton className="h-6 w-48" />
-          </div>
-          <Skeleton className="h-3 w-full mb-4" />
-          <div className="flex justify-between">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <Skeleton key={i} className="w-12 h-12 rounded-full" />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   const completionStatus = {
     score: progress.hasScore,

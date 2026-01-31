@@ -1,12 +1,11 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Trophy, FileText, BarChart3, Lightbulb, Workflow, 
   ArrowRight, Sparkles, CheckCircle2 
 } from "lucide-react";
-import { UserProgressData } from "@/hooks/useUserProgress";
+import type { UserProgressData } from "@/hooks/useDashboardData";
 
 interface NextStepRecommendationProps {
   progress: UserProgressData;
@@ -71,23 +70,6 @@ const STEP_RECOMMENDATIONS: StepRecommendation[] = [
 ];
 
 export function NextStepRecommendation({ progress }: NextStepRecommendationProps) {
-  if (progress.loading) {
-    return (
-      <Card className="mb-6 border-2 border-dashed border-primary/30">
-        <CardContent className="pt-6">
-          <div className="flex items-start gap-4">
-            <Skeleton className="w-14 h-14 rounded-xl" />
-            <div className="flex-1">
-              <Skeleton className="h-4 w-24 mb-2" />
-              <Skeleton className="h-6 w-64 mb-2" />
-              <Skeleton className="h-4 w-full mb-4" />
-              <Skeleton className="h-10 w-40" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   // Check if all steps are completed
   const completionStatus = {

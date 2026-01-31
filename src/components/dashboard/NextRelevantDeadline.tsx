@@ -1,109 +1,17 @@
-import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, AlertTriangle, Clock, ExternalLink, CalendarPlus } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { Calendar, AlertTriangle, ExternalLink, CalendarPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { differenceInDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import type { PrazoItem } from "@/hooks/useDashboardData";
 
-interface Prazo {
-  id: string;
-  titulo: string;
-  data_prazo: string;
-  descricao: string | null;
-  tipo: string | null;
-  base_legal: string | null;
-  url_referencia: string | null;
-  afeta_regimes: string[] | null;
-  afeta_setores: string[] | null;
+interface NextRelevantDeadlineProps {
+  prazo: PrazoItem | null;
 }
 
-export function NextRelevantDeadline() {
-  const { user, profile } = useAuth();
-  const [prazo, setPrazo] = useState<Prazo | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchNextDeadline = async () => {
-      try {
-        // Get user's regime and sector for filtering
-        const userRegime = profile?.regime?.toUpperCase() || null;
-        
-        // Also try to get sector from company_profile
-        let userSetor: string | null = null;
-        if (user?.id) {
-          const { data: companyProfile } = await supabase
-            .from('company_profile')
-            .select('setor')
-            .eq('user_id', user.id)
-            .maybeSingle();
-          userSetor = companyProfile?.setor || null;
-        }
-
-        // Fetch upcoming deadlines
-        const { data, error } = await supabase
-          .from('prazos_reforma')
-          .select('*')
-          .eq('ativo', true)
-          .gte('data_prazo', new Date().toISOString().split('T')[0])
-          .order('data_prazo', { ascending: true })
-          .limit(10);
-
-        if (error) throw error;
-
-        // Filter by relevance to user
-        const relevantPrazos = (data || []).filter(p => {
-          // If no filters, it's for everyone
-          const hasRegimeFilter = p.afeta_regimes && p.afeta_regimes.length > 0;
-          const hasSetorFilter = p.afeta_setores && p.afeta_setores.length > 0;
-
-          if (!hasRegimeFilter && !hasSetorFilter) return true;
-
-          // Check regime match
-          const regimeMatch = !hasRegimeFilter || 
-            (userRegime && p.afeta_regimes?.includes(userRegime)) ||
-            p.afeta_regimes?.includes('TODOS');
-
-          // Check setor match
-          const setorMatch = !hasSetorFilter || 
-            (userSetor && p.afeta_setores?.includes(userSetor)) ||
-            p.afeta_setores?.includes('TODOS');
-
-          return regimeMatch || setorMatch;
-        });
-
-        setPrazo(relevantPrazos[0] || null);
-      } catch (error) {
-        console.error('Error fetching deadline:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchNextDeadline();
-  }, [user?.id, profile?.regime]);
-
-  if (loading) {
-    return (
-      <Card className="mb-6 border-border/50">
-        <CardContent className="pt-4 pb-4">
-          <div className="flex items-start gap-3">
-            <Skeleton className="w-12 h-12 rounded-lg" />
-            <div className="flex-1">
-              <Skeleton className="h-4 w-32 mb-2" />
-              <Skeleton className="h-5 w-64 mb-2" />
-              <Skeleton className="h-3 w-48" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
+export function NextRelevantDeadline({ prazo }: NextRelevantDeadlineProps) {
   if (!prazo) {
     return null;
   }
