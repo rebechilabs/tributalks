@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Check, Star, TrendingUp, Shield, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import logoHero from "@/assets/logo-tributalks-hero.jpg";
+import { CONFIG } from "@/config/site";
 
 export function HeroSection() {
   const scrollToPlanos = () => {
@@ -72,15 +73,15 @@ export function HeroSection() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-fade-in-up animation-delay-200">
-              <Link to="/cadastro">
+              <a href={CONFIG.PAYMENT_LINKS.STARTER_MENSAL} target="_blank" rel="noopener noreferrer">
                 <Button
                   size="lg"
                   className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-8 py-6 text-lg group"
                 >
-                  Começar Diagnóstico Gratuito
+                  Testar Grátis por 7 Dias
                   <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
-              </Link>
+              </a>
               <Button
                 size="lg"
                 variant="outline"
