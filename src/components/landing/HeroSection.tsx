@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Check, Navigation, MapPin, Route } from "lucide-react";
+import { ArrowRight, Check, Star, TrendingUp, Shield, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import logoHero from "@/assets/logo-tributalks-hero.jpg";
 
@@ -22,91 +21,128 @@ export function HeroSection() {
       </div>
 
       <div className="container mx-auto px-4 md:px-6 lg:px-8 py-12 md:py-20 relative">
-        <div className="max-w-4xl mx-auto text-center">
-          {/* Logo */}
-          <div className="flex justify-center mb-4 md:mb-6 animate-fade-in-up">
-            <img 
-              src={logoHero} 
-              alt="TribuTalks" 
-              className="h-20 md:h-32 lg:h-40 w-auto"
-            />
-          </div>
+        <div className="grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
+          
+          {/* Left Side - Promise */}
+          <div className="text-center lg:text-left">
+            {/* Logo */}
+            <div className="flex justify-center lg:justify-start mb-4 md:mb-6 animate-fade-in-up">
+              <img 
+                src={logoHero} 
+                alt="TribuTalks" 
+                className="h-16 md:h-24 w-auto"
+              />
+            </div>
 
-          {/* Announcement Badge */}
-          <div className="flex justify-center mb-4 md:mb-6 animate-fade-in-up">
-            <Badge variant="outline" className="px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm border-primary/50">
-              <Navigation className="w-3 h-3 md:w-4 md:h-4 mr-1.5 md:mr-2 text-primary" />
-              Guia completo para a transição 2026-2033
-            </Badge>
-          </div>
+            {/* Badge */}
+            <div className="inline-block bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-semibold mb-4 animate-fade-in-up">
+              PLATAFORMA DE INTELIGÊNCIA TRIBUTÁRIA
+            </div>
 
-          {/* Main Heading */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-foreground mb-4 md:mb-6 animate-fade-in-up leading-tight">
-            O <span className="text-primary">GPS</span> da
-            <br />
-            <span className="text-primary">Reforma Tributária</span>
-          </h1>
+            {/* Main Heading */}
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 animate-fade-in-up leading-tight">
+              Transforme a Reforma Tributária em{" "}
+              <span className="text-primary">vantagem competitiva</span>
+            </h1>
 
-          {/* Subheading */}
-          <p className="text-base md:text-xl text-muted-foreground mb-5 md:mb-6 max-w-2xl mx-auto animate-fade-in-up animation-delay-100 px-2">
-            Simule cenários de impacto, acompanhe prazos, e receba orientações claras para cada fase.{" "}
-            <span className="text-foreground font-medium">
-              Diagnóstico automatizado + simuladores + conteúdo diário.
-            </span>
-          </p>
+            {/* Subheading */}
+            <p className="text-base md:text-xl text-muted-foreground mb-8 max-w-xl mx-auto lg:mx-0 animate-fade-in-up animation-delay-100">
+              Enquanto seus concorrentes vão descobrir o impacto tarde demais, 
+              você já estará 3 passos à frente.
+            </p>
 
-          {/* Feature Pills */}
-          <div className="flex flex-wrap items-center justify-center gap-1.5 md:gap-2 mb-8 md:mb-10 animate-fade-in-up animation-delay-150 px-2">
-            {[
-              "Split Payment",
-              "Timeline 2026-2033",
-              "Comparativo",
-              "Notícias",
-              "Score",
-            ].map((feature) => (
-              <span 
-                key={feature}
-                className="px-2 md:px-3 py-1 bg-primary/10 text-primary text-xs md:text-sm rounded-full whitespace-nowrap"
-              >
-                {feature}
-              </span>
-            ))}
-          </div>
+            {/* Benefits */}
+            <div className="space-y-4 mb-8 animate-fade-in-up animation-delay-150">
+              {[
+                { icon: TrendingUp, text: "Identifique créditos ocultos", sub: "Média de R$ 47k recuperados por empresa" },
+                { icon: Shield, text: "Proteja sua margem", sub: "Veja impacto exato de CBS/IBS no lucro" },
+                { icon: Zap, text: "Decisões com IA", sub: "Clara AI responde dúvidas 24/7" },
+              ].map((benefit) => (
+                <div key={benefit.text} className="flex items-start gap-3 text-left">
+                  <div className="bg-success/20 text-success rounded-full p-2 flex-shrink-0">
+                    <Check className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <strong className="text-foreground">{benefit.text}</strong>
+                    <p className="text-sm text-muted-foreground">{benefit.sub}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4 mb-6 md:mb-8 animate-fade-in-up animation-delay-200 px-4">
-            <Link to="/cadastro" className="w-full sm:w-auto">
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-fade-in-up animation-delay-200">
+              <Link to="/cadastro">
+                <Button
+                  size="lg"
+                  className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-8 py-6 text-lg group"
+                >
+                  Começar Diagnóstico Gratuito
+                  <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
               <Button
                 size="lg"
-                className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-6 md:px-8 py-5 md:py-6 text-base md:text-lg group"
+                variant="outline"
+                onClick={scrollToPlanos}
+                className="w-full sm:w-auto border-foreground text-foreground hover:bg-foreground hover:text-background font-semibold px-8 py-6 text-lg"
               >
-                Começar grátis
-                <ArrowRight className="w-4 h-4 md:w-5 md:h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                Ver Como Funciona ↓
               </Button>
-            </Link>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={scrollToPlanos}
-              className="w-full sm:w-auto border-foreground text-foreground hover:bg-foreground hover:text-background font-semibold px-6 md:px-8 py-5 md:py-6 text-base md:text-lg"
-            >
-              Ver planos ↓
-            </Button>
+            </div>
           </div>
 
-          {/* Value Props */}
-          <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 text-xs md:text-sm text-muted-foreground animate-fade-in-up animation-delay-300">
-            <div className="flex items-center gap-1.5 md:gap-2">
-              <MapPin className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
-              <span>Onde você está</span>
+          {/* Right Side - Social Proof Card */}
+          <div className="bg-card rounded-2xl shadow-2xl p-6 md:p-8 border border-border animate-fade-in-up animation-delay-300">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="text-primary font-semibold text-lg">CM</span>
+              </div>
+              <div>
+                <strong className="text-foreground">Carlos Mendes</strong>
+                <p className="text-sm text-muted-foreground">CFO, Logística Norte</p>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5 md:gap-2">
-              <Route className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
-              <span>Para onde vai</span>
+
+            <blockquote className="text-lg text-foreground mb-4 leading-relaxed">
+              "Em 48 horas identificamos <strong className="text-primary">R$ 127 mil em créditos</strong> que nosso contador não tinha visto. O TribuTalks se pagou <strong className="text-primary">42 vezes</strong> no primeiro mês."
+            </blockquote>
+
+            <div className="flex items-center gap-1 text-primary mb-4">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="w-5 h-5 fill-primary" />
+              ))}
             </div>
-            <div className="flex items-center gap-1.5 md:gap-2">
-              <Check className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
-              <span>O que fazer</span>
+
+            <div className="border-t border-border pt-4 mt-4">
+              <div className="grid grid-cols-2 gap-4 text-center">
+                <div>
+                  <div className="text-3xl font-bold text-primary">R$ 127k</div>
+                  <div className="text-sm text-muted-foreground">Créditos identificados</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-success">42x ROI</div>
+                  <div className="text-sm text-muted-foreground">Retorno sobre investimento</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Social Proof Stats */}
+            <div className="mt-6 pt-4 border-t border-border">
+              <div className="flex items-center justify-around text-center">
+                <div>
+                  <strong className="text-2xl text-foreground">1.500+</strong>
+                  <p className="text-xs text-muted-foreground">empresas confiam</p>
+                </div>
+                <div>
+                  <strong className="text-2xl text-primary">R$ 380M</strong>
+                  <p className="text-xs text-muted-foreground">economia gerada</p>
+                </div>
+                <div>
+                  <strong className="text-2xl text-foreground">⭐ 4.8/5</strong>
+                  <p className="text-xs text-muted-foreground">avaliação média</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

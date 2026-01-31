@@ -1,17 +1,14 @@
 import { Header } from "@/components/landing/Header";
 import { HeroSection } from "@/components/landing/HeroSection";
-import { FeaturesSection } from "@/components/landing/FeaturesSection";
-import { IntegrationsSection } from "@/components/landing/IntegrationsSection";
-import { RTCCalculatorSection } from "@/components/landing/RTCCalculatorSection";
+import { JourneysSection } from "@/components/landing/JourneysSection";
+import { SocialProofSection } from "@/components/landing/SocialProofSection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
-import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
+import { ROICalculatorSection } from "@/components/landing/ROICalculatorSection";
+import { IntegrationsSection } from "@/components/landing/IntegrationsSection";
 import { PricingSection } from "@/components/landing/PricingSection";
-import { ComingSoonSection } from "@/components/landing/ComingSoonSection";
-import { CredibilitySection } from "@/components/landing/CredibilitySection";
 import { FAQSection } from "@/components/landing/FAQSection";
 import { CTASection } from "@/components/landing/CTASection";
 import { Footer } from "@/components/landing/Footer";
-import { ValuationImpactSection } from "@/components/landing/ValuationImpactSection";
 
 const Index = () => {
   return (
@@ -19,15 +16,12 @@ const Index = () => {
       <Header />
       <main>
         <HeroSection />
-        <RTCCalculatorSection />
-        <FeaturesSection />
-        <IntegrationsSection />
+        <JourneysSection />
+        <SocialProofSection />
         <HowItWorksSection />
-        <TestimonialsSection />
-        <ValuationImpactSection />
+        <ROICalculatorSection />
+        <IntegrationsSection />
         <PricingSection />
-        <ComingSoonSection />
-        <CredibilitySection />
         <FAQSection />
         <CTASection />
       </main>
