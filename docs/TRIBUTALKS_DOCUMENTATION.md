@@ -12,7 +12,7 @@ O TribuTalks é uma **plataforma SaaS de inteligência tributária** voltada par
 
 | Problema | Solução TribuTalks |
 |----------|-------------------|
-| Reforma Tributária complexa (EC 132/2023, LC 214/2025) | GPS com timeline, calculadoras e alertas |
+| Reforma Tributária complexa (EC 132/2023, LC 214/2025) | Plataforma com timeline, calculadoras e alertas |
 | Falta de visibilidade sobre impacto no caixa | NEXUS: 8 KPIs em tempo real |
 | Créditos tributários não aproveitados | Radar de Créditos (24 regras automatizadas) |
 | Precificação sem considerar novos impostos | PriceGuard com gross-up reverso |

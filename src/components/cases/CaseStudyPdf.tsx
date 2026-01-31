@@ -165,7 +165,7 @@ export async function CaseStudyPdf(caseStudy: CaseStudy): Promise<void> {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
-  addText("TribuTalks - PIT - Plataforma de Inteligência Tributária", margin, pageHeight - 10);
+  addText("TribuTalks Inteligência Tributária", margin, pageHeight - 10);
   addText("tributalks.lovable.app", pageWidth - margin - 40, pageHeight - 10);
 
   // Save
