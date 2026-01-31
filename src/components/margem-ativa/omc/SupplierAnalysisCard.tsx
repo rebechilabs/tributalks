@@ -21,9 +21,11 @@ interface Supplier {
 interface SupplierAnalysisCardProps {
   supplier: Supplier;
   onClose: () => void;
+  /** Optional NCM-specific rate from RTC API */
+  ncmAliquota?: number;
 }
 
-export function SupplierAnalysisCard({ supplier, onClose }: SupplierAnalysisCardProps) {
+export function SupplierAnalysisCard({ supplier, onClose, ncmAliquota }: SupplierAnalysisCardProps) {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -62,8 +64,8 @@ export function SupplierAnalysisCard({ supplier, onClose }: SupplierAnalysisCard
     return labels[confianca] || { label: confianca, color: 'text-muted-foreground' };
   };
 
-  // Cálculos
-  const aliquotaMaxima = 26.5; // CBS/IBS máximo (Lucro Real)
+  // Cálculos - usar alíquota NCM específica se disponível via RTC API
+  const aliquotaMaxima = ncmAliquota || 26.5; // CBS/IBS (default ou via RTC)
   const creditoAtual = supplier.total_compras_12m * (supplier.aliquota_credito_estimada / 100);
   const creditoMaximo = supplier.total_compras_12m * (aliquotaMaxima / 100);
   const gapCredito = creditoMaximo - creditoAtual;

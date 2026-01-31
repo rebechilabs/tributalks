@@ -5,6 +5,7 @@ import { SocialProofSection } from "@/components/landing/SocialProofSection";
 import { CredibilitySection } from "@/components/landing/CredibilitySection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { ROICalculatorSection } from "@/components/landing/ROICalculatorSection";
+import { MarginProtectionSection } from "@/components/landing/MarginProtectionSection";
 import { IntegrationsSection } from "@/components/landing/IntegrationsSection";
 import { PricingSection } from "@/components/landing/PricingSection";
 import { FAQSection } from "@/components/landing/FAQSection";
@@ -22,6 +23,7 @@ const Index = () => {
         <CredibilitySection />
         <HowItWorksSection />
         <ROICalculatorSection />
+        <MarginProtectionSection />
         <IntegrationsSection />
         <PricingSection />
         <FAQSection />
