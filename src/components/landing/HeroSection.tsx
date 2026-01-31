@@ -99,8 +99,8 @@ export function HeroSection() {
                 <span className="text-primary font-semibold text-lg">CM</span>
               </div>
               <div>
-                <strong className="text-foreground">Carlos Mendes</strong>
-                <p className="text-sm text-muted-foreground">CFO, Logística Norte</p>
+                <strong className="text-foreground">C.M.</strong>
+                <p className="text-sm text-muted-foreground">CFO, Setor de Logística</p>
               </div>
             </div>
 
