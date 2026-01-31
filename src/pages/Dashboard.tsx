@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -24,7 +24,7 @@ import { LastActivityCard } from "@/components/dashboard/LastActivityCard";
 import { InProgressWorkflows } from "@/components/dashboard/InProgressWorkflows";
 import { NextRelevantDeadline } from "@/components/dashboard/NextRelevantDeadline";
 import { ClaraContextualSuggestion } from "@/components/common/ClaraContextualSuggestion";
-import { OnboardingChecklist, FirstMission, GuidedTour } from "@/components/onboarding";
+import { OnboardingChecklist, FirstMission, GuidedTour, QuickDiagnosticModal } from "@/components/onboarding";
 import { StreakDisplay } from "@/components/achievements";
 import { SwitchCompanyCard } from "@/components/profile/SwitchCompanyCard";
 import { useDashboardData } from "@/hooks/useDashboardData";
@@ -206,9 +206,11 @@ function DashboardSkeleton() {
 const Dashboard = () => {
   const { user, profile } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [simulations, setSimulations] = useState<Simulation[]>([]);
   const [simulationsThisMonth, setSimulationsThisMonth] = useState(0);
   const [simulationsLoading, setSimulationsLoading] = useState(true);
+  const [showQuickDiagnostic, setShowQuickDiagnostic] = useState(false);
   
   // Consolidated dashboard data hook - single batch request
   const { data: dashboardData, isLoading: dashboardLoading } = useDashboardData();
@@ -226,6 +228,14 @@ const Dashboard = () => {
       }, 2000);
     }
   }, [user?.id, dashboardLoading]);
+
+  // Check for quick diagnostic flag
+  useEffect(() => {
+    const needsDiagnostic = localStorage.getItem('needs_quick_diagnostic');
+    if (needsDiagnostic === 'true') {
+      setShowQuickDiagnostic(true);
+    }
+  }, []);
 
   const rawPlan = profile?.plano || 'FREE';
   const currentPlan = LEGACY_PLAN_MAP[rawPlan] || 'FREE';
@@ -341,8 +351,24 @@ const Dashboard = () => {
     progressPercent: 0,
   };
 
+  const handleDiagnosticComplete = () => {
+    setShowQuickDiagnostic(false);
+    // Optionally refresh data
+  };
+
+  const handleDiagnosticSkip = () => {
+    setShowQuickDiagnostic(false);
+  };
+
   return (
     <DashboardLayout title="Dashboard">
+      {/* Quick Diagnostic Modal */}
+      <QuickDiagnosticModal
+        open={showQuickDiagnostic}
+        onComplete={handleDiagnosticComplete}
+        onSkip={handleDiagnosticSkip}
+      />
+      
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
         <div className="mb-8 flex items-center justify-between">
