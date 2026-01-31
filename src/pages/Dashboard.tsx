@@ -54,7 +54,7 @@ interface ToolGroup {
   items: ToolItem[];
 }
 
-// PIT - Plataforma de Inteligência Tributária - primeira seção após Clara
+// TribuTalks Inteligência Tributária - primeira seção após Clara
 const gpsReformaItems: ToolItem[] = [
   { 
     name: 'Notícias da Reforma', 
@@ -435,11 +435,11 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* PIT - PLATAFORMA DE INTELIGÊNCIA TRIBUTÁRIA - Section right after Clara */}
+        {/* TribuTalks Inteligência Tributária - Section right after Clara */}
         <section className="mb-8">
           <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
             <Newspaper className="w-5 h-5 text-primary" />
-            PIT
+            TribuTalks
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -66,7 +66,7 @@ export default function Termos() {
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-4">5. NATUREZA DOS SERVIÇOS — ISENÇÃO DE RESPONSABILIDADE</h2>
-            <p><strong>5.1.</strong> A TribuTalks é uma plataforma de inteligência tributária com fins EXCLUSIVAMENTE EDUCATIVOS E INFORMATIVOS.</p>
+            <p><strong>5.1.</strong> O TribuTalks Inteligência Tributária é uma plataforma com fins EXCLUSIVAMENTE EDUCATIVOS E INFORMATIVOS.</p>
             <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 my-4">
               <p className="text-destructive font-medium mb-2">5.2. AS SIMULAÇÕES, CÁLCULOS, COMPARATIVOS E INFORMAÇÕES FORNECIDAS PELA PLATAFORMA NÃO CONSTITUEM:</p>
               <ul className="list-disc list-inside space-y-1 text-destructive/80">

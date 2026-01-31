@@ -426,7 +426,7 @@ async function sendProfessionalWelcomeEmail(email: string) {
 
   <h2 style="color: #1a1a2e; border-bottom: 2px solid #eee; padding-bottom: 10px;">O que você acabou de adquirir:</h2>
   
-  <p>O TribuTalks é a <strong>PIT - Plataforma de Inteligência Tributária</strong> — uma plataforma completa que mostra em tempo real como a transição de 2026 a 2033 vai impactar sua empresa.</p>
+  <p>O TribuTalks é a plataforma de <strong>Inteligência Tributária</strong> — uma solução completa que mostra em tempo real como a transição de 2026 a 2033 vai impactar sua empresa.</p>
 
   <p><strong>Você tem acesso a:</strong></p>
 
@@ -489,7 +489,7 @@ async function sendProfessionalWelcomeEmail(email: string) {
   <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
   
   <p style="font-size: 12px; color: #999; text-align: center;">
-    TribuTalks - PIT - Plataforma de Inteligência Tributária<br>
+    TribuTalks Inteligência Tributária<br>
     Rebechi & Silva Produções | São Paulo, SP
   </p>
 
