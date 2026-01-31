@@ -104,7 +104,7 @@ O TribuTalks é uma **plataforma SaaS de inteligência tributária** voltada par
 | Plano | Acesso |
 |-------|--------|
 | NAVIGATOR | Grupo de WhatsApp |
-| PROFESSIONAL+ | Circle (GPS da Reforma Tributária) |
+| PROFESSIONAL+ | Circle (Inteligência Tributária Connect) |
 
 Ao assinar Professional, o usuário recebe automaticamente:
 - E-mail de boas-vindas via Resend
