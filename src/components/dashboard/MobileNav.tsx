@@ -198,8 +198,8 @@ export function MobileNav() {
       </SheetTrigger>
       <SheetContent side="left" className="w-72 p-0">
         {/* Header */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-border">
-          <img src={logoTributalks} alt="TribuTalks" className="h-8 w-auto" />
+        <div className="h-20 flex items-center justify-between px-4 border-b border-border">
+          <img src={logoTributalks} alt="TribuTalks" className="h-16 w-auto" />
           <Button variant="ghost" size="icon" onClick={() => setOpen(false)}>
             <X className="w-5 h-5" />
           </Button>
