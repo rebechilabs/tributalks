@@ -1,4 +1,4 @@
-import { Target, BarChart3, Gauge, Lock, Check, Star } from "lucide-react";
+import { Target, BarChart3, Gauge, Lock, Check, Star, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
@@ -6,7 +6,6 @@ const journeys = [
   {
     id: "starter",
     icon: Target,
-    emoji: "🎯",
     title: "Preciso Entender",
     description: '"A Reforma parece complexa. Quero entender o impacto antes de agir."',
     features: [
@@ -25,7 +24,6 @@ const journeys = [
   {
     id: "navigator",
     icon: BarChart3,
-    emoji: "📊",
     title: "Preciso Monitorar",
     description: '"Quero acompanhar mudanças e me preparar gradualmente."',
     features: [
@@ -45,7 +43,6 @@ const journeys = [
   {
     id: "professional",
     icon: Gauge,
-    emoji: "🎛️",
     title: "Preciso Decidir",
     description: '"Preciso tomar decisões informadas e proteger meu caixa AGORA."',
     features: [
@@ -61,7 +58,7 @@ const journeys = [
     ctaText: "Plano Professional →",
     link: "/cadastro?plan=professional",
     highlighted: true,
-    badge: "⭐ MAIS POPULAR",
+    badge: "MAIS POPULAR",
     roi: "ROI médio: 10x nos primeiros 90 dias",
   },
 ];
@@ -92,7 +89,8 @@ export function JourneysSection() {
               {/* Badge */}
               {journey.badge && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <div className="inline-flex items-center gap-1 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-bold whitespace-nowrap">
+                  <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-bold whitespace-nowrap">
+                    <Star className="w-4 h-4 fill-current" />
                     {journey.badge}
                   </div>
                 </div>
@@ -100,7 +98,9 @@ export function JourneysSection() {
 
               {/* Header */}
               <div className={`${journey.badge ? "pt-4" : ""}`}>
-                <div className="text-4xl mb-4">{journey.emoji}</div>
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <journey.icon className="w-6 h-6 text-primary" />
+                </div>
                 <h3 className="text-2xl font-bold text-foreground mb-2">
                   {journey.title}
                 </h3>
@@ -153,8 +153,9 @@ export function JourneysSection() {
                 </Link>
 
                 {journey.roi && (
-                  <p className="text-xs text-center text-muted-foreground mt-2">
-                    💡 {journey.roi}
+                  <p className="text-xs text-center text-muted-foreground mt-2 flex items-center justify-center gap-1">
+                    <Lightbulb className="w-3.5 h-3.5" />
+                    {journey.roi}
                   </p>
                 )}
               </div>

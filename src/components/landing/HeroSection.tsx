@@ -139,7 +139,10 @@ export function HeroSection() {
                   <p className="text-xs text-muted-foreground">economia gerada</p>
                 </div>
                 <div>
-                  <strong className="text-2xl text-foreground">⭐ 4.8/5</strong>
+                  <div className="flex items-center justify-center gap-1">
+                    <Star className="w-5 h-5 text-primary fill-primary" />
+                    <strong className="text-2xl text-foreground">4.8/5</strong>
+                  </div>
                   <p className="text-xs text-muted-foreground">avaliação média</p>
                 </div>
               </div>
