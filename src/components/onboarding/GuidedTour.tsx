@@ -57,16 +57,16 @@ const tourSteps: Step[] = [
     placement: "right",
   },
   {
-    target: '[data-tour="gps-reforma-group"]',
+    target: '[data-tour="pit-group"]',
     content: (
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Newspaper className="h-5 w-5 text-primary" />
-          <span className="font-semibold">GPS da Reforma</span>
+          <span className="font-semibold">PIT</span>
         </div>
         <p className="text-sm text-muted-foreground">
-          Fique por dentro das notícias e prazos importantes da reforma tributária. 
-          Receba alertas personalizados para o seu negócio.
+          Plataforma de Inteligência Tributária. Fique por dentro das notícias e prazos 
+          importantes da reforma tributária. Receba alertas personalizados para o seu negócio.
         </p>
       </div>
     ),

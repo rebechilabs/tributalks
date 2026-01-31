@@ -77,7 +77,7 @@ Quer que eu te guie passo a passo no preenchimento do Score Tributário? Ou pref
 
 ⚠️ *Lembre-se: antes de implementar qualquer estratégia tributária em sua empresa, converse com seu contador ou advogado tributarista para avaliar sua situação específica.*`,
 
-  NAVIGATOR: `Excelente! Você tem acesso completo ao GPS da Reforma Tributária. Vou te orientar na jornada ideal:
+  NAVIGATOR: `Excelente! Você tem acesso completo à PIT - Plataforma de Inteligência Tributária. Vou te orientar na jornada ideal:
 
 📍 **JORNADA RECOMENDADA:**
 
@@ -413,7 +413,7 @@ export function FloatingAssistant() {
       // Fallback greeting
       setMessages([{ 
         role: "assistant", 
-        content: `Olá! Sou a **Clara**, sua consultora especializada em Reforma Tributária. 👋\n\nPosso te ajudar com dúvidas sobre a reforma, impostos, cronograma ou qualquer ferramenta do GPS Tributário. Como posso ajudar?` 
+        content: `Olá! Sou a **Clara**, sua consultora especializada em Reforma Tributária. 👋\n\nPosso te ajudar com dúvidas sobre a reforma, impostos, cronograma ou qualquer ferramenta da PIT. Como posso ajudar?` 
       }]);
       setHasGreeted(true);
     } finally {

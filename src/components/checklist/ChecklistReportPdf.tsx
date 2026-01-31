@@ -240,7 +240,7 @@ export async function generateChecklistPdf(
   doc.text('TribuTalks', margin, pageHeight - 10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...mutedColor);
-  doc.text('| GPS da Reforma Tributária', margin + 22, pageHeight - 10);
+  doc.text('| PIT - Plataforma de Inteligência Tributária', margin + 22, pageHeight - 10);
 
   // Save
   const fileName = `relatorio-prontidao-reforma-${new Date().toISOString().split('T')[0]}.pdf`;

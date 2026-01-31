@@ -590,17 +590,18 @@ Ideal para contratos sociais, acordos de sócios, contratos de serviço e docume
 
   {
     slug: "comunidade",
-    name: "Comunidade Circle",
+    name: "TribuTalks Connect",
     icon: "Users",
     category: "extras",
     minPlan: "NAVIGATOR",
     shortDescription: "Acesse a comunidade exclusiva de empresários e contadores.",
-    fullDescription: `A Comunidade Circle é o espaço para networking e troca de experiências entre usuários da plataforma.
+    fullDescription: `A TribuTalks Connect é a comunidade exclusiva para networking e troca de experiências entre usuários da plataforma.
 
 Inclui:
 - Fóruns temáticos por setor e regime
 - Lives mensais com especialistas
-- Grupo de WhatsApp exclusivo
+- Grupo de WhatsApp exclusivo (Navigator)
+- Circle exclusivo (Professional+)
 - Acesso antecipado a novas funcionalidades`,
     whenToUse: [
       "Quer trocar experiências com outros empresários",
@@ -608,7 +609,7 @@ Inclui:
       "Quer acesso a conteúdo exclusivo"
     ],
     howItWorks: [
-      "Acesse o Circle pelo menu da plataforma",
+      "Acesse a TribuTalks Connect pelo menu da plataforma",
       "Participe de discussões e faça perguntas",
       "Acompanhe lives e webinars",
       "Conecte-se com profissionais do seu setor"

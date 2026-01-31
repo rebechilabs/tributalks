@@ -74,7 +74,7 @@ export const MENU_STARTER: MenuElement[] = [
     ]
   },
   {
-    title: 'GPS da Reforma',
+    title: 'PIT',
     items: [
       { label: 'Timeline 2026-2033', href: '/dashboard/timeline-reforma', icon: MapPin },
     ]
@@ -126,7 +126,7 @@ export const MENU_NAVIGATOR: MenuElement[] = [
     ]
   },
   {
-    title: 'GPS da Reforma',
+    title: 'PIT',
     items: [
       { label: 'Notícias da Reforma', href: '/noticias', icon: Newspaper, badge: 'Novo' },
       { label: 'Timeline 2026-2033', href: '/dashboard/timeline-reforma', icon: MapPin },
@@ -303,8 +303,8 @@ export const FEATURE_HIGHLIGHTS: Record<string, { title: string; description: st
     value: 'Fique por dentro de todas as mudanças que afetam seu negócio'
   },
   comunidade: {
-    title: 'Comunidade TribuTalks',
-    description: 'Acesso ao Circle exclusivo',
+    title: 'TribuTalks Connect',
+    description: 'Comunidade exclusiva Professional+',
     icon: Users,
     value: 'Networking com outros empresários e especialistas tributários'
   },

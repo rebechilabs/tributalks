@@ -85,12 +85,12 @@ export const ALL_TOOLS: CommandTool[] = [
   },
   { 
     id: 'comunidade',
-    name: 'Comunidade Circle', 
+    name: 'TribuTalks Connect', 
     path: '/comunidade', 
     icon: '👥',
     plan: 'navigator',
-    keywords: ['comunidade', 'circle', 'forum', 'rede', 'network'],
-    description: 'Network com outros CFOs'
+    keywords: ['comunidade', 'circle', 'forum', 'rede', 'network', 'tributalks', 'connect'],
+    description: 'Comunidade exclusiva Professional+'
   },
   {
     id: 'checklist',
