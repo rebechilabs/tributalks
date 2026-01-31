@@ -1,90 +1,89 @@
 
-# Corrigir Links dos Planos para Stripe
+# Atualizar Link Stripe + Remover Nomes de Empresas (OAB)
 
-## Problema Identificado
+## Resumo das Alterações
 
-Os botões de planos estão redirecionando para `/cadastro?plan=...` em vez de links Stripe. Para usuários já logados, o `PublicRoute` intercepta e redireciona para o dashboard.
+Duas correções importantes:
+1. Adicionar link Stripe correto para Professional Mensal
+2. Remover todos os nomes de empresas dos testemunhos para cumprir o código de ética da OAB
 
 ---
 
-## Correções Necessárias
+## 1. Atualizar Link Stripe
 
-### 1. Arquivo: `src/config/site.ts`
+### Arquivo: `src/config/site.ts`
 
-**Linha 11** - Corrigir `PROFESSIONAL_MENSAL` para usar link Stripe:
+**Linha 11** - Atualizar o link do Professional Mensal:
 
 ```typescript
 // Antes
 PROFESSIONAL_MENSAL: "/cadastro?plan=professional",
 
 // Depois
-PROFESSIONAL_MENSAL: "https://buy.stripe.com/LINK_DO_STRIPE_PROFESSIONAL_MENSAL",
-```
-
-> **Ação necessária**: Você precisa fornecer o link correto do Stripe para o Professional Mensal, pois só você tem acesso ao painel Stripe.
-
----
-
-### 2. Arquivo: `src/components/landing/JourneysSection.tsx`
-
-**Problema**: Esta seção usa links internos hardcoded em vez dos links do CONFIG.
-
-**Solução**: Importar CONFIG e usar os links Stripe corretos.
-
-**Mudanças**:
-1. Importar `CONFIG` de `@/config/site`
-2. Atualizar cada journey para usar os links do Stripe
-3. Adicionar lógica para abrir links externos em nova aba
-
-```typescript
-import { CONFIG } from "@/config/site";
-
-const journeys = [
-  {
-    id: "starter",
-    // ... outras props
-    link: CONFIG.PAYMENT_LINKS.STARTER_MENSAL,  // Link Stripe
-  },
-  {
-    id: "navigator",
-    // ... outras props
-    link: CONFIG.PAYMENT_LINKS.NAVIGATOR_MENSAL,  // Link Stripe
-  },
-  {
-    id: "professional",
-    // ... outras props
-    link: CONFIG.PAYMENT_LINKS.PROFESSIONAL_MENSAL,  // Link Stripe
-  },
-];
-```
-
-4. Atualizar o botão para abrir links externos:
-
-```tsx
-{journey.link.startsWith("http") ? (
-  <a href={journey.link} target="_blank" rel="noopener noreferrer">
-    <Button ...>{journey.ctaText}</Button>
-  </a>
-) : (
-  <Link to={journey.link}>
-    <Button ...>{journey.ctaText}</Button>
-  </Link>
-)}
+PROFESSIONAL_MENSAL: "https://buy.stripe.com/dRmfZa2R4e9U4DFeDcbo40a",
 ```
 
 ---
 
-## Resumo das Alterações
+## 2. Remover Nomes de Empresas dos Testemunhos
+
+### Arquivo: `src/components/landing/SocialProofSection.tsx`
+
+**Linhas 3-37** - Remover campo `company` e ajustar estrutura:
+
+| Antes | Depois |
+|-------|--------|
+| Carlos Mendes, CFO, Logística Norte | C.M., CFO, Setor de Logística |
+| Fernanda Lima, CFO, TechSul | F.L., CFO, Setor de Tecnologia |
+| Ricardo Alves, Dir. Financeiro, Indústria ABC | R.A., Dir. Financeiro, Setor Industrial |
+
+**Mudanças específicas**:
+- Trocar nomes completos por iniciais (C.M., F.L., R.A.)
+- Remover campo `company` 
+- Renomear para mostrar setor em vez de empresa
+- Ajustar exibição para `{testimonial.role}, {testimonial.sector}`
+
+---
+
+### Arquivo: `src/data/caseStudies.ts`
+
+**Todos os 4 estudos de caso** - Substituir nomes de empresas por descrições genéricas:
+
+| Antes | Depois |
+|-------|--------|
+| Distribuidora Alimentos SP | Distribuidora de Alimentos |
+| Clínica Oftalmológica Rio | Clínica Oftalmológica |
+| Metalúrgica Belo Horizonte | Indústria Metalúrgica |
+| TechFlow SaaS | Startup de Software B2B |
+
+**Nos testimoniais**:
+
+| Antes | Depois |
+|-------|--------|
+| Carlos Mendes, Diretor Financeiro | C.M., Diretor Financeiro |
+| Dra. Fernanda Lima, Sócia-Administradora | F.L., Sócia-Administradora |
+| Roberto Andrade, Controller | R.A., Controller |
+| Marina Costa, CEO & Co-founder | M.C., CEO |
+
+**Nos slugs e fullStory**:
+- Atualizar slugs para versões genéricas
+- Remover menções específicas de nomes no texto narrativo
+
+---
+
+## Arquivos Afetados
 
 | Arquivo | Alteração |
 |---------|-----------|
-| `src/config/site.ts` | Corrigir `PROFESSIONAL_MENSAL` com link Stripe real |
-| `src/components/landing/JourneysSection.tsx` | Usar links do CONFIG + abrir externos em nova aba |
+| `src/config/site.ts` | Link Stripe Professional Mensal |
+| `src/components/landing/SocialProofSection.tsx` | Anonimizar testemunhos |
+| `src/data/caseStudies.ts` | Anonimizar 4 estudos de caso + testemunhos |
 
 ---
 
-## Resultado Esperado
+## Resultado Final
 
-- Todos os botões de planos abrirão o Stripe checkout diretamente
-- Funciona para visitantes E usuários já logados
-- Consistência entre `JourneysSection` e `PricingSection`
+- Botões de plano Professional abrirão Stripe corretamente
+- Todos os testemunhos mostrarão apenas iniciais + cargo + setor
+- Nenhum nome de empresa identificável será exibido
+- Conformidade total com o código de ética da OAB
