@@ -4,23 +4,23 @@ const testimonials = [
   {
     quote:
       "Descobri em 5 minutos que estou no regime errado. Potencial de economia: R$47k/ano.",
-    author: "Carlos Mendes",
+    author: "C.M.",
     role: "CEO",
-    company: "Logística Norte",
+    sector: "Logística",
   },
   {
     quote:
       "Finalmente entendi quanto o Split Payment vai impactar meu caixa. Números que ninguém tinha me mostrado.",
-    author: "Fernanda Lima",
+    author: "F.L.",
     role: "CFO",
-    company: "TechSul",
+    sector: "Tecnologia",
   },
   {
     quote:
       "A Clara AI respondeu em 10 segundos uma dúvida que eu ia pagar R$500 pra um consultor.",
-    author: "Ricardo Alves",
+    author: "R.A.",
     role: "Diretor Financeiro",
-    company: "Indústria ABC",
+    sector: "Indústria",
   },
 ];
 
@@ -61,7 +61,7 @@ export function TestimonialsSection() {
                     {testimonial.author}
                   </div>
                   <div className="text-xs md:text-sm text-muted-foreground">
-                    {testimonial.role}, {testimonial.company}
+                    {testimonial.role} · {testimonial.sector}
                   </div>
                 </div>
               </div>
