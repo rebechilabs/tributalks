@@ -1,6 +1,7 @@
 import { Target, BarChart3, Gauge, Lock, Check, Star, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { CONFIG } from "@/config/site";
 
 const journeys = [
   {
@@ -18,7 +19,7 @@ const journeys = [
     price: 397,
     priceText: "/mês",
     ctaText: "Plano Starter →",
-    link: "/cadastro?plan=starter",
+    link: CONFIG.PAYMENT_LINKS.STARTER_MENSAL,
     highlighted: false,
   },
   {
@@ -37,7 +38,7 @@ const journeys = [
     price: 1297,
     priceText: "/mês",
     ctaText: "Plano Navigator →",
-    link: "/cadastro?plan=navigator",
+    link: CONFIG.PAYMENT_LINKS.NAVIGATOR_MENSAL,
     highlighted: false,
   },
   {
@@ -56,7 +57,7 @@ const journeys = [
     price: 2997,
     priceText: "/mês",
     ctaText: "Plano Professional →",
-    link: "/cadastro?plan=professional",
+    link: CONFIG.PAYMENT_LINKS.PROFESSIONAL_MENSAL,
     highlighted: true,
     badge: "MAIS POPULAR",
     roi: "ROI médio: 10x nos primeiros 90 dias",
@@ -140,17 +141,22 @@ export function JourneysSection() {
                   </span>
                 </div>
                 
-                <Link to={journey.link}>
-                  <Button
-                    className={`w-full ${
-                      journey.highlighted
-                        ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                        : "bg-secondary text-foreground hover:bg-secondary/80"
-                    }`}
-                  >
-                    {journey.ctaText}
-                  </Button>
-                </Link>
+              <a 
+                href={journey.link} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-full"
+              >
+                <Button
+                  className={`w-full ${
+                    journey.highlighted
+                      ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                      : "bg-secondary text-foreground hover:bg-secondary/80"
+                  }`}
+                >
+                  {journey.ctaText}
+                </Button>
+              </a>
 
                 {journey.roi && (
                   <p className="text-xs text-center text-muted-foreground mt-2 flex items-center justify-center gap-1">
