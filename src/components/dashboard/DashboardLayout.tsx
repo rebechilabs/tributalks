@@ -13,6 +13,7 @@ import { Sidebar } from "./Sidebar";
 import { MobileNav } from "./MobileNav";
 import { FloatingAssistant } from "@/components/common/FloatingAssistant";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { CommandPalette } from "@/components/CommandPalette";
 import logoTributalks from "@/assets/logo-tributalks.png";
 
 interface DashboardLayoutProps {
@@ -93,6 +94,9 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
 
         {/* Floating AI Assistant */}
         <FloatingAssistant />
+        
+        {/* Command Palette (⌘K) */}
+        <CommandPalette />
       </div>
     </div>
   );
