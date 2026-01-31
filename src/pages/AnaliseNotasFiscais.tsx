@@ -515,7 +515,8 @@ export default function AnaliseNotasFiscais() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -865,6 +866,7 @@ export default function AnaliseNotasFiscais() {
             <ExposureProjection />
           </TabsContent>
         </Tabs>
+        </div>
       </div>
     </DashboardLayout>
   );
