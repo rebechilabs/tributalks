@@ -110,13 +110,8 @@ const plans: Plan[] = [
     isEnterprise: true,
     cnpjLimit: "Ilimitado • Usuários Ilimitados",
     features: [
-      { text: "Clara AI ilimitada", included: true },
-      { text: "Tudo do Professional +", included: true },
-      { text: "Painel Executivo Multi-empresa", included: true },
       { text: "Consultoria com Rebechi & Silva Advogados", included: true },
       { text: "White Label", included: true, limitText: "(seu logo, cores, domínio)" },
-      { text: "API de integração dedicada", included: true },
-      { text: "SLA prioritário", included: true },
     ],
     ctaText: "Fale conosco",
     linkMonthly: CONFIG.PAYMENT_LINKS.ENTERPRISE,
