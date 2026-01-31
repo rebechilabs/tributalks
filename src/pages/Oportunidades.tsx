@@ -316,7 +316,8 @@ export default function Oportunidades() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-8">
         {/* ============ HEADER COM IMPACTO TOTAL ============ */}
         <Card className="bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 border-primary/20">
           <CardContent className="p-6 md:p-8">
@@ -531,6 +532,7 @@ export default function Oportunidades() {
           }}
           onStatusChange={handleStatusChange}
         />
+        </div>
       </div>
     </DashboardLayout>
   );
