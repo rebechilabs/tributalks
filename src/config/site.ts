@@ -15,7 +15,7 @@ export const CONFIG = {
     // Pacotes de créditos Clara (1 crédito = 1 conversa) - via Stripe
     CREDITS_30: "https://buy.stripe.com/6oU7sE77k4zk8TVfHgbo407",
     CREDITS_50: "https://buy.stripe.com/cNibIU2R4e9Ub2366Gbo408",
-    CREDITS_100: "/cadastro?credits=100",
+    CREDITS_100: "https://buy.stripe.com/7sY14g77kaXIeefbr0bo409",
     // Extra seats for multi-user plans - R$ 247/mês por usuário adicional
     SEAT_ADDITIONAL: "https://buy.stripe.com/dRmdR2ajwd5Q6LNcv4bo400",
   },
