@@ -1,9 +1,14 @@
 
-# Atualizar Link Stripe do Pacote Clara IA - 100 Créditos
 
-## Resumo
+# Corrigir Badge "7 Dias Grátis" Cortado
 
-Substituir o placeholder `/cadastro?credits=100` pelo link real do Stripe para o pacote Clara IA de 100 créditos por dia (R$ 250,00).
+## Problema
+
+O badge "7 DIAS GRÁTIS" usa posicionamento absoluto com `-top-3` (12px acima do card), mas o container com `overflow-x-auto` na seção de preços está cortando elementos que ultrapassam seus limites.
+
+## Solução
+
+Adicionar padding-top ao container de scroll para dar espaço aos badges que ficam acima dos cards.
 
 ---
 
@@ -11,34 +16,23 @@ Substituir o placeholder `/cadastro?credits=100` pelo link real do Stripe para o
 
 | Arquivo | Linha | Valor Atual | Novo Valor |
 |---------|-------|-------------|------------|
-| `src/config/site.ts` | 18 | `/cadastro?credits=100` | `https://buy.stripe.com/7sY14g77kaXIeefbr0bo409` |
+| `src/components/landing/PricingSection.tsx` | 174 | `overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pb-4` | `overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pt-4 pb-4` |
 
 ---
 
-## Codigo
+## Código
 
-```typescript
-// Antes (linha 18)
-CREDITS_100: "/cadastro?credits=100",
+```tsx
+// Antes (linha 174)
+<div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pb-4 md:pb-0 scrollbar-hide">
 
-// Depois
-CREDITS_100: "https://buy.stripe.com/7sY14g77kaXIeefbr0bo409",
+// Depois  
+<div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pt-4 pb-4 md:pb-0 scrollbar-hide">
 ```
 
 ---
 
 ## Resultado
 
-Quando usuarios clicarem no botao de compra do pacote de 100 creditos Clara IA, serao redirecionados diretamente para o checkout do Stripe no valor de R$ 250,00.
+O badge "7 DIAS GRÁTIS" ficará totalmente visível, sem cortes, tanto em mobile quanto em desktop.
 
----
-
-## Status dos Links de Creditos Clara IA
-
-Apos esta atualizacao, todos os pacotes de creditos Clara IA estarao configurados:
-
-| Pacote | Valor | Status |
-|--------|-------|--------|
-| 30 creditos/dia | R$ 80,00 | Configurado |
-| 50 creditos/dia | R$ 130,00 | Configurado |
-| 100 creditos/dia | R$ 250,00 | Sera configurado |
