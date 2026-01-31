@@ -157,26 +157,36 @@ export default function Noticias() {
   const fetchData = async () => {
     setLoading(true);
     
-    // Buscar pílula do dia (rotação ou agendada)
+    // Buscar pílula do dia com rotação automática
     const today = new Date().toISOString().split('T')[0];
-    const { data: pilulas } = await supabase
+    
+    // 1. Verificar se há pílula agendada para hoje
+    const { data: agendada } = await supabase
       .from('pilulas_reforma')
       .select('*')
       .eq('ativo', true)
-      .or(`data_exibicao.eq.${today},data_exibicao.is.null`)
+      .eq('data_exibicao', today)
       .limit(1);
-    
-    if (pilulas && pilulas.length > 0) {
-      setPilulaDoDia(pilulas[0]);
+
+    if (agendada && agendada.length > 0) {
+      setPilulaDoDia(agendada[0]);
     } else {
-      // Fallback: pegar qualquer pílula ativa
-      const { data: anyPilula } = await supabase
+      // 2. Rotação automática entre pílulas sem data específica
+      const { data: pilulas } = await supabase
         .from('pilulas_reforma')
         .select('*')
         .eq('ativo', true)
-        .limit(1);
-      if (anyPilula && anyPilula.length > 0) {
-        setPilulaDoDia(anyPilula[0]);
+        .is('data_exibicao', null)
+        .order('created_at', { ascending: true });
+
+      if (pilulas && pilulas.length > 0) {
+        // Calcular dia do ano para rotação (1-365)
+        const startOfYear = new Date(new Date().getFullYear(), 0, 0);
+        const dayOfYear = Math.floor(
+          (Date.now() - startOfYear.getTime()) / 86400000
+        );
+        const indice = dayOfYear % pilulas.length;
+        setPilulaDoDia(pilulas[indice]);
       }
     }
 
