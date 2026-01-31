@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Clock, XCircle, ArrowRight, RefreshCw, Home } from "lucide-react";
+import { CheckCircle2, Clock, XCircle, ArrowRight, RefreshCw, Home, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 type PaymentStatus = "approved" | "pending" | "rejected" | "unknown";
@@ -19,10 +20,10 @@ const STATUS_CONFIG: Record<PaymentStatus, {
   approved: {
     icon: CheckCircle2,
     title: "Pagamento Confirmado! 🎉",
-    description: "Seu plano já está ativo. Você será redirecionado ao Dashboard em instantes.",
+    description: "Seu plano já está ativo. Você será redirecionado em instantes.",
     color: "text-success",
     bgColor: "bg-success/10",
-    redirectDelay: 3000,
+    redirectDelay: 4000,
     showRetry: false,
   },
   pending: {
@@ -57,7 +58,10 @@ const STATUS_CONFIG: Record<PaymentStatus, {
 export default function PagamentoConfirmacao() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { user, profile, loading: authLoading, refreshProfile } = useAuth();
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const hasRefreshed = useRef(false);
 
   // Parse Mercado Pago redirect parameters
   const status = searchParams.get("status") || searchParams.get("collection_status");
@@ -81,8 +85,26 @@ export default function PagamentoConfirmacao() {
   const config = STATUS_CONFIG[paymentStatus];
   const Icon = config.icon;
 
-  // Auto-redirect countdown
+  // Refresh profile when arriving at page to get latest data from webhook
   useEffect(() => {
+    const doRefresh = async () => {
+      if (user && !authLoading && !hasRefreshed.current) {
+        hasRefreshed.current = true;
+        setIsRefreshing(true);
+        console.log('[PagamentoConfirmacao] Refreshing profile after payment...');
+        await refreshProfile();
+        console.log('[PagamentoConfirmacao] Profile refreshed');
+        setIsRefreshing(false);
+      }
+    };
+    doRefresh();
+  }, [user, authLoading, refreshProfile]);
+
+  // Auto-redirect countdown - only starts after profile refresh
+  useEffect(() => {
+    // Wait for auth and profile refresh to complete
+    if (authLoading || isRefreshing) return;
+    
     if (config.redirectDelay) {
       const seconds = Math.ceil(config.redirectDelay / 1000);
       setCountdown(seconds);
@@ -91,7 +113,12 @@ export default function PagamentoConfirmacao() {
         setCountdown((prev) => {
           if (prev === null || prev <= 1) {
             clearInterval(interval);
-            navigate("/dashboard");
+            // Determine target based on profile state
+            const targetUrl = profile?.onboarding_complete 
+              ? "/dashboard" 
+              : "/onboarding";
+            console.log('[PagamentoConfirmacao] Redirecting to:', targetUrl);
+            navigate(targetUrl);
             return null;
           }
           return prev - 1;
@@ -100,7 +127,19 @@ export default function PagamentoConfirmacao() {
 
       return () => clearInterval(interval);
     }
-  }, [config.redirectDelay, navigate]);
+  }, [config.redirectDelay, navigate, profile, authLoading, isRefreshing]);
+
+  // Show loading while auth is initializing or profile is refreshing
+  if (authLoading || isRefreshing) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Atualizando seu perfil...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -160,16 +199,22 @@ export default function PagamentoConfirmacao() {
                 asChild
                 variant={config.showRetry ? "outline" : "default"}
                 className="w-full"
+                onClick={() => {
+                  const targetUrl = profile?.onboarding_complete 
+                    ? "/dashboard" 
+                    : "/onboarding";
+                  navigate(targetUrl);
+                }}
               >
-                <Link to="/dashboard">
+                <Link to={profile?.onboarding_complete ? "/dashboard" : "/onboarding"}>
                   {config.showRetry ? (
                     <>
                       <Home className="w-4 h-4 mr-2" />
-                      Ir para o Dashboard
+                      Continuar
                     </>
                   ) : (
                     <>
-                      Ir para o Dashboard
+                      Continuar
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </>
                   )}

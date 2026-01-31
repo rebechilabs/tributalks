@@ -34,6 +34,20 @@ export const ProtectedRoute = ({ children, requireOnboarding = true }: Protected
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // Aguardar o perfil carregar antes de decidir sobre onboarding
+  // Isso evita redirects prematuros quando o usuário vem do pagamento
+  if (requireOnboarding && profile === null) {
+    console.log('[ProtectedRoute] Waiting for profile to load...');
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Carregando perfil...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Se requer onboarding e não está completo, redireciona
   if (requireOnboarding && profile && !profile.onboarding_complete && location.pathname !== '/onboarding') {
     console.log('[ProtectedRoute] Needs onboarding, redirecting');
