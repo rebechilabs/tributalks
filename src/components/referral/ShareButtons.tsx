@@ -6,8 +6,48 @@ interface ShareButtonsProps {
   code: string;
 }
 
+// Mensagem padrão para compartilhamento
+export const getShareMessage = (code: string, referralLink: string) => {
+  return `🎯 Reforma Tributária chegando: sua empresa está preparada?
+
+Estou usando o TribuTalks para identificar créditos tributários e proteger minha margem. Em poucos minutos, descobri oportunidades que meu contador não tinha visto.
+
+✅ Diagnóstico gratuito em 2 minutos
+✅ IA especialista disponível 24/7
+✅ Créditos identificados automaticamente
+
+Use meu código ${code} e comece grátis:
+${referralLink}`;
+};
+
+// Mensagem para LinkedIn (mais curta e profissional)
+export const getLinkedInMessage = (code: string, referralLink: string) => {
+  return `A Reforma Tributária vai impactar seu fluxo de caixa em 2027. Estou me preparando com o TribuTalks — uma plataforma que identifica créditos tributários e simula cenários.
+
+Use meu código ${code}: ${referralLink}`;
+};
+
+// Mensagem para e-mail (mais detalhada)
+export const getEmailMessage = (code: string, referralLink: string) => {
+  return `Olá!
+
+Quero compartilhar uma ferramenta que está me ajudando muito na preparação para a Reforma Tributária.
+
+O TribuTalks é uma plataforma de inteligência tributária que:
+• Identifica créditos fiscais não aproveitados (média de R$ 47k por empresa)
+• Simula o impacto real de CBS, IBS e IS no seu negócio
+• Tem uma IA especialista (Clara) disponível 24/7
+
+O diagnóstico inicial é gratuito e leva só 2 minutos. Vale muito a pena conferir.
+
+Use meu código de indicação: ${code}
+Acesse: ${referralLink}
+
+Abraços!`;
+};
+
 export function ShareButtons({ referralLink, code }: ShareButtonsProps) {
-  const shareMessage = `Conheça o TribuTalks! Use meu código ${code} e prepare sua empresa para a Reforma Tributária: ${referralLink}`;
+  const shareMessage = getShareMessage(code, referralLink);
   
   const handleWhatsApp = () => {
     const url = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
@@ -15,15 +55,15 @@ export function ShareButtons({ referralLink, code }: ShareButtonsProps) {
   };
 
   const handleLinkedIn = () => {
-    const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(referralLink)}`;
+    // LinkedIn não aceita texto customizado no share, mas podemos usar o post composer
+    const linkedInMessage = getLinkedInMessage(code, referralLink);
+    const url = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(linkedInMessage)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const handleEmail = () => {
-    const subject = encodeURIComponent('Convite para o TribuTalks - Reforma Tributária');
-    const body = encodeURIComponent(
-      `Olá!\n\nQuero te convidar para conhecer o TribuTalks, a plataforma que está me ajudando a preparar minha empresa para a Reforma Tributária.\n\nUse meu código de indicação: ${code}\n\nAcesse: ${referralLink}\n\nAbraços!`
-    );
+    const subject = encodeURIComponent('Preparação para Reforma Tributária - Indicação TribuTalks');
+    const body = encodeURIComponent(getEmailMessage(code, referralLink));
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };
 

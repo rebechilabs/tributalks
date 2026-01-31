@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Copy, Check, Gift, Sparkles } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { ShareButtons } from "./ShareButtons";
+import { ShareButtons, getShareMessage } from "./ShareButtons";
 
 interface ReferralCodeCardProps {
   code: string | null;
@@ -13,6 +13,7 @@ interface ReferralCodeCardProps {
 
 export function ReferralCodeCard({ code, referralLink, isLoading }: ReferralCodeCardProps) {
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const handleCopyCode = async () => {
     if (!code) return;
@@ -34,15 +35,19 @@ export function ReferralCodeCard({ code, referralLink, isLoading }: ReferralCode
     }
   };
 
+  // Copia o link COM a mensagem de convite completa
   const handleCopyLink = async () => {
-    if (!referralLink) return;
+    if (!referralLink || !code) return;
     
     try {
-      await navigator.clipboard.writeText(referralLink);
+      const fullMessage = getShareMessage(code, referralLink);
+      await navigator.clipboard.writeText(fullMessage);
+      setLinkCopied(true);
       toast({
-        title: "Link copiado!",
-        description: "Envie para quem você quer indicar.",
+        title: "Convite copiado!",
+        description: "Texto completo pronto para compartilhar.",
       });
+      setTimeout(() => setLinkCopied(false), 2000);
     } catch {
       toast({
         title: "Erro ao copiar",
@@ -97,17 +102,32 @@ export function ReferralCodeCard({ code, referralLink, isLoading }: ReferralCode
           </Button>
         </div>
 
-        {/* Link completo */}
+        {/* Link completo com convite */}
         <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">Link de convite:</p>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 text-xs bg-muted px-3 py-2 rounded truncate">
-              {referralLink || "---"}
-            </code>
-            <Button variant="ghost" size="sm" onClick={handleCopyLink} disabled={!referralLink}>
-              <Copy className="w-4 h-4" />
-            </Button>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">Copiar convite completo:</p>
           </div>
+          <Button 
+            variant="secondary" 
+            className="w-full gap-2" 
+            onClick={handleCopyLink} 
+            disabled={!referralLink}
+          >
+            {linkCopied ? (
+              <>
+                <Check className="w-4 h-4 text-green-500" />
+                Convite copiado!
+              </>
+            ) : (
+              <>
+                <Copy className="w-4 h-4" />
+                Copiar texto + link de indicação
+              </>
+            )}
+          </Button>
+          <p className="text-xs text-muted-foreground text-center">
+            Inclui mensagem explicativa sobre o TribuTalks
+          </p>
         </div>
 
         {/* Botões de compartilhamento */}
