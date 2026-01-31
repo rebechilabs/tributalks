@@ -1,9 +1,9 @@
 
-# Atualizar Link Stripe do Plano Starter Anual
+# Atualizar Link Stripe do Plano Professional Anual
 
 ## Resumo
 
-Substituir o placeholder `/cadastro?plan=starter&billing=annual` pelo link real do Stripe para o plano Starter Anual (R$ 3.970/ano).
+Substituir o placeholder `/cadastro?plan=professional&billing=annual` pelo link real do Stripe para o plano Professional Anual (R$ 29.970,00/ano).
 
 ---
 
@@ -11,22 +11,22 @@ Substituir o placeholder `/cadastro?plan=starter&billing=annual` pelo link real 
 
 | Arquivo | Linha | Valor Atual | Novo Valor |
 |---------|-------|-------------|------------|
-| `src/config/site.ts` | 6 | `/cadastro?plan=starter&billing=annual` | `https://buy.stripe.com/00wbIU4Zc5Do1rt1Qqbo401` |
+| `src/config/site.ts` | 12 | `/cadastro?plan=professional&billing=annual` | `https://buy.stripe.com/3cI9AM3V89TEgmn2Uubo406` |
 
 ---
 
 ## Código
 
 ```typescript
-// Antes (linha 6)
-STARTER_ANUAL: "/cadastro?plan=starter&billing=annual",
+// Antes (linha 12)
+PROFESSIONAL_ANUAL: "/cadastro?plan=professional&billing=annual",
 
 // Depois
-STARTER_ANUAL: "https://buy.stripe.com/00wbIU4Zc5Do1rt1Qqbo401",
+PROFESSIONAL_ANUAL: "https://buy.stripe.com/3cI9AM3V89TEgmn2Uubo406",
 ```
 
 ---
 
 ## Resultado
 
-Quando usuários clicarem no botão de assinatura anual do plano Starter, serão redirecionados diretamente para o checkout do Stripe.
+Quando usuários clicarem no botão de assinatura anual do plano Professional, serão redirecionados diretamente para o checkout do Stripe no valor de R$ 29.970,00/ano.
