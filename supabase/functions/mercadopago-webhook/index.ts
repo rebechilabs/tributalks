@@ -267,6 +267,11 @@ async function handleSubscriptionEvent(preapprovalId: string, action: string) {
           action_url: '/dashboard',
         })
 
+        // If PROFESSIONAL plan, add tag to Beehiiv for welcome email automation
+        if (planName === 'PROFESSIONAL') {
+          await addBeehiivTag(payerEmail, 'professional_subscriber')
+        }
+
         // Trigger referral processing
         try {
           const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -380,5 +385,96 @@ async function addCreditsToUser(email: string, credits: number, paymentId: strin
       category: 'sistema',
       action_url: '/tribubot',
     })
+  }
+}
+
+// Add tag to Beehiiv subscriber for automation triggers
+async function addBeehiivTag(email: string, tag: string) {
+  const apiKey = Deno.env.get('BEEHIIV_API_KEY')
+  const publicationId = Deno.env.get('BEEHIIV_PUBLICATION_ID')
+
+  if (!apiKey || !publicationId) {
+    console.log('Beehiiv credentials not configured, skipping tag')
+    return
+  }
+
+  try {
+    // First, get the subscriber by email
+    const searchResponse = await fetch(
+      `https://api.beehiiv.com/v2/publications/${publicationId}/subscriptions?email=${encodeURIComponent(email)}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+
+    if (!searchResponse.ok) {
+      console.error('Failed to search Beehiiv subscriber:', searchResponse.status)
+      return
+    }
+
+    const searchData = await searchResponse.json()
+    const subscriber = searchData.data?.[0]
+
+    if (!subscriber) {
+      // Subscriber not found, create with tag
+      console.log(`Subscriber ${email} not found in Beehiiv, creating with tag`)
+      
+      const createResponse = await fetch(
+        `https://api.beehiiv.com/v2/publications/${publicationId}/subscriptions`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: email,
+            reactivate_existing: true,
+            send_welcome_email: false,
+            custom_fields: [
+              { name: 'professional_subscriber', value: 'true' }
+            ],
+          }),
+        }
+      )
+
+      if (createResponse.ok) {
+        console.log(`Created Beehiiv subscriber ${email} with tag ${tag}`)
+      } else {
+        console.error('Failed to create Beehiiv subscriber:', createResponse.status)
+      }
+      return
+    }
+
+    // Update existing subscriber with tag via custom field
+    const subscriptionId = subscriber.id
+    
+    const updateResponse = await fetch(
+      `https://api.beehiiv.com/v2/publications/${publicationId}/subscriptions/${subscriptionId}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          custom_fields: [
+            { name: 'professional_subscriber', value: 'true' }
+          ],
+        }),
+      }
+    )
+
+    if (updateResponse.ok) {
+      console.log(`Added tag ${tag} to Beehiiv subscriber ${email}`)
+    } else {
+      console.error('Failed to update Beehiiv subscriber:', updateResponse.status)
+    }
+
+  } catch (error) {
+    console.error('Error adding Beehiiv tag:', error)
   }
 }
