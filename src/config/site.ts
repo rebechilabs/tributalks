@@ -9,7 +9,7 @@ export const CONFIG = {
     NAVIGATOR_ANUAL: "https://buy.stripe.com/fZu9AM63g2rcc67gLkbo404",
     // Professional - R$2.997/mês
     PROFESSIONAL_MENSAL: "/cadastro?plan=professional",
-    PROFESSIONAL_ANUAL: "/cadastro?plan=professional&billing=annual",
+    PROFESSIONAL_ANUAL: "https://buy.stripe.com/3cI9AM3V89TEgmn2Uubo406",
     // Enterprise - Sob consulta (WhatsApp direto)
     ENTERPRISE: "https://wa.me/5511914523971",
     // Pacotes de créditos Clara (1 crédito = 1 conversa) - via Stripe
