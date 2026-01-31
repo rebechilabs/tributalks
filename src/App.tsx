@@ -26,6 +26,7 @@ import PagamentoConfirmacao from "./pages/PagamentoConfirmacao";
 // Páginas protegidas
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
+import Upgrade from "./pages/Upgrade";
 import Perfil from "./pages/Perfil";
 import Historico from "./pages/Historico";
 import TribuBot from "./pages/TribuBot";
@@ -412,6 +413,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Ajuda />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/upgrade" 
+              element={
+                <ProtectedRoute>
+                  <Upgrade />
                 </ProtectedRoute>
               } 
             />
