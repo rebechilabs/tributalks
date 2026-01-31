@@ -12,6 +12,147 @@ interface ToolContext {
   stepByStep: string[];
 }
 
+// ============================================
+// CACHE CONFIGURATION - TTL por Categoria
+// ============================================
+type CacheCategory = 'definition' | 'aliquot' | 'deadline' | 'procedure' | 'calculation';
+type QueryComplexity = 'cache' | 'simple' | 'complex';
+
+const CATEGORY_CONFIG: Record<CacheCategory, { ttl_days: number; requires_validation: boolean }> = {
+  'definition': { ttl_days: 90, requires_validation: false },  // "O que é CBS?"
+  'aliquot': { ttl_days: 7, requires_validation: true },       // "Qual alíquota de IBS?"
+  'deadline': { ttl_days: 1, requires_validation: true },      // "Quando entra Split Payment?"
+  'procedure': { ttl_days: 30, requires_validation: false },   // "Como importar XMLs?"
+  'calculation': { ttl_days: 0, requires_validation: false },  // Nunca cachear
+};
+
+// ============================================
+// CACHE FUNCTIONS
+// ============================================
+
+// Normaliza query para lookup consistente
+function normalizeQuery(query: string): string {
+  return query
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+    .replace(/[^\w\s]/g, '') // Remove pontuação
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Gera hash simples para lookup rápido
+async function hashQuery(query: string): Promise<string> {
+  const normalized = normalizeQuery(query);
+  const encoder = new TextEncoder();
+  const data = encoder.encode(normalized);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Classifica a query para determinar categoria de cache
+function getCategoryFromQuery(query: string): CacheCategory {
+  const lowerQuery = query.toLowerCase();
+  
+  // Alíquotas - TTL curto, requer validação
+  if (/al[ií]quota|percentual|taxa|quanto.*paga|carga tribut/i.test(lowerQuery)) {
+    return 'aliquot';
+  }
+  
+  // Prazos e datas - TTL muito curto
+  if (/prazo|data|quando|at[eé]|vence|vigora|entra em vigor|cronograma/i.test(lowerQuery)) {
+    return 'deadline';
+  }
+  
+  // Definições conceituais - TTL longo
+  if (/o que [eé]|significa|defini[cç][aã]o|conceito|explica|diferença entre/i.test(lowerQuery)) {
+    return 'definition';
+  }
+  
+  // Procedimentos da plataforma - TTL médio
+  if (/como (fa[cç]o|importo|uso|acesso)|passo a passo|tutorial|procedimento/i.test(lowerQuery)) {
+    return 'procedure';
+  }
+  
+  // Cálculos personalizados - NUNCA cachear
+  if (/calcula|simula|meu|minha|nossa|meus|minhas|considerando|baseado|dado que/i.test(lowerQuery)) {
+    return 'calculation';
+  }
+  
+  return 'definition'; // Default mais seguro
+}
+
+// Classifica complexidade da query para roteamento
+function classifyQueryComplexity(message: string, hasUserData: boolean): QueryComplexity {
+  const lowerMessage = message.toLowerCase();
+  
+  // NUNCA CACHEAR: queries com contexto pessoal
+  const personalPatterns = [
+    /meu|minha|nossa|meus|minhas/i,
+    /considerando|baseado|dado que|levando em conta/i,
+    /na minha empresa|para mim|no meu caso/i,
+  ];
+  
+  if (personalPatterns.some(p => p.test(message)) || hasUserData) {
+    return 'complex';
+  }
+  
+  // FAQ patterns (cache)
+  const faqPatterns = [
+    /^o que ([eé]|s[aã]o)/i,
+    /^qual ([ao])? ?(al[ií]quota|prazo|data)/i,
+    /^quando (come[cç]a|entra|inicia)/i,
+    /^quem (pode|deve)/i,
+    /^como funciona/i,
+    /^pode explicar/i,
+    /^diferença entre/i,
+  ];
+  
+  if (message.length < 100 && faqPatterns.some(p => p.test(message))) {
+    return 'cache';
+  }
+  
+  // Complex signals
+  const complexSignals = [
+    message.length > 200,
+    /cen[aá]rio|simul|compar|estrat[eé]g|analis/i.test(message),
+    message.includes('?') && message.split('?').length > 2, // múltiplas perguntas
+    /impacto|economia|planejamento/i.test(message),
+  ];
+  
+  if (complexSignals.filter(Boolean).length >= 2) {
+    return 'complex';
+  }
+  
+  return 'simple';
+}
+
+// Verifica se cache ainda é válido
+function isCacheValid(entry: { created_at: string; ttl_days: number; requires_validation: boolean; category: string }): boolean {
+  const createdAt = new Date(entry.created_at).getTime();
+  const now = Date.now();
+  const ageMs = now - createdAt;
+  const maxAgeMs = entry.ttl_days * 24 * 60 * 60 * 1000;
+  
+  if (ageMs > maxAgeMs) return false;
+  
+  // Alíquotas exigem validação extra - mais conservador
+  if (entry.requires_validation && entry.category === 'aliquot') {
+    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+    return ageMs <= sevenDaysMs;
+  }
+  
+  return true;
+}
+
+// Gera disclaimer de data para respostas de cache
+function getCacheDisclaimer(createdAt: string): string {
+  const date = new Date(createdAt);
+  const formattedDate = date.toLocaleDateString('pt-BR');
+  return `\n\n_[Resposta atualizada em ${formattedDate}. Legislação tributária pode ter mudado desde então.]_`;
+}
+
 const TOOL_CONTEXTS: Record<string, ToolContext> = {
   "score-tributario": {
     toolName: "Score Tributário",
@@ -685,16 +826,18 @@ serve(async (req) => {
       });
     }
 
-    // Get user plan AND name
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("plano, nome")
-      .eq("user_id", user.id)
-      .single();
+    // Get user plan, name, and check if has data
+    const [profileResult, dreResult, xmlResult] = await Promise.all([
+      supabase.from("profiles").select("plano, nome").eq("user_id", user.id).single(),
+      supabase.from("company_dre").select("id").eq("user_id", user.id).limit(1),
+      supabase.from("xml_imports").select("id").eq("user_id", user.id).limit(1),
+    ]);
 
+    const profile = profileResult.data;
     const rawPlan = profile?.plano || "FREE";
     const userPlan = PLAN_MAPPING[rawPlan] || "FREE";
     const userName = profile?.nome || null;
+    const hasUserData = (dreResult.data?.length || 0) > 0 || (xmlResult.data?.length || 0) > 0;
 
     const { messages, toolSlug, isGreeting, getStarters } = await req.json();
 
@@ -718,6 +861,49 @@ serve(async (req) => {
       return new Response(JSON.stringify({ message: outOfScopeResponse }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // ============================================
+    // CACHE LOGIC - Verifica cache antes de chamar IA
+    // ============================================
+    const queryComplexity = classifyQueryComplexity(lastMessage, hasUserData);
+    const queryCategory = getCategoryFromQuery(lastMessage);
+    
+    // Só tenta cache se for query cacheável e não for greeting
+    if (!isGreeting && queryComplexity === 'cache' && queryCategory !== 'calculation') {
+      const queryHash = await hashQuery(lastMessage);
+      
+      // Busca no cache
+      const { data: cacheEntry } = await supabase
+        .from('clara_cache')
+        .select('*')
+        .eq('query_hash', queryHash)
+        .single();
+      
+      if (cacheEntry && isCacheValid(cacheEntry)) {
+        // Cache hit! Incrementa contador e retorna
+        await supabase
+          .from('clara_cache')
+          .update({ 
+            hit_count: cacheEntry.hit_count + 1,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', cacheEntry.id);
+        
+        // Adiciona disclaimer de data para transparência
+        const cachedResponse = cacheEntry.response + getCacheDisclaimer(cacheEntry.created_at);
+        const finalResponse = appendDisclaimer(cachedResponse, userPlan);
+        
+        console.log(`Cache HIT for query: "${lastMessage.substring(0, 50)}..." - saved ~${cacheEntry.tokens_saved || 500} tokens`);
+        
+        return new Response(JSON.stringify({ 
+          message: finalResponse,
+          cached: true,
+          cache_date: cacheEntry.created_at
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
     
     const systemPrompt = buildSystemPrompt(toolContext, userPlan, userName, isSimple);
@@ -756,46 +942,166 @@ serve(async (req) => {
         ]
       : messages;
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 2048,
-        system: systemPrompt,
-        messages: messagesWithContext.map((msg: { role: string; content: string }) => ({
-          role: msg.role === "assistant" ? "assistant" : "user",
-          content: msg.content,
-        })),
-      }),
-    });
+    // ============================================
+    // MODEL SELECTION - Escolhe modelo baseado na complexidade
+    // ============================================
+    // Para queries simples, podemos usar Gemini Flash (mais barato)
+    // Para queries complexas, mantemos Claude Sonnet
+    const useGemini = queryComplexity === 'simple' && !isGreeting;
+    
+    let assistantMessage: string;
+    
+    if (useGemini) {
+      // Usar Lovable AI com Gemini Flash para economia
+      const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
+      
+      if (lovableApiKey) {
+        try {
+          const geminiResponse = await fetch("https://api.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${lovableApiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash",
+              messages: [
+                { role: "system", content: systemPrompt },
+                ...messagesWithContext.map((msg: { role: string; content: string }) => ({
+                  role: msg.role === "assistant" ? "assistant" : "user",
+                  content: msg.content,
+                })),
+              ],
+              max_tokens: 1024,
+            }),
+          });
+          
+          if (geminiResponse.ok) {
+            const geminiData = await geminiResponse.json();
+            assistantMessage = geminiData.choices?.[0]?.message?.content || "Olá! Sou a Clara, como posso ajudar?";
+            console.log(`Used Gemini Flash for simple query: "${lastMessage.substring(0, 50)}..."`);
+          } else {
+            // Fallback para Claude se Gemini falhar
+            throw new Error("Gemini failed, falling back to Claude");
+          }
+        } catch {
+          // Fallback para Claude
+          console.log("Gemini failed, using Claude Sonnet");
+          const response = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: {
+              "x-api-key": ANTHROPIC_API_KEY,
+              "anthropic-version": "2023-06-01",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "claude-sonnet-4-20250514",
+              max_tokens: 2048,
+              system: systemPrompt,
+              messages: messagesWithContext.map((msg: { role: string; content: string }) => ({
+                role: msg.role === "assistant" ? "assistant" : "user",
+                content: msg.content,
+              })),
+            }),
+          });
+          
+          const data = await response.json();
+          assistantMessage = data.content?.[0]?.text || "Olá! Sou a Clara, como posso ajudar?";
+        }
+      } else {
+        // Sem Lovable API Key, usa Claude direto
+        const response = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "x-api-key": ANTHROPIC_API_KEY,
+            "anthropic-version": "2023-06-01",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 2048,
+            system: systemPrompt,
+            messages: messagesWithContext.map((msg: { role: string; content: string }) => ({
+              role: msg.role === "assistant" ? "assistant" : "user",
+              content: msg.content,
+            })),
+          }),
+        });
+        
+        const data = await response.json();
+        assistantMessage = data.content?.[0]?.text || "Olá! Sou a Clara, como posso ajudar?";
+      }
+    } else {
+      // Queries complexas sempre usam Claude Sonnet
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 2048,
+          system: systemPrompt,
+          messages: messagesWithContext.map((msg: { role: string; content: string }) => ({
+            role: msg.role === "assistant" ? "assistant" : "user",
+            content: msg.content,
+          })),
+        }),
+      });
 
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns instantes." }), {
-          status: 429,
+      if (!response.ok) {
+        if (response.status === 429) {
+          return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns instantes." }), {
+            status: 429,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        const errorText = await response.text();
+        console.error("Anthropic API error:", response.status, errorText);
+        return new Response(JSON.stringify({ error: "Erro ao processar. Tente novamente." }), {
+          status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const errorText = await response.text();
-      console.error("Anthropic API error:", response.status, errorText);
-      return new Response(JSON.stringify({ error: "Erro ao processar. Tente novamente." }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
-    const data = await response.json();
-    const rawMessage = data.content?.[0]?.text || "Olá! Sou a Clara, como posso ajudar?";
+      const data = await response.json();
+      assistantMessage = data.content?.[0]?.text || "Olá! Sou a Clara, como posso ajudar?";
+    }
+    
+    // ============================================
+    // SAVE TO CACHE - Salva queries cacheáveis
+    // ============================================
+    if (!isGreeting && queryComplexity === 'cache' && queryCategory !== 'calculation') {
+      const queryHash = await hashQuery(lastMessage);
+      const categoryConfig = CATEGORY_CONFIG[queryCategory];
+      
+      // Tenta inserir no cache (ignora se já existe)
+      await supabase
+        .from('clara_cache')
+        .upsert({
+          query_hash: queryHash,
+          query_normalized: normalizeQuery(lastMessage),
+          response: assistantMessage,
+          category: queryCategory,
+          ttl_days: categoryConfig.ttl_days,
+          requires_validation: categoryConfig.requires_validation,
+          model_used: useGemini ? 'gemini-2.5-flash' : 'claude-sonnet-4',
+          tokens_saved: assistantMessage.length, // Aproximação
+          hit_count: 1,
+        }, {
+          onConflict: 'query_hash',
+          ignoreDuplicates: true
+        });
+      
+      console.log(`Cached response for category "${queryCategory}" with TTL ${categoryConfig.ttl_days} days`);
+    }
     
     // Aplica disclaimer automaticamente no pós-processamento
-    const assistantMessage = appendDisclaimer(rawMessage, userPlan);
+    const finalMessage = appendDisclaimer(assistantMessage, userPlan);
 
-    return new Response(JSON.stringify({ message: assistantMessage }), {
+    return new Response(JSON.stringify({ message: finalMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
