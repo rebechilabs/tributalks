@@ -1,62 +1,108 @@
 
 
-# Plano: Tornar Cards de Jornada Clicáveis
+# Plano: Corrigir Vulnerabilidade de Autenticação na Edge Function match-opportunities
 
-## Situação Atual
+## Problema Identificado
 
-| Elemento | Comportamento |
-|----------|---------------|
-| Card inteiro | Não clicável |
-| Botão "Plano X →" | Leva ao Stripe ✅ |
+A função `match-opportunities` aceita `user_id` do body da requisição **sem validar a autenticação** do chamador:
 
-O usuário espera que clicar em qualquer parte do card leve ao checkout do Stripe.
-
----
-
-## Alteração Proposta
-
-### Arquivo: `src/components/landing/JourneysSection.tsx`
-
-**Transformar o container do card em um link clicável**
-
-Vou envolver todo o card com uma tag `<a>` que aponta para o link do Stripe, mantendo o visual atual mas tornando toda a área clicável.
-
-**1. Alterar o container do card (linhas 82-168)**
-
-```tsx
-// ANTES
-<div
-  key={journey.id}
-  className={`relative bg-card rounded-xl p-6 md:p-8 border-2 transition-all duration-300 ${...}`}
->
-  {/* conteúdo */}
-</div>
-
-// DEPOIS
-<a
-  key={journey.id}
-  href={journey.link}
-  target="_blank"
-  rel="noopener noreferrer"
-  className={`relative bg-card rounded-xl p-6 md:p-8 border-2 transition-all duration-300 block cursor-pointer hover:shadow-lg ${...}`}
->
-  {/* conteúdo */}
-</a>
+```typescript
+// ❌ VULNERÁVEL - Qualquer um pode passar qualquer user_id
+const { user_id } = await req.json()
 ```
 
-**2. Manter o botão interno (opcional visual)**
-
-O botão continuará visível como elemento de UI, mas toda a área do card será clicável.
+Com isso, um atacante pode:
+1. Invocar a função com qualquer `user_id`
+2. Acessar dados sensíveis do perfil da empresa (CNPJ, faturamento, regime, emails de sócios)
+3. Acessar oportunidades tributárias calculadas para outro usuário
 
 ---
 
-## Resultado Final
+## Observação sobre os Outros Alertas
 
-Após a alteração:
-- ✅ Clicar em **qualquer parte** do card leva ao Stripe
-- ✅ O botão continua visível como indicador de ação
-- ✅ Efeito hover no card inteiro (shadow)
-- ✅ Abre em nova aba
+| Alerta | Status | Motivo |
+|--------|--------|--------|
+| Profiles table exposure | ✅ Falso positivo | RLS policy `auth.uid() = user_id` está correta |
+| Company profile exposure | ✅ Falso positivo | RLS policy `auth.uid() = user_id` está correta |
+| Organization seats | ✅ Baixo risco | Policies adequadas para owner e member |
+
+O problema real é que a **Edge Function usa SERVICE_ROLE_KEY** que bypassa RLS. Corrigindo a autenticação na função, os dados ficam protegidos.
+
+---
+
+## Correção Proposta
+
+### Arquivo: `supabase/functions/match-opportunities/index.ts`
+
+**Substituir linhas 727-748** com validação JWT:
+
+```typescript
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    // PASSO 1: Validar autenticação
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ 
+        error: 'unauthorized',
+        message: 'Token de autenticação obrigatório'
+      }), { 
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    )
+
+    // PASSO 2: Validar token e obter usuário autenticado
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+
+    if (authError || !user) {
+      return new Response(JSON.stringify({ 
+        error: 'invalid_token',
+        message: 'Token de autenticação inválido ou expirado'
+      }), { 
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    // PASSO 3: Usar o ID do usuário autenticado (não do body)
+    const user_id = user.id
+```
+
+---
+
+## Fluxo de Segurança Corrigido
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│                      ANTES (Vulnerável)                      │
+├─────────────────────────────────────────────────────────────┤
+│  Cliente → POST { user_id: "qualquer-id" } → Edge Function  │
+│                                                              │
+│  Problema: Aceita qualquer user_id sem validação            │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│                      DEPOIS (Seguro)                         │
+├─────────────────────────────────────────────────────────────┤
+│  Cliente → POST + Authorization: Bearer <JWT> → Edge Fn     │
+│                         │                                    │
+│                         ▼                                    │
+│              Validar JWT com getUser(token)                  │
+│                         │                                    │
+│                         ▼                                    │
+│              Usar user.id do token (não do body)            │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -64,6 +110,16 @@ Após a alteração:
 
 | Arquivo | Modificação |
 |---------|-------------|
-| `JourneysSection.tsx` | Trocar `<div>` por `<a>` no container do card |
-| **Total** | 1 alteração em 1 arquivo |
+| `match-opportunities/index.ts` | Adicionar validação JWT e usar user_id do token |
+| **Linhas afetadas** | 727-748 (início do handler serve) |
+| **Risco resolvido** | Acesso não autorizado a dados de outros usuários |
+
+---
+
+## Verificação Pós-Implementação
+
+Após a correção, os alertas serão marcados como resolvidos:
+- ✅ Match Opportunities Function Lacks Authentication
+- ✅ Customer Personal Information (consequência da correção)
+- ✅ Confidential Business Data (consequência da correção)
 
