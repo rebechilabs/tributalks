@@ -70,6 +70,7 @@ import AdminMonitoring from "./pages/admin/AdminMonitoring";
 import AdminPilulas from "./pages/admin/AdminPilulas";
 import AdminPrazos from "./pages/admin/AdminPrazos";
 import AdminUsuarios from "./pages/admin/AdminUsuarios";
+import { PresenceTrackerWrapper } from "./components/PresenceTrackerWrapper";
 
 const queryClient = new QueryClient();
 
@@ -79,6 +80,7 @@ const App = () => (
       <TooltipProvider>
         <BrowserRouter>
         <AuthProvider>
+          <PresenceTrackerWrapper />
           <Toaster />
           <Sonner />
           <Routes>

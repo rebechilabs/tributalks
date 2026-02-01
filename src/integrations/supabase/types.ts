@@ -2040,7 +2040,10 @@ export type Database = {
       }
       profiles: {
         Row: {
+          city: string | null
           cnae: string | null
+          country_code: string | null
+          country_name: string | null
           created_at: string | null
           current_streak: number | null
           email: string | null
@@ -2050,6 +2053,7 @@ export type Database = {
           faturamento_mensal: number | null
           id: string
           last_access_date: string | null
+          last_seen_at: string | null
           longest_streak: number | null
           max_seats: number | null
           nome: string | null
@@ -2070,7 +2074,10 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          city?: string | null
           cnae?: string | null
+          country_code?: string | null
+          country_name?: string | null
           created_at?: string | null
           current_streak?: number | null
           email?: string | null
@@ -2080,6 +2087,7 @@ export type Database = {
           faturamento_mensal?: number | null
           id?: string
           last_access_date?: string | null
+          last_seen_at?: string | null
           longest_streak?: number | null
           max_seats?: number | null
           nome?: string | null
@@ -2100,7 +2108,10 @@ export type Database = {
           user_id: string
         }
         Update: {
+          city?: string | null
           cnae?: string | null
+          country_code?: string | null
+          country_name?: string | null
           created_at?: string | null
           current_streak?: number | null
           email?: string | null
@@ -2110,6 +2121,7 @@ export type Database = {
           faturamento_mensal?: number | null
           id?: string
           last_access_date?: string | null
+          last_seen_at?: string | null
           longest_streak?: number | null
           max_seats?: number | null
           nome?: string | null
@@ -3238,6 +3250,36 @@ export type Database = {
           started_at?: string | null
           tour_completed?: boolean | null
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_presence: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_active_at: string
+          page_path: string | null
+          status: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_active_at?: string
+          page_path?: string | null
+          status?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_active_at?: string
+          page_path?: string | null
+          status?: string
+          user_agent?: string | null
           user_id?: string
         }
         Relationships: []
