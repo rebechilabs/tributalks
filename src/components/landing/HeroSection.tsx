@@ -36,10 +36,10 @@ export function HeroSection() {
             </div>
 
             {/* Badge */}
-            <div className="flex flex-col items-center lg:items-start gap-2 mb-6 animate-fade-in-up">
-              <div className="bg-primary/10 text-primary px-5 py-2.5 rounded-full text-base md:text-lg font-bold tracking-wide">
+            <div className="flex flex-col items-center lg:items-start gap-1 mb-6 animate-fade-in-up">
+              <span className="text-xl md:text-2xl font-extrabold text-primary tracking-tight">
                 PLATAFORMA DE INTELIGÊNCIA TRIBUTÁRIA
-              </div>
+              </span>
               <span className="text-xl md:text-2xl font-extrabold text-primary tracking-tight">
                 A 1ª AI-FIRST DO BRASIL
               </span>
