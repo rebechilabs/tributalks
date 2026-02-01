@@ -248,6 +248,31 @@ const ROUTE_MAP: Record<string, RouteDefinition> = {
     parent: '/dashboard',
     icon: Settings
   },
+  '/admin/usuarios': { 
+    label: 'Gestão de Usuários', 
+    parent: '/dashboard',
+    icon: Users
+  },
+  '/admin/pilulas': { 
+    label: 'Pílulas da Reforma', 
+    parent: '/dashboard',
+    icon: Newspaper
+  },
+  '/admin/noticias': { 
+    label: 'Admin Notícias', 
+    parent: '/dashboard',
+    icon: Newspaper
+  },
+  '/admin/prazos': { 
+    label: 'Prazos e Calendário', 
+    parent: '/dashboard',
+    icon: Calendar
+  },
+  '/admin/monitoramento': { 
+    label: 'Monitoramento', 
+    parent: '/dashboard',
+    icon: BarChart3
+  },
 };
 
 // Group to paths mapping for auto-expand
