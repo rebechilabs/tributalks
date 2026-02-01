@@ -4,7 +4,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
+import { LivePresenceCard } from "@/components/admin/LivePresenceCard";
 import { 
   Loader2, 
   ShieldAlert,
@@ -14,7 +16,8 @@ import {
   Calendar,
   TrendingUp,
   ArrowRight,
-  BarChart3
+  BarChart3,
+  Activity
 } from "lucide-react";
 
 interface AdminStats {
@@ -206,98 +209,114 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Usuários</p>
-                  <p className="text-2xl font-bold">{stats?.totalUsers || 0}</p>
-                </div>
-                <Users className="w-8 h-8 text-primary/50" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Navigator</p>
-                  <p className="text-2xl font-bold">{stats?.usersNavigator || 0}</p>
-                </div>
-                <TrendingUp className="w-8 h-8 text-primary/50" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Professional</p>
-                  <p className="text-2xl font-bold">{stats?.usersProfessional || 0}</p>
-                </div>
-                <TrendingUp className="w-8 h-8 text-success/50" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Enterprise</p>
-                  <p className="text-2xl font-bold">{stats?.usersEnterprise || 0}</p>
-                </div>
-                <TrendingUp className="w-8 h-8 text-warning/50" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList>
+            <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+            <TabsTrigger value="live" className="flex items-center gap-2">
+              <Activity className="w-4 h-4" />
+              Ao Vivo
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Admin Modules */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {adminModules.map((module) => {
-            const Icon = module.icon;
-            const isHighlight = 'highlight' in module && module.highlight;
-            return (
-              <Card 
-                key={module.href} 
-                className={`hover:border-primary/30 transition-colors ${isHighlight ? 'border-primary/40 bg-gradient-to-br from-primary/5 to-transparent' : ''}`}
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isHighlight ? 'bg-primary/20' : 'bg-primary/10'}`}>
-                      <Icon className="w-6 h-6 text-primary" />
+          <TabsContent value="overview" className="space-y-6 mt-6">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Usuários</p>
+                      <p className="text-2xl font-bold">{stats?.totalUsers || 0}</p>
                     </div>
-                    {module.count !== null && (
-                      <span className="text-2xl font-bold text-muted-foreground">
-                        {module.count}
-                      </span>
-                    )}
-                    {isHighlight && (
-                      <span className="px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
-                        Novo
-                      </span>
-                    )}
+                    <Users className="w-8 h-8 text-primary/50" />
                   </div>
-                  <CardTitle className="text-lg mt-3">{module.title}</CardTitle>
-                  <CardDescription>{module.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button asChild className="w-full" variant={isHighlight ? "default" : "outline"}>
-                    <Link to={module.href}>
-                      {isHighlight ? 'Ver Métricas' : 'Gerenciar'}
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Link>
-                  </Button>
                 </CardContent>
               </Card>
-            );
-          })}
-        </div>
+              
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Navigator</p>
+                      <p className="text-2xl font-bold">{stats?.usersNavigator || 0}</p>
+                    </div>
+                    <TrendingUp className="w-8 h-8 text-primary/50" />
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Professional</p>
+                      <p className="text-2xl font-bold">{stats?.usersProfessional || 0}</p>
+                    </div>
+                    <TrendingUp className="w-8 h-8 text-success/50" />
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Enterprise</p>
+                      <p className="text-2xl font-bold">{stats?.usersEnterprise || 0}</p>
+                    </div>
+                    <TrendingUp className="w-8 h-8 text-warning/50" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Admin Modules */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {adminModules.map((module) => {
+                const Icon = module.icon;
+                const isHighlight = 'highlight' in module && module.highlight;
+                return (
+                  <Card 
+                    key={module.href} 
+                    className={`hover:border-primary/30 transition-colors ${isHighlight ? 'border-primary/40 bg-gradient-to-br from-primary/5 to-transparent' : ''}`}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isHighlight ? 'bg-primary/20' : 'bg-primary/10'}`}>
+                          <Icon className="w-6 h-6 text-primary" />
+                        </div>
+                        {module.count !== null && (
+                          <span className="text-2xl font-bold text-muted-foreground">
+                            {module.count}
+                          </span>
+                        )}
+                        {isHighlight && (
+                          <span className="px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                            Novo
+                          </span>
+                        )}
+                      </div>
+                      <CardTitle className="text-lg mt-3">{module.title}</CardTitle>
+                      <CardDescription>{module.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button asChild className="w-full" variant={isHighlight ? "default" : "outline"}>
+                        <Link to={module.href}>
+                          {isHighlight ? 'Ver Métricas' : 'Gerenciar'}
+                          <ArrowRight className="w-4 h-4 ml-2" />
+                        </Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="live" className="mt-6">
+            <LivePresenceCard />
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
