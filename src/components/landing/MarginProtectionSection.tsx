@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Shield, ArrowRight, CheckCircle2, TrendingUp, BadgeCheck, Calculator } from "lucide-react";
-import { Link } from "react-router-dom";
+import { CONFIG } from "@/config/site";
 
 export function MarginProtectionSection() {
   return (
@@ -124,12 +124,12 @@ export function MarginProtectionSection() {
 
         {/* CTA */}
         <div className="text-center">
-          <Link to="/cadastro">
+          <a href={CONFIG.PAYMENT_LINKS.PROFESSIONAL_MENSAL} target="_blank" rel="noopener noreferrer">
             <Button size="lg" className="gap-2">
               <Shield className="w-4 h-4" />
               Conhecer Suíte Margem Ativa
             </Button>
-          </Link>
+          </a>
           <p className="mt-3 text-xs text-muted-foreground">
             <Badge variant="outline" className="text-xs">Exclusivo Plano Professional</Badge>
           </p>
