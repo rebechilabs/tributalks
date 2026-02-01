@@ -8,6 +8,7 @@ import { ScoreResults } from "@/components/score/ScoreResults";
 import { ScorePdfReport } from "@/components/score/ScorePdfReport";
 import { ScoreHistoryChart } from "@/components/score/ScoreHistoryChart";
 import { ScoreBenchmarkCard } from "@/components/score/ScoreBenchmarkCard";
+import { ClaraContextualCard } from "@/components/common/ClaraContextualCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -242,6 +243,9 @@ export default function ScoreTributario() {
           </div>
           <HelpButton toolSlug="score-tributario" size="default" className="gap-2" />
         </div>
+
+        {/* Clara AI Card */}
+        <ClaraContextualCard />
 
         {/* Card Principal do Score */}
         <Card>
