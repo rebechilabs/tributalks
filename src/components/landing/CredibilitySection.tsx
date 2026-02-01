@@ -1,4 +1,5 @@
-import { TrendingUp, Users, Building, Scale } from "lucide-react";
+import { TrendingUp, Users, Building, Scale, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const stats = [
   {
@@ -64,6 +65,20 @@ export function CredibilitySection() {
               <div className="text-[10px] sm:text-xs md:text-sm text-muted-foreground leading-tight">{stat.label}</div>
             </div>
           ))}
+        </div>
+
+        {/* PDF Download CTA */}
+        <div className="text-center mt-10 md:mt-12">
+          <a 
+            href="https://bit.ly/TribuTalks" 
+            target="_blank" 
+            rel="noopener noreferrer"
+          >
+            <Button variant="outline" size="lg" className="gap-2">
+              <FileText className="h-4 w-4" />
+              Saiba mais sobre a TribuTalks — Baixe o PDF
+            </Button>
+          </a>
         </div>
       </div>
     </section>
