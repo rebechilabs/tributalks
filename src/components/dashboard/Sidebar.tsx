@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
   Lock, Sparkles, ChevronDown, ChevronRight, ArrowUpRight, Gift, Command
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUnreadNotificationsByCategory } from "@/hooks/useUnreadNotificationsByCategory";
+import { getGroupForPath } from "@/hooks/useRouteInfo";
 import logoTributalks from "@/assets/logo-tributalks.png";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
@@ -26,19 +27,64 @@ function isMenuGroup(element: MenuElement): element is MenuGroup {
   return 'items' in element;
 }
 
+// Map group titles to group keys
+const GROUP_TITLE_TO_KEY: Record<string, string> = {
+  'Diagnóstico': 'diagnostico',
+  'Comando': 'comando',
+  'Simuladores': 'simuladores',
+  'PIT': 'pit',
+  'Central Inteligente': 'central',
+  'Diagnóstico Avançado': 'avancado',
+  'Integrações': 'integracoes',
+  'Ferramentas Pro': 'avancado',
+};
+
 export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { counts: unreadCounts } = useUnreadNotificationsByCategory();
+  const activeItemRef = useRef<HTMLAnchorElement>(null);
   
   const rawPlan = profile?.plano || 'STARTER';
   const currentPlan = (LEGACY_PLAN_MAP[rawPlan] || 'STARTER') as PlanType;
   const menuElements = getMenuForPlan(currentPlan);
   const upgradeCTA = getUpgradeCTA(currentPlan);
 
-  // State for collapsible groups
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  // Get current group from path
+  const currentGroupKey = getGroupForPath(location.pathname);
+
+  // Initialize expanded groups - auto-expand the group containing current route
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    if (currentGroupKey) {
+      // Find the group title that matches this key
+      for (const [title, key] of Object.entries(GROUP_TITLE_TO_KEY)) {
+        if (key === currentGroupKey) {
+          initial[title] = true;
+        }
+      }
+    }
+    return initial;
+  });
+
+  // Auto-expand group when route changes
+  useEffect(() => {
+    if (currentGroupKey) {
+      for (const [title, key] of Object.entries(GROUP_TITLE_TO_KEY)) {
+        if (key === currentGroupKey) {
+          setExpandedGroups(prev => ({ ...prev, [title]: true }));
+        }
+      }
+    }
+  }, [currentGroupKey]);
+
+  // Scroll to active item when sidebar loads
+  useEffect(() => {
+    if (activeItemRef.current) {
+      activeItemRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [location.pathname]);
 
   // Map categories to menu items for notification badges
   const getUnreadForRoute = (href: string): number => {
@@ -92,13 +138,14 @@ export function Sidebar() {
         <Link
           key={item.href}
           to={item.href}
+          ref={isActive ? activeItemRef : undefined}
           onClick={item.shortcut === 'k' ? (e) => { e.preventDefault(); handleClaraShortcut(); } : undefined}
           className={cn(
             "flex items-center gap-3 px-3 py-3 rounded-lg transition-all",
             "bg-gradient-to-r from-primary/10 via-primary/5 to-transparent",
             "border-l-4 border-primary",
             "hover:from-primary/15 hover:via-primary/10",
-            isActive && "ring-1 ring-primary/20"
+            isActive && "ring-2 ring-primary/30 bg-primary/15"
           )}
         >
           <div className="relative">
@@ -134,26 +181,31 @@ export function Sidebar() {
       );
     }
 
-    // Item normal
+    // Item normal - with enhanced active state
     return (
       <Link
         key={item.href}
         to={item.href}
+        ref={isActive ? activeItemRef : undefined}
         className={cn(
-          "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
+          "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors relative",
           isActive
-            ? "bg-primary/10 text-primary border-l-2 border-primary"
+            ? "bg-primary/15 text-primary font-medium border-l-3 border-primary shadow-sm"
             : "text-muted-foreground hover:text-foreground hover:bg-muted",
           isNested && "pl-10"
         )}
       >
+        {/* Active indicator dot */}
+        {isActive && (
+          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
+        )}
         <div className="relative shrink-0">
-          <Icon className="w-4 h-4" />
+          <Icon className={cn("w-4 h-4", isActive && "text-primary")} />
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full animate-pulse" />
           )}
         </div>
-        <span className="flex-1 text-sm font-medium truncate">{item.label}</span>
+        <span className="flex-1 text-sm truncate">{item.label}</span>
         {unreadCount > 0 ? (
           <Badge variant="destructive" className="text-[10px] px-1.5 py-0 min-w-[20px] text-center">
             {unreadCount > 9 ? '9+' : unreadCount}
@@ -174,7 +226,9 @@ export function Sidebar() {
   };
 
   const renderMenuGroup = (group: MenuGroup, index: number) => {
-    const isExpanded = expandedGroups[group.title] ?? !group.collapsible;
+    const groupKey = GROUP_TITLE_TO_KEY[group.title] || '';
+    const hasActiveItem = group.items.some(item => location.pathname === item.href);
+    const isExpanded = expandedGroups[group.title] ?? (!group.collapsible || hasActiveItem);
 
     // Grupo sem título (items no topo como Clara)
     if (!group.title) {
@@ -194,10 +248,19 @@ export function Sidebar() {
           onOpenChange={() => toggleGroup(group.title)}
         >
           <CollapsibleTrigger asChild>
-            <button className="flex items-center gap-2 px-3 py-2 w-full text-left group hover:bg-muted/50 rounded-lg transition-colors">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex-1">
+            <button className={cn(
+              "flex items-center gap-2 px-3 py-2 w-full text-left group hover:bg-muted/50 rounded-lg transition-colors",
+              hasActiveItem && "bg-muted/30"
+            )}>
+              <span className={cn(
+                "text-xs font-semibold uppercase tracking-wider flex-1",
+                hasActiveItem ? "text-primary" : "text-muted-foreground"
+              )}>
                 {group.title}
               </span>
+              {hasActiveItem && (
+                <span className="w-1.5 h-1.5 rounded-full bg-primary mr-1" />
+              )}
               <ChevronDown className={cn(
                 "w-4 h-4 text-muted-foreground transition-transform",
                 isExpanded && "rotate-180"
@@ -214,10 +277,19 @@ export function Sidebar() {
     // Grupo normal
     return (
       <div key={group.title} className="space-y-1">
-        <div className="flex items-center gap-2 px-3 py-2">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        <div className={cn(
+          "flex items-center gap-2 px-3 py-2",
+          hasActiveItem && "bg-muted/30 rounded-lg"
+        )}>
+          <span className={cn(
+            "text-xs font-semibold uppercase tracking-wider",
+            hasActiveItem ? "text-primary" : "text-muted-foreground"
+          )}>
             {group.title}
           </span>
+          {hasActiveItem && (
+            <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+          )}
         </div>
         {group.items.map(item => renderNavItem(item))}
       </div>

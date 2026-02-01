@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
   Menu, X, Lock, Sparkles, ChevronDown, ArrowUpRight, Gift, Command
@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAuth } from "@/hooks/useAuth";
+import { getGroupForPath } from "@/hooks/useRouteInfo";
 import logoTributalks from "@/assets/logo-tributalks.png";
 import { cn } from "@/lib/utils";
 import {
@@ -26,9 +27,20 @@ function isMenuGroup(element: MenuElement): element is MenuGroup {
   return 'items' in element;
 }
 
+// Map group titles to group keys
+const GROUP_TITLE_TO_KEY: Record<string, string> = {
+  'Diagnóstico': 'diagnostico',
+  'Comando': 'comando',
+  'Simuladores': 'simuladores',
+  'PIT': 'pit',
+  'Central Inteligente': 'central',
+  'Diagnóstico Avançado': 'avancado',
+  'Integrações': 'integracoes',
+  'Ferramentas Pro': 'avancado',
+};
+
 export function MobileNav() {
   const [open, setOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const location = useLocation();
   const navigate = useNavigate();
   const { profile } = useAuth();
@@ -37,6 +49,33 @@ export function MobileNav() {
   const currentPlan = (LEGACY_PLAN_MAP[rawPlan] || 'STARTER') as PlanType;
   const menuElements = getMenuForPlan(currentPlan);
   const upgradeCTA = getUpgradeCTA(currentPlan);
+
+  // Get current group from path
+  const currentGroupKey = getGroupForPath(location.pathname);
+
+  // Initialize expanded groups - auto-expand the group containing current route
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    if (currentGroupKey) {
+      for (const [title, key] of Object.entries(GROUP_TITLE_TO_KEY)) {
+        if (key === currentGroupKey) {
+          initial[title] = true;
+        }
+      }
+    }
+    return initial;
+  });
+
+  // Auto-expand group when route changes
+  useEffect(() => {
+    if (currentGroupKey) {
+      for (const [title, key] of Object.entries(GROUP_TITLE_TO_KEY)) {
+        if (key === currentGroupKey) {
+          setExpandedGroups(prev => ({ ...prev, [title]: true }));
+        }
+      }
+    }
+  }, [currentGroupKey]);
 
   const toggleGroup = (title: string) => {
     setExpandedGroups(prev => ({ ...prev, [title]: !prev[title] }));
@@ -80,7 +119,8 @@ export function MobileNav() {
           className={cn(
             "flex items-center gap-3 w-full text-left px-3 py-3 rounded-lg",
             "bg-gradient-to-r from-primary/10 via-primary/5 to-transparent",
-            "border-l-4 border-primary"
+            "border-l-4 border-primary",
+            isActive && "ring-2 ring-primary/30"
           )}
         >
           <div className="relative">
@@ -116,23 +156,33 @@ export function MobileNav() {
       );
     }
 
-    // Item normal
+    // Item normal - with enhanced active state
     return (
       <Link
         key={item.href}
         to={item.href}
         onClick={() => setOpen(false)}
         className={cn(
-          "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
+          "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors relative",
           isActive
-            ? "bg-primary/10 text-primary"
+            ? "bg-primary/15 text-primary font-medium"
             : "text-muted-foreground hover:text-foreground hover:bg-muted"
         )}
       >
-        <Icon className="w-4 h-4 shrink-0" />
-        <span className="flex-1 text-sm font-medium truncate">{item.label}</span>
+        {/* Active indicator */}
+        {isActive && (
+          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
+        )}
+        <Icon className={cn("w-4 h-4 shrink-0", isActive && "text-primary")} />
+        <span className="flex-1 text-sm truncate">{item.label}</span>
         {item.badge && (
-          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+          <Badge 
+            variant="secondary" 
+            className={cn(
+              "text-[10px] px-1.5 py-0",
+              isActive && "bg-primary/20 text-primary"
+            )}
+          >
             {item.badge}
           </Badge>
         )}
@@ -141,7 +191,8 @@ export function MobileNav() {
   };
 
   const renderMenuGroup = (group: MenuGroup, index: number) => {
-    const isExpanded = expandedGroups[group.title] ?? !group.collapsible;
+    const hasActiveItem = group.items.some(item => location.pathname === item.href);
+    const isExpanded = expandedGroups[group.title] ?? (!group.collapsible || hasActiveItem);
 
     if (!group.title) {
       return (
@@ -159,10 +210,19 @@ export function MobileNav() {
           onOpenChange={() => toggleGroup(group.title)}
         >
           <CollapsibleTrigger asChild>
-            <button className="flex items-center gap-2 px-3 py-2 w-full text-left">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex-1">
+            <button className={cn(
+              "flex items-center gap-2 px-3 py-2 w-full text-left rounded-lg",
+              hasActiveItem && "bg-muted/30"
+            )}>
+              <span className={cn(
+                "text-xs font-semibold uppercase tracking-wider flex-1",
+                hasActiveItem ? "text-primary" : "text-muted-foreground"
+              )}>
                 {group.title}
               </span>
+              {hasActiveItem && (
+                <span className="w-1.5 h-1.5 rounded-full bg-primary mr-1" />
+              )}
               <ChevronDown className={cn(
                 "w-4 h-4 text-muted-foreground transition-transform",
                 isExpanded && "rotate-180"
@@ -178,8 +238,14 @@ export function MobileNav() {
 
     return (
       <div key={group.title} className="space-y-1">
-        <div className="px-3 py-2">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        <div className={cn(
+          "px-3 py-2 rounded-lg",
+          hasActiveItem && "bg-muted/30"
+        )}>
+          <span className={cn(
+            "text-xs font-semibold uppercase tracking-wider",
+            hasActiveItem ? "text-primary" : "text-muted-foreground"
+          )}>
             {group.title}
           </span>
         </div>
