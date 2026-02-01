@@ -116,8 +116,7 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({ 
       success: true, 
-      geo: geoData,
-      ip: clientIp 
+      geo: geoData
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
