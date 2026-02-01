@@ -14,6 +14,7 @@ import { MobileNav } from "./MobileNav";
 import { FloatingAssistant } from "@/components/common/FloatingAssistant";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { CommandPalette } from "@/components/CommandPalette";
+import { PageBreadcrumb } from "@/components/common/PageBreadcrumb";
 import logoTributalks from "@/assets/logo-tributalks.png";
 
 interface DashboardLayoutProps {
@@ -86,6 +87,9 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
+
+        {/* Breadcrumb Navigation Bar */}
+        <PageBreadcrumb />
 
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto">
