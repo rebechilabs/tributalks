@@ -4,9 +4,15 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 import { ALL_TOOLS, canAccessTool, filterTools, CommandTool } from '@/data/commandPaletteTools';
-import { ICON_MAP } from '@/lib/iconMap';
-import { Lock, Search, ArrowRight, Command } from 'lucide-react';
+import { ICON_MAP, IconKey } from '@/lib/iconMap';
+import { Lock, Search, ArrowRight, Command, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+// Check if a string is an emoji (starts with emoji character)
+const isEmoji = (str: string): boolean => {
+  const emojiRegex = /^[\p{Emoji}]/u;
+  return emojiRegex.test(str);
+};
 
 // Legacy plan mapping
 const LEGACY_PLAN_MAP: Record<string, string> = {
@@ -166,7 +172,8 @@ export function CommandPalette() {
             filteredTools.map((tool, index) => {
               const hasAccess = canAccessTool(tool, userPlan);
               const isSelected = index === selectedIndex;
-              const IconComponent = ICON_MAP[tool.icon];
+              const isEmojiIcon = isEmoji(tool.icon);
+              const IconComponent = !isEmojiIcon ? ICON_MAP[tool.icon as IconKey] : null;
               
               return (
                 <button
@@ -182,7 +189,13 @@ export function CommandPalette() {
                 >
                   {/* Icon */}
                   <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-                    <IconComponent className="w-4 h-4 text-primary" />
+                    {isEmojiIcon ? (
+                      <span className="text-lg">{tool.icon}</span>
+                    ) : IconComponent ? (
+                      <IconComponent className="w-4 h-4 text-primary" />
+                    ) : (
+                      <Sparkles className="w-4 h-4 text-primary" />
+                    )}
                   </div>
                   
                   {/* Content */}
