@@ -13,6 +13,7 @@ import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
 import { useAuth } from "@/hooks/useAuth";
 import { ClaraFloatingButton } from "./ClaraFloatingButton";
+import { ClaraOnboardingTooltip } from "./ClaraProactive";
 
 interface Message {
   role: "user" | "assistant";
@@ -711,6 +712,9 @@ Você também pode me fazer qualquer pergunta sobre a Reforma Tributária!`;
           </CardContent>
         </Card>
       </div>
+
+      {/* Onboarding Tooltip - appears on first visit to each page */}
+      <ClaraOnboardingTooltip />
 
       {/* Floating Button */}
       <ClaraFloatingButton

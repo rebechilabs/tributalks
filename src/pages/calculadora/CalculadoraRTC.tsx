@@ -14,6 +14,7 @@ import {
 import { TaxCalculatorForm, TaxFormData } from "@/components/rtc/TaxCalculatorForm";
 import { TaxResultsDisplay } from "@/components/rtc/TaxResultsDisplay";
 import { CalculationHistory } from "@/components/rtc/CalculationHistory";
+import { ClaraContextualCard } from "@/components/common/ClaraContextualCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Calculator, HelpCircle, ExternalLink, FileText, ArrowLeft, Zap } from "lucide-react";
@@ -194,6 +195,9 @@ export default function CalculadoraRTC() {
             </AlertDescription>
           </Alert>
         )}
+
+        {/* Clara AI Card - Contextual Help */}
+        <ClaraContextualCard className="mb-2" />
 
         {/* Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
