@@ -1,6 +1,6 @@
 import { Upload, Search, Gauge, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { CONFIG } from "@/config/site";
 
 const steps = [
   {
@@ -73,15 +73,19 @@ export function HowItWorksSection() {
 
         {/* CTA */}
         <div className="text-center mt-12">
-          <Link to="/cadastro">
+          <a 
+            href={CONFIG.PAYMENT_LINKS.STARTER_MENSAL} 
+            target="_blank" 
+            rel="noopener noreferrer"
+          >
             <Button
               size="lg"
               className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-10 py-6 text-lg group"
             >
-              Começar Meu Diagnóstico Gratuito
+              Verifique a Saúde da Sua Empresa
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
-          </Link>
+          </a>
         </div>
       </div>
     </section>
