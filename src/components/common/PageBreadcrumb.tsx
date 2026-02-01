@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 import {
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
@@ -28,6 +27,7 @@ export function PageBreadcrumb({ className, showRelated = true }: PageBreadcrumb
   const { breadcrumb, relatedPages, isRoot, label } = useRouteInfo();
   
   const handleBack = () => {
+    console.log('[PageBreadcrumb] handleBack called, history length:', window.history.length);
     if (window.history.length > 2) {
       navigate(-1);
     } else {
@@ -36,8 +36,11 @@ export function PageBreadcrumb({ className, showRelated = true }: PageBreadcrumb
   };
 
   const handleCommandK = () => {
+    console.log('[PageBreadcrumb] handleCommandK called');
     window.dispatchEvent(new CustomEvent("openClaraFreeChat"));
   };
+
+  console.log('[PageBreadcrumb] render - isRoot:', isRoot, 'breadcrumb:', breadcrumb);
   
   return (
     <div className={cn(
@@ -78,17 +81,17 @@ export function PageBreadcrumb({ className, showRelated = true }: PageBreadcrumb
                 <BreadcrumbItem key={item.path}>
                   {!isLast ? (
                     <>
-                      <BreadcrumbLink 
-                        href={item.path}
-                        onClick={(e) => {
-                          e.preventDefault();
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          console.log('[PageBreadcrumb] Navigating to:', item.path);
                           navigate(item.path);
                         }}
-                        className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                        className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors text-sm"
                       >
                         {isFirst && <Home className="h-3.5 w-3.5" />}
                         <span className="hidden md:inline">{item.label}</span>
-                      </BreadcrumbLink>
+                      </button>
                       <BreadcrumbSeparator>
                         <ChevronRight className="h-3.5 w-3.5" />
                       </BreadcrumbSeparator>
