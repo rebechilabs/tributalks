@@ -1129,6 +1129,263 @@ function isSimpleQuery(message: string): boolean {
   return message.length < 50 && simplePatterns.some(p => p.test(message.trim()));
 }
 
+// ============================================
+// ANÁLISE LINHA A LINHA - Explicação detalhada dos resultados
+// ============================================
+type AnalysisType = 'dre' | 'score' | 'credits' | 'opportunities' | 'general' | null;
+
+function detectAnalysisRequest(message: string): AnalysisType {
+  const lowerMessage = message.toLowerCase();
+  
+  // Padrões que indicam pedido de análise/explicação
+  const analysisPatterns = [
+    /explic(a|ar|e|ue)/i,
+    /analis(a|ar|e)/i,
+    /detalh(a|ar|e)/i,
+    /o que significa/i,
+    /entender meus/i,
+    /me ajud(a|e) (a )?entender/i,
+    /linha (a|por) linha/i,
+    /como (ler|interpretar)/i,
+  ];
+  
+  const isAnalysisRequest = analysisPatterns.some(p => p.test(lowerMessage));
+  if (!isAnalysisRequest) return null;
+  
+  // Detecta qual tipo de análise
+  if (/dre|resultado|demonstra(tivo|ção)|receita|margem|lucro|ebitda|financeiro/i.test(lowerMessage)) {
+    return 'dre';
+  }
+  if (/score|nota|pontu(ação|os)|saúde tribut/i.test(lowerMessage)) {
+    return 'score';
+  }
+  if (/crédit(o|os)|recuper(ar|ação)|radar/i.test(lowerMessage)) {
+    return 'credits';
+  }
+  if (/oportunidade|benefício|incentivo|economia/i.test(lowerMessage)) {
+    return 'opportunities';
+  }
+  
+  // Comando genérico "explica meus resultados"
+  if (/meus (resultados|dados|números)/i.test(lowerMessage)) {
+    return 'general';
+  }
+  
+  return null;
+}
+
+// Formata explicação didática do DRE
+function formatDREExplanation(ctx: UserPlatformContext): string | null {
+  if (!ctx.financeiro) {
+    return "Você ainda não preencheu seu DRE. Acesse 'DRE Inteligente' para cadastrar. 📊";
+  }
+  
+  const f = ctx.financeiro;
+  const formatCurrency = (v: number | null) => v ? `R$ ${(v/1000).toFixed(0)}k` : 'N/A';
+  const formatPct = (v: number | null) => v !== null ? `${v.toFixed(1)}%` : 'N/A';
+  
+  const lines: string[] = [];
+  lines.push("📊 **Análise do seu DRE:**\n");
+  
+  if (f.receitaBruta) {
+    lines.push(`**Receita Bruta**: ${formatCurrency(f.receitaBruta)}`);
+    lines.push(`→ É o total que sua empresa fatura antes de descontos.\n`);
+  }
+  
+  if (f.margemBruta !== null) {
+    lines.push(`**Margem Bruta**: ${formatPct(f.margemBruta)}`);
+    const margemStatus = f.margemBruta >= 30 ? "saudável ✅" : f.margemBruta >= 20 ? "adequada ⚠️" : "baixa 🔴";
+    lines.push(`→ Quanto sobra após custos diretos. Sua margem está ${margemStatus}.\n`);
+  }
+  
+  if (f.margemLiquida !== null) {
+    lines.push(`**Margem Líquida**: ${formatPct(f.margemLiquida)}`);
+    const liquidaStatus = f.margemLiquida >= 10 ? "excelente ✅" : f.margemLiquida >= 5 ? "ok ⚠️" : "crítica 🔴";
+    lines.push(`→ Lucro real após tudo. Status: ${liquidaStatus}.\n`);
+  }
+  
+  if (f.ebitda) {
+    lines.push(`**EBITDA**: ${formatCurrency(f.ebitda)}`);
+    lines.push(`→ Resultado operacional. É o que sua empresa gera antes de juros e impostos.\n`);
+  }
+  
+  if (f.reformaImpactoPercent !== null && f.reformaImpactoPercent !== 0) {
+    const impacto = f.reformaImpactoPercent;
+    const sinal = impacto > 0 ? '📈' : '📉';
+    lines.push(`**Impacto Reforma 2027**: ${impacto > 0 ? '+' : ''}${formatPct(impacto)} ${sinal}`);
+    if (impacto < -1) {
+      lines.push(`→ Sua margem vai cair. Precisa revisar precificação e créditos!\n`);
+    } else if (impacto > 1) {
+      lines.push(`→ Você vai se beneficiar da reforma. Ótimo posicionamento!\n`);
+    } else {
+      lines.push(`→ Impacto neutro. Mantenha acompanhamento.\n`);
+    }
+  }
+  
+  lines.push("Quer que eu explique algum item específico?");
+  
+  return lines.join('\n');
+}
+
+// Formata explicação didática do Score
+function formatScoreExplanation(ctx: UserPlatformContext): string | null {
+  if (!ctx.score) {
+    return "Você ainda não calculou seu Score. Acesse 'Score Tributário' para avaliar. 📈";
+  }
+  
+  const s = ctx.score;
+  const lines: string[] = [];
+  lines.push("📈 **Análise do seu Score Tributário:**\n");
+  
+  lines.push(`**Nota Geral**: ${s.grade || 'N/A'} (${s.total || 0} pontos)`);
+  const gradeDesc: Record<string, string> = {
+    'A+': 'Excelente! Você está no top 5%.',
+    'A': 'Muito bom! Saúde tributária forte.',
+    'B': 'Bom, mas há espaço para melhorar.',
+    'C': 'Atenção! Riscos identificados.',
+    'D': 'Crítico! Ação urgente necessária.',
+    'E': 'Muito crítico! Risco alto de autuação.',
+  };
+  lines.push(`→ ${gradeDesc[s.grade || 'C'] || 'Avaliação pendente.'}\n`);
+  
+  if (s.riscoAutuacao !== null) {
+    lines.push(`**Risco de Autuação**: ${s.riscoAutuacao}%`);
+    const riscoDesc = s.riscoAutuacao <= 20 ? "baixo ✅" : s.riscoAutuacao <= 50 ? "médio ⚠️" : "alto 🔴";
+    lines.push(`→ Seu risco está ${riscoDesc}.\n`);
+  }
+  
+  if (s.dimensoes) {
+    const dims = s.dimensoes;
+    const entries = Object.entries(dims) as [string, number][];
+    const weakest = entries.reduce((a, b) => a[1] < b[1] ? a : b);
+    const strongest = entries.reduce((a, b) => a[1] > b[1] ? a : b);
+    
+    const dimNames: Record<string, string> = {
+      conformidade: 'Conformidade',
+      eficiencia: 'Eficiência',
+      risco: 'Gestão de Risco',
+      documentacao: 'Documentação',
+      gestao: 'Gestão Fiscal',
+    };
+    
+    lines.push(`**Ponto forte**: ${dimNames[strongest[0]]} (${strongest[1]} pts)`);
+    lines.push(`**Ponto fraco**: ${dimNames[weakest[0]]} (${weakest[1]} pts)`);
+    lines.push(`→ Foque em melhorar ${dimNames[weakest[0]]} para subir sua nota.\n`);
+  }
+  
+  lines.push("Quer dicas específicas para melhorar seu score?");
+  
+  return lines.join('\n');
+}
+
+// Formata explicação de créditos
+function formatCreditsExplanation(ctx: UserPlatformContext): string | null {
+  const creditos = ctx.oportunidades.creditosDisponiveis;
+  if (creditos === 0) {
+    return "Nenhum crédito identificado ainda. Importe XMLs para análise! 📥";
+  }
+  
+  const formatCurrency = (v: number) => `R$ ${(v/1000).toFixed(1)}k`;
+  
+  const lines: string[] = [];
+  lines.push("💰 **Créditos Fiscais Identificados:**\n");
+  
+  lines.push(`**Total Disponível**: ${formatCurrency(creditos)}`);
+  lines.push(`→ Valor estimado que pode ser recuperado.\n`);
+  
+  lines.push("**Como funciona:**");
+  lines.push("1. Créditos são impostos pagos nas compras");
+  lines.push("2. Podem ser usados para abater tributos a pagar");
+  lines.push("3. Recuperação vai até 5 anos retroativos\n");
+  
+  lines.push("⚠️ Valide com seu contador antes de recuperar.");
+  lines.push("Quer ver o Radar de Créditos detalhado?");
+  
+  return lines.join('\n');
+}
+
+// Formata explicação de oportunidades
+function formatOpportunitiesExplanation(ctx: UserPlatformContext): string | null {
+  const { oportunidadesAtivas, economiaAnualPotencial } = ctx.oportunidades;
+  if (oportunidadesAtivas === 0) {
+    return "Nenhuma oportunidade mapeada. Complete seu perfil de empresa! 📋";
+  }
+  
+  const formatCurrency = (v: number) => `R$ ${(v/1000).toFixed(0)}k`;
+  
+  const lines: string[] = [];
+  lines.push("💡 **Oportunidades Fiscais:**\n");
+  
+  lines.push(`**${oportunidadesAtivas}** oportunidades ativas`);
+  lines.push(`**Economia potencial**: ${formatCurrency(economiaAnualPotencial)}/ano\n`);
+  
+  lines.push("**Tipos de oportunidades:**");
+  lines.push("• Incentivos fiscais estaduais/municipais");
+  lines.push("• Regimes especiais de tributação");
+  lines.push("• Benefícios por atividade/setor");
+  lines.push("• Créditos não aproveitados\n");
+  
+  lines.push("Acesse Oportunidades para ver detalhes. Posso explicar alguma específica?");
+  
+  return lines.join('\n');
+}
+
+// Formata explicação geral (resumo de tudo)
+function formatGeneralExplanation(ctx: UserPlatformContext): string {
+  const lines: string[] = [];
+  const userName = ctx.userName ? `, ${ctx.userName}` : '';
+  lines.push(`Oi${userName}! Aqui está um resumo dos seus resultados:\n`);
+  
+  // Score
+  if (ctx.score) {
+    lines.push(`📈 **Score**: ${ctx.score.grade} (${ctx.score.total} pts)`);
+  } else {
+    lines.push("📈 **Score**: Não calculado ainda");
+  }
+  
+  // DRE
+  if (ctx.financeiro && ctx.financeiro.margemLiquida !== null) {
+    lines.push(`💰 **Margem Líquida**: ${ctx.financeiro.margemLiquida.toFixed(1)}%`);
+  } else {
+    lines.push("💰 **DRE**: Não preenchido");
+  }
+  
+  // Créditos
+  if (ctx.oportunidades.creditosDisponiveis > 0) {
+    lines.push(`🎯 **Créditos**: R$ ${(ctx.oportunidades.creditosDisponiveis/1000).toFixed(0)}k disponíveis`);
+  }
+  
+  // Oportunidades
+  if (ctx.oportunidades.oportunidadesAtivas > 0) {
+    lines.push(`💡 **Oportunidades**: ${ctx.oportunidades.oportunidadesAtivas} ativas`);
+  }
+  
+  lines.push("\nQual resultado quer que eu explique em detalhe?");
+  lines.push("• 'Explica meu DRE'");
+  lines.push("• 'Explica meu Score'");
+  lines.push("• 'Explica meus créditos'");
+  
+  return lines.join('\n');
+}
+
+// Gera resposta de análise baseada no tipo
+function generateAnalysisResponse(type: AnalysisType, ctx: UserPlatformContext): string | null {
+  switch (type) {
+    case 'dre':
+      return formatDREExplanation(ctx);
+    case 'score':
+      return formatScoreExplanation(ctx);
+    case 'credits':
+      return formatCreditsExplanation(ctx);
+    case 'opportunities':
+      return formatOpportunitiesExplanation(ctx);
+    case 'general':
+      return formatGeneralExplanation(ctx);
+    default:
+      return null;
+  }
+}
+
 // Adiciona disclaimer automaticamente quando resposta menciona termos tributários
 function appendDisclaimer(response: string, userPlan: string): string {
   // Só adiciona se resposta > 100 chars E menciona termos tributários relevantes
@@ -1320,6 +1577,20 @@ serve(async (req) => {
     }
     
     const systemPrompt = buildSystemPrompt(toolContext, userPlan, userName, isSimple, userContext);
+
+    // ============================================
+    // ANÁLISE LINHA A LINHA - Responde pedidos de explicação
+    // ============================================
+    const analysisType = detectAnalysisRequest(lastMessage);
+    if (analysisType && !isGreeting) {
+      const analysisResponse = generateAnalysisResponse(analysisType, userContext);
+      if (analysisResponse) {
+        console.log(`Analysis request detected: ${analysisType}`);
+        return new Response(JSON.stringify({ message: analysisResponse }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     // Check if user is asking "Por onde eu começo?" and return plan-specific response
     const lastUserMessage = lastMessage.toLowerCase();
