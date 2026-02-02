@@ -45,8 +45,20 @@ interface UserPlatformContext {
     margemBruta: number | null;
     margemLiquida: number | null;
     ebitda: number | null;
+    despesasTotal: number | null;
     reformaImpactoPercent: number | null;
     atualizadoEm: string | null;
+    // Detalhes dos inputs para explicar a origem dos números
+    inputs: {
+      vendasServicos: number | null;
+      vendasProdutos: number | null;
+      salariosEncargos: number | null;
+      prolabore: number | null;
+      maoObraDireta: number | null;
+      aluguel: number | null;
+      marketing: number | null;
+      contadorJuridico: number | null;
+    } | null;
   } | null;
   
   // Créditos e Oportunidades
@@ -112,7 +124,7 @@ async function buildUserContext(supabase: SupabaseClient, userId: string): Promi
     supabase.from("profiles").select("nome, plano, streak_count").eq("user_id", userId).maybeSingle(),
     supabase.from("company_profile").select("razao_social, cnpj_principal, setor, regime_tributario").eq("user_id", userId).maybeSingle(),
     supabase.from("tax_score").select("score_total, score_grade, score_conformidade, score_eficiencia, score_risco, score_documentacao, score_gestao, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
-    supabase.from("company_dre").select("calc_receita_bruta, calc_margem_bruta, calc_margem_liquida, calc_ebitda, reforma_impacto_percentual, updated_at").eq("user_id", userId).order("updated_at", { ascending: false }).limit(1).maybeSingle(),
+    supabase.from("company_dre").select("calc_receita_bruta, calc_margem_bruta, calc_margem_liquida, calc_ebitda, calc_despesas_operacionais_total, reforma_impacto_percentual, updated_at, input_vendas_servicos, input_vendas_produtos, input_salarios_encargos, input_prolabore, input_custo_mao_obra_direta, input_aluguel, input_marketing_publicidade, input_contador_juridico").eq("user_id", userId).order("updated_at", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("credit_analysis_summary").select("total_potential").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("company_opportunities").select("id, economia_anual_min, economia_anual_max, status").eq("user_id", userId).neq("status", "descartada"),
     supabase.from("workflow_progress").select("workflow_id, completed_at").eq("user_id", userId),
@@ -177,8 +189,19 @@ async function buildUserContext(supabase: SupabaseClient, userId: string): Promi
       margemBruta: dre.calc_margem_bruta,
       margemLiquida: dre.calc_margem_liquida,
       ebitda: dre.calc_ebitda,
+      despesasTotal: dre.calc_despesas_operacionais_total,
       reformaImpactoPercent: dre.reforma_impacto_percentual,
       atualizadoEm: dre.updated_at,
+      inputs: {
+        vendasServicos: dre.input_vendas_servicos,
+        vendasProdutos: dre.input_vendas_produtos,
+        salariosEncargos: dre.input_salarios_encargos,
+        prolabore: dre.input_prolabore,
+        maoObraDireta: dre.input_custo_mao_obra_direta,
+        aluguel: dre.input_aluguel,
+        marketing: dre.input_marketing_publicidade,
+        contadorJuridico: dre.input_contador_juridico,
+      },
     } : null,
     
     oportunidades: {
@@ -797,7 +820,14 @@ function detectTopic(message: string): string | null {
 // Verifica se o tópico está no escopo do plano
 function isTopicInScope(topic: string | null, userPlan: string): boolean {
   if (!topic) return true; // Se não detectou tópico, permite
-  const scope = PLAN_TOOL_SCOPE[userPlan] || [];
+  
+  // Normaliza o plano para uppercase
+  const normalizedPlan = userPlan.toUpperCase();
+  const scope = PLAN_TOOL_SCOPE[normalizedPlan] || [];
+  
+  // Log para debugging
+  console.log(`[isTopicInScope] topic=${topic}, plan=${normalizedPlan}, inScope=${scope.includes(topic)}`);
+  
   return scope.includes(topic);
 }
 
@@ -1174,51 +1204,95 @@ function detectAnalysisRequest(message: string): AnalysisType {
   return null;
 }
 
-// Formata explicação didática do DRE
+// Formata explicação didática do DRE COM ORIGEM DOS NÚMEROS
 function formatDREExplanation(ctx: UserPlatformContext): string | null {
   if (!ctx.financeiro) {
     return "Você ainda não preencheu seu DRE. Acesse 'DRE Inteligente' para cadastrar. 📊";
   }
   
   const f = ctx.financeiro;
-  const formatCurrency = (v: number | null) => v ? `R$ ${(v/1000).toFixed(0)}k` : 'N/A';
+  const inputs = f.inputs;
+  
+  const formatCurrency = (v: number | null) => {
+    if (v === null || v === undefined) return 'N/A';
+    if (Math.abs(v) >= 1000) return `R$ ${(v/1000).toFixed(0)}k`;
+    return `R$ ${v.toFixed(0)}`;
+  };
   const formatPct = (v: number | null) => v !== null ? `${v.toFixed(1)}%` : 'N/A';
   
   const lines: string[] = [];
   lines.push("📊 **Análise do seu DRE:**\n");
   
+  // RECEITA BRUTA COM DETALHAMENTO
   if (f.receitaBruta) {
     lines.push(`**Receita Bruta**: ${formatCurrency(f.receitaBruta)}`);
-    lines.push(`→ É o total que sua empresa fatura antes de descontos.\n`);
+    if (inputs) {
+      const detalhes: string[] = [];
+      if (inputs.vendasServicos && inputs.vendasServicos > 0) detalhes.push(`Serviços: ${formatCurrency(inputs.vendasServicos)}`);
+      if (inputs.vendasProdutos && inputs.vendasProdutos > 0) detalhes.push(`Produtos: ${formatCurrency(inputs.vendasProdutos)}`);
+      if (detalhes.length > 0) {
+        lines.push(`→ Composição: ${detalhes.join(' + ')}\n`);
+      } else {
+        lines.push(`→ Total de faturamento antes de descontos.\n`);
+      }
+    } else {
+      lines.push(`→ Total de faturamento antes de descontos.\n`);
+    }
   }
   
+  // MARGEM BRUTA
   if (f.margemBruta !== null) {
     lines.push(`**Margem Bruta**: ${formatPct(f.margemBruta)}`);
     const margemStatus = f.margemBruta >= 30 ? "saudável ✅" : f.margemBruta >= 20 ? "adequada ⚠️" : "baixa 🔴";
-    lines.push(`→ Quanto sobra após custos diretos. Sua margem está ${margemStatus}.\n`);
+    lines.push(`→ Quanto sobra após custos diretos. Status: ${margemStatus}\n`);
   }
   
+  // DESPESAS OPERACIONAIS COM DETALHAMENTO
+  if (f.despesasTotal) {
+    lines.push(`**Despesas Operacionais**: ${formatCurrency(f.despesasTotal)}`);
+    if (inputs) {
+      const despDetalhes: string[] = [];
+      if (inputs.salariosEncargos && inputs.salariosEncargos > 0) despDetalhes.push(`Salários: ${formatCurrency(inputs.salariosEncargos)}`);
+      if (inputs.prolabore && inputs.prolabore > 0) despDetalhes.push(`Pró-labore: ${formatCurrency(inputs.prolabore)}`);
+      if (inputs.aluguel && inputs.aluguel > 0) despDetalhes.push(`Aluguel: ${formatCurrency(inputs.aluguel)}`);
+      if (inputs.marketing && inputs.marketing > 0) despDetalhes.push(`Marketing: ${formatCurrency(inputs.marketing)}`);
+      if (inputs.contadorJuridico && inputs.contadorJuridico > 0) despDetalhes.push(`Contador/Jurídico: ${formatCurrency(inputs.contadorJuridico)}`);
+      
+      if (despDetalhes.length > 0) {
+        lines.push(`→ Principais itens: ${despDetalhes.join(', ')}\n`);
+      }
+    }
+    
+    // Nota sobre mão de obra direta (custo de produção, não despesa)
+    if (inputs?.maoObraDireta && inputs.maoObraDireta > 0) {
+      lines.push(`📝 **Nota**: Mão de obra direta (${formatCurrency(inputs.maoObraDireta)}) está em **Custos de Produção**, não em despesas.\n`);
+    }
+  }
+  
+  // MARGEM LÍQUIDA
   if (f.margemLiquida !== null) {
     lines.push(`**Margem Líquida**: ${formatPct(f.margemLiquida)}`);
     const liquidaStatus = f.margemLiquida >= 10 ? "excelente ✅" : f.margemLiquida >= 5 ? "ok ⚠️" : "crítica 🔴";
-    lines.push(`→ Lucro real após tudo. Status: ${liquidaStatus}.\n`);
+    lines.push(`→ Lucro real após tudo. Status: ${liquidaStatus}\n`);
   }
   
+  // EBITDA
   if (f.ebitda) {
     lines.push(`**EBITDA**: ${formatCurrency(f.ebitda)}`);
-    lines.push(`→ Resultado operacional. É o que sua empresa gera antes de juros e impostos.\n`);
+    lines.push(`→ Resultado operacional antes de juros e impostos.\n`);
   }
   
+  // IMPACTO REFORMA
   if (f.reformaImpactoPercent !== null && f.reformaImpactoPercent !== 0) {
     const impacto = f.reformaImpactoPercent;
     const sinal = impacto > 0 ? '📈' : '📉';
     lines.push(`**Impacto Reforma 2027**: ${impacto > 0 ? '+' : ''}${formatPct(impacto)} ${sinal}`);
     if (impacto < -1) {
-      lines.push(`→ Sua margem vai cair. Precisa revisar precificação e créditos!\n`);
+      lines.push(`→ Sua margem vai cair. Precisa revisar precificação!\n`);
     } else if (impacto > 1) {
-      lines.push(`→ Você vai se beneficiar da reforma. Ótimo posicionamento!\n`);
+      lines.push(`→ Você vai se beneficiar da reforma!\n`);
     } else {
-      lines.push(`→ Impacto neutro. Mantenha acompanhamento.\n`);
+      lines.push(`→ Impacto neutro.\n`);
     }
   }
   

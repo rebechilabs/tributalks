@@ -390,9 +390,10 @@ function generateDiagnostics(dre: ReturnType<typeof calculateDRE>, inputs: DREIn
     })
   }
 
-  // PESO DA FOLHA
-  const totalPessoas = (inputs.salarios_encargos || 0) + (inputs.prolabore || 0) + (inputs.mao_obra_direta || 0)
-  const pesoFolha = dre.receita_liquida > 0 ? (totalPessoas / dre.receita_liquida) * 100 : 0
+  // PESO DA FOLHA (despesas operacionais de pessoal - NÃO inclui mão de obra direta que é custo de produção)
+  // mao_obra_direta já está computada nos custos (CPV/CSP), então NÃO somamos aqui para evitar duplicação
+  const totalPessoasDespesas = (inputs.salarios_encargos || 0) + (inputs.prolabore || 0)
+  const pesoFolha = dre.receita_liquida > 0 ? (totalPessoasDespesas / dre.receita_liquida) * 100 : 0
   
   if (pesoFolha > 50) {
     diagnostics.push({
