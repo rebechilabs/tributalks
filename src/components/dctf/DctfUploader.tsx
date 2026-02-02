@@ -78,8 +78,8 @@ export function DctfUploader() {
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
-      const file = acceptedFiles[0];
-      if (file) {
+      // Processa todos os arquivos em lote
+      for (const file of acceptedFiles) {
         processMutation.mutate(file);
       }
     },
@@ -92,7 +92,8 @@ export function DctfUploader() {
       "text/plain": [".txt"],
       "application/xml": [".xml"],
     },
-    maxFiles: 1,
+    maxFiles: 50, // Permite até 50 arquivos de uma vez
+    multiple: true, // Habilita seleção múltipla
     disabled: processMutation.isPending,
   });
 
@@ -142,11 +143,11 @@ export function DctfUploader() {
                 <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
                 <p className="text-sm text-muted-foreground">
                   {isDragActive
-                    ? "Solte o arquivo aqui..."
-                    : "Arraste um arquivo DCTF ou clique para selecionar"}
+                    ? "Solte os arquivos aqui..."
+                    : "Arraste arquivos DCTF ou clique para selecionar"}
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Formatos aceitos: .txt (layout RFB)
+                  Formatos aceitos: .txt (layout RFB) • <strong>Suporta múltiplos arquivos</strong>
                 </p>
               </>
             )}
