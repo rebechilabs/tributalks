@@ -35,21 +35,20 @@ export function HeroSection() {
               />
             </div>
 
-            {/* Badge */}
-            <div className="flex flex-col items-center lg:items-start gap-1 mb-6 animate-fade-in-up">
-              <span className="text-xl md:text-2xl font-extrabold text-primary tracking-tight">
+            {/* Header */}
+            <div className="mb-6 animate-fade-in-up">
+              <h1 className="text-xl md:text-2xl font-extrabold text-primary tracking-tight leading-tight">
                 PLATAFORMA DE INTELIGÊNCIA TRIBUTÁRIA
-              </span>
-              <span className="text-xl md:text-2xl font-extrabold text-primary tracking-tight">
+                <br />
                 A 1ª AI-FIRST DO BRASIL
-              </span>
+              </h1>
             </div>
 
             {/* Main Heading */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 animate-fade-in-up leading-tight">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 animate-fade-in-up leading-tight">
               Transforme a Reforma Tributária em{" "}
               <span className="text-primary">vantagem competitiva</span>
-            </h1>
+            </h2>
 
             {/* Subheading */}
             <p className="text-base md:text-xl text-muted-foreground mb-8 max-w-xl mx-auto lg:mx-0 animate-fade-in-up animation-delay-100">
