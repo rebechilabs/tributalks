@@ -390,6 +390,105 @@ function formatUserContextForPrompt(ctx: UserPlatformContext): string {
 }
 
 // ============================================
+// KNOWLEDGE BASE - Busca dinâmica de conhecimento jurídico
+// ============================================
+interface KnowledgeEntry {
+  slug: string;
+  title: string;
+  category: string;
+  summary: string;
+  full_content: string | null;
+  trigger_keywords: string[];
+  trigger_regimes: string[];
+  must_say: string[] | null;
+  must_not_say: string[] | null;
+  legal_basis: string | null;
+  priority: number;
+}
+
+// Cache em memória do knowledge base (15 minutos)
+const knowledgeCache = new Map<string, { entries: KnowledgeEntry[]; timestamp: number }>();
+const KNOWLEDGE_CACHE_TTL = 15 * 60 * 1000;
+
+async function fetchRelevantKnowledge(
+  supabase: SupabaseClient, 
+  query: string, 
+  userRegime?: string | null
+): Promise<KnowledgeEntry[]> {
+  const cacheKey = 'all_knowledge';
+  const cached = knowledgeCache.get(cacheKey);
+  
+  let allEntries: KnowledgeEntry[];
+  
+  if (cached && Date.now() - cached.timestamp < KNOWLEDGE_CACHE_TTL) {
+    allEntries = cached.entries;
+  } else {
+    const { data, error } = await supabase
+      .from('clara_knowledge_base')
+      .select('slug, title, category, summary, full_content, trigger_keywords, trigger_regimes, must_say, must_not_say, legal_basis, priority')
+      .eq('status', 'active')
+      .order('priority', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching knowledge base:', error);
+      return [];
+    }
+    
+    allEntries = data || [];
+    knowledgeCache.set(cacheKey, { entries: allEntries, timestamp: Date.now() });
+  }
+  
+  const lowerQuery = query.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  
+  const relevantEntries = allEntries.filter(entry => {
+    const hasMatchingKeyword = entry.trigger_keywords.some(kw => 
+      lowerQuery.includes(kw.toLowerCase())
+    );
+    const regimeMatch = entry.trigger_regimes.length === 0 || 
+      !userRegime || 
+      entry.trigger_regimes.some(r => userRegime.toLowerCase().includes(r.toLowerCase()));
+    return hasMatchingKeyword && regimeMatch;
+  });
+  
+  return relevantEntries.sort((a, b) => b.priority - a.priority);
+}
+
+function formatKnowledgeForPrompt(entries: KnowledgeEntry[]): string {
+  if (entries.length === 0) return '';
+  
+  const lines: string[] = [];
+  lines.push('');
+  lines.push('='.repeat(50));
+  lines.push('CONHECIMENTO JURIDICO ATUALIZADO (use obrigatoriamente)');
+  lines.push('='.repeat(50));
+  lines.push('');
+  
+  for (const entry of entries) {
+    lines.push(`### ${entry.title}`);
+    lines.push(`Base Legal: ${entry.legal_basis || 'N/A'}`);
+    lines.push('');
+    lines.push(entry.summary);
+    
+    if (entry.must_say && entry.must_say.length > 0) {
+      lines.push('');
+      lines.push('VOCE DEVE DIZER:');
+      entry.must_say.forEach(phrase => lines.push(`- "${phrase}"`));
+    }
+    
+    if (entry.must_not_say && entry.must_not_say.length > 0) {
+      lines.push('');
+      lines.push('VOCE NAO PODE DIZER:');
+      entry.must_not_say.forEach(phrase => lines.push(`- "${phrase}"`));
+    }
+    
+    lines.push('');
+    lines.push('---');
+  }
+  
+  return lines.join('\n');
+}
+
+// ============================================
 // CACHE CONFIGURATION - TTL por Categoria
 // ============================================
 type CacheCategory = 'definition' | 'aliquot' | 'deadline' | 'procedure' | 'calculation';
@@ -1755,7 +1854,18 @@ serve(async (req) => {
       }
     }
     
-    const systemPrompt = buildSystemPrompt(toolContext, userPlan, userName, isSimple, userContext);
+    // ============================================
+    // KNOWLEDGE BASE - Busca conhecimento jurídico relevante
+    // ============================================
+    const userRegime = userContext?.regime || null;
+    const relevantKnowledge = await fetchRelevantKnowledge(supabase, lastMessage, userRegime);
+    const knowledgePrompt = formatKnowledgeForPrompt(relevantKnowledge);
+    
+    if (relevantKnowledge.length > 0) {
+      console.log(`Found ${relevantKnowledge.length} relevant knowledge entries for query`);
+    }
+    
+    const systemPrompt = buildSystemPrompt(toolContext, userPlan, userName, isSimple, userContext) + knowledgePrompt;
 
     // ============================================
     // ANÁLISE LINHA A LINHA - Responde pedidos de explicação
