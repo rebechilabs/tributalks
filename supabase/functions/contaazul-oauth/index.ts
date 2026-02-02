@@ -95,7 +95,7 @@ serve(async (req) => {
         state: state,
       });
 
-      const authUrl = `https://auth.contaazul.com/oauth2/authorize?${authParams}`;
+      const authUrl = `https://api.contaazul.com/auth/authorize?${authParams}`;
 
       console.log('[contaazul-oauth] Authorization URL generated');
 
@@ -173,7 +173,7 @@ serve(async (req) => {
       // Exchange authorization code for tokens
       const auth = btoa(`${clientId}:${clientSecret}`);
       
-      const tokenResponse = await fetch('https://auth.contaazul.com/oauth2/token', {
+      const tokenResponse = await fetch('https://api.contaazul.com/oauth2/token', {
         method: 'POST',
         headers: {
           'Authorization': `Basic ${auth}`,
