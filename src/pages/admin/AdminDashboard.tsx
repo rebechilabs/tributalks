@@ -161,12 +161,19 @@ export default function AdminDashboard() {
 
   const adminModules = [
     {
-      title: 'Monitoramento Estratégico',
-      description: 'Métricas das mudanças estratégicas implementadas',
-      href: '/admin/monitoring',
+      title: 'Training Data Center',
+      description: 'Dados de feedback e memória para fine-tuning da Clara',
+      href: '/admin/training-data',
       icon: BarChart3,
       count: null,
       highlight: true,
+    },
+    {
+      title: 'Monitoramento Estratégico',
+      description: 'Métricas das mudanças estratégicas implementadas',
+      href: '/admin/monitoring',
+      icon: Activity,
+      count: null,
     },
     {
       title: 'Pílulas da Reforma',
