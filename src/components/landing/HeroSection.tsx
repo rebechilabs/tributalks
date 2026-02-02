@@ -25,9 +25,9 @@ export function HeroSection() {
         <div className="grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
           
           {/* Left Side - Promise */}
-          <div className="text-center lg:text-left">
+          <div className="lg:text-left">
             {/* Logo */}
-            <div className="flex justify-center lg:justify-start mb-4 md:mb-6 animate-fade-in-up">
+            <div className="flex lg:justify-start mb-4 md:mb-6 animate-fade-in-up">
               <img 
                 src={logoHero} 
                 alt="TribuTalks" 
@@ -51,7 +51,7 @@ export function HeroSection() {
             </h2>
 
             {/* Subheading */}
-            <p className="text-base md:text-xl text-muted-foreground mb-8 max-w-xl mx-auto lg:mx-0 animate-fade-in-up animation-delay-100">
+            <p className="text-base md:text-xl text-muted-foreground mb-8 max-w-xl lg:mx-0 animate-fade-in-up animation-delay-100">
               Enquanto seus concorrentes vão descobrir o impacto tarde demais, 
               você já estará 3 passos à frente.
             </p>
@@ -76,7 +76,7 @@ export function HeroSection() {
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-fade-in-up animation-delay-200">
+            <div className="flex flex-col sm:flex-row items-start gap-4 animate-fade-in-up animation-delay-200">
               <a href={CONFIG.PAYMENT_LINKS.STARTER_MENSAL} target="_blank" rel="noopener noreferrer">
                 <Button
                   size="lg"
