@@ -87,15 +87,17 @@ serve(async (req) => {
       const state = crypto.randomUUID().replace(/-/g, '');
       
       // Build authorization URL with offline scope for refresh tokens
+      // Nova API v2 - Scopes obrigatórios para Cognito
       const authParams = new URLSearchParams({
         client_id: clientId,
         redirect_uri: redirectUri,
         response_type: 'code',
-        scope: 'offline sales purchases products customers suppliers fiscal-invoices bank-accounts treasury', // Include offline for refresh token
+        scope: 'openid profile aws.cognito.signin.user.admin',
         state: state,
       });
 
-      const authUrl = `https://api.contaazul.com/auth/authorize?${authParams}`;
+      // Nova API v2 - Endpoint de autorização
+      const authUrl = `https://auth.contaazul.com/login?${authParams}`;
 
       console.log('[contaazul-oauth] Authorization URL generated');
 
@@ -173,7 +175,8 @@ serve(async (req) => {
       // Exchange authorization code for tokens
       const auth = btoa(`${clientId}:${clientSecret}`);
       
-      const tokenResponse = await fetch('https://api.contaazul.com/oauth2/token', {
+      // Nova API v2 - Endpoint de token
+      const tokenResponse = await fetch('https://auth.contaazul.com/oauth2/token', {
         method: 'POST',
         headers: {
           'Authorization': `Basic ${auth}`,
@@ -208,8 +211,8 @@ serve(async (req) => {
         );
       }
 
-      // Validate the access token by making a test API call
-      const validateResponse = await fetch('https://api.contaazul.com/v1/companies', {
+      // Nova API v2 - Validar token com endpoint correto
+      const validateResponse = await fetch('https://api-v2.contaazul.com/v1/empresas', {
         headers: {
           'Authorization': `Bearer ${tokens.access_token}`,
           'Accept': 'application/json',
