@@ -27,9 +27,11 @@ import { ClaraContextualSuggestion } from "@/components/common/ClaraContextualSu
 import { OnboardingChecklist, FirstMission, GuidedTour, QuickDiagnosticModal } from "@/components/onboarding";
 import { StreakDisplay } from "@/components/achievements";
 import { SwitchCompanyCard } from "@/components/profile/SwitchCompanyCard";
+import { QuickAddCnpj } from "@/components/profile/QuickAddCnpj";
 import { ClaraInsightsPanel } from "@/components/clara";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAchievements } from "@/hooks/useAchievements";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Simulation {
   id: string;
@@ -208,13 +210,36 @@ const Dashboard = () => {
   const { user, profile } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [simulations, setSimulations] = useState<Simulation[]>([]);
   const [simulationsThisMonth, setSimulationsThisMonth] = useState(0);
   const [simulationsLoading, setSimulationsLoading] = useState(true);
   const [showQuickDiagnostic, setShowQuickDiagnostic] = useState(false);
   
+  // Company profile data for CNPJ management
+  const [companyProfile, setCompanyProfile] = useState<{ cnpj_principal: string | null; cnpjs_grupo: string[] } | null>(null);
+  
   // Consolidated dashboard data hook - single batch request
   const { data: dashboardData, isLoading: dashboardLoading } = useDashboardData();
+  
+  // Fetch company profile for CNPJ management
+  useEffect(() => {
+    const fetchCompanyProfile = async () => {
+      if (!user?.id) return;
+      const { data } = await supabase
+        .from('company_profile')
+        .select('cnpj_principal, cnpjs_grupo')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (data) {
+        setCompanyProfile({
+          cnpj_principal: data.cnpj_principal,
+          cnpjs_grupo: data.cnpjs_grupo || []
+        });
+      }
+    };
+    fetchCompanyProfile();
+  }, [user?.id]);
   
   // Lazy achievement check (only once per session)
   const { checkAchievements } = useAchievements();
@@ -433,6 +458,39 @@ const Dashboard = () => {
 
         {/* Resumo Executivo - Semáforo do CEO/CFO */}
         <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+              <Target className="w-5 h-5 text-primary" />
+              Diagnóstico Empresarial
+            </h2>
+            {/* Quick Add CNPJ - Próximo ao diagnóstico */}
+            {user?.id && companyProfile && (
+              <QuickAddCnpj
+                userId={user.id}
+                userPlan={currentPlan}
+                cnpjPrincipal={companyProfile.cnpj_principal}
+                cnpjsGrupo={companyProfile.cnpjs_grupo}
+                onUpdate={() => {
+                  queryClient.invalidateQueries({ queryKey: ['company-profile'] });
+                  // Refresh local state
+                  supabase
+                    .from('company_profile')
+                    .select('cnpj_principal, cnpjs_grupo')
+                    .eq('user_id', user.id)
+                    .maybeSingle()
+                    .then(({ data }) => {
+                      if (data) {
+                        setCompanyProfile({
+                          cnpj_principal: data.cnpj_principal,
+                          cnpjs_grupo: data.cnpjs_grupo || []
+                        });
+                      }
+                    });
+                }}
+                compact
+              />
+            )}
+          </div>
           <ExecutiveSummaryCard 
             thermometerData={dashboardData?.thermometerData || null} 
             scoreActions={dashboardData?.scoreActions || []}

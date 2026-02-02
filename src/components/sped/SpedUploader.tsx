@@ -271,7 +271,7 @@ export function SpedUploader() {
                   Arraste arquivos SPED Contribuições aqui
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Arquivos .txt no layout EFD-Contribuições (PIS/COFINS)
+                  Arquivos .txt no layout EFD-Contribuições (PIS/COFINS) • <strong>Suporta múltiplos arquivos</strong>
                 </p>
               </div>
             </div>
