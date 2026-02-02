@@ -104,13 +104,15 @@ interface ERPCredentials {
   // Omie
   app_key?: string;
   app_secret?: string;
-  // Bling
+  // Bling (OAuth 2.0)
   access_token?: string;
-  // Conta Azul
-  client_id?: string;
-  client_secret?: string;
   refresh_token?: string;
   expires_at?: number;
+  bling_client_id?: string;
+  bling_client_secret?: string;
+  // Conta Azul (OAuth 2.0)
+  client_id?: string;
+  client_secret?: string;
   // Tiny
   token?: string;
   // Sankhya
@@ -386,13 +388,86 @@ class OmieAdapter implements ERPAdapter {
 }
 
 // ============================================================================
-// BLING Adapter
+// BLING Adapter (with OAuth 2.0 Refresh Token Support)
 // ============================================================================
 
 class BlingAdapter implements ERPAdapter {
   private baseUrl = 'https://api.bling.com.br/Api/v3';
+  // deno-lint-ignore no-explicit-any
+  private supabase: any = null;
+  private connectionId: string | null = null;
+  private credentials: ERPCredentials | null = null;
 
-  private async makeRequest(endpoint: string, credentials: ERPCredentials) {
+  // deno-lint-ignore no-explicit-any
+  setContext(supabase: any, connectionId: string, credentials: ERPCredentials) {
+    this.supabase = supabase;
+    this.connectionId = connectionId;
+    this.credentials = credentials;
+  }
+
+  private async refreshAccessToken(): Promise<string> {
+    if (!this.credentials?.bling_client_id || !this.credentials?.bling_client_secret || !this.credentials?.refresh_token) {
+      throw new Error('Credenciais incompletas para renovação do token. Por favor, reconecte o Bling.');
+    }
+
+    console.log('[BlingAdapter] Refreshing access token...');
+
+    const auth = btoa(`${this.credentials.bling_client_id}:${this.credentials.bling_client_secret}`);
+    
+    const response = await fetch('https://www.bling.com.br/Api/v3/oauth/token', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: this.credentials.refresh_token,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[BlingAdapter] Refresh token failed:', errorText);
+      throw new Error('Sua autorização do Bling expirou. Por favor, reconecte sua conta.');
+    }
+
+    const data = await response.json();
+    console.log('[BlingAdapter] Token refreshed successfully');
+
+    // Update credentials in memory
+    this.credentials.access_token = data.access_token;
+    if (data.refresh_token) {
+      this.credentials.refresh_token = data.refresh_token;
+    }
+    // Set expiration (Bling tokens typically last 6 hours = 21600 seconds)
+    this.credentials.expires_at = Date.now() + (data.expires_in || 21600) * 1000;
+
+    // Persist updated credentials to database
+    if (this.supabase && this.connectionId) {
+      try {
+        const encryptedCreds = await encryptCredentials(this.credentials);
+        await this.supabase
+          .from('erp_connections')
+          .update({ 
+            credentials: encryptedCreds,
+            status: 'active',
+            status_message: 'Token renovado automaticamente',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', this.connectionId);
+        console.log('[BlingAdapter] Credentials persisted to database');
+      } catch (persistError) {
+        console.error('[BlingAdapter] Error persisting credentials:', persistError);
+        // Continue anyway - token is valid in memory
+      }
+    }
+
+    return data.access_token;
+  }
+
+  // deno-lint-ignore no-explicit-any
+  private async makeRequest(endpoint: string, credentials: ERPCredentials, retryCount = 0): Promise<any> {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method: 'GET',
       headers: {
@@ -400,6 +475,25 @@ class BlingAdapter implements ERPAdapter {
         'Accept': 'application/json',
       },
     });
+
+    // Check for token expiration (401 Unauthorized)
+    if (response.status === 401 && retryCount === 0) {
+      const errorText = await response.text();
+      
+      // Check if it's a token expiration issue
+      if (errorText.includes('invalid_token') || errorText.includes('expired') || errorText.includes('Unauthorized') || errorText.includes('token')) {
+        console.log('[BlingAdapter] Token expired, attempting refresh...');
+        
+        try {
+          const newToken = await this.refreshAccessToken();
+          // Retry the request with new token
+          const updatedCredentials = { ...credentials, access_token: newToken };
+          return this.makeRequest(endpoint, updatedCredentials, 1);
+        } catch (refreshError) {
+          throw refreshError; // Propagate the user-friendly error message
+        }
+      }
+    }
 
     if (!response.ok) {
       const error = await response.text();
@@ -1366,9 +1460,12 @@ serve(async (req) => {
         // Decrypt credentials (supports both encrypted and legacy plain formats)
         const credentials = await getDecryptedCredentials(connection.credentials);
         
-        // Set context for ContaAzul adapter (for token refresh support)
+        // Set context for OAuth 2.0 adapters (for token refresh support)
         if (connection.erp_type === 'contaazul' && adapter instanceof ContaAzulAdapter) {
           (adapter as ContaAzulAdapter).setContext(supabase, connection.id, credentials);
+        }
+        if (connection.erp_type === 'bling' && adapter instanceof BlingAdapter) {
+          (adapter as BlingAdapter).setContext(supabase, connection.id, credentials);
         }
         
         const modulesToSync = modules || connection.sync_config?.modules || ['nfe', 'produtos', 'financeiro', 'empresa'];

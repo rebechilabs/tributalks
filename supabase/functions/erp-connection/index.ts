@@ -135,6 +135,37 @@ async function validateBlingCredentials(accessToken: string): Promise<{ valid: b
   }
 }
 
+async function validateContaAzulCredentials(credentials: Record<string, string>): Promise<{ valid: boolean; message: string; data?: any }> {
+  try {
+    // Conta Azul uses OAuth 2.0 - validate by making an API call
+    const response = await fetch("https://api.contaazul.com/v1/companies", {
+      method: "GET",
+      headers: { 
+        "Authorization": `Bearer ${credentials.access_token}`,
+        "Accept": "application/json"
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      if (errorText.includes('invalid_token') || errorText.includes('expired')) {
+        return { valid: false, message: "Token de acesso expirado. Reconecte sua conta." };
+      }
+      return { valid: false, message: "Token de acesso inválido" };
+    }
+
+    const data = await response.json();
+    return { 
+      valid: true, 
+      message: "Credenciais válidas",
+      data: data || null
+    };
+  } catch (error: unknown) {
+    console.error("Conta Azul validation error:", error);
+    return { valid: false, message: "Erro ao validar credenciais" };
+  }
+}
+
 async function validateCredentials(erpType: string, credentials: Record<string, string>): Promise<{ valid: boolean; message: string; data?: any }> {
   switch (erpType) {
     case "omie":
@@ -150,6 +181,17 @@ async function validateCredentials(erpType: string, credentials: Record<string, 
       return validateBlingCredentials(credentials.access_token);
     
     case "contaazul":
+      if (!credentials.access_token) {
+        return { valid: false, message: "Access Token é obrigatório" };
+      }
+      if (!credentials.client_id || !credentials.client_secret) {
+        return { valid: false, message: "Client ID e Client Secret são obrigatórios para renovação automática de token" };
+      }
+      if (!credentials.refresh_token) {
+        return { valid: false, message: "Refresh Token é obrigatório para renovação automática de token" };
+      }
+      return validateContaAzulCredentials(credentials);
+    
     case "tiny":
     case "sankhya":
     case "totvs":
