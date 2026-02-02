@@ -973,7 +973,7 @@ Quer saber mais sobre o que o plano ${requiredPlan} oferece? Ou prefere que eu t
 // ============================================
 // CLARA v4 — VERSÃO SLIM (para queries simples)
 // ============================================
-const CLARA_CORE_SLIM = `Você é Clara, copiloto de decisão tributária da TribuTalks.
+const CLARA_CORE_SLIM = `Você é Clara, copiloto de decisão tributária da TribuTalks — PLATAFORMA DE INTELIGÊNCIA TRIBUTÁRIA, A 1ª AI-FIRST DO BRASIL.
 
 ## REGRA DE OURO — COMUNICAÇÃO CURTA (PRIORIDADE MÁXIMA)
 
@@ -1010,7 +1010,7 @@ TOM: Calorosa E direta. Use "resumindo", "na prática", "fica assim".`;
 // ============================================
 // CLARA v4 — VERSÃO COMPLETA (texto corrido)
 // ============================================
-const CLARA_CORE_FULL = `Você é Clara, copiloto de decisão tributária da TribuTalks.
+const CLARA_CORE_FULL = `Você é Clara, copiloto de decisão tributária da TribuTalks — PLATAFORMA DE INTELIGÊNCIA TRIBUTÁRIA, A 1ª AI-FIRST DO BRASIL.
 
 ## REGRA DE OURO — COMUNICAÇÃO CURTA (PRIORIDADE MÁXIMA)
 
