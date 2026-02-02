@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { Sparkles, Send, Mic, MicOff, Volume2, VolumeX, X } from "lucide-react";
 import { useClaraShortcut } from "@/hooks/useKeyboardShortcuts";
+import { useClaraContext, formatContextForAPI } from "@/hooks/useClaraContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -219,6 +220,7 @@ Posso te ajudar a preparar os dados para a consultoria? Ou prefere que eu expliq
 
 export function FloatingAssistant() {
   const { profile } = useAuth();
+  const { context: claraContext, trackAction, trackResult } = useClaraContext();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -482,7 +484,8 @@ Você também pode me fazer qualquer pergunta sobre a Reforma Tributária!`;
         body: { 
           messages: [...messages, { role: "user", content: userMessage }],
           toolSlug: currentTool,
-          isGreeting: false
+          isGreeting: false,
+          navigationContext: formatContextForAPI(claraContext),
         },
       });
 
