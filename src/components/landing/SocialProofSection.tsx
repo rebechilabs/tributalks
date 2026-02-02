@@ -90,17 +90,6 @@ export function SocialProofSection() {
           *Casos ilustrativos baseados em resultados reais. Valores podem variar conforme perfil da empresa.
         </p>
 
-        {/* Total Savings */}
-        <div className="text-center mt-12">
-          <div className="inline-block bg-card rounded-xl px-8 py-6 shadow-lg border border-border">
-            <div className="text-4xl md:text-5xl font-bold text-foreground mb-2">
-              R$ 380 milhões
-            </div>
-            <div className="text-muted-foreground">
-              Economia total gerada para clientes
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   );
