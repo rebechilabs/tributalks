@@ -443,22 +443,48 @@ serve(async (req) => {
 
     // DELETE - Remove connection
     if (req.method === "DELETE") {
-      if (!connectionId) {
+      // Support both query param and body for backwards compatibility
+      let deleteConnectionId = connectionId;
+      
+      if (!deleteConnectionId) {
+        try {
+          const body = await req.json();
+          deleteConnectionId = body.id;
+        } catch {
+          // No body provided
+        }
+      }
+
+      if (!deleteConnectionId) {
         return new Response(
           JSON.stringify({ error: "ID da conexão é obrigatório" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      const { error } = await supabase
+      console.log(`[erp-connection] DELETE request for connection: ${deleteConnectionId}, user: ${userId}`);
+
+      const { data, error } = await supabase
         .from("erp_connections")
         .delete()
-        .eq("id", connectionId)
-        .eq("user_id", userId);
+        .eq("id", deleteConnectionId)
+        .eq("user_id", userId)
+        .select("id");
 
       if (error) {
+        console.error(`[erp-connection] DELETE error:`, error);
         throw error;
       }
+
+      if (!data || data.length === 0) {
+        console.warn(`[erp-connection] Connection not found or no permission: ${deleteConnectionId}`);
+        return new Response(
+          JSON.stringify({ error: "Conexão não encontrada ou você não tem permissão" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      console.log(`[erp-connection] Connection deleted successfully: ${deleteConnectionId}`);
 
       return new Response(
         JSON.stringify({ success: true, message: "Conexão removida com sucesso" }),
