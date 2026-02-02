@@ -1,179 +1,202 @@
 
-# Plano: Melhorar Navegação entre Páginas
+# Plano de Correção da Integração Conta Azul
 
-## Visão Geral
-Implementar um sistema de navegação mais intuitivo com 4 componentes principais:
-1. **Breadcrumb automático** - Mostra onde você está na hierarquia
-2. **Botão Voltar** - Retorna à página anterior
-3. **Quick Nav** - Atalhos contextuais no header
-4. **Página atual destacada** - Indicador visual claro na sidebar
+## Resumo do Problema
+
+A cliente Stephanie (stephanie@rebechisilva.com.br) conectou o Conta Azul e todos os módulos falharam devido a dois problemas técnicos:
+
+1. **Token OAuth expirado**: O Conta Azul usa tokens de acesso válidos por apenas **1 hora**. O sistema atual não possui mecanismo de renovação automática (refresh token).
+
+2. **Erro no enum `sync_type`**: O código usa `'manual'` como valor, mas o banco de dados só aceita: `nfe`, `nfse`, `produtos`, `financeiro`, `empresa`, `full`.
 
 ---
 
-## Alterações Propostas
+## Solução Proposta
 
-### 1. Criar Hook `useRouteInfo` para Mapeamento de Rotas
+### 1. Adicionar suporte a Refresh Token para Conta Azul
 
-**Novo arquivo:** `src/hooks/useRouteInfo.ts`
+**Arquivos a modificar:**
+- `supabase/functions/erp-sync/index.ts`
+- `supabase/functions/erp-connection/index.ts`
 
-Cria um hook que fornece:
-- Nome legível da página atual
-- Caminho hierárquico (breadcrumb)
-- Grupo/categoria da página
-- Páginas relacionadas para navegação rápida
+**Lógica:**
+- Antes de fazer qualquer requisição à API do Conta Azul, verificar se o token ainda é válido
+- Se a requisição falhar com `invalid_token`, chamar automaticamente o endpoint de refresh:
+  ```
+  POST https://auth.contaazul.com/oauth2/token
+  Authorization: Basic BASE64(client_id:client_secret)
+  Content-Type: application/x-www-form-urlencoded
+  
+  grant_type=refresh_token
+  refresh_token=REFRESH_TOKEN_ATUAL
+  ```
+- Atualizar as credenciais salvas com o novo `access_token` e `refresh_token`
 
-```text
-Estrutura do mapa:
-/dashboard → Dashboard (raiz)
-/dashboard/score-tributario → Dashboard > Diagnóstico > Score Tributário
-/calculadora/rtc → Dashboard > Simuladores > Calculadora RTC
+---
+
+### 2. Corrigir o enum `sync_type`
+
+**Arquivo a modificar:**
+- `supabase/functions/erp-sync/index.ts` (linha 1235)
+
+**Alteração:**
+```typescript
+// ANTES
+sync_type: 'manual',
+
+// DEPOIS  
+sync_type: 'full',
 ```
 
 ---
 
-### 2. Criar Componente `PageBreadcrumb`
+### 3. Corrigir o enum no `erp-auto-sync`
 
-**Novo arquivo:** `src/components/common/PageBreadcrumb.tsx`
+**Arquivo a modificar:**
+- `supabase/functions/erp-auto-sync/index.ts` (linha 66)
 
-Componente reutilizável que:
-- Gera breadcrumb automaticamente baseado na rota
-- Links clicáveis para navegação hierárquica
-- Botão "Voltar" integrado (seta ←)
-- Responsivo (colapsa em mobile)
+**Alteração:**
+```typescript
+// ANTES
+sync_type: 'auto',
 
-**Exemplo visual:**
-```text
-[←] Dashboard > Simuladores > Split Payment
+// DEPOIS
+sync_type: 'full',
 ```
 
 ---
 
-### 3. Atualizar `DashboardLayout` com Navegação Melhorada
+### 4. Melhorar mensagens de erro para o usuário
 
-**Arquivo:** `src/components/dashboard/DashboardLayout.tsx`
-
-Alterações:
-- Adicionar `PageBreadcrumb` abaixo do header
-- Adicionar indicador visual da página atual (título com ícone)
-- Incluir atalhos de navegação rápida (páginas relacionadas)
-
-**Novo layout do header:**
-```text
-┌─────────────────────────────────────────────────────────────┐
-│ [☰] [Logo]                    [🔔] [User ▼]                │
-├─────────────────────────────────────────────────────────────┤
-│ [←] Dashboard > Simuladores > Split Payment    [Shortcuts] │
-└─────────────────────────────────────────────────────────────┘
-```
-
----
-
-### 4. Melhorar Destaque na Sidebar
-
-**Arquivo:** `src/components/dashboard/Sidebar.tsx`
-
-Alterações:
-- Manter grupos colapsáveis abertos quando contêm a rota ativa
-- Adicionar indicador "você está aqui" mais visível
-- Scroll automático para o item ativo quando sidebar abre
-
----
-
-### 5. Adicionar Quick Actions no Header
-
-**Arquivo:** `src/components/dashboard/DashboardLayout.tsx`
-
-Adicionar badges/botões de ação rápida:
-- **⌘K** - Abre busca global (já existe)
-- **Páginas frequentes** - Atalhos para Score, Dashboard, etc.
-
----
-
-## Arquivos a Criar
-
-| Arquivo | Descrição |
-|---------|-----------|
-| `src/hooks/useRouteInfo.ts` | Hook com mapa de rotas e informações hierárquicas |
-| `src/components/common/PageBreadcrumb.tsx` | Componente de breadcrumb com botão voltar |
-
-## Arquivos a Modificar
-
-| Arquivo | Alterações |
-|---------|------------|
-| `src/components/dashboard/DashboardLayout.tsx` | Integrar breadcrumb, quick nav |
-| `src/components/dashboard/Sidebar.tsx` | Auto-expand grupos, melhor destaque |
-| `src/components/dashboard/MobileNav.tsx` | Indicador de página atual |
+Quando o token expirar, exibir uma mensagem clara pedindo reconexão:
+- "Sua autorização do Conta Azul expirou. Por favor, reconecte sua conta."
 
 ---
 
 ## Detalhes Técnicos
 
-### Hook `useRouteInfo`
-```typescript
-interface RouteInfo {
-  path: string;
-  label: string;
-  group?: string;
-  breadcrumb: { path: string; label: string }[];
-  relatedPages?: { path: string; label: string; icon: string }[];
-}
+### Fluxo de Refresh Token (ContaAzulAdapter)
 
-// Exemplo de uso:
-const { breadcrumb, relatedPages, label } = useRouteInfo();
-```
-
-### Mapa de Rotas (hierarquia)
 ```text
-Diagnóstico
-  ├── Dashboard
-  ├── Score Tributário
-  └── NEXUS
-
-Simuladores
-  ├── Calculadora RTC
-  ├── Calculadora NBS
-  ├── Split Payment
-  └── Comparativo de Regimes
-
-PIT (Reforma)
-  ├── Timeline 2026-2033
-  ├── Notícias
-  └── Checklist de Prontidão
-
-Central Inteligente
-  ├── Analisador de Documentos
-  ├── Workflows
-  └── Comunidade
-
-Diagnóstico Avançado
-  ├── Radar de Créditos
-  ├── DRE Inteligente
-  ├── Oportunidades Fiscais
-  └── Margem Ativa
+┌──────────────────────────────────────────────────────────────────┐
+│                    FLUXO DE SINCRONIZAÇÃO                        │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  1. Requisição à API do Conta Azul                               │
+│         │                                                        │
+│         ▼                                                        │
+│  2. Resposta = 401 / invalid_token?                              │
+│         │                                                        │
+│    ┌────┴────┐                                                   │
+│    │   SIM   │──► 3. Chamar refresh token endpoint               │
+│    └─────────┘         │                                         │
+│         │              ▼                                         │
+│         │         4. Atualizar credenciais no banco              │
+│         │              │                                         │
+│         │              ▼                                         │
+│         │         5. Retry da requisição original                │
+│         │                                                        │
+│    ┌────┴────┐                                                   │
+│    │   NÃO   │──► Continuar normalmente                          │
+│    └─────────┘                                                   │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
-### Lógica do Botão Voltar
-- Usa `navigate(-1)` do react-router
-- Fallback para `/dashboard` se não houver histórico
-- Não aparece na página Dashboard (raiz)
+### Estrutura de Credenciais Conta Azul (após correção)
 
-### Auto-Expand na Sidebar
-Quando usuário está em `/calculadora/rtc`:
-- O grupo "Simuladores" fica automaticamente expandido
-- O item "Calculadora RTC" fica destacado com borda/fundo
+```typescript
+interface ContaAzulCredentials {
+  client_id: string;
+  client_secret: string;
+  access_token: string;
+  refresh_token: string;
+  expires_at?: number; // timestamp de expiração
+}
+```
+
+### Método `refreshContaAzulToken`
+
+```typescript
+async function refreshContaAzulToken(
+  credentials: ContaAzulCredentials,
+  supabase: SupabaseClient,
+  connectionId: string
+): Promise<string> {
+  const auth = btoa(`${credentials.client_id}:${credentials.client_secret}`);
+  
+  const response = await fetch('https://auth.contaazul.com/oauth2/token', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Basic ${auth}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token: credentials.refresh_token,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Refresh token expirado. Reconecte o Conta Azul.');
+  }
+
+  const data = await response.json();
+  
+  // Atualizar credenciais encriptadas no banco
+  const newCredentials = {
+    ...credentials,
+    access_token: data.access_token,
+    refresh_token: data.refresh_token,
+  };
+  
+  await supabase
+    .from('erp_connections')
+    .update({ credentials: await encryptCredentials(newCredentials) })
+    .eq('id', connectionId);
+
+  return data.access_token;
+}
+```
+
+---
+
+## Arquivos a Modificar
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `supabase/functions/erp-sync/index.ts` | Adicionar lógica de refresh token para ContaAzulAdapter + corrigir enum `sync_type` |
+| `supabase/functions/erp-auto-sync/index.ts` | Corrigir enum `sync_type` de 'auto' para 'full' |
+| `supabase/functions/erp-connection/index.ts` | Solicitar `refresh_token` na conexão inicial do Conta Azul |
+
+---
+
+## Migração de Banco de Dados
+
+Adicionar o valor `auto` ao enum `erp_sync_type` para manter compatibilidade futura:
+
+```sql
+ALTER TYPE erp_sync_type ADD VALUE IF NOT EXISTS 'auto';
+ALTER TYPE erp_sync_type ADD VALUE IF NOT EXISTS 'manual';
+```
 
 ---
 
 ## Resultado Esperado
 
-**Antes:**
-- Usuário não sabia onde estava na hierarquia
-- Precisava usar o botão do navegador para voltar
-- Sidebar não mostrava claramente a página atual
+Após a implementação:
 
-**Depois:**
-- Breadcrumb mostra caminho completo clicável
-- Botão voltar sempre visível (exceto no Dashboard)
-- Grupos da sidebar expandem automaticamente
-- Atalhos para páginas relacionadas
-- ⌘K continua funcionando para busca global
+1. A sincronização do Conta Azul funcionará automaticamente, renovando tokens quando necessário
+2. Nenhum erro de enum no log de sincronização  
+3. A cliente Stephanie poderá usar a plataforma normalmente após reconectar (apenas uma vez)
+4. Sincronizações futuras não exigirão intervenção manual
+
+---
+
+## Passos de Implementação
+
+1. Migração de banco: adicionar valores ao enum
+2. Atualizar `erp-sync` com lógica de refresh token e correção de enum
+3. Atualizar `erp-auto-sync` com correção de enum
+4. Deploy das edge functions
+5. Testar a sincronização com a conta da Stephanie
