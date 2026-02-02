@@ -125,6 +125,72 @@ export type Database = {
         }
         Relationships: []
       }
+      clara_knowledge_base: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          full_content: string | null
+          id: string
+          legal_basis: string | null
+          must_not_say: string[] | null
+          must_say: string[] | null
+          priority: number
+          slug: string
+          source_url: string | null
+          status: string
+          summary: string
+          title: string
+          trigger_keywords: string[]
+          trigger_regimes: string[] | null
+          updated_at: string
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          full_content?: string | null
+          id?: string
+          legal_basis?: string | null
+          must_not_say?: string[] | null
+          must_say?: string[] | null
+          priority?: number
+          slug: string
+          source_url?: string | null
+          status?: string
+          summary: string
+          title: string
+          trigger_keywords?: string[]
+          trigger_regimes?: string[] | null
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          full_content?: string | null
+          id?: string
+          legal_basis?: string | null
+          must_not_say?: string[] | null
+          must_say?: string[] | null
+          priority?: number
+          slug?: string
+          source_url?: string | null
+          status?: string
+          summary?: string
+          title?: string
+          trigger_keywords?: string[]
+          trigger_regimes?: string[] | null
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
       company_dre: {
         Row: {
           calc_custo_produtos_vendidos: number | null

@@ -490,3 +490,41 @@ Msg 2: "Como fica meu regime?"
 | `src/components/common/FloatingAssistant.tsx` | Componente de chat |
 | `src/hooks/useClaraContext.ts` | Hook de contexto de navegação |
 | `src/data/toolsManual.ts` | Contextos das ferramentas |
+
+---
+
+## Base de Conhecimento Dinâmica
+
+A partir da v4.1, a Clara busca conhecimento jurídico atualizado da tabela `clara_knowledge_base`.
+
+### Tabela: `clara_knowledge_base`
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `slug` | text | Identificador único (ex: `lc-224-2025-pedagio-presumido`) |
+| `title` | text | Título do conhecimento |
+| `category` | text | Categoria: `jurisprudencia`, `legislacao`, `reforma`, `prazo`, `aliquota` |
+| `summary` | text | Resumo curto que Clara usa diretamente na resposta |
+| `full_content` | text | Conteúdo completo para detalhes |
+| `trigger_keywords` | text[] | Palavras que ativam essa informação |
+| `trigger_regimes` | text[] | Regimes afetados (presumido, real, simples) |
+| `must_say` | text[] | Frases que Clara DEVE usar |
+| `must_not_say` | text[] | Frases que Clara NÃO PODE usar |
+| `status` | text | `active`, `expired`, `superseded` |
+| `priority` | int | 1-10, maior = mais importante |
+
+### Fluxo de Busca
+
+1. Clara recebe mensagem do usuário
+2. Busca entradas ativas no `clara_knowledge_base` (cache 15 min)
+3. Filtra por `trigger_keywords` que aparecem na mensagem
+4. Filtra por `trigger_regimes` se usuário tem regime definido
+5. Ordena por `priority` (maior primeiro)
+6. Injeta no prompt como "CONHECIMENTO JURÍDICO ATUALIZADO"
+
+### Vantagens
+
+- ✅ Admins atualizam sem deploy
+- ✅ Clara busca só quando relevante (economia de tokens)
+- ✅ Linguagem obrigatória (`must_say`/`must_not_say`) garante precisão jurídica
+- ✅ Histórico de alterações com `valid_from`/`valid_until`
