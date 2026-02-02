@@ -133,26 +133,6 @@ export function HeroSection() {
               </div>
             </div>
 
-            {/* Social Proof Stats */}
-            <div className="mt-6 pt-4 border-t border-border">
-              <div className="flex items-center justify-around text-center">
-                <div>
-                  <strong className="text-2xl text-foreground">1.500+</strong>
-                  <p className="text-xs text-muted-foreground">empresas confiam</p>
-                </div>
-                <div>
-                  <strong className="text-2xl text-primary">R$ 380M</strong>
-                  <p className="text-xs text-muted-foreground">economia gerada</p>
-                </div>
-                <div>
-                  <div className="flex items-center justify-center gap-1">
-                    <Star className="w-5 h-5 text-primary fill-primary" />
-                    <strong className="text-2xl text-foreground">4.8/5</strong>
-                  </div>
-                  <p className="text-xs text-muted-foreground">avaliação média</p>
-                </div>
-              </div>
-            </div>
 
             {/* Disclaimer */}
             <p className="text-xs text-muted-foreground/70 text-center mt-4">
