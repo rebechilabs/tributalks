@@ -1,163 +1,284 @@
 
-# Plano de Correção da Integração Conta Azul
 
-## Resumo do Problema
+# Plano: Clara com Visibilidade Total da Plataforma
 
-A cliente Stephanie (stephanie@rebechisilva.com.br) conectou o Conta Azul e todos os módulos falharam devido a dois problemas técnicos:
+## Diagnóstico Atual
 
-1. **Token OAuth expirado**: O Conta Azul usa tokens de acesso válidos por apenas **1 hora**. O sistema atual não possui mecanismo de renovação automática (refresh token).
+Hoje, a Clara AI recebe contexto **muito limitado** sobre o usuário:
+- Apenas o nome e plano do usuário (`profiles.nome`, `profiles.plano`)
+- Verificação binária se tem DRE ou XMLs (`hasUserData`)
+- A rota/ferramenta atual (`toolSlug`)
 
-2. **Erro no enum `sync_type`**: O código usa `'manual'` como valor, mas o banco de dados só aceita: `nfe`, `nfse`, `produtos`, `financeiro`, `empresa`, `full`.
-
----
+A Clara **não sabe**:
+- Score tributário do usuário (nota, dimensões, riscos)
+- Dados financeiros do DRE (receita, margem, EBITDA)
+- Créditos fiscais identificados
+- Oportunidades mapeadas
+- Progresso nos workflows
+- Última atividade e engajamento
+- Notificações pendentes
+- Conexões de ERP ativas
+- Perfil da empresa (setor, regime, CNPJ)
 
 ## Solução Proposta
 
-### 1. Adicionar suporte a Refresh Token para Conta Azul
+Criar um **"Contexto Rico"** que é carregado dinamicamente na edge function `clara-assistant` e injetado no prompt, permitindo que Clara:
 
-**Arquivos a modificar:**
-- `supabase/functions/erp-sync/index.ts`
-- `supabase/functions/erp-connection/index.ts`
-
-**Lógica:**
-- Antes de fazer qualquer requisição à API do Conta Azul, verificar se o token ainda é válido
-- Se a requisição falhar com `invalid_token`, chamar automaticamente o endpoint de refresh:
-  ```
-  POST https://auth.contaazul.com/oauth2/token
-  Authorization: Basic BASE64(client_id:client_secret)
-  Content-Type: application/x-www-form-urlencoded
-  
-  grant_type=refresh_token
-  refresh_token=REFRESH_TOKEN_ATUAL
-  ```
-- Atualizar as credenciais salvas com o novo `access_token` e `refresh_token`
+1. **Conheça o estado atual do usuário** em tempo real
+2. **Faça recomendações personalizadas** baseadas em dados reais
+3. **Antecipe necessidades** e ofereça ajuda proativa
+4. **Conduza conversas contextuais** referenciando métricas específicas
 
 ---
 
-### 2. Corrigir o enum `sync_type`
-
-**Arquivo a modificar:**
-- `supabase/functions/erp-sync/index.ts` (linha 1235)
-
-**Alteração:**
-```typescript
-// ANTES
-sync_type: 'manual',
-
-// DEPOIS  
-sync_type: 'full',
-```
-
----
-
-### 3. Corrigir o enum no `erp-auto-sync`
-
-**Arquivo a modificar:**
-- `supabase/functions/erp-auto-sync/index.ts` (linha 66)
-
-**Alteração:**
-```typescript
-// ANTES
-sync_type: 'auto',
-
-// DEPOIS
-sync_type: 'full',
-```
-
----
-
-### 4. Melhorar mensagens de erro para o usuário
-
-Quando o token expirar, exibir uma mensagem clara pedindo reconexão:
-- "Sua autorização do Conta Azul expirou. Por favor, reconecte sua conta."
-
----
-
-## Detalhes Técnicos
-
-### Fluxo de Refresh Token (ContaAzulAdapter)
+## Arquitetura da Solução
 
 ```text
-┌──────────────────────────────────────────────────────────────────┐
-│                    FLUXO DE SINCRONIZAÇÃO                        │
-├──────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  1. Requisição à API do Conta Azul                               │
-│         │                                                        │
-│         ▼                                                        │
-│  2. Resposta = 401 / invalid_token?                              │
-│         │                                                        │
-│    ┌────┴────┐                                                   │
-│    │   SIM   │──► 3. Chamar refresh token endpoint               │
-│    └─────────┘         │                                         │
-│         │              ▼                                         │
-│         │         4. Atualizar credenciais no banco              │
-│         │              │                                         │
-│         │              ▼                                         │
-│         │         5. Retry da requisição original                │
-│         │                                                        │
-│    ┌────┴────┐                                                   │
-│    │   NÃO   │──► Continuar normalmente                          │
-│    └─────────┘                                                   │
-│                                                                  │
-└──────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                    CLARA CONTEXT BUILDER                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  FloatingAssistant.tsx                                          │
+│         │                                                       │
+│         ▼                                                       │
+│  clara-assistant Edge Function                                  │
+│         │                                                       │
+│         ▼                                                       │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │               buildUserContext()                         │   │
+│  │                                                          │   │
+│  │  Busca em paralelo:                                      │   │
+│  │  ├── profiles (nome, plano, regime, setor)               │   │
+│  │  ├── company_profile (razão social, CNPJ, atividades)    │   │
+│  │  ├── tax_score (score, dimensões, riscos)                │   │
+│  │  ├── company_dre (receita, margem, EBITDA, impacto)      │   │
+│  │  ├── credit_analysis_summary (créditos totais)           │   │
+│  │  ├── company_opportunities (oportunidades ativas)        │   │
+│  │  ├── workflow_progress (workflows em andamento)          │   │
+│  │  ├── xml_imports (count de XMLs processados)             │   │
+│  │  ├── notifications (não lidas, por categoria)            │   │
+│  │  ├── erp_connections (ERPs conectados, status sync)      │   │
+│  │  └── user_onboarding_progress (etapas concluídas)        │   │
+│  │                                                          │   │
+│  │  Retorna: UserPlatformContext                            │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│         │                                                       │
+│         ▼                                                       │
+│  Injeta no System Prompt como "CONTEXTO DO USUÁRIO"             │
+│         │                                                       │
+│         ▼                                                       │
+│  Claude/Gemini responde com conhecimento completo               │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### Estrutura de Credenciais Conta Azul (após correção)
+---
+
+## Estrutura do Contexto do Usuário
 
 ```typescript
-interface ContaAzulCredentials {
-  client_id: string;
-  client_secret: string;
-  access_token: string;
-  refresh_token: string;
-  expires_at?: number; // timestamp de expiração
-}
-```
-
-### Método `refreshContaAzulToken`
-
-```typescript
-async function refreshContaAzulToken(
-  credentials: ContaAzulCredentials,
-  supabase: SupabaseClient,
-  connectionId: string
-): Promise<string> {
-  const auth = btoa(`${credentials.client_id}:${credentials.client_secret}`);
+interface UserPlatformContext {
+  // Identificação
+  userName: string | null;
+  companyName: string | null;
+  cnpj: string | null;
+  setor: string | null;
+  regime: string | null;
+  plano: string;
   
-  const response = await fetch('https://auth.contaazul.com/oauth2/token', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Basic ${auth}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      grant_type: 'refresh_token',
-      refresh_token: credentials.refresh_token,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error('Refresh token expirado. Reconecte o Conta Azul.');
-  }
-
-  const data = await response.json();
-  
-  // Atualizar credenciais encriptadas no banco
-  const newCredentials = {
-    ...credentials,
-    access_token: data.access_token,
-    refresh_token: data.refresh_token,
+  // Score Tributário
+  score: {
+    total: number | null;
+    grade: string | null;
+    riscoAutuacao: number | null;
+    dimensoes: {
+      conformidade: number;
+      eficiencia: number;
+      risco: number;
+      documentacao: number;
+      gestao: number;
+    } | null;
+    calculadoEm: string | null;
   };
   
-  await supabase
-    .from('erp_connections')
-    .update({ credentials: await encryptCredentials(newCredentials) })
-    .eq('id', connectionId);
-
-  return data.access_token;
+  // Financeiro (DRE)
+  financeiro: {
+    receitaBruta: number | null;
+    margemBruta: number | null;
+    margemLiquida: number | null;
+    ebitda: number | null;
+    cargaTributariaPercent: number | null;
+    reformaImpactoPercent: number | null;
+    atualizadoEm: string | null;
+  };
+  
+  // Créditos e Oportunidades
+  oportunidades: {
+    creditosDisponiveis: number;
+    oportunidadesAtivas: number;
+    economiaAnualPotencial: number;
+  };
+  
+  // Progresso
+  progresso: {
+    xmlsProcessados: number;
+    workflowsEmAndamento: number;
+    workflowsConcluidos: number;
+    onboardingCompleto: boolean;
+    checklistItens: string[];
+  };
+  
+  // Engajamento
+  engajamento: {
+    ultimoAcesso: string | null;
+    streakDias: number;
+    notificacoesNaoLidas: number;
+  };
+  
+  // Integrações
+  integracoes: {
+    erpConectado: boolean;
+    erpNome: string | null;
+    ultimaSync: string | null;
+    syncStatus: 'success' | 'error' | 'pending' | null;
+  };
 }
 ```
+
+---
+
+## Exemplo de Prompt Injetado
+
+```
+CONTEXTO DO USUÁRIO (dados reais da plataforma):
+
+👤 PERFIL
+- Nome: Stephanie
+- Empresa: ABC Comércio Ltda
+- CNPJ: 12.345.678/0001-90
+- Setor: Varejo
+- Regime: Lucro Presumido
+- Plano: Professional
+
+📊 SCORE TRIBUTÁRIO
+- Nota: B (720 pontos)
+- Risco de Autuação: 35% (médio)
+- Ponto fraco: Documentação (score 45/200)
+- Calculado em: 15/01/2026
+
+💰 FINANCEIRO (DRE)
+- Receita Bruta Mensal: R$ 850.000
+- Margem Bruta: 32%
+- Margem Líquida: 8,5%
+- Carga Tributária Atual: 22%
+- Impacto Reforma 2027: -2,3% na margem
+- Atualizado em: 28/01/2026
+
+💡 OPORTUNIDADES
+- Créditos disponíveis para recuperar: R$ 47.500
+- Oportunidades fiscais ativas: 5
+- Economia anual potencial: R$ 156.000
+
+📈 PROGRESSO
+- XMLs processados: 234
+- Workflows em andamento: 2 (Diagnóstico Completo, Reforma)
+- Onboarding: 75% completo (falta: perfil empresa)
+
+🔗 INTEGRAÇÕES
+- ERP: Conta Azul (conectado)
+- Última sync: há 2 horas
+- Status: ✅ sucesso
+
+📬 ENGAJAMENTO
+- Streak: 5 dias consecutivos
+- Notificações não lidas: 3
+
+---
+
+Use este contexto para personalizar suas respostas. Quando Stephanie perguntar algo, você já sabe:
+- Ela tem créditos para recuperar (mencione!)
+- A margem dela vai cair 2,3pp com a Reforma (alerte se relevante)
+- O ponto fraco é Documentação (sugira melhorar)
+- Ela tem workflows em andamento (pergunte se precisa de ajuda)
+```
+
+---
+
+## Alterações Necessárias
+
+### 1. Edge Function `clara-assistant/index.ts`
+
+**Criar função `buildUserContext()`**:
+- Buscar dados de 10+ tabelas em paralelo
+- Formatar em estrutura legível para o LLM
+- Cachear por 5 minutos para evitar queries excessivas
+
+**Modificar `buildSystemPrompt()`**:
+- Adicionar seção `CONTEXTO DO USUÁRIO` com dados reais
+- Incluir instruções sobre como usar o contexto
+
+**Nova lógica de personalização**:
+- Se usuário tem créditos > R$ 10k: mencionar proativamente
+- Se Score < C: sugerir ações de melhoria
+- Se workflow em andamento: perguntar se precisa de ajuda
+- Se sem DRE: priorizar preenchimento
+
+### 2. Otimizações de Performance
+
+**Cache de contexto**:
+- Armazenar contexto em memória por 5 min
+- Invalidar quando houver mudança relevante (novo XML, DRE atualizado)
+
+**Query otimizada**:
+- Usar uma única função SQL que retorna todos os dados
+- Evitar N+1 queries
+
+---
+
+## Tabelas Consultadas
+
+| Tabela | Dados Extraídos |
+|--------|-----------------|
+| `profiles` | nome, plano, regime, setor, streak |
+| `company_profile` | razão_social, cnpj, atividades |
+| `tax_score` | score_total, grade, dimensões, risco |
+| `company_dre` | receita, margens, EBITDA, impacto reforma |
+| `credit_analysis_summary` | total_potential |
+| `company_opportunities` | count, economia_anual |
+| `workflow_progress` | em_andamento, concluídos |
+| `xml_imports` | count processados |
+| `notifications` | não_lidas count |
+| `erp_connections` | nome, status, última_sync |
+| `user_onboarding_progress` | checklist_items |
+
+---
+
+## Benefícios Esperados
+
+1. **Clara sabe quem é o usuário** - Chama pelo nome, conhece a empresa
+2. **Clara sabe o estado financeiro** - Menciona números reais, não genéricos
+3. **Clara identifica oportunidades** - "Vi que você tem R$ 47k em créditos..."
+4. **Clara acompanha progresso** - "Você está no passo 3 do workflow..."
+5. **Clara antecipa problemas** - "Sua margem vai cair 2,3pp em 2027..."
+6. **Clara é proativa** - Sugere próximos passos baseados em dados
+
+---
+
+## Exemplo de Conversa Após Implementação
+
+**Usuário**: Oi Clara, como estou?
+
+**Clara**: Oi Stephanie! 😊 Que bom te ver de volta pelo 5º dia seguido!
+
+Olha só o resumo rápido da ABC Comércio:
+
+- **Score B (720 pts)** - Bom, mas dá pra chegar no A
+- **R$ 47.500 em créditos** esperando recuperação
+- **Impacto Reforma**: sua margem vai cair 2,3pp em 2027
+
+💡 Notei que o ponto mais fraco é Documentação. Quer que eu te mostre como melhorar esse score?
+
+E você tem 2 workflows em andamento - precisa de ajuda para continuar algum deles?
 
 ---
 
@@ -165,38 +286,26 @@ async function refreshContaAzulToken(
 
 | Arquivo | Alteração |
 |---------|-----------|
-| `supabase/functions/erp-sync/index.ts` | Adicionar lógica de refresh token para ContaAzulAdapter + corrigir enum `sync_type` |
-| `supabase/functions/erp-auto-sync/index.ts` | Corrigir enum `sync_type` de 'auto' para 'full' |
-| `supabase/functions/erp-connection/index.ts` | Solicitar `refresh_token` na conexão inicial do Conta Azul |
+| `supabase/functions/clara-assistant/index.ts` | Adicionar `buildUserContext()`, modificar `buildSystemPrompt()`, implementar cache |
 
 ---
 
-## Migração de Banco de Dados
+## Segurança
 
-Adicionar o valor `auto` ao enum `erp_sync_type` para manter compatibilidade futura:
-
-```sql
-ALTER TYPE erp_sync_type ADD VALUE IF NOT EXISTS 'auto';
-ALTER TYPE erp_sync_type ADD VALUE IF NOT EXISTS 'manual';
-```
-
----
-
-## Resultado Esperado
-
-Após a implementação:
-
-1. A sincronização do Conta Azul funcionará automaticamente, renovando tokens quando necessário
-2. Nenhum erro de enum no log de sincronização  
-3. A cliente Stephanie poderá usar a plataforma normalmente após reconectar (apenas uma vez)
-4. Sincronizações futuras não exigirão intervenção manual
+- Todos os dados já são filtrados por `user_id` via RLS
+- Clara só vê dados do próprio usuário autenticado
+- Nenhum dado sensível (senhas, tokens) é incluído no contexto
+- O contexto não é logado ou persistido
 
 ---
 
 ## Passos de Implementação
 
-1. Migração de banco: adicionar valores ao enum
-2. Atualizar `erp-sync` com lógica de refresh token e correção de enum
-3. Atualizar `erp-auto-sync` com correção de enum
-4. Deploy das edge functions
-5. Testar a sincronização com a conta da Stephanie
+1. Criar função `buildUserContext()` com queries paralelas
+2. Formatar contexto em texto legível para o LLM
+3. Modificar `buildSystemPrompt()` para incluir contexto
+4. Adicionar instruções de uso do contexto no prompt
+5. Implementar cache de 5 minutos
+6. Testar com diferentes perfis de usuário
+7. Deploy da edge function
+
