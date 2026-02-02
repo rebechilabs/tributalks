@@ -89,3 +89,6 @@ verify_jwt = false
 
 [functions.notify-new-subscriber]
 verify_jwt = false
+
+[functions.contaazul-oauth]
+verify_jwt = false

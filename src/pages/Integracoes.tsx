@@ -53,14 +53,10 @@ const ERP_INFO: Record<string, {
   },
   contaazul: {
     name: "Conta Azul",
-    description: "Foco em microempresas. Sincronize financeiro e notas fiscais.",
+    description: "Foco em microempresas. Conexão segura via OAuth 2.0.",
     logo: "🔷",
     color: "bg-cyan-500",
-    fields: [
-      { key: "client_id", label: "Client ID", type: "text", placeholder: "Client ID OAuth" },
-      { key: "client_secret", label: "Client Secret", type: "password", placeholder: "Client Secret OAuth" },
-      { key: "access_token", label: "Access Token", type: "password", placeholder: "Access Token" }
-    ]
+    fields: [] // OAuth flow - no manual fields needed
   },
   tiny: {
     name: "Tiny ERP",

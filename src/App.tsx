@@ -22,6 +22,7 @@ import DocumentoOportunidades from "./pages/DocumentoOportunidades";
 import EstudosCaso from "./pages/EstudosCaso";
 import EstudoCasoDetalhe from "./pages/EstudoCasoDetalhe";
 import PagamentoConfirmacao from "./pages/PagamentoConfirmacao";
+import OAuthCallback from "./pages/OAuthCallback";
 
 // Páginas protegidas
 import Onboarding from "./pages/Onboarding";
@@ -99,6 +100,8 @@ const App = () => (
             <Route path="/casos" element={<EstudosCaso />} />
             <Route path="/casos/:slug" element={<EstudoCasoDetalhe />} />
             <Route path="/pagamento/confirmacao" element={<PagamentoConfirmacao />} />
+            <Route path="/oauth/callback" element={<OAuthCallback />} />
+            <Route path="/integracoes" element={<ProtectedRoute><Integracoes /></ProtectedRoute>} />
             
             {/* Protegidas */}
             <Route 
