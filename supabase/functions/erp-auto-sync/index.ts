@@ -72,7 +72,7 @@ serve(async (req) => {
         .insert({
           user_id: connection.user_id,
           connection_id: connection.id,
-          sync_type: 'auto',
+          sync_type: 'full',
           status: 'running',
           started_at: new Date().toISOString(),
         })
