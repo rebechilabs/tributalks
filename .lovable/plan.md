@@ -1,151 +1,66 @@
 
-# Plano: Corrigir Desconexão do Conta Azul e Sincronização de Contas
+# Plano de Correção: Integração OAuth do Conta Azul
 
-## Situação Atual
+## Resumo do Problema
 
-### Diagnóstico Completo
-A usuária **Stephanie** possui **duas contas** no sistema:
+O erro `invalid_request` ocorre porque a aplicação está usando URLs de endpoints OAuth **incorretas** para o Conta Azul. A documentação oficial mostra endpoints diferentes dos que estão implementados.
 
-| Email | Plano | Conexão Conta Azul |
-|-------|-------|-------------------|
-| `stephanie@rebechisilva.com.br` | PROFESSIONAL | ❌ Não tem |
-| `rebechi.ste@gmail.com` | ENTERPRISE | ✅ Tem (com erro) |
+## Correções Necessárias
 
-Quando ela acessa pelo email corporativo, não vê a conexão porque ela pertence à outra conta.
+### 1. Corrigir URL de Autorização
 
-### Bugs Encontrados
-1. **Bug de DELETE**: O frontend envia o ID no `body`, mas a Edge Function espera no `query parameter` - desconexão sempre falha
-2. **Inconsistência OAuth**: O callback pode ter criado a conexão na conta errada se ela estava logada com email diferente
+**Arquivo:** `supabase/functions/contaazul-oauth/index.ts`  
+**Linha:** 98
 
----
+| Antes (Incorreto) | Depois (Correto) |
+|-------------------|------------------|
+| `https://auth.contaazul.com/oauth2/authorize` | `https://api.contaazul.com/auth/authorize` |
 
-## Solução Proposta
+### 2. Corrigir URL de Token
 
-### Etapa 1: Corrigir Bug do DELETE na Edge Function
-Modificar a função para aceitar o ID tanto do body quanto do query parameter.
+**Arquivo:** `supabase/functions/contaazul-oauth/index.ts`  
+**Linha:** 176
 
-**Arquivo:** `supabase/functions/erp-connection/index.ts`
+| Antes (Incorreto) | Depois (Correto) |
+|-------------------|------------------|
+| `https://auth.contaazul.com/oauth2/token` | `https://api.contaazul.com/oauth2/token` |
 
-```typescript
-// DELETE - Remove connection
-if (req.method === "DELETE") {
-  // Support both query param and body for backwards compatibility
-  let deleteConnectionId = connectionId;
-  
-  if (!deleteConnectionId) {
-    try {
-      const body = await req.json();
-      deleteConnectionId = body.id;
-    } catch {
-      // No body provided
-    }
-  }
-  
-  if (!deleteConnectionId) {
-    return new Response(
-      JSON.stringify({ error: "ID da conexão é obrigatório" }),
-      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  }
+## Validação dos Parâmetros
 
-  const { data, error } = await supabase
-    .from("erp_connections")
-    .delete()
-    .eq("id", deleteConnectionId)
-    .eq("user_id", userId)
-    .select("id");
+Os demais parâmetros estão corretos conforme a documentação:
+- ✅ `client_id` - OK
+- ✅ `redirect_uri` - OK
+- ✅ `response_type: 'code'` - OK
+- ✅ `scope` - OK (mas pode precisar usar apenas `sales` conforme documentação)
+- ✅ `state` - OK (UUID válido)
 
-  if (error) {
-    throw error;
-  }
+## Observação sobre Scopes
 
-  if (!data || data.length === 0) {
-    return new Response(
-      JSON.stringify({ error: "Conexão não encontrada ou você não tem permissão" }),
-      { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  }
-
-  return new Response(
-    JSON.stringify({ success: true, message: "Conexão removida com sucesso" }),
-    { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-  );
-}
-```
-
-### Etapa 2: Ação Administrativa Imediata
-Deletar a conexão problemática diretamente via SQL (ação única de admin).
-
-```sql
--- Deletar a conexão Conta Azul com erro
-DELETE FROM erp_connections 
-WHERE id = '6a71f33f-2aa4-49f8-9857-323c812f6ebf';
-```
-
-### Etapa 3: Adicionar Logs no OAuth Callback
-Melhorar a rastreabilidade do fluxo OAuth para debugar problemas futuros.
-
-**Arquivo:** `supabase/functions/contaazul-oauth/index.ts`
-
-Adicionar logs estruturados em pontos críticos:
-- Início do exchange de tokens
-- Resultado da chamada à API Conta Azul
-- Antes/depois de salvar no banco
-- Erros com contexto
-
----
-
-## Ação Imediata Recomendada
-
-Para resolver o problema da Stephanie **agora**:
-
-1. **Deletar a conexão via banco** (já que o DELETE da UI não funciona):
-   - Conexão ID: `6a71f33f-2aa4-49f8-9857-323c812f6ebf`
-
-2. **Orientar a Stephanie** a:
-   - Fazer login com `rebechi.ste@gmail.com` (onde está a conexão)
-   - Ou reconectar o Conta Azul usando `stephanie@rebechisilva.com.br`
-
-3. **Consolidar contas** (opcional):
-   - Considerar se as duas contas deveriam ser uma só
+A documentação antiga menciona apenas o scope `sales`. A implementação atual usa scopes mais amplos. Pode ser necessário verificar quais scopes estão habilitados no painel de desenvolvedor do Conta Azul.
 
 ---
 
 ## Detalhes Técnicos
 
-### Por que o DELETE falha?
+### Mudanças no Código
 
 ```text
-Frontend (Integracoes.tsx:157-160)
-┌─────────────────────────────────────────┐
-│ supabase.functions.invoke("erp-conn", { │
-│   method: "DELETE",                     │
-│   body: { id: connectionId }  ← Envia   │
-│ })                              no body │
-└─────────────────────────────────────────┘
-                  ▼
-Edge Function (erp-connection:444-450)
-┌─────────────────────────────────────────┐
-│ const connectionId =                    │
-│   url.searchParams.get("id") ← Espera   │
-│                         query parameter │
-│                                         │
-│ if (!connectionId) → ERRO 400           │
-└─────────────────────────────────────────┘
+supabase/functions/contaazul-oauth/index.ts
+├── Linha 98: Alterar URL de autorização
+└── Linha 176: Alterar URL de token
 ```
 
-### Arquivos a Modificar
+### Impacto
 
-| Arquivo | Alteração |
-|---------|-----------|
-| `supabase/functions/erp-connection/index.ts` | Aceitar ID do body no DELETE |
-| `supabase/functions/contaazul-oauth/index.ts` | Adicionar logs estruturados |
+- Baixo risco de efeitos colaterais
+- Apenas URLs de endpoints são alteradas
+- A lógica de processamento permanece a mesma
 
----
-
-## Resultado Esperado
+### Teste Pós-Implementação
 
 Após as correções:
-- ✅ Botão "Remover" funcionará corretamente
-- ✅ Logs permitirão debugar problemas OAuth futuros
-- ✅ Stephanie poderá desconectar e reconectar normalmente
+1. O usuário inicia a conexão em `/integracoes`
+2. Sistema redireciona para `api.contaazul.com/auth/authorize`
+3. Conta Azul redireciona de volta para `tributechai.lovable.app/oauth/callback`
+4. Sistema troca o código por tokens em `api.contaazul.com/oauth2/token`
+5. Conexão é salva e usuário vê confirmação de sucesso
