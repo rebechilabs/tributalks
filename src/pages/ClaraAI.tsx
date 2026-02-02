@@ -11,9 +11,12 @@ import { supabase } from "@/integrations/supabase/client";
 import DOMPurify from "dompurify";
 import { CreditDisplay } from "@/components/credits/CreditDisplay";
 import { useUserCredits } from "@/hooks/useUserCredits";
+import { ClaraFeedbackButtons } from "@/components/clara";
+
 interface Message {
   role: "user" | "assistant";
   content: string;
+  userMessage?: string; // Para rastrear a pergunta que gerou esta resposta
 }
 
 const SUGGESTIONS = [
@@ -309,6 +312,16 @@ Como posso te ajudar hoje?`,
                     <User className="w-4 h-4 mt-1 shrink-0" />
                   )}
                 </div>
+                {/* Feedback buttons for assistant messages (skip the first greeting) */}
+                {msg.role === "assistant" && i > 0 && (
+                  <div className="mt-2 pt-2 border-t border-border/30">
+                    <ClaraFeedbackButtons
+                      messageContent={messages[i - 1]?.content || ""}
+                      responseContent={msg.content}
+                      contextScreen="clara-ai"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           ))}

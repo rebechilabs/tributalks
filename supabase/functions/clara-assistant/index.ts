@@ -2071,6 +2071,81 @@ serve(async (req) => {
       console.log(`Cached response for category "${queryCategory}" with TTL ${categoryConfig.ttl_days} days`);
     }
     
+    // ============================================
+    // SALVA CONVERSA NO HISTÓRICO (para memória de longo prazo)
+    // ============================================
+    const sessionId = crypto.randomUUID(); // Idealmente recebido do frontend
+    
+    // Salva mensagem do usuário e resposta da Clara em paralelo
+    try {
+      await Promise.all([
+        supabase.from('clara_conversations').insert({
+          user_id: user.id,
+          session_id: sessionId,
+          role: 'user',
+          content: lastMessage,
+          screen_context: toolSlug || 'chat',
+          model_used: useGemini ? 'gemini-2.5-flash' : 'claude-sonnet-4',
+        }),
+        supabase.from('clara_conversations').insert({
+          user_id: user.id,
+          session_id: sessionId,
+          role: 'assistant',
+          content: assistantMessage,
+          screen_context: toolSlug || 'chat',
+          tools_used: toolSlug ? [toolSlug] : [],
+          model_used: useGemini ? 'gemini-2.5-flash' : 'claude-sonnet-4',
+          tokens_used: assistantMessage.length, // Aproximação
+        }),
+      ]);
+    } catch (convError) {
+      console.error('Error saving conversation:', convError);
+      // Não bloqueia a resposta se falhar
+    }
+    
+    // ============================================
+    // EXTRAI MEMÓRIAS IMPORTANTES (decisões, preferências)
+    // ============================================
+    // Detecta se a conversa contém informação importante para lembrar
+    const memoryPatterns = [
+      { pattern: /minha empresa|meu negócio|nossa empresa/i, category: 'empresa', importance: 7 },
+      { pattern: /decidi|vou fazer|escolhi|prefiro/i, category: 'decisao', importance: 8 },
+      { pattern: /faturamento|receita|margem/i, category: 'financeiro', importance: 6 },
+      { pattern: /simples|lucro real|lucro presumido/i, category: 'regime', importance: 7 },
+      { pattern: /problema|dificuldade|não consigo/i, category: 'suporte', importance: 5 },
+    ];
+    
+    for (const { pattern, category, importance } of memoryPatterns) {
+      if (pattern.test(lastMessage) && lastMessage.length > 30) {
+        try {
+          // Verifica se já existe memória similar recente
+          const { count } = await supabase
+            .from('clara_memory')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .eq('category', category)
+            .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+          
+          // Só cria se não houver memória similar nas últimas 24h
+          if (!count || count < 3) {
+            await supabase.from('clara_memory').insert({
+              user_id: user.id,
+              memory_type: 'context',
+              category,
+              content: `Usuário disse: "${lastMessage.substring(0, 200)}..." / Clara respondeu: "${assistantMessage.substring(0, 200)}..."`,
+              importance,
+              source_screen: toolSlug || 'chat',
+              source_conversation_id: null, // Idealmente linkaria ao ID da conversa
+            });
+            console.log(`Memory extracted: category=${category}, importance=${importance}`);
+          }
+        } catch (memError) {
+          console.error('Error extracting memory:', memError);
+        }
+        break; // Só extrai uma memória por conversa
+      }
+    }
+    
     // Aplica disclaimer automaticamente no pós-processamento
     const finalMessage = appendDisclaimer(assistantMessage, userPlan);
 

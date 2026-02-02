@@ -27,6 +27,7 @@ import { ClaraContextualSuggestion } from "@/components/common/ClaraContextualSu
 import { OnboardingChecklist, FirstMission, GuidedTour, QuickDiagnosticModal } from "@/components/onboarding";
 import { StreakDisplay } from "@/components/achievements";
 import { SwitchCompanyCard } from "@/components/profile/SwitchCompanyCard";
+import { ClaraInsightsPanel } from "@/components/clara";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAchievements } from "@/hooks/useAchievements";
 
@@ -399,6 +400,11 @@ const Dashboard = () => {
         {/* TribuChat - Clara Card (integra o CTA "Por onde começo") */}
         <div className="mb-6" data-tour="clara-card">
           <ClaraCard />
+        </div>
+
+        {/* Clara Insights - Alertas e recomendações proativos */}
+        <div className="mb-6">
+          <ClaraInsightsPanel maxInsights={3} />
         </div>
 
         {/* Guided Tour */}
