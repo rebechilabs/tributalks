@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.91.1";
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.91.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,6 +10,360 @@ interface ToolContext {
   toolName: string;
   toolDescription: string;
   stepByStep: string[];
+}
+
+// ============================================
+// CONTEXTO COMPLETO DO USUÁRIO - Clara com Visibilidade Total
+// ============================================
+interface UserPlatformContext {
+  // Identificação
+  userName: string | null;
+  companyName: string | null;
+  cnpj: string | null;
+  setor: string | null;
+  regime: string | null;
+  plano: string;
+  
+  // Score Tributário
+  score: {
+    total: number | null;
+    grade: string | null;
+    riscoAutuacao: number | null;
+    dimensoes: {
+      conformidade: number;
+      eficiencia: number;
+      risco: number;
+      documentacao: number;
+      gestao: number;
+    } | null;
+    calculadoEm: string | null;
+  } | null;
+  
+  // Financeiro (DRE)
+  financeiro: {
+    receitaBruta: number | null;
+    margemBruta: number | null;
+    margemLiquida: number | null;
+    ebitda: number | null;
+    reformaImpactoPercent: number | null;
+    atualizadoEm: string | null;
+  } | null;
+  
+  // Créditos e Oportunidades
+  oportunidades: {
+    creditosDisponiveis: number;
+    oportunidadesAtivas: number;
+    economiaAnualPotencial: number;
+  };
+  
+  // Progresso
+  progresso: {
+    xmlsProcessados: number;
+    workflowsEmAndamento: number;
+    workflowsConcluidos: number;
+    onboardingCompleto: boolean;
+    checklistItens: string[];
+  };
+  
+  // Engajamento
+  engajamento: {
+    streakDias: number;
+    notificacoesNaoLidas: number;
+  };
+  
+  // Integrações
+  integracoes: {
+    erpConectado: boolean;
+    erpNome: string | null;
+    ultimaSync: string | null;
+    syncStatus: 'success' | 'error' | 'pending' | null;
+  };
+}
+
+// Cache em memória para contexto do usuário (5 minutos)
+const contextCache = new Map<string, { context: UserPlatformContext; timestamp: number }>();
+const CONTEXT_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
+// Busca contexto completo do usuário em paralelo
+async function buildUserContext(supabase: SupabaseClient, userId: string): Promise<UserPlatformContext> {
+  // Verifica cache
+  const cached = contextCache.get(userId);
+  if (cached && Date.now() - cached.timestamp < CONTEXT_CACHE_TTL) {
+    console.log(`Context cache HIT for user ${userId}`);
+    return cached.context;
+  }
+
+  console.log(`Building full context for user ${userId}`);
+
+  // Busca todas as tabelas em paralelo
+  const [
+    profileResult,
+    companyProfileResult,
+    taxScoreResult,
+    dreResult,
+    creditSummaryResult,
+    opportunitiesResult,
+    workflowProgressResult,
+    xmlCountResult,
+    notificationsResult,
+    erpConnectionResult,
+    onboardingResult,
+  ] = await Promise.all([
+    supabase.from("profiles").select("nome, plano, streak_count").eq("user_id", userId).maybeSingle(),
+    supabase.from("company_profile").select("razao_social, cnpj_principal, setor, regime_tributario").eq("user_id", userId).maybeSingle(),
+    supabase.from("tax_score").select("score_total, score_grade, score_conformidade, score_eficiencia, score_risco, score_documentacao, score_gestao, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    supabase.from("company_dre").select("calc_receita_bruta, calc_margem_bruta, calc_margem_liquida, calc_ebitda, reforma_impacto_percentual, updated_at").eq("user_id", userId).order("updated_at", { ascending: false }).limit(1).maybeSingle(),
+    supabase.from("credit_analysis_summary").select("total_potential").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    supabase.from("company_opportunities").select("id, economia_anual_min, economia_anual_max, status").eq("user_id", userId).neq("status", "descartada"),
+    supabase.from("workflow_progress").select("workflow_id, completed_at").eq("user_id", userId),
+    supabase.from("xml_imports").select("id", { count: "exact", head: true }).eq("user_id", userId),
+    supabase.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("read", false),
+    supabase.from("erp_connections").select("erp_type, status, last_sync_at, connection_name").eq("user_id", userId).eq("status", "active").limit(1).maybeSingle(),
+    supabase.from("user_onboarding_progress").select("tour_completed, first_mission_completed, checklist_items, completed_at").eq("user_id", userId).maybeSingle(),
+  ]);
+
+  // Processa resultados
+  const profile = profileResult.data;
+  const companyProfile = companyProfileResult.data;
+  const taxScore = taxScoreResult.data;
+  const dre = dreResult.data;
+  const creditSummary = creditSummaryResult.data;
+  const opportunities = opportunitiesResult.data || [];
+  const workflows = workflowProgressResult.data || [];
+  const xmlCount = xmlCountResult.count || 0;
+  const unreadNotifications = notificationsResult.count || 0;
+  const erpConnection = erpConnectionResult.data;
+  const onboarding = onboardingResult.data;
+
+  // Calcula métricas derivadas
+  const activeOpportunities = opportunities.filter(o => o.status !== 'descartada' && o.status !== 'implementada');
+  const totalAnnualSavings = opportunities.reduce((acc, o) => acc + ((o.economia_anual_min || 0) + (o.economia_anual_max || 0)) / 2, 0);
+  const workflowsInProgress = workflows.filter(w => !w.completed_at).length;
+  const workflowsCompleted = workflows.filter(w => w.completed_at).length;
+
+  // Checa itens do checklist completados
+  const checklistItems: string[] = [];
+  if (onboarding?.checklist_items) {
+    const items = onboarding.checklist_items as Record<string, boolean>;
+    Object.entries(items).forEach(([key, value]) => {
+      if (value) checklistItems.push(key);
+    });
+  }
+
+  const context: UserPlatformContext = {
+    userName: profile?.nome || null,
+    companyName: companyProfile?.razao_social || null,
+    cnpj: companyProfile?.cnpj_principal || null,
+    setor: companyProfile?.setor || null,
+    regime: companyProfile?.regime_tributario || null,
+    plano: profile?.plano || "FREE",
+    
+    score: taxScore ? {
+      total: taxScore.score_total,
+      grade: taxScore.score_grade,
+      riscoAutuacao: null, // Não temos esse campo na tabela atual
+      dimensoes: {
+        conformidade: taxScore.score_conformidade || 0,
+        eficiencia: taxScore.score_eficiencia || 0,
+        risco: taxScore.score_risco || 0,
+        documentacao: taxScore.score_documentacao || 0,
+        gestao: taxScore.score_gestao || 0,
+      },
+      calculadoEm: taxScore.created_at,
+    } : null,
+    
+    financeiro: dre ? {
+      receitaBruta: dre.calc_receita_bruta,
+      margemBruta: dre.calc_margem_bruta,
+      margemLiquida: dre.calc_margem_liquida,
+      ebitda: dre.calc_ebitda,
+      reformaImpactoPercent: dre.reforma_impacto_percentual,
+      atualizadoEm: dre.updated_at,
+    } : null,
+    
+    oportunidades: {
+      creditosDisponiveis: creditSummary?.total_potential || 0,
+      oportunidadesAtivas: activeOpportunities.length,
+      economiaAnualPotencial: totalAnnualSavings,
+    },
+    
+    progresso: {
+      xmlsProcessados: xmlCount,
+      workflowsEmAndamento: workflowsInProgress,
+      workflowsConcluidos: workflowsCompleted,
+      onboardingCompleto: !!onboarding?.completed_at,
+      checklistItens: checklistItems,
+    },
+    
+    engajamento: {
+      streakDias: profile?.streak_count || 0,
+      notificacoesNaoLidas: unreadNotifications,
+    },
+    
+    integracoes: {
+      erpConectado: !!erpConnection,
+      erpNome: erpConnection?.connection_name || erpConnection?.erp_type || null,
+      ultimaSync: erpConnection?.last_sync_at || null,
+      syncStatus: erpConnection?.status === 'active' ? 'success' : erpConnection?.status === 'error' ? 'error' : null,
+    },
+  };
+
+  // Salva no cache
+  contextCache.set(userId, { context, timestamp: Date.now() });
+
+  return context;
+}
+
+// Formata o contexto do usuário para o prompt do LLM
+function formatUserContextForPrompt(ctx: UserPlatformContext): string {
+  const formatCurrency = (value: number | null) => {
+    if (!value) return null;
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(value);
+  };
+
+  const formatPercent = (value: number | null) => {
+    if (value === null || value === undefined) return null;
+    return `${value.toFixed(1)}%`;
+  };
+
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return null;
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('pt-BR');
+  };
+
+  const lines: string[] = [];
+  
+  lines.push('='.repeat(50));
+  lines.push('CONTEXTO DO USUÁRIO (dados reais da plataforma)');
+  lines.push('='.repeat(50));
+  lines.push('');
+
+  // PERFIL
+  lines.push('👤 PERFIL');
+  if (ctx.userName) lines.push(`- Nome: ${ctx.userName}`);
+  if (ctx.companyName) lines.push(`- Empresa: ${ctx.companyName}`);
+  if (ctx.cnpj) lines.push(`- CNPJ: ${ctx.cnpj}`);
+  if (ctx.setor) lines.push(`- Setor: ${ctx.setor}`);
+  if (ctx.regime) lines.push(`- Regime: ${ctx.regime}`);
+  lines.push(`- Plano: ${ctx.plano}`);
+  lines.push('');
+
+  // SCORE TRIBUTÁRIO
+  if (ctx.score) {
+    lines.push('📊 SCORE TRIBUTÁRIO');
+    lines.push(`- Nota: ${ctx.score.grade || 'N/A'} (${ctx.score.total || 0} pontos)`);
+    if (ctx.score.riscoAutuacao !== null) {
+      lines.push(`- Risco de Autuação: ${ctx.score.riscoAutuacao}%`);
+    }
+    if (ctx.score.dimensoes) {
+      const dims = ctx.score.dimensoes;
+      const weakest = Object.entries(dims).reduce((a, b) => a[1] < b[1] ? a : b);
+      lines.push(`- Ponto mais fraco: ${weakest[0]} (score ${weakest[1]})`);
+    }
+    if (ctx.score.calculadoEm) {
+      lines.push(`- Calculado em: ${formatDate(ctx.score.calculadoEm)}`);
+    }
+    lines.push('');
+  }
+
+  // FINANCEIRO (DRE)
+  if (ctx.financeiro) {
+    lines.push('💰 FINANCEIRO (DRE)');
+    if (ctx.financeiro.receitaBruta) lines.push(`- Receita Bruta Mensal: ${formatCurrency(ctx.financeiro.receitaBruta)}`);
+    if (ctx.financeiro.margemBruta !== null) lines.push(`- Margem Bruta: ${formatPercent(ctx.financeiro.margemBruta)}`);
+    if (ctx.financeiro.margemLiquida !== null) lines.push(`- Margem Líquida: ${formatPercent(ctx.financeiro.margemLiquida)}`);
+    if (ctx.financeiro.ebitda) lines.push(`- EBITDA: ${formatCurrency(ctx.financeiro.ebitda)}`);
+    if (ctx.financeiro.reformaImpactoPercent !== null && ctx.financeiro.reformaImpactoPercent !== 0) {
+      const impact = ctx.financeiro.reformaImpactoPercent;
+      const sign = impact > 0 ? '+' : '';
+      lines.push(`- Impacto Reforma 2027: ${sign}${formatPercent(impact)} na margem`);
+    }
+    if (ctx.financeiro.atualizadoEm) lines.push(`- Atualizado em: ${formatDate(ctx.financeiro.atualizadoEm)}`);
+    lines.push('');
+  }
+
+  // OPORTUNIDADES
+  const { creditosDisponiveis, oportunidadesAtivas, economiaAnualPotencial } = ctx.oportunidades;
+  if (creditosDisponiveis > 0 || oportunidadesAtivas > 0) {
+    lines.push('💡 OPORTUNIDADES');
+    if (creditosDisponiveis > 0) lines.push(`- Créditos disponíveis para recuperar: ${formatCurrency(creditosDisponiveis)}`);
+    if (oportunidadesAtivas > 0) lines.push(`- Oportunidades fiscais ativas: ${oportunidadesAtivas}`);
+    if (economiaAnualPotencial > 0) lines.push(`- Economia anual potencial: ${formatCurrency(economiaAnualPotencial)}`);
+    lines.push('');
+  }
+
+  // PROGRESSO
+  const { xmlsProcessados, workflowsEmAndamento, workflowsConcluidos, onboardingCompleto, checklistItens } = ctx.progresso;
+  lines.push('📈 PROGRESSO');
+  lines.push(`- XMLs processados: ${xmlsProcessados}`);
+  if (workflowsEmAndamento > 0) lines.push(`- Workflows em andamento: ${workflowsEmAndamento}`);
+  if (workflowsConcluidos > 0) lines.push(`- Workflows concluídos: ${workflowsConcluidos}`);
+  const checklistTotal = 4;
+  const checklistDone = checklistItens.length;
+  if (!onboardingCompleto && checklistDone < checklistTotal) {
+    const missing = ['score', 'simulation', 'timeline', 'profile'].filter(i => !checklistItens.includes(i));
+    lines.push(`- Onboarding: ${Math.round((checklistDone / checklistTotal) * 100)}% completo (falta: ${missing.join(', ')})`);
+  } else if (onboardingCompleto) {
+    lines.push(`- Onboarding: ✅ Completo`);
+  }
+  lines.push('');
+
+  // INTEGRAÇÕES
+  if (ctx.integracoes.erpConectado) {
+    lines.push('🔗 INTEGRAÇÕES');
+    lines.push(`- ERP: ${ctx.integracoes.erpNome} (conectado)`);
+    if (ctx.integracoes.ultimaSync) {
+      const syncDate = new Date(ctx.integracoes.ultimaSync);
+      const hoursAgo = Math.round((Date.now() - syncDate.getTime()) / (1000 * 60 * 60));
+      lines.push(`- Última sync: há ${hoursAgo} hora${hoursAgo !== 1 ? 's' : ''}`);
+    }
+    const statusIcon = ctx.integracoes.syncStatus === 'success' ? '✅' : ctx.integracoes.syncStatus === 'error' ? '❌' : '⏳';
+    lines.push(`- Status: ${statusIcon} ${ctx.integracoes.syncStatus || 'pendente'}`);
+    lines.push('');
+  }
+
+  // ENGAJAMENTO
+  if (ctx.engajamento.streakDias > 0 || ctx.engajamento.notificacoesNaoLidas > 0) {
+    lines.push('📬 ENGAJAMENTO');
+    if (ctx.engajamento.streakDias > 0) lines.push(`- Streak: ${ctx.engajamento.streakDias} dia${ctx.engajamento.streakDias !== 1 ? 's' : ''} consecutivo${ctx.engajamento.streakDias !== 1 ? 's' : ''}`);
+    if (ctx.engajamento.notificacoesNaoLidas > 0) lines.push(`- Notificações não lidas: ${ctx.engajamento.notificacoesNaoLidas}`);
+    lines.push('');
+  }
+
+  // INSTRUÇÕES PARA O LLM
+  lines.push('-'.repeat(50));
+  lines.push('');
+  lines.push('INSTRUÇÕES DE PERSONALIZAÇÃO:');
+  lines.push('Use este contexto para personalizar suas respostas. Você sabe:');
+  
+  if (ctx.userName) {
+    lines.push(`- Chame o usuário pelo nome (${ctx.userName})`);
+  }
+  if (creditosDisponiveis > 10000) {
+    lines.push(`- Ele tem ${formatCurrency(creditosDisponiveis)} em créditos para recuperar - mencione quando relevante!`);
+  }
+  if (ctx.financeiro?.reformaImpactoPercent && ctx.financeiro.reformaImpactoPercent < 0) {
+    lines.push(`- A margem dele vai cair ${Math.abs(ctx.financeiro.reformaImpactoPercent).toFixed(1)}pp com a Reforma - alerte se relevante`);
+  }
+  if (ctx.score && ctx.score.dimensoes) {
+    const dims = ctx.score.dimensoes;
+    const weakest = Object.entries(dims).reduce((a, b) => a[1] < b[1] ? a : b);
+    lines.push(`- O ponto mais fraco é ${weakest[0]} - sugira melhorar se perguntarem sobre score`);
+  }
+  if (workflowsEmAndamento > 0) {
+    lines.push(`- Ele tem ${workflowsEmAndamento} workflow${workflowsEmAndamento !== 1 ? 's' : ''} em andamento - pergunte se precisa de ajuda`);
+  }
+  if (!ctx.financeiro) {
+    lines.push('- Ele ainda não preencheu o DRE - priorize isso para análises financeiras');
+  }
+  if (xmlsProcessados === 0) {
+    lines.push('- Ele ainda não importou XMLs - sugira importar para análises mais precisas');
+  }
+  
+  lines.push('');
+
+  return lines.join('\n');
 }
 
 // ============================================
@@ -787,7 +1141,8 @@ const buildSystemPrompt = (
   toolContext: ToolContext | null, 
   userPlan: string,
   userName: string | null = null,
-  isSimple: boolean = false
+  isSimple: boolean = false,
+  userContext: UserPlatformContext | null = null
 ): string => {
   const nameContext = userName 
     ? `O nome do usuário é ${userName}. Use-o naturalmente na primeira resposta (ex: "Oi ${userName}!"). Nas respostas seguintes, use o nome dele pelo menos uma vez de forma natural.`
@@ -795,7 +1150,23 @@ const buildSystemPrompt = (
 
   // Query simples = prompt slim (economia de tokens)
   if (isSimple) {
-    return `${CLARA_CORE_SLIM}\n\n${nameContext}\n\nO usuário está no plano: ${userPlan}`;
+    let slimPrompt = `${CLARA_CORE_SLIM}\n\n${nameContext}\n\nO usuário está no plano: ${userPlan}`;
+    
+    // Adiciona contexto mínimo mesmo em queries simples
+    if (userContext) {
+      const quickContext: string[] = [];
+      if (userContext.oportunidades.creditosDisponiveis > 10000) {
+        quickContext.push(`Créditos disponíveis: R$ ${(userContext.oportunidades.creditosDisponiveis / 1000).toFixed(0)}k`);
+      }
+      if (userContext.score?.grade) {
+        quickContext.push(`Score: ${userContext.score.grade}`);
+      }
+      if (quickContext.length > 0) {
+        slimPrompt += `\n\nContexto rápido: ${quickContext.join(' | ')}`;
+      }
+    }
+    
+    return slimPrompt;
   }
 
   // Contexto de escopo por plano
@@ -806,6 +1177,11 @@ Se ele perguntar sobre ferramentas de planos superiores, você pode explicar bre
 
   // Query complexa = prompt completo v4
   let prompt = `${CLARA_CORE_FULL}\n\n${nameContext}${scopeContext}`;
+  
+  // NOVO: Adiciona contexto completo do usuário
+  if (userContext) {
+    prompt += `\n\n${formatUserContextForPrompt(userContext)}`;
+  }
   
   // Adiciona contexto da ferramenta atual
   if (toolContext) {
@@ -855,18 +1231,13 @@ serve(async (req) => {
       });
     }
 
-    // Get user plan, name, and check if has data
-    const [profileResult, dreResult, xmlResult] = await Promise.all([
-      supabase.from("profiles").select("plano, nome").eq("user_id", user.id).single(),
-      supabase.from("company_dre").select("id").eq("user_id", user.id).limit(1),
-      supabase.from("xml_imports").select("id").eq("user_id", user.id).limit(1),
-    ]);
-
-    const profile = profileResult.data;
-    const rawPlan = profile?.plano || "FREE";
-    const userPlan = PLAN_MAPPING[rawPlan] || "FREE";
-    const userName = profile?.nome || null;
-    const hasUserData = (dreResult.data?.length || 0) > 0 || (xmlResult.data?.length || 0) > 0;
+    // NOVO: Busca contexto completo do usuário em paralelo
+    const userContext = await buildUserContext(supabase, user.id);
+    
+    // Extrai valores básicos do contexto
+    const userPlan = PLAN_MAPPING[userContext.plano] || "FREE";
+    const userName = userContext.userName;
+    const hasUserData = userContext.progresso.xmlsProcessados > 0 || userContext.financeiro !== null;
 
     const { messages, toolSlug, isGreeting, getStarters } = await req.json();
 
@@ -935,7 +1306,7 @@ serve(async (req) => {
       }
     }
     
-    const systemPrompt = buildSystemPrompt(toolContext, userPlan, userName, isSimple);
+    const systemPrompt = buildSystemPrompt(toolContext, userPlan, userName, isSimple, userContext);
 
     // Check if user is asking "Por onde eu começo?" and return plan-specific response
     const lastUserMessage = lastMessage.toLowerCase();
