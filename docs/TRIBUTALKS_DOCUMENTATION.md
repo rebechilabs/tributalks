@@ -2,7 +2,17 @@
 
 ## Resumo Executivo
 
-O TribuTalks é uma **plataforma SaaS de inteligência tributária** voltada para CEOs e CFOs de empresas com faturamento acima de R$ 1 milhão/mês. A plataforma ajuda empresas a se prepararem para a **Reforma Tributária brasileira** (2026-2033), oferecendo simuladores, diagnósticos, IA assistente e comunidade.
+O TribuTalks é uma **plataforma SaaS de inteligência tributária AI-First** voltada para CEOs e CFOs de empresas com faturamento acima de R$ 1 milhão/mês. A plataforma ajuda empresas a se prepararem para a **Reforma Tributária brasileira** (2026-2033), oferecendo simuladores, diagnósticos, IA assistente com memória de longo prazo e comunidade.
+
+### Diferenciais AI-First
+
+| Característica | Implementação |
+|----------------|---------------|
+| **Memória de Longo Prazo** | Clara lembra contexto entre sessões via `clara_memory` |
+| **Feedback Loop** | Coleta thumbs up/down para fine-tuning futuro |
+| **Insights Proativos** | Sistema detecta problemas e gera alertas automáticos |
+| **Contexto Rico** | Dados reais do usuário (DRE, Score, créditos) injetados no prompt |
+| **Aprendizado Contínuo** | Cada interação alimenta base de treinamento proprietária |
 
 ---
 
@@ -16,7 +26,7 @@ O TribuTalks é uma **plataforma SaaS de inteligência tributária** voltada par
 | Falta de visibilidade sobre impacto no caixa | NEXUS: 8 KPIs em tempo real |
 | Créditos tributários não aproveitados | Radar de Créditos (24 regras automatizadas) |
 | Precificação sem considerar novos impostos | PriceGuard com gross-up reverso |
-| Dúvidas tributárias fora do horário comercial | Clara AI 24/7 |
+| Dúvidas tributárias fora do horário comercial | Clara AI 24/7 com memória e contexto |
 
 ---
 
@@ -65,7 +75,7 @@ O TribuTalks é uma **plataforma SaaS de inteligência tributária** voltada par
 ### EXTRAS
 | Ferramenta | Descrição | Plano Mínimo |
 |------------|-----------|--------------|
-| Clara AI | Copiloto de decisão tributária | STARTER |
+| Clara AI | Copiloto de decisão tributária com memória | STARTER |
 | Analisador de Documentos | IA analisa contratos | NAVIGATOR |
 | Workflows Guiados | Jornadas estruturadas (4 roteiros) | NAVIGATOR |
 | Comunidade Circle | Network + fóruns + lives | NAVIGATOR |
@@ -81,6 +91,21 @@ O TribuTalks é uma **plataforma SaaS de inteligência tributária** voltada par
 | Categorias | geral, reforma, indicacao, sistema |
 | Realtime | Sincronização instantânea via WebSocket |
 | E-mails | Apenas métricas diárias (admin) e contatos diretos |
+
+---
+
+## Clara AI — Insights Proativos
+
+O sistema de insights proativos monitora os dados do usuário e gera alertas automáticos:
+
+| Tipo | Exemplos |
+|------|----------|
+| **Alertas** | Score abaixo de 50, margem crítica |
+| **Recomendações** | Recalcular Score após 30 dias, importar mais XMLs |
+| **Oportunidades** | Créditos acima de R$ 10k identificados |
+| **Riscos** | Impacto negativo da Reforma na margem |
+
+Os insights aparecem no Dashboard com CTAs diretos para ação.
 
 ---
 
@@ -145,8 +170,8 @@ Ao assinar Professional, o usuário recebe automaticamente:
 
 | Feature | Status |
 |---------|--------|
-| Dashboard Analytics (KPIs avançados) | Planejado |
-| Multi-empresa (gestão de grupo) | Planejado |
+| Fine-tuning da Clara com dados coletados | Em coleta |
+| Embeddings vetoriais (busca semântica) | Planejado |
 | App Mobile (iOS/Android) | Planejado |
 
 ---
@@ -162,11 +187,94 @@ Ao assinar Professional, o usuário recebe automaticamente:
 | Estado | TanStack Query + Context API |
 | Backend | Supabase (Lovable Cloud) |
 | Edge Functions | Deno (Supabase Functions) |
-| AI | Claude Sonnet 4 via Lovable AI |
+| AI | Claude Sonnet 4 + Gemini 2.5 Flash via Lovable AI |
 | Pagamentos | Stripe (subscriptions + one-off) |
 | E-mail | Resend (transacional) + Beehiiv (newsletter) |
 | Comunidade | Circle.so |
 | PWA | vite-plugin-pwa |
+
+---
+
+## Arquitetura AI-First
+
+### Visão Geral
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        FRONTEND                                  │
+│  ┌──────────┐  ┌──────────────┐  ┌───────────────────────────┐  │
+│  │ Chat UI  │  │ Feedback 👍👎│  │ Insights Panel (proativo) │  │
+│  └────┬─────┘  └──────┬───────┘  └────────────┬──────────────┘  │
+└───────┼───────────────┼───────────────────────┼─────────────────┘
+        │               │                       │
+        ▼               ▼                       ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     EDGE FUNCTIONS                               │
+│  ┌──────────────────┐  ┌──────────────────────────────────────┐ │
+│  │ clara-assistant  │  │ generate-clara-insights (cron)      │ │
+│  │ - Salva conversas│  │ - Analisa dados                     │ │
+│  │ - Extrai memórias│  │ - Gera alertas automáticos          │ │
+│  │ - Injeta contexto│  │ - Cria recomendações                │ │
+│  └────────┬─────────┘  └──────────────────────────────────────┘ │
+└───────────┼─────────────────────────────────────────────────────┘
+            │
+            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     DATABASE (Supabase)                          │
+│  ┌────────────────┐  ┌──────────────┐  ┌─────────────────────┐  │
+│  │ clara_memory   │  │ clara_feedback│  │ clara_conversations│  │
+│  │ (longo prazo)  │  │ (fine-tuning) │  │ (histórico)        │  │
+│  └────────────────┘  └──────────────┘  └─────────────────────┘  │
+│  ┌────────────────┐  ┌──────────────────────────────────────┐   │
+│  │ clara_insights │  │ clara_knowledge_base (regras)        │   │
+│  │ (proativo)     │  │ clara_cache (respostas frequentes)   │   │
+│  └────────────────┘  └──────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Tabelas AI-First
+
+| Tabela | Descrição | Uso |
+|--------|-----------|-----|
+| `clara_memory` | Memórias de longo prazo por usuário | Contexto entre sessões |
+| `clara_conversations` | Histórico de todas as conversas | Continuidade de contexto |
+| `clara_feedback` | Avaliações 👍👎 das respostas | Base para fine-tuning |
+| `clara_insights` | Insights proativos gerados | Alertas automáticos |
+| `clara_knowledge_base` | Base de conhecimento jurídico | RAG / Injeção de contexto |
+| `clara_cache` | Cache de respostas frequentes | Economia de tokens |
+
+### Fluxo de Coleta de Dados (Data Flywheel)
+
+```
+Usuário faz pergunta
+       ↓
+Clara responde (com contexto injetado)
+       ↓
+Usuário avalia 👍 ou 👎
+       ↓
+Sistema salva:
+├── clara_conversations (pergunta + resposta)
+├── clara_feedback (rating + comentário opcional)
+└── clara_memory (se detectar informação importante)
+       ↓
+Admin exporta JSONL para fine-tuning
+```
+
+### Painel Admin: Training Data Center
+
+Rota: `/admin/training-data`
+
+| Aba | Conteúdo |
+|-----|----------|
+| **Visão Geral** | KPIs de coleta, prontidão para fine-tuning |
+| **Feedback** | Lista de avaliações com filtros |
+| **Conversas** | Histórico completo de interações |
+| **Memórias** | Contextos extraídos automaticamente |
+
+Funcionalidades:
+- Exportar feedbacks positivos em formato JSONL (OpenAI fine-tuning)
+- Exportar feedbacks negativos em CSV para análise
+- Indicadores de prontidão (metas: 100 positivos, 20 negativos, 50 memórias)
 
 ---
 
@@ -178,6 +286,10 @@ src/
 │   ├── ui/                    # shadcn/ui (50+ componentes)
 │   ├── landing/               # Página de vendas
 │   ├── dashboard/             # Layout + cards do dashboard
+│   ├── clara/                 # Componentes AI-First
+│   │   ├── ClaraFeedbackButtons.tsx   # Thumbs up/down
+│   │   ├── ClaraInsightCard.tsx       # Card de insight
+│   │   └── ClaraInsightsPanel.tsx     # Painel de insights
 │   ├── nexus/                 # NEXUS Command Center
 │   ├── credits/               # Radar de Créditos
 │   ├── dre/                   # DRE Inteligente
@@ -186,14 +298,19 @@ src/
 │   ├── referral/              # Programa de Indicação
 │   └── common/                # Componentes compartilhados
 ├── pages/
-│   ├── Dashboard.tsx          # Home logada
+│   ├── Dashboard.tsx          # Home logada (com InsightsPanel)
 │   ├── Nexus.tsx              # Centro de Comando
-│   ├── ClaraAI.tsx            # Interface Clara AI (Copiloto Tributário)
+│   ├── ClaraAI.tsx            # Interface Clara AI (com Feedback)
 │   ├── Indicar.tsx            # Programa de Indicação
 │   ├── calculadora/           # Calculadoras (RTC, NBS, Split)
-│   └── admin/                 # Painel administrativo
+│   └── admin/
+│       ├── AdminDashboard.tsx     # Painel admin principal
+│       ├── AdminTrainingData.tsx  # Training Data Center
+│       └── ...
 ├── hooks/
 │   ├── useAuth.tsx            # Autenticação + perfil
+│   ├── useClaraMemory.ts      # Memória + feedback + insights
+│   ├── useClaraContext.ts     # Contexto de navegação
 │   ├── useNexusData.ts        # 8 KPIs do NEXUS
 │   ├── useReferral.ts         # Sistema de indicação
 │   ├── useNotifications.ts    # Notificações realtime
@@ -216,7 +333,8 @@ src/
 
 | Função | Descrição |
 |--------|-----------|
-| `clara-assistant` | Orquestra Clara AI (Claude Sonnet 4) |
+| `clara-assistant` | Orquestra Clara AI (Claude/Gemini) + salva conversas + extrai memórias |
+| `generate-clara-insights` | Analisa dados e gera insights proativos |
 | `stripe-webhook` | Processa assinaturas Stripe + envia e-mail welcome |
 | `calculate-rtc` | Calcula CBS/IBS/IS via API Gov |
 | `calculate-tax-score` | Gera score tributário (0-1000) |
@@ -234,12 +352,27 @@ src/
 
 ## Tabelas Supabase (Principais)
 
+### Core
 | Tabela | Descrição |
 |--------|-----------|
 | `profiles` | Usuários + plano + stripe/mp IDs |
 | `company_profile` | Perfil completo da empresa (100+ campos) |
 | `company_dre` | DREs + cálculos + impacto reforma |
 | `tax_score` | Score tributário + dimensões |
+
+### AI-First
+| Tabela | Descrição |
+|--------|-----------|
+| `clara_memory` | Memórias de longo prazo (contexto, decisões, preferências) |
+| `clara_conversations` | Histórico de conversas (user + assistant) |
+| `clara_feedback` | Avaliações de respostas (positive, negative, neutral) |
+| `clara_insights` | Insights proativos (alertas, recomendações, riscos) |
+| `clara_knowledge_base` | Base de conhecimento jurídico/fiscal |
+| `clara_cache` | Cache de respostas frequentes |
+
+### Operacional
+| Tabela | Descrição |
+|--------|-----------|
 | `identified_credits` | Créditos encontrados nos XMLs |
 | `company_opportunities` | Match usuário × oportunidades |
 | `notifications` | Sistema de notificações |
@@ -250,7 +383,47 @@ src/
 
 ---
 
-## Clara AI — Arquitetura v4
+## Clara AI — Arquitetura v5 (AI-First)
+
+### Componentes do Sistema
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     CLARA AI SYSTEM                              │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌──────────────────┐    ┌──────────────────┐                   │
+│  │ KNOWLEDGE CORE   │    │ DECISION CORE    │                   │
+│  │ (25 heurísticas) │    │ (regras de       │                   │
+│  │                  │    │  interpretação)  │                   │
+│  └────────┬─────────┘    └────────┬─────────┘                   │
+│           │                       │                              │
+│           ▼                       ▼                              │
+│  ┌────────────────────────────────────────────────────┐         │
+│  │              CONTEXT INJECTION                      │         │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────────────┐  │         │
+│  │  │ User Data│  │ Memory   │  │ Knowledge Base   │  │         │
+│  │  │ (DRE,    │  │ (longo   │  │ (jurídico/       │  │         │
+│  │  │ Score...)│  │  prazo)  │  │  fiscal)         │  │         │
+│  │  └──────────┘  └──────────┘  └──────────────────┘  │         │
+│  └────────────────────────────────────────────────────┘         │
+│                           │                                      │
+│                           ▼                                      │
+│  ┌────────────────────────────────────────────────────┐         │
+│  │              LLM (Claude Sonnet 4 / Gemini)        │         │
+│  └────────────────────────────────────────────────────┘         │
+│                           │                                      │
+│                           ▼                                      │
+│  ┌────────────────────────────────────────────────────┐         │
+│  │              POST-PROCESSING                        │         │
+│  │  - Disclaimer jurídico                             │         │
+│  │  - Salva conversa                                  │         │
+│  │  - Extrai memórias importantes                     │         │
+│  │  - Cache de respostas frequentes                   │         │
+│  └────────────────────────────────────────────────────┘         │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ### Prompt Mestre (3 camadas)
 
@@ -267,24 +440,17 @@ src/
    - Cada ferramenta tem: nome, descrição, passo-a-passo
    - Usado para ajuda contextual
 
-### Fluxo de Resposta
+### Extração de Memórias
 
-```text
-Mensagem do usuário
-       ↓
-Detecta tópico (TOPIC_KEYWORDS)
-       ↓
-Verifica escopo do plano (PLAN_TOOL_SCOPE)
-       ↓
-Se fora do escopo → resposta educada de upgrade
-       ↓
-Se simples (saudação) → usa CLARA_CORE_SLIM
-Se complexa → usa CLARA_CORE_FULL
-       ↓
-Adiciona disclaimer jurídico (se necessário)
-       ↓
-Streaming SSE para frontend
-```
+O sistema detecta padrões nas conversas e extrai memórias automaticamente:
+
+| Padrão | Categoria | Importância |
+|--------|-----------|-------------|
+| "minha empresa", "meu negócio" | empresa | 7 |
+| "decidi", "vou fazer", "prefiro" | decisao | 8 |
+| "faturamento", "receita", "margem" | financeiro | 6 |
+| "simples", "lucro real", "presumido" | regime | 7 |
+| "problema", "dificuldade" | suporte | 5 |
 
 ### Guardrails
 
@@ -432,6 +598,8 @@ CREATE POLICY "Users can update own profile"
 | `executive_report_logs` | Envios de relatório executivo |
 | `stripe_subscription_events` | Eventos do Stripe |
 | `credit_usage` | Uso de créditos Clara AI |
+| `clara_conversations` | Histórico de interações Clara |
+| `clara_feedback` | Avaliações de qualidade |
 
 ---
 
@@ -450,6 +618,7 @@ CREATE POLICY "Users can update own profile"
 - **TanStack Query**: Cache e refetch inteligente
 - **Lazy loading**: Componentes pesados carregados sob demanda
 - **Realtime seletivo**: Apenas tabelas críticas (notifications)
+- **Clara Cache**: Respostas frequentes cacheadas por categoria
 
 ---
 
@@ -499,4 +668,29 @@ A rota `/tribubot` redireciona automaticamente para `/clara-ai` para manter comp
 
 ---
 
-Este documento cobre tanto a **visão de negócio** (ferramentas, planos, jornadas) quanto a **visão técnica** (arquitetura, código, integrações) do TribuTalks.
+## Estratégia AI-First: Próximos Passos
+
+### Fase 1: Coleta de Dados (ATUAL)
+- [x] Tabelas de memória, feedback e conversas
+- [x] Botões de thumbs up/down no chat
+- [x] Extração automática de memórias
+- [x] Painel admin Training Data Center
+- [x] Export JSONL para fine-tuning
+
+### Fase 2: RAG Semântico
+- [ ] Habilitar pgvector para embeddings
+- [ ] Embeddings da knowledge_base
+- [ ] Busca semântica em memórias
+- [ ] Threshold de similaridade configurável
+
+### Fase 3: Fine-Tuning
+- [ ] Atingir 100+ feedbacks positivos
+- [ ] Curar dataset (remover ruído)
+- [ ] Fine-tune modelo especializado
+- [ ] A/B test vs modelo base
+
+### Fase 4: Agentes Autônomos
+- [ ] Clara executa ações (não só responde)
+- [ ] Workflows end-to-end automatizados
+- [ ] UI "invisível" (auditoria apenas)
+- [ ] MCP para integração cross-tool
