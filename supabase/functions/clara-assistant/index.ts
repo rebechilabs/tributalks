@@ -1513,11 +1513,36 @@ const buildSystemPrompt = (
     return slimPrompt;
   }
 
-  // Contexto de escopo por plano
+  // Contexto de escopo por plano - REGRA CRÍTICA SOBRE UPGRADES
+  const planDescriptions: Record<string, string> = {
+    'FREE': 'Grátis (acesso básico)',
+    'STARTER': 'Starter (5 ferramentas essenciais)',
+    'NAVIGATOR': 'Navigator (ferramentas avançadas + simuladores)',
+    'PROFESSIONAL': 'Professional (diagnóstico automatizado + XMLs ilimitados + DRE + Radar de Créditos + Oportunidades)',
+    'ENTERPRISE': 'Enterprise (tudo + consultoria jurídica ilimitada)',
+  };
+  
+  const planDescription = planDescriptions[userPlan] || planDescriptions['FREE'];
+  
   const scopeContext = `
-IMPORTANTE - ESCOPO POR PLANO:
-O usuário está no plano ${userPlan}. Você só pode dar orientações detalhadas sobre as ferramentas disponíveis no plano dele.
-Se ele perguntar sobre ferramentas de planos superiores, você pode explicar brevemente o que a ferramenta faz, mas deve indicar educadamente que precisa de upgrade para usar.`;
+REGRA CRÍTICA - PLANO DO USUÁRIO (NUNCA IGNORE):
+O usuário está no plano ${userPlan} (${planDescription}).
+
+${userPlan === 'PROFESSIONAL' || userPlan === 'ENTERPRISE' ? `
+⚠️ ESTE USUÁRIO JÁ ESTÁ EM UM PLANO PAGO AVANÇADO!
+- NUNCA sugira upgrade para este usuário. Ele já tem acesso a praticamente tudo.
+- NUNCA diga que ele precisa de outro plano. Ele já paga pelo Professional/Enterprise.
+- Foque em ajudá-lo a usar TODAS as ferramentas que ele já tem acesso.
+- Se ele perguntar sobre algo, AJUDE DIRETAMENTE. Não bloqueie com "precisa de upgrade".
+- As únicas ferramentas que Professional não tem são: Painel Executivo e Consultoria Jurídica (exclusivas Enterprise).
+` : userPlan === 'NAVIGATOR' ? `
+Este usuário está no plano Navigator e tem acesso às ferramentas avançadas.
+Ele NÃO tem acesso a: DRE Inteligente, Radar de Créditos, Análise de XMLs ilimitada, Oportunidades Fiscais, Margem Ativa, NEXUS.
+Para essas ferramentas, você pode explicar o que fazem mas indique que são do plano Professional.
+` : `
+Este usuário está no plano ${userPlan}. Você pode explicar todas as ferramentas, mas indique quando algo é de plano superior.
+`}
+Se ele perguntar sobre ferramentas de planos superiores, você pode explicar brevemente o que a ferramenta faz, mas só indique upgrade se for REALMENTE necessário.`;
 
   // Query complexa = prompt completo v4
   let prompt = `${CLARA_CORE_FULL}\n\n${nameContext}${scopeContext}`;
