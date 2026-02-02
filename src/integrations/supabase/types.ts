@@ -3539,6 +3539,8 @@ export type Database = {
         | "financeiro"
         | "empresa"
         | "full"
+        | "auto"
+        | "manual"
       erp_type: "omie" | "bling" | "contaazul" | "tiny" | "sankhya" | "totvs"
     }
     CompositeTypes: {
@@ -3677,6 +3679,8 @@ export const Constants = {
         "financeiro",
         "empresa",
         "full",
+        "auto",
+        "manual",
       ],
       erp_type: ["omie", "bling", "contaazul", "tiny", "sankhya", "totvs"],
     },

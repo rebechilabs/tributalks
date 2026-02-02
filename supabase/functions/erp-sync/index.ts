@@ -47,6 +47,26 @@ async function decryptCredentials(encryptedBase64: string): Promise<ERPCredentia
   return JSON.parse(plaintext);
 }
 
+async function encryptCredentials(data: ERPCredentials): Promise<string> {
+  const key = await getEncryptionKey();
+  const iv = crypto.getRandomValues(new Uint8Array(12)); // 12 bytes IV for AES-GCM
+  const plaintext = new TextEncoder().encode(JSON.stringify(data));
+  
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv },
+    key,
+    plaintext
+  );
+  
+  // Combine IV + ciphertext (includes auth tag)
+  const combined = new Uint8Array(iv.length + ciphertext.byteLength);
+  combined.set(iv, 0);
+  combined.set(new Uint8Array(ciphertext), iv.length);
+  
+  // Base64 encode
+  return btoa(String.fromCharCode(...combined));
+}
+
 function isEncryptedCredentials(credentials: unknown): boolean {
   // Encrypted credentials are stored as a base64 string
   // Plain credentials are stored as a JSON object
@@ -89,6 +109,8 @@ interface ERPCredentials {
   // Conta Azul
   client_id?: string;
   client_secret?: string;
+  refresh_token?: string;
+  expires_at?: number;
   // Tiny
   token?: string;
   // Sankhya
@@ -541,13 +563,85 @@ class BlingAdapter implements ERPAdapter {
 }
 
 // ============================================================================
-// CONTA AZUL Adapter
+// CONTA AZUL Adapter (with OAuth 2.0 Refresh Token Support)
 // ============================================================================
 
 class ContaAzulAdapter implements ERPAdapter {
   private baseUrl = 'https://api.contaazul.com/v1';
+  // deno-lint-ignore no-explicit-any
+  private supabase: any = null;
+  private connectionId: string | null = null;
+  private credentials: ERPCredentials | null = null;
 
-  private async makeRequest(endpoint: string, credentials: ERPCredentials) {
+  // deno-lint-ignore no-explicit-any
+  setContext(supabase: any, connectionId: string, credentials: ERPCredentials) {
+    this.supabase = supabase;
+    this.connectionId = connectionId;
+    this.credentials = credentials;
+  }
+
+  private async refreshAccessToken(): Promise<string> {
+    if (!this.credentials?.client_id || !this.credentials?.client_secret || !this.credentials?.refresh_token) {
+      throw new Error('Credenciais incompletas para renovação do token. Por favor, reconecte o Conta Azul.');
+    }
+
+    console.log('[ContaAzulAdapter] Refreshing access token...');
+
+    const auth = btoa(`${this.credentials.client_id}:${this.credentials.client_secret}`);
+    
+    const response = await fetch('https://auth.contaazul.com/oauth2/token', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: this.credentials.refresh_token,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[ContaAzulAdapter] Refresh token failed:', errorText);
+      throw new Error('Sua autorização do Conta Azul expirou. Por favor, reconecte sua conta.');
+    }
+
+    const data = await response.json();
+    console.log('[ContaAzulAdapter] Token refreshed successfully');
+
+    // Update credentials in memory
+    this.credentials.access_token = data.access_token;
+    if (data.refresh_token) {
+      this.credentials.refresh_token = data.refresh_token;
+    }
+    // Set expiration (Conta Azul tokens typically last 1 hour)
+    this.credentials.expires_at = Date.now() + (data.expires_in || 3600) * 1000;
+
+    // Persist updated credentials to database
+    if (this.supabase && this.connectionId) {
+      try {
+        const encryptedCreds = await encryptCredentials(this.credentials);
+        await this.supabase
+          .from('erp_connections')
+          .update({ 
+            credentials: encryptedCreds,
+            status: 'active',
+            status_message: 'Token renovado automaticamente',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', this.connectionId);
+        console.log('[ContaAzulAdapter] Credentials persisted to database');
+      } catch (persistError) {
+        console.error('[ContaAzulAdapter] Error persisting credentials:', persistError);
+        // Continue anyway - token is valid in memory
+      }
+    }
+
+    return data.access_token;
+  }
+
+  private async makeRequest(endpoint: string, credentials: ERPCredentials, retryCount = 0): Promise<any> {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method: 'GET',
       headers: {
@@ -555,6 +649,25 @@ class ContaAzulAdapter implements ERPAdapter {
         'Accept': 'application/json',
       },
     });
+
+    // Check for token expiration (401 Unauthorized)
+    if (response.status === 401 && retryCount === 0) {
+      const errorText = await response.text();
+      
+      // Check if it's a token expiration issue
+      if (errorText.includes('invalid_token') || errorText.includes('expired') || errorText.includes('Unauthorized')) {
+        console.log('[ContaAzulAdapter] Token expired, attempting refresh...');
+        
+        try {
+          const newToken = await this.refreshAccessToken();
+          // Retry the request with new token
+          const updatedCredentials = { ...credentials, access_token: newToken };
+          return this.makeRequest(endpoint, updatedCredentials, 1);
+        } catch (refreshError) {
+          throw refreshError; // Propagate the user-friendly error message
+        }
+      }
+    }
 
     if (!response.ok) {
       const error = await response.text();
@@ -1232,7 +1345,7 @@ serve(async (req) => {
         .insert({
           connection_id: connection.id,
           user_id: userId,
-          sync_type: 'manual',
+          sync_type: 'full',
           status: 'running',
           started_at: new Date().toISOString(),
           details: { modules: modules || connection.sync_config?.modules || ['nfe', 'produtos', 'financeiro', 'empresa'] },
@@ -1252,6 +1365,12 @@ serve(async (req) => {
         const adapter = getAdapter(connection.erp_type);
         // Decrypt credentials (supports both encrypted and legacy plain formats)
         const credentials = await getDecryptedCredentials(connection.credentials);
+        
+        // Set context for ContaAzul adapter (for token refresh support)
+        if (connection.erp_type === 'contaazul' && adapter instanceof ContaAzulAdapter) {
+          (adapter as ContaAzulAdapter).setContext(supabase, connection.id, credentials);
+        }
+        
         const modulesToSync = modules || connection.sync_config?.modules || ['nfe', 'produtos', 'financeiro', 'empresa'];
 
         // Sync Empresa
