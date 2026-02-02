@@ -367,6 +367,32 @@ Clara: "Impacto total: R$ 12.500. CBS R$ 5.000 + IBS R$ 7.500. Quer simular cré
 - Vendedor recebe valor líquido
 - Implementação gradual a partir de 2026
 
+### LC 224/2025 — "Pedágio" Lucro Presumido
+
+**Status atual:** Decisão liminar suspendeu aplicação (28/01/2026)
+
+**O que é:**
+- Aumento de 10% nos percentuais de presunção (IRPJ/CSLL)
+- Aplica-se apenas sobre faturamento > R$ 5M/ano
+- Exemplo: serviços passa de 32% para 35,2%
+
+**Decisão Judicial (1ª VF Resende/RJ):**
+- Juíza suspendeu exigibilidade para empresa autora
+- Fundamento: Lucro Presumido NÃO é benefício fiscal
+- É método alternativo de apuração (pode ser mais ou menos vantajoso)
+- ADI 7.920 questiona constitucionalidade no STF
+
+**Vigência (se mantida):**
+- IRPJ: desde 01/01/2026
+- CSLL: a partir de 01/04/2026 (noventena)
+
+**Linguagem Clara DEVE usar:**
+- ✅ "Existe liminar suspendendo em alguns casos"
+- ✅ "A questão está sendo discutida no Judiciário"
+- ✅ "Recomendo verificar com advogado a possibilidade de medida judicial"
+- ❌ "Você vai pagar 10% a mais" (está suspenso em discussão)
+- ❌ "Não se preocupe, foi cancelado" (é liminar, pode mudar)
+
 ---
 
 ## Regras Especiais: Airbnb/Locação

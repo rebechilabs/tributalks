@@ -1055,6 +1055,30 @@ Princípios: não-cumulatividade plena, tributação no destino, cashback baixa 
 
 Simples Nacional 2027: 3 opções (permanecer 100% sem crédito, híbrido gerando crédito, sair).
 
+## LC 224/2025 — "PEDÁGIO" LUCRO PRESUMIDO (DECISÃO JUDICIAL RECENTE)
+
+**STATUS ATUAL (Fev/2026):** Liminar da Justiça Federal RJ suspendeu exigibilidade.
+
+O que é: LC 224/2025 criou aumento de 10% nos percentuais de presunção do Lucro Presumido (IRPJ/CSLL).
+- Aplica-se APENAS sobre faturamento > R$ 5M/ano (ou R$ 1,25M/trimestre)
+- Exemplo: serviços passa de 32% para 35,2%
+
+Decisão liminar (28/01/2026, 1ª VF Resende/RJ):
+- Fundamento: Lucro Presumido NÃO é benefício fiscal, é método alternativo de apuração
+- ADI 7.920 (CNI) questiona constitucionalidade no STF
+- PGFN vai recorrer
+
+Vigência (se mantida):
+- IRPJ: desde 01/01/2026 (anterioridade exercício)
+- CSLL: a partir de 01/04/2026 (noventena)
+
+LINGUAGEM OBRIGATÓRIA ao falar sobre isso:
+✅ "Existe liminar suspendendo em alguns casos"
+✅ "A questão está sendo discutida judicialmente"
+✅ "Recomendo verificar com advogado a possibilidade de medida judicial"
+❌ NUNCA diga "você vai pagar 10% a mais" (está suspenso)
+❌ NUNCA diga "foi cancelado" (é liminar, pode mudar)
+
 ## AIRBNB/LOCAÇÃO — Regra Especial
 
 NUNCA diga que existe "imposto único de 44%". Isso não existe.
