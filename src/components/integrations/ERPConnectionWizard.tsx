@@ -17,11 +17,11 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   Loader2, 
   CheckCircle2, 
-  XCircle, 
   ArrowRight, 
   ArrowLeft,
   Eye,
-  EyeOff
+  EyeOff,
+  ExternalLink
 } from "lucide-react";
 
 interface ERPInfo {
@@ -30,6 +30,7 @@ interface ERPInfo {
   logo: string;
   color: string;
   fields: { key: string; label: string; type: string; placeholder: string }[];
+  useOAuth?: boolean;
 }
 
 interface ERPConnectionWizardProps {
@@ -46,6 +47,9 @@ const SYNC_MODULES = [
   { key: "empresa", label: "Dados da Empresa", description: "Atualizar perfil e identificar oportunidades" },
 ];
 
+// ERPs that use OAuth 2.0 flow
+const OAUTH_ERPS = ['contaazul'];
+
 export function ERPConnectionWizard({ 
   open, 
   onClose, 
@@ -58,10 +62,12 @@ export function ERPConnectionWizard({
   const [credentials, setCredentials] = useState<Record<string, string>>({});
   const [selectedModules, setSelectedModules] = useState(["nfe", "produtos", "financeiro", "empresa"]);
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
+  const [isStartingOAuth, setIsStartingOAuth] = useState(false);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Standard credential-based connection
   const createMutation = useMutation({
     mutationFn: async () => {
       const response = await supabase.functions.invoke("erp-connection", {
@@ -108,6 +114,63 @@ export function ERPConnectionWizard({
     },
   });
 
+  // OAuth 2.0 flow for Conta Azul
+  const startOAuthFlow = async () => {
+    if (!selectedERP) return;
+
+    setIsStartingOAuth(true);
+
+    try {
+      const redirectUri = `${window.location.origin}/oauth/callback`;
+      
+      // Get authorization URL from backend
+      const response = await supabase.functions.invoke("contaazul-oauth", {
+        method: "GET",
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      // Build URL with query params manually since invoke doesn't support query params well
+      const authResponse = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/contaazul-oauth?action=authorize&redirect_uri=${encodeURIComponent(redirectUri)}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!authResponse.ok) {
+        const errorData = await authResponse.json();
+        throw new Error(errorData.error || 'Falha ao iniciar OAuth');
+      }
+
+      const data = await authResponse.json();
+
+      if (!data.authorization_url || !data.state) {
+        throw new Error('Resposta inválida do servidor');
+      }
+
+      // Store state and connection name in sessionStorage for CSRF validation
+      sessionStorage.setItem('contaazul_oauth_state', data.state);
+      sessionStorage.setItem('contaazul_connection_name', connectionName || 'Conta Azul');
+
+      // Redirect to Conta Azul authorization page
+      window.location.href = data.authorization_url;
+
+    } catch (error) {
+      console.error('OAuth error:', error);
+      toast({
+        title: "Erro ao iniciar conexão",
+        description: error instanceof Error ? error.message : "Tente novamente",
+        variant: "destructive",
+      });
+      setIsStartingOAuth(false);
+    }
+  };
+
   const handleSelectERP = (erp: string) => {
     setSelectedERP(erp);
     setConnectionName(erpInfo[erp]?.name || erp);
@@ -133,10 +196,17 @@ export function ERPConnectionWizard({
 
   const canProceedStep2 = () => {
     if (!selectedERP) return false;
+    
+    // OAuth ERPs don't need credentials filled
+    if (OAUTH_ERPS.includes(selectedERP)) {
+      return true;
+    }
+    
     const fields = erpInfo[selectedERP]?.fields || [];
     return fields.every(field => credentials[field.key]?.trim());
   };
 
+  const isOAuthERP = selectedERP && OAUTH_ERPS.includes(selectedERP);
   const currentERPInfo = selectedERP ? erpInfo[selectedERP] : null;
 
   return (
@@ -155,7 +225,10 @@ export function ERPConnectionWizard({
           </DialogTitle>
           <DialogDescription>
             {step === 1 && "Selecione o ERP que deseja integrar com o TribuTalks"}
-            {step === 2 && "Insira suas credenciais de API para estabelecer a conexão"}
+            {step === 2 && (isOAuthERP 
+              ? "Você será redirecionado para autorizar o acesso de forma segura"
+              : "Insira suas credenciais de API para estabelecer a conexão"
+            )}
             {step === 3 && "Escolha quais dados deseja sincronizar automaticamente"}
           </DialogDescription>
         </DialogHeader>
@@ -174,7 +247,14 @@ export function ERPConnectionWizard({
                     {info.logo}
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-medium">{info.name}</h3>
+                    <h3 className="font-medium flex items-center gap-2">
+                      {info.name}
+                      {OAUTH_ERPS.includes(key) && (
+                        <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                          OAuth 2.0
+                        </span>
+                      )}
+                    </h3>
                     <p className="text-sm text-muted-foreground">{info.description}</p>
                   </div>
                   <ArrowRight className="h-5 w-5 text-muted-foreground" />
@@ -184,7 +264,7 @@ export function ERPConnectionWizard({
           </div>
         )}
 
-        {/* Step 2: Credentials */}
+        {/* Step 2: Credentials or OAuth */}
         {step === 2 && currentERPInfo && (
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -193,60 +273,103 @@ export function ERPConnectionWizard({
                 id="connection_name"
                 value={connectionName}
                 onChange={(e) => setConnectionName(e.target.value)}
-                placeholder="Ex: Minha Empresa - Omie"
+                placeholder="Ex: Minha Empresa - Conta Azul"
               />
             </div>
             
-            {currentERPInfo.fields.map((field) => (
-              <div key={field.key} className="space-y-2">
-                <Label htmlFor={field.key}>{field.label}</Label>
-                <div className="relative">
-                  <Input
-                    id={field.key}
-                    type={field.type === 'password' && !showPasswords[field.key] ? 'password' : 'text'}
-                    value={credentials[field.key] || ""}
-                    onChange={(e) => handleCredentialChange(field.key, e.target.value)}
-                    placeholder={field.placeholder}
-                    className={field.type === 'password' ? 'pr-10' : ''}
-                  />
-                  {field.type === 'password' && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                      onClick={() => togglePasswordVisibility(field.key)}
-                    >
-                      {showPasswords[field.key] ? (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </Button>
-                  )}
+            {isOAuthERP ? (
+              // OAuth flow - show explanation and button
+              <div className="space-y-4">
+                <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <ExternalLink className="h-4 w-4" />
+                    Autorização Segura via OAuth 2.0
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    Você será redirecionado para o {currentERPInfo.name} para autorizar o acesso. 
+                    Este método é mais seguro pois não requer que você compartilhe suas credenciais.
+                  </p>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>✓ Suas credenciais permanecem seguras</li>
+                    <li>✓ Renovação automática de tokens</li>
+                    <li>✓ Você pode revogar o acesso a qualquer momento</li>
+                  </ul>
                 </div>
               </div>
-            ))}
+            ) : (
+              // Standard credential fields
+              currentERPInfo.fields.map((field) => (
+                <div key={field.key} className="space-y-2">
+                  <Label htmlFor={field.key}>{field.label}</Label>
+                  <div className="relative">
+                    <Input
+                      id={field.key}
+                      type={field.type === 'password' && !showPasswords[field.key] ? 'password' : 'text'}
+                      value={credentials[field.key] || ""}
+                      onChange={(e) => handleCredentialChange(field.key, e.target.value)}
+                      placeholder={field.placeholder}
+                      className={field.type === 'password' ? 'pr-10' : ''}
+                    />
+                    {field.type === 'password' && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                        onClick={() => togglePasswordVisibility(field.key)}
+                      >
+                        {showPasswords[field.key] ? (
+                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
 
             <div className="flex gap-2 pt-4">
               <Button variant="outline" onClick={() => setStep(1)} className="gap-2">
                 <ArrowLeft className="h-4 w-4" />
                 Voltar
               </Button>
-              <Button 
-                className="flex-1 gap-2" 
-                onClick={() => setStep(3)}
-                disabled={!canProceedStep2()}
-              >
-                Continuar
-                <ArrowRight className="h-4 w-4" />
-              </Button>
+              
+              {isOAuthERP ? (
+                <Button 
+                  className="flex-1 gap-2" 
+                  onClick={startOAuthFlow}
+                  disabled={isStartingOAuth}
+                >
+                  {isStartingOAuth ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Redirecionando...
+                    </>
+                  ) : (
+                    <>
+                      <ExternalLink className="h-4 w-4" />
+                      Conectar com {currentERPInfo.name}
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <Button 
+                  className="flex-1 gap-2" 
+                  onClick={() => setStep(3)}
+                  disabled={!canProceedStep2()}
+                >
+                  Continuar
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </div>
         )}
 
-        {/* Step 3: Sync Config */}
-        {step === 3 && (
+        {/* Step 3: Sync Config (only for non-OAuth ERPs) */}
+        {step === 3 && !isOAuthERP && (
           <div className="space-y-4 py-4">
             <div className="space-y-3">
               {SYNC_MODULES.map((module) => (
