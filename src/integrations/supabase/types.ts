@@ -125,6 +125,150 @@ export type Database = {
         }
         Relationships: []
       }
+      clara_conversations: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          model_used: string | null
+          role: string
+          screen_context: string | null
+          session_id: string
+          tokens_used: number | null
+          tools_used: string[] | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          model_used?: string | null
+          role: string
+          screen_context?: string | null
+          session_id: string
+          tokens_used?: number | null
+          tools_used?: string[] | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          model_used?: string | null
+          role?: string
+          screen_context?: string | null
+          session_id?: string
+          tokens_used?: number | null
+          tools_used?: string[] | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      clara_feedback: {
+        Row: {
+          category: string | null
+          context_screen: string | null
+          conversation_id: string | null
+          created_at: string | null
+          feedback_text: string | null
+          id: string
+          message_content: string
+          metadata: Json | null
+          model_used: string | null
+          rating: string
+          response_content: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          context_screen?: string | null
+          conversation_id?: string | null
+          created_at?: string | null
+          feedback_text?: string | null
+          id?: string
+          message_content: string
+          metadata?: Json | null
+          model_used?: string | null
+          rating: string
+          response_content: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          context_screen?: string | null
+          conversation_id?: string | null
+          created_at?: string | null
+          feedback_text?: string | null
+          id?: string
+          message_content?: string
+          metadata?: Json | null
+          model_used?: string | null
+          rating?: string
+          response_content?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      clara_insights: {
+        Row: {
+          acted_at: string | null
+          action_cta: string | null
+          action_route: string | null
+          created_at: string | null
+          description: string
+          dismissed_at: string | null
+          expires_at: string | null
+          id: string
+          insight_type: string
+          priority: string
+          source_data: Json | null
+          title: string
+          trigger_condition: string | null
+          user_id: string
+        }
+        Insert: {
+          acted_at?: string | null
+          action_cta?: string | null
+          action_route?: string | null
+          created_at?: string | null
+          description: string
+          dismissed_at?: string | null
+          expires_at?: string | null
+          id?: string
+          insight_type: string
+          priority?: string
+          source_data?: Json | null
+          title: string
+          trigger_condition?: string | null
+          user_id: string
+        }
+        Update: {
+          acted_at?: string | null
+          action_cta?: string | null
+          action_route?: string | null
+          created_at?: string | null
+          description?: string
+          dismissed_at?: string | null
+          expires_at?: string | null
+          id?: string
+          insight_type?: string
+          priority?: string
+          source_data?: Json | null
+          title?: string
+          trigger_condition?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       clara_knowledge_base: {
         Row: {
           category: string
@@ -188,6 +332,51 @@ export type Database = {
           updated_at?: string
           valid_from?: string
           valid_until?: string | null
+        }
+        Relationships: []
+      }
+      clara_memory: {
+        Row: {
+          category: string
+          content: string
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          importance: number
+          memory_type: string
+          metadata: Json | null
+          source_conversation_id: string | null
+          source_screen: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          content: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          importance?: number
+          memory_type?: string
+          metadata?: Json | null
+          source_conversation_id?: string | null
+          source_screen?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          importance?: number
+          memory_type?: string
+          metadata?: Json | null
+          source_conversation_id?: string | null
+          source_screen?: string | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -3567,6 +3756,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_recent_conversations: {
+        Args: { p_limit?: number; p_user_id: string }
+        Returns: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          screen_context: string
+          session_id: string
+        }[]
+      }
+      get_user_memories: {
+        Args: { p_category?: string; p_limit?: number; p_user_id: string }
+        Returns: {
+          category: string
+          content: string
+          created_at: string
+          id: string
+          importance: number
+          memory_type: string
+          source_screen: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
