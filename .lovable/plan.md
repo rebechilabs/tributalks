@@ -1,311 +1,151 @@
 
+# Plano: Corrigir Desconexão do Conta Azul e Sincronização de Contas
 
-# Plano: Clara com Visibilidade Total da Plataforma
+## Situação Atual
 
-## Diagnóstico Atual
+### Diagnóstico Completo
+A usuária **Stephanie** possui **duas contas** no sistema:
 
-Hoje, a Clara AI recebe contexto **muito limitado** sobre o usuário:
-- Apenas o nome e plano do usuário (`profiles.nome`, `profiles.plano`)
-- Verificação binária se tem DRE ou XMLs (`hasUserData`)
-- A rota/ferramenta atual (`toolSlug`)
+| Email | Plano | Conexão Conta Azul |
+|-------|-------|-------------------|
+| `stephanie@rebechisilva.com.br` | PROFESSIONAL | ❌ Não tem |
+| `rebechi.ste@gmail.com` | ENTERPRISE | ✅ Tem (com erro) |
 
-A Clara **não sabe**:
-- Score tributário do usuário (nota, dimensões, riscos)
-- Dados financeiros do DRE (receita, margem, EBITDA)
-- Créditos fiscais identificados
-- Oportunidades mapeadas
-- Progresso nos workflows
-- Última atividade e engajamento
-- Notificações pendentes
-- Conexões de ERP ativas
-- Perfil da empresa (setor, regime, CNPJ)
+Quando ela acessa pelo email corporativo, não vê a conexão porque ela pertence à outra conta.
+
+### Bugs Encontrados
+1. **Bug de DELETE**: O frontend envia o ID no `body`, mas a Edge Function espera no `query parameter` - desconexão sempre falha
+2. **Inconsistência OAuth**: O callback pode ter criado a conexão na conta errada se ela estava logada com email diferente
+
+---
 
 ## Solução Proposta
 
-Criar um **"Contexto Rico"** que é carregado dinamicamente na edge function `clara-assistant` e injetado no prompt, permitindo que Clara:
+### Etapa 1: Corrigir Bug do DELETE na Edge Function
+Modificar a função para aceitar o ID tanto do body quanto do query parameter.
 
-1. **Conheça o estado atual do usuário** em tempo real
-2. **Faça recomendações personalizadas** baseadas em dados reais
-3. **Antecipe necessidades** e ofereça ajuda proativa
-4. **Conduza conversas contextuais** referenciando métricas específicas
-
----
-
-## Arquitetura da Solução
-
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                    CLARA CONTEXT BUILDER                        │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  FloatingAssistant.tsx                                          │
-│         │                                                       │
-│         ▼                                                       │
-│  clara-assistant Edge Function                                  │
-│         │                                                       │
-│         ▼                                                       │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │               buildUserContext()                         │   │
-│  │                                                          │   │
-│  │  Busca em paralelo:                                      │   │
-│  │  ├── profiles (nome, plano, regime, setor)               │   │
-│  │  ├── company_profile (razão social, CNPJ, atividades)    │   │
-│  │  ├── tax_score (score, dimensões, riscos)                │   │
-│  │  ├── company_dre (receita, margem, EBITDA, impacto)      │   │
-│  │  ├── credit_analysis_summary (créditos totais)           │   │
-│  │  ├── company_opportunities (oportunidades ativas)        │   │
-│  │  ├── workflow_progress (workflows em andamento)          │   │
-│  │  ├── xml_imports (count de XMLs processados)             │   │
-│  │  ├── notifications (não lidas, por categoria)            │   │
-│  │  ├── erp_connections (ERPs conectados, status sync)      │   │
-│  │  └── user_onboarding_progress (etapas concluídas)        │   │
-│  │                                                          │   │
-│  │  Retorna: UserPlatformContext                            │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│         │                                                       │
-│         ▼                                                       │
-│  Injeta no System Prompt como "CONTEXTO DO USUÁRIO"             │
-│         │                                                       │
-│         ▼                                                       │
-│  Claude/Gemini responde com conhecimento completo               │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Estrutura do Contexto do Usuário
+**Arquivo:** `supabase/functions/erp-connection/index.ts`
 
 ```typescript
-interface UserPlatformContext {
-  // Identificação
-  userName: string | null;
-  companyName: string | null;
-  cnpj: string | null;
-  setor: string | null;
-  regime: string | null;
-  plano: string;
+// DELETE - Remove connection
+if (req.method === "DELETE") {
+  // Support both query param and body for backwards compatibility
+  let deleteConnectionId = connectionId;
   
-  // Score Tributário
-  score: {
-    total: number | null;
-    grade: string | null;
-    riscoAutuacao: number | null;
-    dimensoes: {
-      conformidade: number;
-      eficiencia: number;
-      risco: number;
-      documentacao: number;
-      gestao: number;
-    } | null;
-    calculadoEm: string | null;
-  };
+  if (!deleteConnectionId) {
+    try {
+      const body = await req.json();
+      deleteConnectionId = body.id;
+    } catch {
+      // No body provided
+    }
+  }
   
-  // Financeiro (DRE)
-  financeiro: {
-    receitaBruta: number | null;
-    margemBruta: number | null;
-    margemLiquida: number | null;
-    ebitda: number | null;
-    cargaTributariaPercent: number | null;
-    reformaImpactoPercent: number | null;
-    atualizadoEm: string | null;
-  };
-  
-  // Créditos e Oportunidades
-  oportunidades: {
-    creditosDisponiveis: number;
-    oportunidadesAtivas: number;
-    economiaAnualPotencial: number;
-  };
-  
-  // Progresso
-  progresso: {
-    xmlsProcessados: number;
-    workflowsEmAndamento: number;
-    workflowsConcluidos: number;
-    onboardingCompleto: boolean;
-    checklistItens: string[];
-  };
-  
-  // Engajamento
-  engajamento: {
-    ultimoAcesso: string | null;
-    streakDias: number;
-    notificacoesNaoLidas: number;
-  };
-  
-  // Integrações
-  integracoes: {
-    erpConectado: boolean;
-    erpNome: string | null;
-    ultimaSync: string | null;
-    syncStatus: 'success' | 'error' | 'pending' | null;
-  };
+  if (!deleteConnectionId) {
+    return new Response(
+      JSON.stringify({ error: "ID da conexão é obrigatório" }),
+      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  const { data, error } = await supabase
+    .from("erp_connections")
+    .delete()
+    .eq("id", deleteConnectionId)
+    .eq("user_id", userId)
+    .select("id");
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data || data.length === 0) {
+    return new Response(
+      JSON.stringify({ error: "Conexão não encontrada ou você não tem permissão" }),
+      { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  return new Response(
+    JSON.stringify({ success: true, message: "Conexão removida com sucesso" }),
+    { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+  );
 }
 ```
 
----
+### Etapa 2: Ação Administrativa Imediata
+Deletar a conexão problemática diretamente via SQL (ação única de admin).
 
-## Exemplo de Prompt Injetado
-
-```
-CONTEXTO DO USUÁRIO (dados reais da plataforma):
-
-👤 PERFIL
-- Nome: Stephanie
-- Empresa: ABC Comércio Ltda
-- CNPJ: 12.345.678/0001-90
-- Setor: Varejo
-- Regime: Lucro Presumido
-- Plano: Professional
-
-📊 SCORE TRIBUTÁRIO
-- Nota: B (720 pontos)
-- Risco de Autuação: 35% (médio)
-- Ponto fraco: Documentação (score 45/200)
-- Calculado em: 15/01/2026
-
-💰 FINANCEIRO (DRE)
-- Receita Bruta Mensal: R$ 850.000
-- Margem Bruta: 32%
-- Margem Líquida: 8,5%
-- Carga Tributária Atual: 22%
-- Impacto Reforma 2027: -2,3% na margem
-- Atualizado em: 28/01/2026
-
-💡 OPORTUNIDADES
-- Créditos disponíveis para recuperar: R$ 47.500
-- Oportunidades fiscais ativas: 5
-- Economia anual potencial: R$ 156.000
-
-📈 PROGRESSO
-- XMLs processados: 234
-- Workflows em andamento: 2 (Diagnóstico Completo, Reforma)
-- Onboarding: 75% completo (falta: perfil empresa)
-
-🔗 INTEGRAÇÕES
-- ERP: Conta Azul (conectado)
-- Última sync: há 2 horas
-- Status: ✅ sucesso
-
-📬 ENGAJAMENTO
-- Streak: 5 dias consecutivos
-- Notificações não lidas: 3
-
----
-
-Use este contexto para personalizar suas respostas. Quando Stephanie perguntar algo, você já sabe:
-- Ela tem créditos para recuperar (mencione!)
-- A margem dela vai cair 2,3pp com a Reforma (alerte se relevante)
-- O ponto fraco é Documentação (sugira melhorar)
-- Ela tem workflows em andamento (pergunte se precisa de ajuda)
+```sql
+-- Deletar a conexão Conta Azul com erro
+DELETE FROM erp_connections 
+WHERE id = '6a71f33f-2aa4-49f8-9857-323c812f6ebf';
 ```
 
----
+### Etapa 3: Adicionar Logs no OAuth Callback
+Melhorar a rastreabilidade do fluxo OAuth para debugar problemas futuros.
 
-## Alterações Necessárias
+**Arquivo:** `supabase/functions/contaazul-oauth/index.ts`
 
-### 1. Edge Function `clara-assistant/index.ts`
-
-**Criar função `buildUserContext()`**:
-- Buscar dados de 10+ tabelas em paralelo
-- Formatar em estrutura legível para o LLM
-- Cachear por 5 minutos para evitar queries excessivas
-
-**Modificar `buildSystemPrompt()`**:
-- Adicionar seção `CONTEXTO DO USUÁRIO` com dados reais
-- Incluir instruções sobre como usar o contexto
-
-**Nova lógica de personalização**:
-- Se usuário tem créditos > R$ 10k: mencionar proativamente
-- Se Score < C: sugerir ações de melhoria
-- Se workflow em andamento: perguntar se precisa de ajuda
-- Se sem DRE: priorizar preenchimento
-
-### 2. Otimizações de Performance
-
-**Cache de contexto**:
-- Armazenar contexto em memória por 5 min
-- Invalidar quando houver mudança relevante (novo XML, DRE atualizado)
-
-**Query otimizada**:
-- Usar uma única função SQL que retorna todos os dados
-- Evitar N+1 queries
+Adicionar logs estruturados em pontos críticos:
+- Início do exchange de tokens
+- Resultado da chamada à API Conta Azul
+- Antes/depois de salvar no banco
+- Erros com contexto
 
 ---
 
-## Tabelas Consultadas
+## Ação Imediata Recomendada
 
-| Tabela | Dados Extraídos |
-|--------|-----------------|
-| `profiles` | nome, plano, regime, setor, streak |
-| `company_profile` | razão_social, cnpj, atividades |
-| `tax_score` | score_total, grade, dimensões, risco |
-| `company_dre` | receita, margens, EBITDA, impacto reforma |
-| `credit_analysis_summary` | total_potential |
-| `company_opportunities` | count, economia_anual |
-| `workflow_progress` | em_andamento, concluídos |
-| `xml_imports` | count processados |
-| `notifications` | não_lidas count |
-| `erp_connections` | nome, status, última_sync |
-| `user_onboarding_progress` | checklist_items |
+Para resolver o problema da Stephanie **agora**:
+
+1. **Deletar a conexão via banco** (já que o DELETE da UI não funciona):
+   - Conexão ID: `6a71f33f-2aa4-49f8-9857-323c812f6ebf`
+
+2. **Orientar a Stephanie** a:
+   - Fazer login com `rebechi.ste@gmail.com` (onde está a conexão)
+   - Ou reconectar o Conta Azul usando `stephanie@rebechisilva.com.br`
+
+3. **Consolidar contas** (opcional):
+   - Considerar se as duas contas deveriam ser uma só
 
 ---
 
-## Benefícios Esperados
+## Detalhes Técnicos
 
-1. **Clara sabe quem é o usuário** - Chama pelo nome, conhece a empresa
-2. **Clara sabe o estado financeiro** - Menciona números reais, não genéricos
-3. **Clara identifica oportunidades** - "Vi que você tem R$ 47k em créditos..."
-4. **Clara acompanha progresso** - "Você está no passo 3 do workflow..."
-5. **Clara antecipa problemas** - "Sua margem vai cair 2,3pp em 2027..."
-6. **Clara é proativa** - Sugere próximos passos baseados em dados
+### Por que o DELETE falha?
 
----
+```text
+Frontend (Integracoes.tsx:157-160)
+┌─────────────────────────────────────────┐
+│ supabase.functions.invoke("erp-conn", { │
+│   method: "DELETE",                     │
+│   body: { id: connectionId }  ← Envia   │
+│ })                              no body │
+└─────────────────────────────────────────┘
+                  ▼
+Edge Function (erp-connection:444-450)
+┌─────────────────────────────────────────┐
+│ const connectionId =                    │
+│   url.searchParams.get("id") ← Espera   │
+│                         query parameter │
+│                                         │
+│ if (!connectionId) → ERRO 400           │
+└─────────────────────────────────────────┘
+```
 
-## Exemplo de Conversa Após Implementação
-
-**Usuário**: Oi Clara, como estou?
-
-**Clara**: Oi Stephanie! 😊 Que bom te ver de volta pelo 5º dia seguido!
-
-Olha só o resumo rápido da ABC Comércio:
-
-- **Score B (720 pts)** - Bom, mas dá pra chegar no A
-- **R$ 47.500 em créditos** esperando recuperação
-- **Impacto Reforma**: sua margem vai cair 2,3pp em 2027
-
-💡 Notei que o ponto mais fraco é Documentação. Quer que eu te mostre como melhorar esse score?
-
-E você tem 2 workflows em andamento - precisa de ajuda para continuar algum deles?
-
----
-
-## Arquivos a Modificar
+### Arquivos a Modificar
 
 | Arquivo | Alteração |
 |---------|-----------|
-| `supabase/functions/clara-assistant/index.ts` | Adicionar `buildUserContext()`, modificar `buildSystemPrompt()`, implementar cache |
+| `supabase/functions/erp-connection/index.ts` | Aceitar ID do body no DELETE |
+| `supabase/functions/contaazul-oauth/index.ts` | Adicionar logs estruturados |
 
 ---
 
-## Segurança
+## Resultado Esperado
 
-- Todos os dados já são filtrados por `user_id` via RLS
-- Clara só vê dados do próprio usuário autenticado
-- Nenhum dado sensível (senhas, tokens) é incluído no contexto
-- O contexto não é logado ou persistido
-
----
-
-## Passos de Implementação
-
-1. Criar função `buildUserContext()` com queries paralelas
-2. Formatar contexto em texto legível para o LLM
-3. Modificar `buildSystemPrompt()` para incluir contexto
-4. Adicionar instruções de uso do contexto no prompt
-5. Implementar cache de 5 minutos
-6. Testar com diferentes perfis de usuário
-7. Deploy da edge function
-
+Após as correções:
+- ✅ Botão "Remover" funcionará corretamente
+- ✅ Logs permitirão debugar problemas OAuth futuros
+- ✅ Stephanie poderá desconectar e reconectar normalmente
