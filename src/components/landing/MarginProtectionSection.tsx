@@ -130,6 +130,9 @@ export function MarginProtectionSection() {
               Conhecer Suíte Margem Ativa
             </Button>
           </a>
+          <p className="mt-4 text-sm text-muted-foreground max-w-md mx-auto">
+            Descubra quanto você precisa ajustar nos preços para manter seu lucro quando os novos impostos entrarem em vigor.
+          </p>
           <p className="mt-3 text-xs text-muted-foreground">
             <Badge variant="outline" className="text-xs">Exclusivo Plano Professional</Badge>
           </p>
