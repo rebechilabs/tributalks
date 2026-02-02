@@ -112,9 +112,12 @@ serve(async (req) => {
     // ACTION: Exchange Authorization Code for Tokens
     // ========================================================================
     if (action === 'exchange') {
+      console.log('[contaazul-oauth] === Starting token exchange flow ===');
+      
       // Verify authentication
       const authHeader = req.headers.get('Authorization');
       if (!authHeader?.startsWith('Bearer ')) {
+        console.error('[contaazul-oauth] No authorization header provided');
         return new Response(
           JSON.stringify({ error: 'Não autorizado' }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -131,6 +134,7 @@ serve(async (req) => {
       const { data: userData, error: userError } = await supabase.auth.getUser(token);
       
       if (userError || !userData.user) {
+        console.error('[contaazul-oauth] Auth validation failed:', userError?.message);
         return new Response(
           JSON.stringify({ error: 'Token inválido' }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -138,12 +142,17 @@ serve(async (req) => {
       }
 
       const userId = userData.user.id;
+      const userEmail = userData.user.email;
+      console.log(`[contaazul-oauth] User authenticated: ${userEmail} (${userId})`);
 
       // Get body parameters
       const body = await req.json();
       const { code, redirect_uri, state, stored_state, connection_name } = body;
 
+      console.log(`[contaazul-oauth] Exchange params: redirect_uri=${redirect_uri}, connection_name=${connection_name || 'default'}`);
+
       if (!code || !redirect_uri) {
+        console.error('[contaazul-oauth] Missing required params: code or redirect_uri');
         return new Response(
           JSON.stringify({ error: 'code e redirect_uri são obrigatórios' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -152,14 +161,14 @@ serve(async (req) => {
 
       // Validate state to prevent CSRF attacks
       if (state !== stored_state) {
-        console.error('[contaazul-oauth] State mismatch - possible CSRF attack');
+        console.error(`[contaazul-oauth] State mismatch - possible CSRF attack. Received: ${state}, Expected: ${stored_state}`);
         return new Response(
           JSON.stringify({ error: 'Estado inválido. Tente novamente.' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      console.log('[contaazul-oauth] Exchanging code for tokens...');
+      console.log('[contaazul-oauth] State validated, exchanging code for tokens...');
 
       // Exchange authorization code for tokens
       const auth = btoa(`${clientId}:${clientSecret}`);
@@ -233,6 +242,8 @@ serve(async (req) => {
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
       );
 
+      console.log(`[contaazul-oauth] Preparing to save connection for user: ${userId} (${userEmail})`);
+
       // Check if connection already exists
       const { data: existingConn } = await serviceSupabase
         .from('erp_connections')
@@ -242,6 +253,8 @@ serve(async (req) => {
         .single();
 
       if (existingConn) {
+        console.log(`[contaazul-oauth] Updating existing connection: ${existingConn.id}`);
+        
         // Update existing connection
         const { error: updateError } = await serviceSupabase
           .from('erp_connections')
@@ -255,11 +268,11 @@ serve(async (req) => {
           .eq('id', existingConn.id);
 
         if (updateError) {
-          console.error('[contaazul-oauth] Update error:', updateError);
+          console.error(`[contaazul-oauth] Update error for connection ${existingConn.id}:`, updateError);
           throw updateError;
         }
 
-        console.log('[contaazul-oauth] Connection updated successfully');
+        console.log(`[contaazul-oauth] Connection ${existingConn.id} updated successfully for user ${userEmail}`);
 
         return new Response(
           JSON.stringify({
@@ -271,6 +284,8 @@ serve(async (req) => {
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+
+      console.log(`[contaazul-oauth] Creating new connection for user: ${userId} (${userEmail})`);
 
       // Create new connection
       const { data: newConn, error: insertError } = await serviceSupabase
@@ -293,11 +308,11 @@ serve(async (req) => {
         .single();
 
       if (insertError) {
-        console.error('[contaazul-oauth] Insert error:', insertError);
+        console.error(`[contaazul-oauth] Insert error for user ${userEmail}:`, insertError);
         throw insertError;
       }
 
-      console.log('[contaazul-oauth] New connection created successfully');
+      console.log(`[contaazul-oauth] New connection ${newConn?.id} created successfully for user ${userEmail}`);
 
       return new Response(
         JSON.stringify({
