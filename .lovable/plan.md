@@ -1,66 +1,141 @@
 
-# Plano de Correção: Integração OAuth do Conta Azul
+# Plano de Correção: Migração para Nova API do Conta Azul
 
-## Resumo do Problema
+## Diagnóstico do Problema
 
-O erro `invalid_request` ocorre porque a aplicação está usando URLs de endpoints OAuth **incorretas** para o Conta Azul. A documentação oficial mostra endpoints diferentes dos que estão implementados.
+Após investigação detalhada da documentação oficial do Conta Azul, identifiquei a **causa raiz** do problema:
 
-## Correções Necessárias
+A integração está usando a **API Legada** do Conta Azul, que foi **oficialmente descontinuada em 5 de novembro de 2025**. Por isso, todas as requisições estão sendo rejeitadas com `invalid_request`.
 
-### 1. Corrigir URL de Autorização
-
-**Arquivo:** `supabase/functions/contaazul-oauth/index.ts`  
-**Linha:** 98
-
-| Antes (Incorreto) | Depois (Correto) |
-|-------------------|------------------|
-| `https://auth.contaazul.com/oauth2/authorize` | `https://api.contaazul.com/auth/authorize` |
-
-### 2. Corrigir URL de Token
-
-**Arquivo:** `supabase/functions/contaazul-oauth/index.ts`  
-**Linha:** 176
-
-| Antes (Incorreto) | Depois (Correto) |
-|-------------------|------------------|
-| `https://auth.contaazul.com/oauth2/token` | `https://api.contaazul.com/oauth2/token` |
-
-## Validação dos Parâmetros
-
-Os demais parâmetros estão corretos conforme a documentação:
-- ✅ `client_id` - OK
-- ✅ `redirect_uri` - OK
-- ✅ `response_type: 'code'` - OK
-- ✅ `scope` - OK (mas pode precisar usar apenas `sales` conforme documentação)
-- ✅ `state` - OK (UUID válido)
-
-## Observação sobre Scopes
-
-A documentação antiga menciona apenas o scope `sales`. A implementação atual usa scopes mais amplos. Pode ser necessário verificar quais scopes estão habilitados no painel de desenvolvedor do Conta Azul.
+A documentação de migração oficial confirma:
+> "A API legada foi descontinuada e não será mais possível utilizá-la."
 
 ---
 
-## Detalhes Técnicos
+## Comparação: API Legada vs Nova API
 
-### Mudanças no Código
+| Aspecto | Implementação Atual (Legada) | Nova API (Correto) |
+|---------|------------------------------|---------------------|
+| URL de Autorização | `api.contaazul.com/auth/authorize` | `auth.contaazul.com/login` |
+| URL de Token | `api.contaazul.com/oauth2/token` | `auth.contaazul.com/oauth2/token` |
+| URL da API | `api.contaazul.com/v1/...` | `api-v2.contaazul.com/v1/...` |
+| Scope | `offline sales purchases...` | `openid+profile+aws.cognito.signin.user.admin` |
+| Credenciais | client_id/secret antigos | Novas credenciais do Portal |
+
+---
+
+## Correções Necessárias
+
+### 1. Atualizar Endpoint de Autorização
+
+**Arquivo:** `supabase/functions/contaazul-oauth/index.ts`
+
+**Linha 98 - De:**
+```typescript
+const authUrl = `https://api.contaazul.com/auth/authorize?${authParams}`;
+```
+
+**Para:**
+```typescript
+const authUrl = `https://auth.contaazul.com/login?${authParams}`;
+```
+
+### 2. Corrigir o Scope (Parâmetro Fixo)
+
+**Arquivo:** `supabase/functions/contaazul-oauth/index.ts`
+
+**Linhas 90-96 - De:**
+```typescript
+const authParams = new URLSearchParams({
+  client_id: clientId,
+  redirect_uri: redirectUri,
+  response_type: 'code',
+  scope: 'offline sales purchases products customers suppliers fiscal-invoices bank-accounts treasury',
+  state: state,
+});
+```
+
+**Para:**
+```typescript
+const authParams = new URLSearchParams({
+  client_id: clientId,
+  redirect_uri: redirectUri,
+  response_type: 'code',
+  scope: 'openid profile aws.cognito.signin.user.admin',
+  state: state,
+});
+```
+
+### 3. Atualizar Endpoint de Token
+
+**Arquivo:** `supabase/functions/contaazul-oauth/index.ts`
+
+**Linha 176 - De:**
+```typescript
+const tokenResponse = await fetch('https://api.contaazul.com/oauth2/token', {
+```
+
+**Para:**
+```typescript
+const tokenResponse = await fetch('https://auth.contaazul.com/oauth2/token', {
+```
+
+### 4. Atualizar Endpoint de Validação (API v2)
+
+**Arquivo:** `supabase/functions/contaazul-oauth/index.ts`
+
+**Linha 212 - De:**
+```typescript
+const validateResponse = await fetch('https://api.contaazul.com/v1/companies', {
+```
+
+**Para:**
+```typescript
+const validateResponse = await fetch('https://api-v2.contaazul.com/v1/empresas', {
+```
+
+---
+
+## Ação Necessária pelo Usuário
+
+**Antes de testar a integração, é necessário:**
+
+1. Acessar o **novo Portal do Desenvolvedor**: https://developers.contaazul.com
+2. Criar uma **nova aplicação** no portal
+3. Obter as **novas credenciais** (`client_id` e `client_secret`)
+4. Atualizar os secrets no projeto:
+   - `CONTAAZUL_CLIENT_ID` (novo valor)
+   - `CONTAAZUL_CLIENT_SECRET` (novo valor)
+5. Configurar a URL de redirecionamento: `https://tributechai.lovable.app/oauth/callback`
+
+A documentação oficial confirma que as **credenciais antigas não são compatíveis** com a nova API.
+
+---
+
+## Resumo das Mudanças de Código
 
 ```text
 supabase/functions/contaazul-oauth/index.ts
-├── Linha 98: Alterar URL de autorização
-└── Linha 176: Alterar URL de token
+├── Linha 94: Corrigir scope para 'openid profile aws.cognito.signin.user.admin'
+├── Linha 98: Alterar URL de autorização para auth.contaazul.com/login
+├── Linha 176: Alterar URL de token para auth.contaazul.com/oauth2/token
+└── Linha 212: Alterar URL da API para api-v2.contaazul.com
 ```
 
-### Impacto
+---
 
-- Baixo risco de efeitos colaterais
-- Apenas URLs de endpoints são alteradas
-- A lógica de processamento permanece a mesma
+## Impacto e Riscos
 
-### Teste Pós-Implementação
+- **Risco:** Baixo - apenas URLs e parâmetros são alterados
+- **Dependência:** Novas credenciais precisam ser geradas pelo usuário
+- **Compatibilidade:** A nova API tem endpoints diferentes para alguns recursos
 
-Após as correções:
-1. O usuário inicia a conexão em `/integracoes`
-2. Sistema redireciona para `api.contaazul.com/auth/authorize`
-3. Conta Azul redireciona de volta para `tributechai.lovable.app/oauth/callback`
-4. Sistema troca o código por tokens em `api.contaazul.com/oauth2/token`
-5. Conexão é salva e usuário vê confirmação de sucesso
+---
+
+## Próximos Passos Após Implementação
+
+1. Usuário gera novas credenciais no Portal do Desenvolvedor
+2. Usuário atualiza os secrets do projeto
+3. Deploy da edge function atualizada
+4. Teste de conexão em `/integracoes`
+5. Validação do fluxo completo OAuth
