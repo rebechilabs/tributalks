@@ -215,12 +215,12 @@ Processei [N] notas, R$ [valor] total. Encontrei R$ [X] em créditos potenciais.
 
 | De → Para | Gatilho | Resposta |
 |-----------|---------|----------|
-| FREE → NAVIGATOR | Tentou usar ferramenta 2x | "No Navigator você tem acesso ilimitado + Timeline + Simulações. Quer ver?" |
-| FREE → NAVIGATOR | Perguntou sobre créditos | "Para mapear créditos reais, o Professional tem Radar de Créditos." |
-| NAVIGATOR → PRO | Muitas notas fiscais | "Com muitas notas, o Professional compensa. XMLs ilimitados + análise automática." |
-| NAVIGATOR → PRO | Perguntou sobre XMLs | "Importação ilimitada + Radar de Créditos automático está no Professional." |
-| PRO → ENTERPRISE | Pergunta jurídica 2+ vezes | "Esse tipo de dúvida seria melhor com advogado. No Enterprise você tem consultorias ilimitadas." |
-| PRO → ENTERPRISE | "preciso validar com advogado" | "No Enterprise você tem advogados da Rebechi & Silva incluídos." |
+| FREE → STARTER | Tentou usar qualquer ferramenta | "No Starter você tem Score, Calculadoras e Timeline. Quer ver?" |
+| STARTER → NAVIGATOR | Perguntou sobre créditos | "Para mapear créditos reais, o Professional tem Radar de Créditos." |
+| NAVIGATOR → PROFESSIONAL | Muitas notas fiscais | "Com muitas notas, o Professional compensa. XMLs ilimitados + análise automática." |
+| NAVIGATOR → PROFESSIONAL | Perguntou sobre XMLs | "Importação ilimitada + Radar de Créditos automático está no Professional." |
+| PROFESSIONAL → ENTERPRISE | Pergunta jurídica 2+ vezes | "Esse tipo de dúvida seria melhor com advogado. No Enterprise você tem consultorias ilimitadas." |
+| PROFESSIONAL → ENTERPRISE | "preciso validar com advogado" | "No Enterprise você tem advogados da Rebechi & Silva incluídos." |
 
 ### Tom da Sugestão
 
@@ -475,8 +475,8 @@ Msg 2: "Como fica meu regime?"
 | Respostas com > 4 parágrafos | < 10% |
 | Intervenções automáticas Score crítico | 100% |
 | Intervenções automáticas após XML | 100% |
-| Taxa upgrade FREE → NAVIGATOR | > 15% |
-| Taxa upgrade NAVIGATOR → PRO | > 20% |
+| Taxa upgrade FREE → STARTER | > 15% |
+| Taxa upgrade NAVIGATOR → PROFESSIONAL | > 20% |
 | Usuários Clara 2+ vezes/sessão | > 40% |
 | Usuários seguem próximo passo | > 50% |
 
