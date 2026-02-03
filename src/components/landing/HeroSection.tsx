@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Check, Star, TrendingUp, Shield, Zap } from "lucide-react";
+import { ArrowRight, Check, Star, TrendingUp, Shield, Zap, Bot, Brain, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import logoHero from "@/assets/logo-tributalks-hero.jpg";
+import claraDashboard from "@/assets/clara-dashboard-preview.png";
 import { CONFIG } from "@/config/site";
 
 export function HeroSection() {
@@ -48,6 +49,75 @@ export function HeroSection() {
                 <br />
                 A 1ª AI-FIRST DO BRASIL
               </p>
+            </div>
+
+            {/* Clara AI-First Explainer */}
+            <div className="w-full max-w-3xl mb-8 animate-fade-in-up animation-delay-100">
+              <div className="relative bg-card/80 backdrop-blur-sm rounded-2xl border border-border overflow-hidden shadow-xl">
+                {/* Header */}
+                <div className="bg-gradient-to-r from-primary/10 to-primary/5 px-6 py-4 border-b border-border">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                      <Bot className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-foreground flex items-center gap-2">
+                        Conheça a Clara
+                        <Sparkles className="w-4 h-4 text-primary" />
+                      </h3>
+                      <p className="text-sm text-muted-foreground">Sua copiloto de inteligência tributária</p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Content */}
+                <div className="p-6">
+                  <div className="grid md:grid-cols-2 gap-6 items-center">
+                    {/* Left - Image */}
+                    <div className="relative">
+                      <img 
+                        src={claraDashboard} 
+                        alt="Clara AI Dashboard Preview" 
+                        className="rounded-lg border border-border shadow-lg w-full"
+                      />
+                      <div className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                        AI-First
+                      </div>
+                    </div>
+                    
+                    {/* Right - Features */}
+                    <div className="space-y-4 text-left">
+                      <div className="flex items-start gap-3">
+                        <div className="bg-primary/20 text-primary rounded-full p-2 flex-shrink-0">
+                          <Brain className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <strong className="text-foreground text-sm">Inteligência Contextual</strong>
+                          <p className="text-xs text-muted-foreground">Clara entende seu negócio e aprende com cada interação</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="bg-primary/20 text-primary rounded-full p-2 flex-shrink-0">
+                          <Sparkles className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <strong className="text-foreground text-sm">Ações Autônomas</strong>
+                          <p className="text-xs text-muted-foreground">Identifica oportunidades e age proativamente</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="bg-primary/20 text-primary rounded-full p-2 flex-shrink-0">
+                          <Shield className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <strong className="text-foreground text-sm">Memória Evolutiva</strong>
+                          <p className="text-xs text-muted-foreground">Lembra decisões passadas para recomendações precisas</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Subheading */}
