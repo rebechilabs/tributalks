@@ -50,13 +50,13 @@ export default function Termos() {
             <h2 className="text-xl font-semibold text-foreground mb-4">3. CADASTRO E CONTA</h2>
             <p><strong>3.1.</strong> Para acessar determinadas funcionalidades, é necessário criar uma conta fornecendo informações verdadeiras, completas e atualizadas.</p>
             <p><strong>3.2.</strong> Você é responsável por manter a confidencialidade de suas credenciais de acesso e por todas as atividades realizadas em sua conta.</p>
-            <p><strong>3.3.</strong> Você deve notificar imediatamente a TribuTech sobre qualquer uso não autorizado de sua conta.</p>
+            <p><strong>3.3.</strong> Você deve notificar imediatamente a TribuTalks sobre qualquer uso não autorizado de sua conta.</p>
             <p><strong>3.4.</strong> A TribuTalks reserva-se o direito de suspender ou cancelar contas que violem estes Termos ou que apresentem informações falsas.</p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-4">4. PLANOS E PAGAMENTOS</h2>
-            <p><strong>4.1.</strong> A Plataforma oferece diferentes planos de assinatura: Free, Básico (R$ 99/mês), Profissional (R$ 197/mês) e Premium (R$ 500/mês).</p>
+            <p><strong>4.1.</strong> A Plataforma oferece diferentes planos de assinatura: Grátis, Starter (R$ 297/mês), Navigator (R$ 1.997/mês), Professional (R$ 2.997/mês) e Enterprise (sob consulta).</p>
             <p><strong>4.2.</strong> Os pagamentos são processados por meio de plataforma de terceiros (Stripe) e estão sujeitos aos termos e condições do processador de pagamentos.</p>
             <p><strong>4.3.</strong> As assinaturas são renovadas automaticamente ao final de cada período, salvo cancelamento prévio pelo Usuário.</p>
             <p><strong>4.4.</strong> O cancelamento pode ser realizado a qualquer momento através do painel do usuário. O acesso aos recursos pagos será mantido até o final do período já pago.</p>
@@ -85,12 +85,11 @@ export default function Termos() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-4">6. CONSULTORIAS (PLANO PREMIUM)</h2>
-            <p><strong>6.1.</strong> O plano Premium inclui 2 (duas) sessões de consultoria de 30 minutos por mês com especialistas da Rebechi & Silva Produções.</p>
+            <h2 className="text-xl font-semibold text-foreground mb-4">6. CONSULTORIAS (PLANO ENTERPRISE)</h2>
+            <p><strong>6.1.</strong> O plano Enterprise inclui consultorias ilimitadas com especialistas da Rebechi & Silva Advogados Associados.</p>
             <p><strong>6.2.</strong> As consultorias são de natureza orientativa e não configuram relação de prestação de serviços advocatícios ou contábeis continuados.</p>
-            <p><strong>6.3.</strong> As sessões não utilizadas no mês NÃO são cumulativas para o mês seguinte.</p>
-            <p><strong>6.4.</strong> O agendamento está sujeito à disponibilidade de horários dos especialistas.</p>
-            <p><strong>6.5.</strong> Cancelamentos com menos de 24 horas de antecedência serão contabilizados como sessão utilizada.</p>
+            <p><strong>6.3.</strong> O agendamento está sujeito à disponibilidade de horários dos especialistas.</p>
+            <p><strong>6.4.</strong> Cancelamentos com menos de 24 horas de antecedência deverão ser reagendados.</p>
           </section>
 
           <section>
@@ -131,7 +130,7 @@ export default function Termos() {
             <p><strong>9.1.</strong> A TribuTalks se esforça para manter a Plataforma disponível 24 horas por dia, 7 dias por semana, mas não garante disponibilidade ininterrupta.</p>
             <p><strong>9.2.</strong> Manutenções programadas serão comunicadas com antecedência quando possível.</p>
             <p><strong>9.3.</strong> A TribuTalks não se responsabiliza por interrupções causadas por fatores externos, como falhas de internet, ataques cibernéticos ou força maior.</p>
-            <p><strong>9.4.</strong> O suporte ao usuário é oferecido por e-mail (suporte@tributalks.com.br) com prazo de resposta de até 48 horas úteis para planos Básico e Profissional, e prioritário para o plano Premium.</p>
+            <p><strong>9.4.</strong> O suporte ao usuário é oferecido por e-mail (suporte@tributalks.com.br) com prazo de resposta de até 48 horas úteis para planos Starter e Professional, e prioritário para o plano Enterprise.</p>
           </section>
 
           <section>
