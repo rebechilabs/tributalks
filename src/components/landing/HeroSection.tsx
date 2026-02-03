@@ -17,107 +17,101 @@ export function HeroSection() {
       </div>
 
       <div className="container mx-auto px-4 md:px-6 lg:px-8 py-12 md:py-20 relative">
-        <div className="flex flex-col items-center max-w-4xl mx-auto">
+        <div className="flex flex-col items-center max-w-2xl mx-auto">
           
-          {/* Main Content */}
-          <div className="text-center">
-            {/* Logo */}
-            <div className="flex justify-center mb-4 md:mb-6 animate-fade-in-up">
-              <img 
-                src={logoHero} 
-                alt="TribuTalks" 
-                className="h-16 md:h-24 w-auto"
-              />
+          {/* Logo */}
+          <div className="flex justify-center mb-4 md:mb-6 animate-fade-in-up">
+            <img 
+              src={logoHero} 
+              alt="TribuTalks" 
+              className="h-16 md:h-24 w-auto"
+            />
+          </div>
+
+          {/* Main Heading */}
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 animate-fade-in-up leading-tight text-center">
+            Transforme a Reforma Tributária em{" "}
+            <span className="text-primary">vantagem competitiva</span>
+          </h1>
+
+          {/* Tagline */}
+          <div className="mb-8 animate-fade-in-up text-center">
+            <p className="text-xl md:text-2xl font-extrabold text-primary tracking-tight leading-tight">
+              PLATAFORMA DE INTELIGÊNCIA TRIBUTÁRIA
+              <br />
+              A 1ª AI-FIRST DO BRASIL
+            </p>
+          </div>
+
+          {/* Clara AI-First Explainer */}
+          <div className="w-full bg-card/80 backdrop-blur-sm rounded-2xl border border-border overflow-hidden shadow-xl mb-8 animate-fade-in-up animation-delay-100">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-primary/10 to-primary/5 px-6 py-4 border-b border-border">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Bot className="w-5 h-5 text-primary" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-bold text-foreground flex items-center gap-2">
+                    Conheça a Clara
+                    <Sparkles className="w-4 h-4 text-primary" />
+                  </h3>
+                  <p className="text-sm text-muted-foreground">Sua copiloto de inteligência tributária</p>
+                </div>
+              </div>
             </div>
-
-            {/* Main Heading */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 animate-fade-in-up leading-tight">
-              Transforme a Reforma Tributária em{" "}
-              <span className="text-primary">vantagem competitiva</span>
-            </h1>
-
-            {/* Tagline */}
-            <div className="mb-6 animate-fade-in-up">
-              <p className="text-xl md:text-2xl font-extrabold text-primary tracking-tight leading-tight">
-                PLATAFORMA DE INTELIGÊNCIA TRIBUTÁRIA
-                <br />
-                A 1ª AI-FIRST DO BRASIL
-              </p>
-            </div>
-
-            {/* Clara AI-First Explainer */}
-            <div className="w-full max-w-2xl mb-8 animate-fade-in-up animation-delay-100">
-              <div className="relative bg-card/80 backdrop-blur-sm rounded-2xl border border-border overflow-hidden shadow-xl">
-                {/* Header */}
-                <div className="bg-gradient-to-r from-primary/10 to-primary/5 px-6 py-4 border-b border-border">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                      <Bot className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-foreground flex items-center gap-2">
-                        Conheça a Clara
-                        <Sparkles className="w-4 h-4 text-primary" />
-                      </h3>
-                      <p className="text-sm text-muted-foreground">Sua copiloto de inteligência tributária</p>
-                    </div>
+            
+            {/* Content */}
+            <div className="p-6">
+              <div className="grid md:grid-cols-2 gap-6 items-center">
+                {/* Left - Image */}
+                <div className="relative">
+                  <img 
+                    src={claraAiHero} 
+                    alt="Clara AI - Inteligência Tributária" 
+                    className="rounded-lg border border-border shadow-lg w-full"
+                  />
+                  <div className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                    AI-First
                   </div>
                 </div>
                 
-                {/* Content */}
-                <div className="p-6">
-                  <div className="grid md:grid-cols-2 gap-6 items-center">
-                    {/* Left - Image */}
-                    <div className="relative">
-                      <img 
-                        src={claraAiHero} 
-                        alt="Clara AI - Inteligência Tributária" 
-                        className="rounded-lg border border-border shadow-lg w-full"
-                      />
-                      <div className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-                        AI-First
-                      </div>
+                {/* Right - Features */}
+                <div className="space-y-4 text-left">
+                  <div className="flex items-start gap-3">
+                    <div className="bg-primary/20 text-primary rounded-full p-2 flex-shrink-0">
+                      <Brain className="w-4 h-4" />
                     </div>
-                    
-                    {/* Right - Features */}
-                    <div className="space-y-4 text-left">
-                      <div className="flex items-start gap-3">
-                        <div className="bg-primary/20 text-primary rounded-full p-2 flex-shrink-0">
-                          <Brain className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <strong className="text-foreground text-sm">Inteligência Contextual</strong>
-                          <p className="text-xs text-muted-foreground">Clara entende seu negócio e aprende com cada interação</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <div className="bg-primary/20 text-primary rounded-full p-2 flex-shrink-0">
-                          <Sparkles className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <strong className="text-foreground text-sm">Ações Autônomas</strong>
-                          <p className="text-xs text-muted-foreground">Identifica oportunidades e age proativamente</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <div className="bg-primary/20 text-primary rounded-full p-2 flex-shrink-0">
-                          <Shield className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <strong className="text-foreground text-sm">Memória Evolutiva</strong>
-                          <p className="text-xs text-muted-foreground">Lembra decisões passadas para recomendações precisas</p>
-                        </div>
-                      </div>
+                    <div>
+                      <strong className="text-foreground text-sm">Inteligência Contextual</strong>
+                      <p className="text-xs text-muted-foreground">Clara entende seu negócio e aprende com cada interação</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="bg-primary/20 text-primary rounded-full p-2 flex-shrink-0">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <strong className="text-foreground text-sm">Ações Autônomas</strong>
+                      <p className="text-xs text-muted-foreground">Identifica oportunidades e age proativamente</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="bg-primary/20 text-primary rounded-full p-2 flex-shrink-0">
+                      <Shield className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <strong className="text-foreground text-sm">Memória Evolutiva</strong>
+                      <p className="text-xs text-muted-foreground">Lembra decisões passadas para recomendações precisas</p>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-
           </div>
 
           {/* Case Study Card */}
-          <div className="w-full max-w-2xl mt-8 bg-card rounded-2xl shadow-2xl p-6 md:p-8 border border-border animate-fade-in-up animation-delay-300">
+          <div className="w-full bg-card rounded-2xl shadow-2xl p-6 md:p-8 border border-border animate-fade-in-up animation-delay-300">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
                 <TrendingUp className="w-6 h-6 text-primary" />
