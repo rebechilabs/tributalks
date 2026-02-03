@@ -12,8 +12,15 @@ const corsHeaders = {
 
 async function getEncryptionKey(): Promise<CryptoKey> {
   const keyString = Deno.env.get("ERP_ENCRYPTION_KEY");
-  if (!keyString || keyString.length < 32) {
-    throw new Error("ERP_ENCRYPTION_KEY não configurada");
+  console.log('[Encrypt] Key exists:', !!keyString);
+  console.log('[Encrypt] Key length:', keyString?.length || 0);
+  
+  if (!keyString) {
+    throw new Error("ERP_ENCRYPTION_KEY não configurada - configure nas secrets do Supabase");
+  }
+  
+  if (keyString.length < 32) {
+    throw new Error(`ERP_ENCRYPTION_KEY muito curta: ${keyString.length} chars (mínimo 32)`);
   }
   
   const keyData = new TextEncoder().encode(keyString.slice(0, 32));
@@ -28,23 +35,43 @@ async function getEncryptionKey(): Promise<CryptoKey> {
 }
 
 async function decryptCredentials(encryptedBase64: string): Promise<ERPCredentials> {
+  console.log('[Decrypt] Starting decryption, input length:', encryptedBase64.length);
+  
   const key = await getEncryptionKey();
   
-  // Base64 decode
-  const combined = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
+  // Sanitize the base64 string - remove any whitespace/newlines
+  const cleanBase64 = encryptedBase64.trim().replace(/\s/g, '');
+  console.log('[Decrypt] Clean Base64 length:', cleanBase64.length);
+  console.log('[Decrypt] Base64 preview:', cleanBase64.slice(0, 20) + '...');
   
-  // Extract IV (first 12 bytes) and ciphertext (rest)
-  const iv = combined.slice(0, 12);
-  const ciphertext = combined.slice(12);
-  
-  const decrypted = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv },
-    key,
-    ciphertext
-  );
-  
-  const plaintext = new TextDecoder().decode(decrypted);
-  return JSON.parse(plaintext);
+  try {
+    // Base64 decode
+    const combined = Uint8Array.from(atob(cleanBase64), c => c.charCodeAt(0));
+    console.log('[Decrypt] Decoded length:', combined.length);
+    
+    // Extract IV (first 12 bytes) and ciphertext (rest)
+    const iv = combined.slice(0, 12);
+    const ciphertext = combined.slice(12);
+    
+    console.log('[Decrypt] IV length:', iv.length, 'Ciphertext length:', ciphertext.length);
+    
+    const decrypted = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv },
+      key,
+      ciphertext
+    );
+    
+    const plaintext = new TextDecoder().decode(decrypted);
+    console.log('[Decrypt] Decrypted plaintext length:', plaintext.length);
+    
+    const credentials = JSON.parse(plaintext);
+    console.log('[Decrypt] Parsed credentials keys:', Object.keys(credentials));
+    
+    return credentials;
+  } catch (error) {
+    console.error('[Decrypt] Error during decryption:', error);
+    throw new Error(`Falha ao descriptografar credenciais: ${error instanceof Error ? error.message : 'erro desconhecido'}`);
+  }
 }
 
 async function encryptCredentials(data: ERPCredentials): Promise<string> {
@@ -70,17 +97,56 @@ async function encryptCredentials(data: ERPCredentials): Promise<string> {
 function isEncryptedCredentials(credentials: unknown): boolean {
   // Encrypted credentials are stored as a base64 string
   // Plain credentials are stored as a JSON object
-  return typeof credentials === 'string' && credentials.length > 20;
+  if (typeof credentials !== 'string') {
+    return false;
+  }
+  
+  // Check if it looks like Base64 (at least 30 chars, only valid Base64 chars)
+  const cleanCreds = credentials.trim();
+  return cleanCreds.length > 30 && /^[A-Za-z0-9+/=]+$/.test(cleanCreds);
 }
 
 async function getDecryptedCredentials(storedCredentials: unknown): Promise<ERPCredentials> {
-  if (isEncryptedCredentials(storedCredentials)) {
-    // New format: encrypted base64 string
-    return await decryptCredentials(storedCredentials as string);
-  } else {
-    // Legacy format: plain JSON object (backward compatibility)
-    return storedCredentials as ERPCredentials;
+  console.log('[GetDecryptedCredentials] Raw credentials type:', typeof storedCredentials);
+  console.log('[GetDecryptedCredentials] Raw credentials preview:', 
+    typeof storedCredentials === 'string' 
+      ? storedCredentials.slice(0, 30) + '...' 
+      : JSON.stringify(storedCredentials).slice(0, 50) + '...');
+  
+  // Handle JSONB - Supabase already parses the JSONB to a JS value
+  if (typeof storedCredentials === 'object' && storedCredentials !== null) {
+    // Could be legacy plain JSON credentials
+    const creds = storedCredentials as Record<string, unknown>;
+    
+    // Check if it's a plain credentials object (has expected keys)
+    if (creds.app_key || creds.app_secret || creds.access_token || creds.token || creds.client_id) {
+      console.log('[GetDecryptedCredentials] Using legacy plain object format');
+      return storedCredentials as ERPCredentials;
+    }
+    
+    // Unexpected object format
+    console.error('[GetDecryptedCredentials] Unexpected object format:', Object.keys(creds));
+    throw new Error('Formato de credenciais inválido - objeto não reconhecido');
   }
+  
+  // Handle string (encrypted Base64)
+  if (typeof storedCredentials === 'string') {
+    const credString = storedCredentials.trim();
+    
+    // Verify it looks like encrypted data
+    if (!isEncryptedCredentials(credString)) {
+      console.error('[GetDecryptedCredentials] String does not look like valid encrypted data');
+      console.error('[GetDecryptedCredentials] String preview:', credString.slice(0, 50));
+      throw new Error('Credenciais em formato inválido - não parece ser Base64 criptografado');
+    }
+    
+    console.log('[GetDecryptedCredentials] Proceeding with decryption');
+    return await decryptCredentials(credString);
+  }
+  
+  // Unsupported type
+  console.error('[GetDecryptedCredentials] Unsupported credentials type:', typeof storedCredentials);
+  throw new Error(`Tipo de credenciais não suportado: ${typeof storedCredentials}`);
 }
 
 // ============================================================================
@@ -210,6 +276,18 @@ class OmieAdapter implements ERPAdapter {
   }
 
   async syncEmpresa(credentials: ERPCredentials): Promise<Record<string, unknown>> {
+    // Validate credentials before making API call
+    if (!credentials.app_key || !credentials.app_secret) {
+      console.error('[Omie syncEmpresa] Missing credentials:', {
+        hasAppKey: !!credentials.app_key,
+        hasAppSecret: !!credentials.app_secret,
+        credentialsKeys: Object.keys(credentials)
+      });
+      throw new Error('Credenciais Omie incompletas: app_key e app_secret são obrigatórios');
+    }
+    
+    console.log('[Omie syncEmpresa] Credentials validated, making API call...');
+    
     try {
       const data = await this.makeRequest('/geral/empresas/', 'ListarEmpresas', [{ 
         pagina: 1, 
@@ -218,6 +296,7 @@ class OmieAdapter implements ERPAdapter {
 
       if (data.empresas_cadastro && data.empresas_cadastro.length > 0) {
         const empresa = data.empresas_cadastro[0];
+        console.log('[Omie syncEmpresa] Success - found company:', empresa.razao_social);
         return {
           razao_social: empresa.razao_social,
           nome_fantasia: empresa.nome_fantasia,
@@ -229,7 +308,7 @@ class OmieAdapter implements ERPAdapter {
       }
       return {};
     } catch (error) {
-      console.error('Omie syncEmpresa error:', error);
+      console.error('[Omie syncEmpresa] API error:', error);
       throw error;
     }
   }
@@ -239,9 +318,17 @@ class OmieAdapter implements ERPAdapter {
   }
 
   async syncProdutos(credentials: ERPCredentials): Promise<UnifiedProduct[]> {
+    // Validate credentials before making API call
+    if (!credentials.app_key || !credentials.app_secret) {
+      console.error('[Omie syncProdutos] Missing credentials');
+      throw new Error('Credenciais Omie incompletas: app_key e app_secret são obrigatórios');
+    }
+    
     const products: UnifiedProduct[] = [];
     let pagina = 1;
     let hasMore = true;
+
+    console.log('[Omie syncProdutos] Starting product sync...');
 
     while (hasMore) {
       await delay(RATE_LIMITS.omie.delayMs);
@@ -272,10 +359,17 @@ class OmieAdapter implements ERPAdapter {
       if (pagina > 100) break;
     }
 
+    console.log('[Omie syncProdutos] Synced', products.length, 'products');
     return products;
   }
 
   async syncNFe(credentials: ERPCredentials): Promise<UnifiedNFe[]> {
+    // Validate credentials before making API call
+    if (!credentials.app_key || !credentials.app_secret) {
+      console.error('[Omie syncNFe] Missing credentials');
+      throw new Error('Credenciais Omie incompletas: app_key e app_secret são obrigatórios');
+    }
+    
     const nfes: UnifiedNFe[] = [];
     let pagina = 1;
     let hasMore = true;
@@ -284,6 +378,8 @@ class OmieAdapter implements ERPAdapter {
     const dataInicial = new Date();
     dataInicial.setDate(dataInicial.getDate() - 90);
     const dataFinal = new Date();
+
+    console.log('[Omie syncNFe] Starting NF-e sync for last 90 days...');
 
     while (hasMore) {
       await delay(RATE_LIMITS.omie.delayMs);
@@ -326,16 +422,24 @@ class OmieAdapter implements ERPAdapter {
 
         if (pagina > 50) break;
       } catch (error) {
-        console.error('Omie syncNFe page error:', error);
+        console.error('[Omie syncNFe] Page error:', error);
         break;
       }
     }
 
+    console.log('[Omie syncNFe] Synced', nfes.length, 'NF-e items');
     return nfes;
   }
 
   async syncFinanceiro(credentials: ERPCredentials): Promise<UnifiedFinancial[]> {
+    // Validate credentials before making API call
+    if (!credentials.app_key || !credentials.app_secret) {
+      console.error('[Omie syncFinanceiro] Missing credentials');
+      throw new Error('Credenciais Omie incompletas: app_key e app_secret são obrigatórios');
+    }
+    
     const financeiro: UnifiedFinancial[] = [];
+    console.log('[Omie syncFinanceiro] Starting financial sync...');
 
     // Contas a Receber (Receitas)
     try {
@@ -356,8 +460,9 @@ class OmieAdapter implements ERPAdapter {
           });
         }
       }
+      console.log('[Omie syncFinanceiro] Contas a receber:', receber.conta_receber_cadastro?.length || 0);
     } catch (error) {
-      console.error('Omie syncFinanceiro receber error:', error);
+      console.error('[Omie syncFinanceiro] Receber error:', error);
     }
 
     // Contas a Pagar (Despesas)
@@ -379,10 +484,12 @@ class OmieAdapter implements ERPAdapter {
           });
         }
       }
+      console.log('[Omie syncFinanceiro] Contas a pagar:', pagar.conta_pagar_cadastro?.length || 0);
     } catch (error) {
-      console.error('Omie syncFinanceiro pagar error:', error);
+      console.error('[Omie syncFinanceiro] Pagar error:', error);
     }
 
+    console.log('[Omie syncFinanceiro] Total records:', financeiro.length);
     return financeiro;
   }
 }
