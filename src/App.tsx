@@ -72,6 +72,7 @@ import AdminPilulas from "./pages/admin/AdminPilulas";
 import AdminPrazos from "./pages/admin/AdminPrazos";
 import AdminUsuarios from "./pages/admin/AdminUsuarios";
 import AdminTrainingData from "./pages/admin/AdminTrainingData";
+import AdminRAGDashboard from "./pages/admin/AdminRAGDashboard";
 import { PresenceTrackerWrapper } from "./components/PresenceTrackerWrapper";
 
 const queryClient = new QueryClient();
@@ -422,6 +423,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <AdminTrainingData />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/rag" 
+              element={
+                <ProtectedRoute>
+                  <AdminRAGDashboard />
                 </ProtectedRoute>
               } 
             />
