@@ -1016,16 +1016,19 @@ class ContaAzulAdapter implements ERPAdapter {
     const financeiro: UnifiedFinancial[] = [];
     console.log('[ContaAzul] MÓDULO: Financeiro');
 
-    // Contas a Receber (API v2: POST /v1/financeiro/eventos-financeiros/contas-a-receber/buscar)
+    // Contas a Receber (API v2: GET /v1/financeiro/eventos-financeiros/contas-a-receber com query params)
     try {
       await delay(RATE_LIMITS.contaazul.delayMs);
       console.log('[ContaAzul] Buscando Contas a Receber...');
       
+      // Parâmetros obrigatórios: data_vencimento_de e data_vencimento_ate
+      const dataFinalReceber = new Date().toISOString().split('T')[0];
+      const dataInicialReceber = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      
       const recebivelResponse = await this.makeRequest(
-        '/v1/financeiro/eventos-financeiros/contas-a-receber/buscar', 
+        `/v1/financeiro/eventos-financeiros/contas-a-receber?data_vencimento_de=${dataInicialReceber}&data_vencimento_ate=${dataFinalReceber}&pagina=1&tamanho_pagina=200`, 
         credentials,
-        'POST',
-        { pagina: 1, tamanho_pagina: 200 }
+        'GET'
       );
       const recebiveis = Array.isArray(recebivelResponse) ? recebivelResponse : (recebivelResponse.itens || recebivelResponse.data || []);
 
@@ -1045,16 +1048,19 @@ class ContaAzulAdapter implements ERPAdapter {
       console.error('[ContaAzul syncFinanceiro] ❌ ERRO em Contas a Receber:', error);
     }
 
-    // Contas a Pagar (API v2: POST /v1/financeiro/eventos-financeiros/contas-a-pagar/buscar)
+    // Contas a Pagar (API v2: GET /v1/financeiro/eventos-financeiros/contas-a-pagar com query params)
     try {
       await delay(RATE_LIMITS.contaazul.delayMs);
       console.log('[ContaAzul] Buscando Contas a Pagar...');
       
+      // Parâmetros obrigatórios: data_vencimento_de e data_vencimento_ate
+      const dataFinalPagar = new Date().toISOString().split('T')[0];
+      const dataInicialPagar = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      
       const pagavelResponse = await this.makeRequest(
-        '/v1/financeiro/eventos-financeiros/contas-a-pagar/buscar', 
+        `/v1/financeiro/eventos-financeiros/contas-a-pagar?data_vencimento_de=${dataInicialPagar}&data_vencimento_ate=${dataFinalPagar}&pagina=1&tamanho_pagina=200`, 
         credentials,
-        'POST',
-        { pagina: 1, tamanho_pagina: 200 }
+        'GET'
       );
       const pagaveis = Array.isArray(pagavelResponse) ? pagavelResponse : (pagavelResponse.itens || pagavelResponse.data || []);
 
