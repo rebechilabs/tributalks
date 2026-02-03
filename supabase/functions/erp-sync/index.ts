@@ -512,8 +512,48 @@ class BlingAdapter implements ERPAdapter {
     this.credentials = credentials;
   }
 
+  /**
+   * Verifica se o token está válido, renovando proativamente se necessário.
+   * Usa buffer de 5 minutos para evitar expiração durante requests.
+   */
+  private async getValidAccessToken(): Promise<string> {
+    if (!this.credentials?.access_token) {
+      throw new Error('Credenciais Bling incompletas: access_token é obrigatório');
+    }
+
+    const now = Date.now();
+    const expiresAt = this.credentials.expires_at || 0;
+    const bufferTime = 5 * 60 * 1000; // 5 minutos de margem
+
+    // Verifica se token está expirado ou prestes a expirar
+    if (now + bufferTime >= expiresAt) {
+      console.log('[BlingAdapter] Token expirado ou prestes a expirar, renovando proativamente...');
+      console.log(`[BlingAdapter] Now: ${now}, ExpiresAt: ${expiresAt}, Diff: ${(expiresAt - now) / 1000}s`);
+      return await this.refreshAccessToken();
+    }
+
+    console.log(`[BlingAdapter] Token válido por mais ${Math.round((expiresAt - now) / 60000)} minutos`);
+    return this.credentials.access_token;
+  }
+
   private async refreshAccessToken(): Promise<string> {
     if (!this.credentials?.bling_client_id || !this.credentials?.bling_client_secret || !this.credentials?.refresh_token) {
+      console.error('[BlingAdapter] Missing credentials for refresh:', {
+        hasClientId: !!this.credentials?.bling_client_id,
+        hasClientSecret: !!this.credentials?.bling_client_secret,
+        hasRefreshToken: !!this.credentials?.refresh_token,
+      });
+      // Marca a conexão como necessitando reconexão
+      if (this.supabase && this.connectionId) {
+        await this.supabase
+          .from('erp_connections')
+          .update({ 
+            status: 'needs_reconnection',
+            status_message: 'Credenciais incompletas - reconexão necessária',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', this.connectionId);
+      }
       throw new Error('Credenciais incompletas para renovação do token. Por favor, reconecte o Bling.');
     }
 
@@ -575,21 +615,31 @@ class BlingAdapter implements ERPAdapter {
 
   // deno-lint-ignore no-explicit-any
   private async makeRequest(endpoint: string, credentials: ERPCredentials, retryCount = 0): Promise<any> {
+    // Verificação PROATIVA: garante token válido ANTES de fazer a chamada
+    let validToken: string;
+    try {
+      validToken = await this.getValidAccessToken();
+    } catch (tokenError) {
+      console.error('[BlingAdapter] Failed to get valid token:', tokenError);
+      throw tokenError;
+    }
+
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${credentials.access_token}`,
+        'Authorization': `Bearer ${validToken}`,
         'Accept': 'application/json',
       },
     });
 
-    // Check for token expiration (401 Unauthorized)
+    // Tratamento de erro 401 (fallback caso a verificação proativa falhe)
     if (response.status === 401 && retryCount === 0) {
       const errorText = await response.text();
+      console.log(`[BlingAdapter] 401 Error (unexpected): ${errorText}`);
       
       // Check if it's a token expiration issue
       if (errorText.includes('invalid_token') || errorText.includes('expired') || errorText.includes('Unauthorized') || errorText.includes('token')) {
-        console.log('[BlingAdapter] Token expired, attempting refresh...');
+        console.log('[BlingAdapter] Token expired unexpectedly, attempting refresh...');
         
         try {
           const newToken = await this.refreshAccessToken();
@@ -597,7 +647,18 @@ class BlingAdapter implements ERPAdapter {
           const updatedCredentials = { ...credentials, access_token: newToken };
           return this.makeRequest(endpoint, updatedCredentials, 1);
         } catch (refreshError) {
-          throw refreshError; // Propagate the user-friendly error message
+          // Marca conexão como precisando reconexão
+          if (this.supabase && this.connectionId) {
+            await this.supabase
+              .from('erp_connections')
+              .update({ 
+                status: 'needs_reconnection',
+                status_message: 'Token expirado - reconexão necessária',
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', this.connectionId);
+          }
+          throw refreshError;
         }
       }
     }
@@ -783,8 +844,48 @@ class ContaAzulAdapter implements ERPAdapter {
     console.log('[ContaAzulAdapter] Context set with connection:', connectionId);
   }
 
+  /**
+   * Verifica se o token está válido, renovando proativamente se necessário.
+   * Usa buffer de 5 minutos para evitar expiração durante requests.
+   */
+  private async getValidAccessToken(): Promise<string> {
+    if (!this.credentials?.access_token) {
+      throw new Error('Credenciais Conta Azul incompletas: access_token é obrigatório');
+    }
+
+    const now = Date.now();
+    const expiresAt = this.credentials.expires_at || 0;
+    const bufferTime = 5 * 60 * 1000; // 5 minutos de margem
+
+    // Verifica se token está expirado ou prestes a expirar
+    if (now + bufferTime >= expiresAt) {
+      console.log('[ContaAzulAdapter] Token expirado ou prestes a expirar, renovando proativamente...');
+      console.log(`[ContaAzulAdapter] Now: ${now}, ExpiresAt: ${expiresAt}, Diff: ${(expiresAt - now) / 1000}s`);
+      return await this.refreshAccessToken();
+    }
+
+    console.log(`[ContaAzulAdapter] Token válido por mais ${Math.round((expiresAt - now) / 60000)} minutos`);
+    return this.credentials.access_token;
+  }
+
   private async refreshAccessToken(): Promise<string> {
     if (!this.credentials?.client_id || !this.credentials?.client_secret || !this.credentials?.refresh_token) {
+      console.error('[ContaAzulAdapter] Missing credentials for refresh:', {
+        hasClientId: !!this.credentials?.client_id,
+        hasClientSecret: !!this.credentials?.client_secret,
+        hasRefreshToken: !!this.credentials?.refresh_token,
+      });
+      // Marca a conexão como necessitando reconexão
+      if (this.supabase && this.connectionId) {
+        await this.supabase
+          .from('erp_connections')
+          .update({ 
+            status: 'needs_reconnection',
+            status_message: 'Credenciais incompletas - reconexão necessária',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', this.connectionId);
+      }
       throw new Error('Credenciais incompletas para renovação do token. Por favor, reconecte o Conta Azul.');
     }
 
@@ -807,6 +908,17 @@ class ContaAzulAdapter implements ERPAdapter {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('[ContaAzulAdapter] Refresh token failed:', errorText);
+      // Marca a conexão como necessitando reconexão
+      if (this.supabase && this.connectionId) {
+        await this.supabase
+          .from('erp_connections')
+          .update({ 
+            status: 'needs_reconnection',
+            status_message: 'Refresh token expirado - reconexão necessária',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', this.connectionId);
+      }
       throw new Error('Sua autorização do Conta Azul expirou. Por favor, reconecte sua conta.');
     }
 
@@ -830,7 +942,7 @@ class ContaAzulAdapter implements ERPAdapter {
           .update({ 
             credentials: encryptedCreds,
             status: 'active',
-            status_message: 'Token renovado automaticamente',
+            status_message: `Token renovado automaticamente em ${new Date().toLocaleString('pt-BR')}`,
             updated_at: new Date().toISOString(),
           })
           .eq('id', this.connectionId);
@@ -851,13 +963,22 @@ class ContaAzulAdapter implements ERPAdapter {
     body?: Record<string, unknown>,
     retryCount = 0
   ): Promise<any> {
+    // Verificação PROATIVA: garante token válido ANTES de fazer a chamada
+    let validToken: string;
+    try {
+      validToken = await this.getValidAccessToken();
+    } catch (tokenError) {
+      console.error('[ContaAzulAdapter] Failed to get valid token:', tokenError);
+      throw tokenError;
+    }
+
     const fullUrl = `${this.baseUrl}${endpoint}`;
     console.log(`[ContaAzul] ${method} ${fullUrl}`);
     
     const options: RequestInit = {
       method,
       headers: {
-        'Authorization': `Bearer ${credentials.access_token}`,
+        'Authorization': `Bearer ${validToken}`,
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -871,14 +992,14 @@ class ContaAzulAdapter implements ERPAdapter {
 
     console.log(`[ContaAzul] Response status: ${response.status}`);
 
-    // Check for token expiration (401 Unauthorized)
+    // Tratamento de erro 401 (fallback caso a verificação proativa falhe)
     if (response.status === 401 && retryCount === 0) {
       const errorText = await response.text();
-      console.log(`[ContaAzul] 401 Error body: ${errorText}`);
+      console.log(`[ContaAzul] 401 Error (unexpected): ${errorText}`);
       
       // Check if it's a token expiration issue
       if (errorText.includes('invalid_token') || errorText.includes('expired') || errorText.includes('Unauthorized')) {
-        console.log('[ContaAzulAdapter] Token expired, attempting refresh...');
+        console.log('[ContaAzulAdapter] Token expired unexpectedly, attempting refresh...');
         
         try {
           const newToken = await this.refreshAccessToken();
@@ -886,7 +1007,18 @@ class ContaAzulAdapter implements ERPAdapter {
           const updatedCredentials = { ...credentials, access_token: newToken };
           return this.makeRequest(endpoint, updatedCredentials, method, body, 1);
         } catch (refreshError) {
-          throw refreshError; // Propagate the user-friendly error message
+          // Marca conexão como precisando reconexão
+          if (this.supabase && this.connectionId) {
+            await this.supabase
+              .from('erp_connections')
+              .update({ 
+                status: 'needs_reconnection',
+                status_message: 'Token expirado - reconexão necessária',
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', this.connectionId);
+          }
+          throw refreshError;
         }
       }
     }
