@@ -33,7 +33,7 @@ const journeys = [
       "Clara AI com 100 mensagens/dia para te guiar nas decisões do dia a dia.",
       "Receba notícias da Reforma em tempo real e avalie o quanto sua empresa está preparada com o Checklist de Prontidão.",
       "Analise documentos fiscais com IA e siga Workflows Guiados para organizar suas tarefas.",
-      "Acesse a comunidade TribuTalks Connect e exporte relatórios em PDF."
+      "Acesse a comunidade TribuTalks Connect no Circle e exporte relatórios em PDF."
     ],
     price: 1297,
     priceText: "/mês",
