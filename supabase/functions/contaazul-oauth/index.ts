@@ -86,20 +86,10 @@ serve(async (req) => {
       // Generate cryptographically random state
       const state = crypto.randomUUID().replace(/-/g, '');
       
-      // API Conta Azul v2 - OAuth via Cognito
-      // Scopes devem ser codificados corretamente (espaços se tornam %20)
-      const scopes = 'openid profile aws.cognito.signin.user.admin';
-      
-      const authParams = new URLSearchParams({
-        client_id: clientId,
-        redirect_uri: redirectUri,
-        response_type: 'code',
-        scope: scopes,
-        state: state,
-      });
-
-      // API Conta Azul v2 - Endpoint de autorização via Cognito
-      const authUrl = `https://auth.contaazul.com/oauth2/authorize?${authParams.toString()}`;
+      // API Conta Azul v2 - OAuth via Cognito customizado
+      // IMPORTANTE: Conta Azul usa endpoint /login (não /oauth2/authorize)
+      // e requer scope com + como separador (não %20)
+      const authUrl = `https://auth.contaazul.com/login?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=openid+profile+aws.cognito.signin.user.admin`;
 
       console.log('[contaazul-oauth] Authorization URL generated:', authUrl);
 
