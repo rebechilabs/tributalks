@@ -31,7 +31,7 @@ const journeys = [
     benefitBlocks: [
       "Tudo do Starter, com mais poder de análise e acompanhamento contínuo.",
       "Clara AI com 100 mensagens/dia para te guiar nas decisões do dia a dia.",
-      "Fique por dentro das notícias da Reforma em tempo real e meça sua prontidão com o Checklist.",
+      "Receba notícias da Reforma em tempo real e avalie o quanto sua empresa está preparada com o Checklist de Prontidão.",
       "Analise documentos fiscais com IA e siga Workflows Guiados para organizar suas tarefas.",
       "Acesse a comunidade TribuTalks Connect e exporte relatórios em PDF."
     ],
