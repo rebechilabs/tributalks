@@ -1,5 +1,7 @@
 # TribuTalks — Documentação Completa para Empresário/Dev
 
+> **Última atualização:** Fevereiro 2026
+
 ## Resumo Executivo
 
 O TribuTalks é uma **plataforma SaaS de inteligência tributária AI-Native** voltada para CEOs e CFOs de empresas com faturamento acima de R$ 1 milhão/mês. A plataforma ajuda empresas a se prepararem para a **Reforma Tributária brasileira** (2026-2033), oferecendo simuladores, diagnósticos, IA assistente com memória evolutiva, agentes especializados e comunidade.
@@ -11,10 +13,12 @@ O TribuTalks é uma **plataforma SaaS de inteligência tributária AI-Native** v
 | **Agentes Especializados** | 3 agentes (Fiscal, Margem, Compliance) com routing inteligente |
 | **Memória Evolutiva** | Clara aprende padrões e preferências de cada usuário |
 | **Ações Autônomas** | Sistema de triggers que executa tarefas automaticamente |
-| **Feedback Loop** | Coleta thumbs up/down para fine-tuning futuro |
+| **Feedback Loop (RLHF)** | Coleta thumbs up/down para fine-tuning futuro |
 | **Insights Proativos** | Sistema detecta problemas e gera alertas automáticos |
 | **Contexto Rico** | Dados reais do usuário (DRE, Score, créditos) injetados no prompt |
 | **Aprendizado Contínuo** | Cada interação alimenta base de treinamento proprietária |
+| **RAG Híbrido** | Busca vetorial (70%) + keywords (30%) para máxima precisão |
+| **Knowledge Graph** | Mapeamento de relações NCM ↔ tributos ↔ benefícios |
 
 ---
 
@@ -32,18 +36,20 @@ O TribuTalks é uma **plataforma SaaS de inteligência tributária AI-Native** v
 
 ---
 
-## Planos e Preços
+## Planos e Preços (2027)
 
 | Plano | Preço | CNPJs | Usuários | Destaques |
 |-------|-------|-------|----------|-----------|
-| **STARTER** | R$ 397/mês | 1 | 1 | Clara AI (30 msgs/dia), Score, Split Payment, Calculadora RTC |
+| **STARTER** | R$ 397/mês ou R$ 3.970/ano | 1 | 1 | Clara AI (30 msgs/dia), Score, Split Payment, Calculadora RTC |
 | **NAVIGATOR** | R$ 1.297/mês | 2 | 2 | + Notícias, Timeline, Workflows, Comunidade Circle |
 | **PROFESSIONAL** | R$ 2.997/mês | 5 | 4 | + XMLs, Radar Créditos, DRE, NEXUS, 61+ Oportunidades, ERP |
 | **ENTERPRISE** | Sob consulta | ∞ | ∞ | + Consultoria jurídica (Rebechi & Silva), White Label, API |
 
+> **Nota:** Apenas o plano Starter possui opção anual (economia de 2 meses).
+
 ---
 
-## Ferramentas por Categoria
+## Ferramentas por Categoria (36 total)
 
 ### Etapa 1: ENTENDER
 | Ferramenta | Descrição | Plano Mínimo |
@@ -58,7 +64,7 @@ O TribuTalks é uma **plataforma SaaS de inteligência tributária AI-Native** v
 | Simulador Split Payment | Impacto no fluxo de caixa | FREE |
 | Comparativo de Regimes | Simples vs Presumido vs Real | FREE |
 | Calculadora RTC (NCM) | CBS + IBS + IS por produto | FREE |
-| Calculadora NBS (Serviços) | Novos tributos para serviços | NAVIGATOR |
+| Calculadora NBS (Serviços) | Novos tributos para serviços (LC 214/2025) | NAVIGATOR |
 
 ### Etapa 3: DIAGNOSTICAR
 | Ferramenta | Descrição | Plano Mínimo |
@@ -85,17 +91,6 @@ O TribuTalks é uma **plataforma SaaS de inteligência tributária AI-Native** v
 
 ---
 
-## Sistema de Notificações
-
-| Tipo | Descrição |
-|------|-----------|
-| Sino no Header | Contador de não lidas + lista de notificações |
-| Categorias | geral, reforma, indicacao, sistema |
-| Realtime | Sincronização instantânea via WebSocket |
-| E-mails | Apenas métricas diárias (admin) e contatos diretos |
-
----
-
 ## Clara AI — Sistema de Agentes Especializados
 
 A Clara utiliza uma arquitetura AI-Native com 3 agentes especializados que colaboram:
@@ -108,17 +103,17 @@ A Clara utiliza uma arquitetura AI-Native com 3 agentes especializados que colab
 | **Margem** | DRE, pricing, custos | Proteção de margem, simulação de preços, análise de custos |
 | **Compliance** | Prazos, reforma, regulatório | Monitoramento de deadlines, alertas de mudanças, adequação |
 
-### Routing Inteligente
+### Tom e Comunicação
 
-O sistema usa keyword scoring + análise de contexto de tela para rotear automaticamente:
+A Clara segue princípios rígidos de comunicação:
 
-```
-Usuário: "Qual o impacto do CBS na minha margem?"
-           ↓
-Router: Detecta "CBS" (fiscal) + "margem" (margin)
-           ↓
-Agente Selecionado: MarginAgent (margem tem prioridade pelo contexto)
-```
+| Regra | Descrição |
+|-------|-----------|
+| **Brevidade Extrema** | Pergunta simples: 2-3 linhas NO MÁXIMO |
+| **Resposta Direta** | Primeira frase = resposta direta (sem preâmbulo) |
+| **Tom Conversacional** | Amiga expert, não robô formal |
+| **Personalização** | Usa nome do usuário, referencia dados reais |
+| **Proibições** | Nunca diz "Ótima pergunta!", "Claro!", etc. |
 
 ### Insights Proativos
 
@@ -130,6 +125,39 @@ Agente Selecionado: MarginAgent (margem tem prioridade pelo contexto)
 | **Riscos** | Impacto negativo da Reforma na margem |
 
 Os insights aparecem no Dashboard com CTAs diretos para ação.
+
+---
+
+## Onboarding Conversacional
+
+O onboarding é uma experiência **AI-First** onde a Clara guia o usuário:
+
+1. **Saudação personalizada** por horário (Bom dia/tarde/noite)
+2. **Busca automática de CNPJ** — preenche empresa, estado e CNAE
+3. **Perguntas conversacionais** — regime, faturamento, setor
+4. **Confirmação visual** — resumo dos dados antes de salvar
+5. **Celebração** — confetti e direcionamento ao Score
+
+### Gamificação
+
+| Elemento | Descrição | Planos |
+|----------|-----------|--------|
+| **Achievements** | 14 badges por uso de ferramentas | Starter, Navigator |
+| **Streaks** | Dias consecutivos de acesso | Starter, Navigator |
+| **First Mission** | Missão inicial por regime tributário | Todos |
+
+> **Nota:** Para Professional/Enterprise, gamificação é secundária — foco em resultados executivos (NEXUS).
+
+---
+
+## Sistema de Notificações
+
+| Tipo | Descrição |
+|------|-----------|
+| Sino no Header | Contador de não lidas + lista de notificações |
+| Categorias | geral, reforma, indicacao, sistema |
+| Realtime | Sincronização instantânea via WebSocket |
+| E-mails | Apenas métricas diárias (admin) e contatos diretos |
 
 ---
 
@@ -162,31 +190,20 @@ Ao assinar Professional, o usuário recebe automaticamente:
 
 ---
 
-## Newsletter (Beehiiv)
+## Valuation Empresarial
 
-- **Tributalks News**: Newsletter semanal com curadoria de notícias
-- Tags: `professional_subscriber` para automação de boas-vindas
-- Integração via API Beehiiv no webhook de assinatura
+A plataforma calcula o valor da empresa usando:
 
----
+```
+Valuation = (EBITDA Mensal × 12) × Múltiplo Setorial × Ajuste de Compliance
+```
 
-## Onboarding e Gamificação
+| Fator | Range |
+|-------|-------|
+| **Múltiplo Setorial** | 4.0x a 7.0x |
+| **Ajuste Score** | -30% (Nota E) a +15% (Nota A) |
 
-### First Mission
-- Missão inicial personalizada por regime tributário
-- Simples Nacional, Presumido ou Real têm fluxos diferentes
-
-### Guided Tour
-- 5 etapas visuais via `react-joyride`
-- Apresenta Clara, ferramentas principais e comunidade
-
-### Achievements (14 badges)
-- Sistema de conquistas por uso de ferramentas
-- Streaks diários de acesso
-
-### Onboarding Checklist
-- Aparece nos primeiros 7 dias
-- Guia para completar perfil, score, DRE, etc.
+O sistema rastreia histórico de valuation e alerta quando compliance impacta negativamente.
 
 ---
 
@@ -197,8 +214,11 @@ Ao assinar Professional, o usuário recebe automaticamente:
 | Agentes Especializados (Fiscal, Margem, Compliance) | ✅ Implementado |
 | Memória Evolutiva | ✅ Implementado |
 | Ações Autônomas | ✅ Implementado |
+| RAG Híbrido (vetorial + keywords) | ✅ Implementado |
+| Knowledge Graph Tributário | ✅ Implementado |
+| Onboarding Conversacional | ✅ Implementado |
 | Fine-tuning da Clara com dados coletados | Em coleta |
-| Embeddings vetoriais (busca semântica) | Planejado |
+| Reward Model (RLHF local) | Planejado |
 | App Mobile (iOS/Android) | Planejado |
 | Orquestração MCP | Planejado |
 
@@ -223,7 +243,7 @@ Ao assinar Professional, o usuário recebe automaticamente:
 
 ---
 
-## Arquitetura AI-Native (v6)
+## Arquitetura AI-Native (v7)
 
 ### Diagrama Geral
 
@@ -253,6 +273,18 @@ Ao assinar Professional, o usuário recebe automaticamente:
 │  └────────────────────────────────────────────────────────────────────┘ │
 │                                                                          │
 │  ┌────────────────────────────────────────────────────────────────────┐ │
+│  │                     RAG HÍBRIDO                                    │ │
+│  │                                                                     │ │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────────┐ │ │
+│  │  │ Busca        │  │   Busca      │  │ Knowledge Graph          │ │ │
+│  │  │ Vetorial     │  │   Keywords   │  │ (NCM ↔ Tributos)         │ │ │
+│  │  │ (70%)        │  │   (30%)      │  │                          │ │ │
+│  │  └──────────────┘  └──────────────┘  └──────────────────────────┘ │ │
+│  │                                                                     │ │
+│  │  Cache de Embeddings: Reutiliza vetores já calculados              │ │
+│  └────────────────────────────────────────────────────────────────────┘ │
+│                                                                          │
+│  ┌────────────────────────────────────────────────────────────────────┐ │
 │  │                     MEMÓRIA EVOLUTIVA                              │ │
 │  │                                                                     │ │
 │  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────────┐ │ │
@@ -273,9 +305,21 @@ Ao assinar Professional, o usuário recebe automaticamente:
 │  │  • margin_drop_5pp → margin_alert (auto)                           │ │
 │  │  • deadline_7_days → send_reminder (auto)                          │ │
 │  │  • benefit_expiring → alert_expiration (auto)                      │ │
+│  │  • dre_updated → recalculate_valuation (auto)                      │ │
 │  │                                                                     │ │
 │  │  Status: pending → approved → executed                              │ │
 │  │  Priority: low | medium | high | urgent                             │ │
+│  └────────────────────────────────────────────────────────────────────┘ │
+│                                                                          │
+│  ┌────────────────────────────────────────────────────────────────────┐ │
+│  │                     DATA FLYWHEEL (RLHF)                           │ │
+│  │                                                                     │ │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────────┐ │ │
+│  │  │ Feedback     │  │   Training   │  │ Export JSONL             │ │ │
+│  │  │ Buttons 👍👎  │→ │   Center     │→ │ (Fine-tuning)            │ │ │
+│  │  └──────────────┘  └──────────────┘  └──────────────────────────┘ │ │
+│  │                                                                     │ │
+│  │  Future: Reward Model local para ranking pré-envio                 │ │
 │  └────────────────────────────────────────────────────────────────────┘ │
 │                                                                          │
 └─────────────────────────────────────────────────────────────────────────┘
@@ -291,10 +335,11 @@ Ao assinar Professional, o usuário recebe automaticamente:
 | `clara_learned_patterns` | Padrões aprendidos por usuário | Tipo, valor, confidence, decay |
 | `clara_memory` | Memórias de longo prazo | Contexto, importância, reforços |
 | `clara_conversations` | Histórico de todas as conversas | Continuidade de contexto |
-| `clara_feedback` | Avaliações 👍👎 das respostas | Base para fine-tuning |
+| `clara_feedback` | Avaliações 👍👎 das respostas | Base para fine-tuning (RLHF) |
 | `clara_insights` | Insights proativos gerados | Alertas automáticos |
 | `clara_knowledge_base` | Base de conhecimento jurídico | RAG / Injeção de contexto |
 | `clara_cache` | Cache de respostas frequentes | Economia de tokens |
+| `clara_embeddings_cache` | Cache de vetores calculados | Economia de API calls |
 
 ### Hooks AI-Native
 
@@ -303,12 +348,22 @@ Ao assinar Professional, o usuário recebe automaticamente:
 
 // Agentes Especializados
 export { useClaraAgents, useFiscalAgent, useMarginAgent, useComplianceAgent } from './useClaraAgents';
+export { useClaraAgentIntegration } from './useClaraAgentIntegration';
 
 // Memória Evolutiva e Aprendizado
 export { useClaraLearning, useClaraContextMemory } from './useClaraLearning';
 
 // Ações Autônomas
 export { useClaraAutonomousActions, AUTO_TRIGGERS } from './useClaraAutonomousActions';
+
+// Triggers de Eventos
+export { useClaraTrigger } from './useClaraTrigger';
+
+// Knowledge Graph
+export { useKnowledgeGraph } from './useKnowledgeGraph';
+
+// Busca Semântica
+export { useSemanticSearch } from './useSemanticSearch';
 ```
 
 ### Componentes AI-Native
@@ -322,109 +377,46 @@ export { ClaraAutonomousPanel } from './ClaraAutonomousPanel';  // Painel de aç
 export { ClaraFeedbackButtons } from './ClaraFeedbackButtons';  // Thumbs up/down
 export { ClaraInsightCard } from './ClaraInsightCard';          // Card de insight
 export { ClaraInsightsPanel } from './ClaraInsightsPanel';      // Painel de insights
+export { ClaraActionsDrawer } from './ClaraActionsDrawer';      // Drawer lateral de ações
 ```
 
-### Sistema de Agentes
+### Sistema de Triggers
 
 ```typescript
-// Tipos de Agentes
-type AgentType = 'fiscal' | 'margin' | 'compliance' | 'general';
+// useClaraTrigger.ts - Métodos disponíveis
 
-// Interface do Agente
-interface ClaraAgent {
-  id: string;
-  name: string;
-  description: string;
-  type: AgentType;
-  capabilities: string[];
-  triggerConditions: Record<string, unknown>;
-  priorityRules: Record<string, unknown>;
-  status: 'active' | 'inactive' | 'learning';
-}
+const { triggers } = useClaraTrigger();
 
-// Routing
-const routeQuery = (query: string, screenContext?: string): AgentType => {
-  // 1. Conta keywords de cada domínio
-  // 2. Considera contexto de tela
-  // 3. Retorna agente com maior score
-};
+// Disparar após importação de XMLs
+await triggers.xmlImported(10); // 10 XMLs importados
+
+// Disparar quando score cai abaixo do limiar
+await triggers.scoreBelowThreshold(55);
+
+// Disparar quando margem cai mais que 5pp
+await triggers.marginDrop(5.2);
+
+// Disparar após atualização do DRE
+await triggers.dreUpdated({ lucroLiquido: 50000, margemLiquida: 8.5 });
 ```
 
-### Sistema de Memória Evolutiva
+### RAG Híbrido
 
 ```typescript
-// Padrão Aprendido
-interface LearnedPattern {
-  id: string;
-  userId: string;
-  patternType: 'preference' | 'behavior' | 'decision' | 'context';
-  patternKey: string;
-  patternValue: Record<string, unknown>;
-  confidence: number;        // 0.1 a 0.95
-  timesObserved: number;
-  decayRate: number;         // Quanto perde por dia sem uso
-  lastObservedAt: Date;
-}
-
-// Ajuste de Confidence
-const adjustConfidence = (current: number, positive: boolean): number => {
-  const delta = positive ? 0.1 : -0.15;
-  return Math.max(0.1, Math.min(0.95, current + delta));
-};
-```
-
-### Sistema de Ações Autônomas
-
-```typescript
-// Triggers Disponíveis
-const AUTO_TRIGGERS = {
-  'xml_imported': {
-    event: 'xml_imported',
-    agentType: 'fiscal',
-    actionType: 'analyze_credits',
-    requiresApproval: false,
-    priority: 'medium',
-  },
-  'score_below_60': {
-    event: 'score_below_threshold',
-    agentType: 'fiscal',
-    actionType: 'generate_compliance_alert',
-    requiresApproval: false,
-    priority: 'high',
-  },
-  'margin_drop_5pp': {
-    event: 'margin_drop_detected',
-    agentType: 'margin',
-    actionType: 'generate_margin_alert',
-    requiresApproval: false,
-    priority: 'high',
-  },
-  // ... mais triggers
+// Configuração de busca
+const SEARCH_CONFIG = {
+  vectorWeight: 0.7,      // 70% similaridade vetorial
+  keywordWeight: 0.3,     // 30% match de keywords
+  minSimilarity: 0.65,    // Threshold mínimo
+  maxResults: 10,
 };
 
-// Status Flow
-// pending → approved → executed
-// pending → rejected
-// approved → failed
-```
-
-### Fluxo de Dados (Data Flywheel)
-
-```
-Usuário interage com plataforma
-        ↓
-Sistema detecta eventos (XML importado, DRE atualizado, etc.)
-        ↓
-AUTO_TRIGGERS disparam ações autônomas
-        ↓
-Agente especializado processa a tarefa
-        ↓
-Sistema aprende com resultado:
-├── clara_learned_patterns (padrões detectados)
-├── clara_user_decisions (escolhas do usuário)
-└── clara_memory (contexto importante)
-        ↓
-Clara se torna mais inteligente e personalizada
+// Prioridades de fonte
+const SOURCE_PRIORITY = {
+  'user_memory': 1.3,     // +30% boost para memórias do usuário
+  'knowledge_base': 1.0,  // Base padrão
+  'general': 0.8,         // -20% para conteúdo genérico
+};
 ```
 
 ---
@@ -435,19 +427,24 @@ Clara se torna mais inteligente e personalizada
 src/
 ├── components/
 │   ├── ui/                    # shadcn/ui (50+ componentes)
-│   ├── landing/               # Página de vendas
+│   ├── landing/               # Página de vendas (3 jornadas)
 │   ├── dashboard/             # Layout + cards do dashboard
 │   ├── clara/                 # Componentes AI-Native
-│   │   ├── ClaraAgentBadge.tsx        # Badge do agente ativo
-│   │   ├── ClaraAutonomousActionCard.tsx  # Card de ação autônoma
-│   │   ├── ClaraAutonomousPanel.tsx   # Painel de ações pendentes
-│   │   ├── ClaraFeedbackButtons.tsx   # Thumbs up/down
-│   │   ├── ClaraInsightCard.tsx       # Card de insight
-│   │   └── ClaraInsightsPanel.tsx     # Painel de insights
+│   │   ├── ClaraAgentBadge.tsx
+│   │   ├── ClaraAutonomousActionCard.tsx
+│   │   ├── ClaraAutonomousPanel.tsx
+│   │   ├── ClaraActionsDrawer.tsx
+│   │   ├── ClaraFeedbackButtons.tsx
+│   │   ├── ClaraInsightCard.tsx
+│   │   └── ClaraInsightsPanel.tsx
 │   ├── nexus/                 # NEXUS Command Center
 │   ├── credits/               # Radar de Créditos
 │   ├── dre/                   # DRE Inteligente
-│   ├── onboarding/            # FirstMission, GuidedTour, Checklist
+│   ├── onboarding/            # Onboarding Conversacional
+│   │   ├── ClaraOnboardingChat.tsx   # Chat principal
+│   │   ├── FirstMission.tsx
+│   │   ├── GuidedTour.tsx
+│   │   └── OnboardingChecklist.tsx
 │   ├── achievements/          # Badges e Streaks
 │   ├── referral/              # Programa de Indicação
 │   └── common/                # Componentes compartilhados
@@ -455,26 +452,32 @@ src/
 │   ├── Dashboard.tsx          # Home logada (com InsightsPanel)
 │   ├── Nexus.tsx              # Centro de Comando
 │   ├── ClaraAI.tsx            # Interface Clara AI (com Feedback)
+│   ├── OnboardingAI.tsx       # Onboarding conversacional
 │   ├── Indicar.tsx            # Programa de Indicação
 │   ├── calculadora/           # Calculadoras (RTC, NBS, Split)
 │   └── admin/
-│       ├── AdminDashboard.tsx     # Painel admin principal
+│       ├── AdminDashboard.tsx
 │       ├── AdminTrainingData.tsx  # Training Data Center
+│       ├── AdminRAGDashboard.tsx  # Dashboard do RAG
 │       └── ...
 ├── hooks/
 │   ├── useAuth.tsx            # Autenticação + perfil
 │   ├── clara/                 # Hooks AI-Native
-│   │   ├── index.ts           # Exports centralizados
-│   │   ├── useClaraAgents.ts  # Agentes especializados + routing
-│   │   ├── useClaraLearning.ts    # Memória evolutiva + padrões
-│   │   └── useClaraAutonomousActions.ts  # Ações autônomas
-│   ├── useClaraMemory.ts      # Memória + feedback + insights
-│   ├── useClaraContext.ts     # Contexto de navegação
-│   ├── useNexusData.ts        # 8 KPIs do NEXUS
-│   ├── useReferral.ts         # Sistema de indicação
-│   ├── useNotifications.ts    # Notificações realtime
-│   ├── useAchievements.ts     # Sistema de badges
-│   └── useFeatureAccess.ts    # Controle de acesso por plano
+│   │   ├── index.ts
+│   │   ├── useClaraAgents.ts
+│   │   ├── useClaraAgentIntegration.ts
+│   │   ├── useClaraLearning.ts
+│   │   ├── useClaraAutonomousActions.ts
+│   │   ├── useClaraTrigger.ts
+│   │   ├── useKnowledgeGraph.ts
+│   │   └── useSemanticSearch.ts
+│   ├── useClaraMemory.ts
+│   ├── useClaraContext.ts
+│   ├── useNexusData.ts
+│   ├── useReferral.ts
+│   ├── useNotifications.ts
+│   ├── useAchievements.ts
+│   └── useFeatureAccess.ts
 ├── data/
 │   ├── toolsManual.ts         # Base de conhecimento (18 ferramentas)
 │   └── checklistReformaItems.ts
@@ -494,7 +497,14 @@ src/
 |--------|-----------|
 | `clara-assistant` | Orquestra Clara AI (Claude/Gemini) + salva conversas + extrai memórias |
 | `generate-clara-insights` | Analisa dados e gera insights proativos |
-| `stripe-webhook` | Processa assinaturas Stripe + envia e-mail welcome |
+| `trigger-autonomous-actions` | Processa eventos e cria ações autônomas |
+| `process-autonomous-cron` | Executa ações aprovadas em batch |
+| `execute-autonomous-action` | Executa uma ação específica |
+| `semantic-search` | Busca híbrida vetorial + keywords |
+| `generate-embeddings` | Gera vetores para RAG |
+| `populate-embeddings` | Popula embeddings da knowledge base |
+| `memory-decay` | Aplica decay em padrões antigos |
+| `stripe-webhook` | Processa assinaturas Stripe + envia welcome email |
 | `calculate-rtc` | Calcula CBS/IBS/IS via API Gov |
 | `calculate-tax-score` | Gera score tributário (0-1000) |
 | `analyze-credits` | Identifica créditos em XMLs |
@@ -502,6 +512,7 @@ src/
 | `process-dre` | Calcula DRE + impacto reforma |
 | `match-opportunities` | Matching perfil × 61 oportunidades |
 | `erp-sync` | Sincroniza Omie, Bling, Conta Azul |
+| `contaazul-oauth` | OAuth 2.0 para Conta Azul |
 | `send-executive-report` | Gera relatório PDF executivo |
 | `fetch-news` | Busca notícias de fontes tributárias |
 | `process-referral-rewards` | Aplica descontos de indicação |
@@ -532,6 +543,7 @@ src/
 | `clara_insights` | Insights proativos (alertas, recomendações, riscos) |
 | `clara_knowledge_base` | Base de conhecimento jurídico/fiscal |
 | `clara_cache` | Cache de respostas frequentes |
+| `clara_embeddings_cache` | Cache de vetores (economia de API) |
 
 ### Operacional
 | Tabela | Descrição |
@@ -548,85 +560,57 @@ src/
 
 ## Clara AI — Prompt Architecture
 
-### Componentes do Sistema
+### Regras de Brevidade (CRÍTICO)
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     CLARA AI SYSTEM                              │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  ┌──────────────────┐    ┌──────────────────┐                   │
-│  │ KNOWLEDGE CORE   │    │ DECISION CORE    │                   │
-│  │ (25 heurísticas) │    │ (regras de       │                   │
-│  │                  │    │  interpretação)  │                   │
-│  └────────┬─────────┘    └────────┬─────────┘                   │
-│           │                       │                              │
-│           ▼                       ▼                              │
-│  ┌────────────────────────────────────────────────────┐         │
-│  │              CONTEXT INJECTION                      │         │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────────────┐  │         │
-│  │  │ User Data│  │ Memory   │  │ Learned Patterns │  │         │
-│  │  │ (DRE,    │  │ (longo   │  │ (preferências)   │  │         │
-│  │  │ Score...)│  │  prazo)  │  │                  │  │         │
-│  │  └──────────┘  └──────────┘  └──────────────────┘  │         │
-│  └────────────────────────────────────────────────────┘         │
-│                           │                                      │
-│                           ▼                                      │
-│  ┌────────────────────────────────────────────────────┐         │
-│  │              AGENT ROUTER                           │         │
-│  │  Fiscal | Margin | Compliance | General            │         │
-│  └────────────────────────────────────────────────────┘         │
-│                           │                                      │
-│                           ▼                                      │
-│  ┌────────────────────────────────────────────────────┐         │
-│  │              LLM (Claude Sonnet 4 / Gemini)        │         │
-│  └────────────────────────────────────────────────────┘         │
-│                           │                                      │
-│                           ▼                                      │
-│  ┌────────────────────────────────────────────────────┐         │
-│  │              POST-PROCESSING                        │         │
-│  │  - Disclaimer jurídico                             │         │
-│  │  - Salva conversa                                  │         │
-│  │  - Extrai memórias importantes                     │         │
-│  │  - Aprende padrões                                 │         │
-│  │  - Cache de respostas frequentes                   │         │
-│  └────────────────────────────────────────────────────┘         │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
+```typescript
+// Regras obrigatórias no prompt da Clara
+
+const BREVITY_RULES = `
+## REGRA #1 — BREVIDADE EXTREMA (OBRIGATÓRIO)
+- Pergunta simples: 2-3 linhas NO MÁXIMO
+- Pergunta técnica: 4-5 linhas NO MÁXIMO
+- Primeira frase = resposta DIRETA (sem preâmbulo)
+- PROIBIDO: "Ótima pergunta!", "Claro!", "Com certeza!"
+
+## REGRA #2 — TOM CONVERSACIONAL
+- Você é uma AMIGA expert, não um robô
+- Use o NOME do usuário sempre que disponível
+- Expressões naturais: "Olha só...", "Na prática...", "O pulo do gato é..."
+- Emojis: máximo 1 por resposta, nunca no início
+`;
 ```
 
-### Prompt Mestre (3 camadas)
+### Injeção de Contexto
 
-1. **Decision Core** (25 heurísticas)
-   - Princípios de como a Clara interpreta cenários tributários
-   - Ex: "Crédito bem usado vale mais que alíquota baixa"
+```typescript
+// Dados reais do usuário injetados no prompt
 
-2. **Knowledge Core** (conhecimento factual)
-   - EC 132/2023, LC 214/2025
-   - Cronograma 2026-2033
-   - Alíquotas, reduções, Simples Nacional, Split Payment
+const USER_CONTEXT = `
+⭐ PLANO ATUAL: ${profile.plan} (USE ESTA INFORMAÇÃO!)
 
-3. **Tool Contexts** (18 ferramentas)
-   - Cada ferramenta tem: nome, descrição, passo-a-passo
-   - Usado para ajuda contextual
+📊 DADOS DA EMPRESA:
+- Empresa: ${company.nome_fantasia}
+- Regime: ${company.regime_tributario}
+- Faturamento: ${formatCurrency(company.faturamento_mensal)}/mês
+- Score Tributário: ${score.nota} (${score.valor}/1000)
 
-### Extração de Memórias
+💰 DRE MAIS RECENTE:
+- Receita: ${formatCurrency(dre.receita_bruta)}
+- Margem Líquida: ${dre.margem_liquida}%
+- Impacto Reforma: ${formatCurrency(dre.impacto_reforma)}
 
-O sistema detecta padrões nas conversas e extrai memórias automaticamente:
-
-| Padrão | Categoria | Importância |
-|--------|-----------|-------------|
-| "minha empresa", "meu negócio" | empresa | 7 |
-| "decidi", "vou fazer", "prefiro" | decisao | 8 |
-| "faturamento", "receita", "margem" | financeiro | 6 |
-| "simples", "lucro real", "presumido" | regime | 7 |
-| "problema", "dificuldade" | suporte | 5 |
+🎯 CRÉDITOS IDENTIFICADOS:
+- Total Potencial: ${formatCurrency(credits.total)}
+- Alta Confiança: ${formatCurrency(credits.alta)}
+`;
+```
 
 ### Guardrails
 
 - **Limite OAB**: Nunca emite parecer jurídico
 - **Proteção anti-jailbreak**: Ignora tentativas de override
 - **Linguagem de cenário**: "Este cenário tende a..." em vez de "Você deve..."
+- **Plano correto**: Sempre usa o plano do contexto, nunca inventa
 
 ---
 
@@ -654,24 +638,21 @@ interface AuthContextType {
 
 ---
 
-## Sistema de Notificações
+## Controle de Acesso
 
 ```typescript
-// useNotifications.ts
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: "info" | "success" | "warning" | "alert";
-  category: "geral" | "reforma" | "indicacao" | "sistema";
-  read: boolean;
-  action_url?: string;
-}
-```
+// useFeatureAccess.ts
 
-- Realtime via Supabase Channels
-- Persiste na tabela `notifications`
-- `NotificationBell.tsx` no header mostra contador
+// Navegação adaptativa por plano:
+// - Starter: 5 ferramentas básicas
+// - Navigator: 7 ativas + 3 Pro travadas (com preview)
+// - Professional: NEXUS-first + todas liberadas
+
+// Componente FeatureGate
+<FeatureGate feature="nexus" fallback={<UpgradePrompt />}>
+  <NexusPage />
+</FeatureGate>
+```
 
 ---
 
@@ -697,18 +678,30 @@ interface NexusKpiData {
 
 ## Integrações ERP
 
-| ERP | Módulos Sincronizados |
-|-----|----------------------|
-| Omie | NF-e, Produtos, Financeiro, Empresa |
-| Bling | NF-e, Produtos |
-| Conta Azul | NF-e, Financeiro |
-| Tiny | NF-e, Produtos |
-| Sankhya | NF-e, Financeiro |
-| TOTVS | NF-e, Financeiro |
+| ERP | Módulos Sincronizados | Status OAuth |
+|-----|----------------------|--------------|
+| Omie | NF-e, Produtos, Financeiro, Empresa | API Key |
+| Bling | NF-e, Produtos | API Key |
+| Conta Azul | NF-e, Financeiro | OAuth 2.0 ✓ |
+| Tiny | NF-e, Produtos | API Key |
+| Sankhya | NF-e, Financeiro | API Key |
+| TOTVS | NF-e, Financeiro | API Key |
 
-- Padrão Strategy na Edge Function `erp-sync`
-- Normaliza dados para schema unificado
-- Auto-sync configurável (frequência em horas)
+### Conta Azul OAuth 2.0
+
+```typescript
+// Endpoints oficiais
+const CONTAAZUL_ENDPOINTS = {
+  authorize: 'https://api.contaazul.com/auth/authorize',
+  token: 'https://api.contaazul.com/oauth2/token',
+  api: 'https://api.contaazul.com/v1/',
+};
+
+// Validade dos tokens
+// authorization_code: 3 minutos
+// access_token: 1 hora
+// refresh_token: 5 anos
+```
 
 ---
 
@@ -740,6 +733,7 @@ await sendProfessionalWelcomeEmail(payerEmail);
 | `BEEHIIV_API_KEY` | Newsletter |
 | `STRIPE_SECRET_KEY` | Pagamentos (via Lovable Stripe connector) |
 | `LOVABLE_API_KEY` | IA (Clara AI) |
+| `ERP_ENCRYPTION_KEY` | Criptografia de tokens ERP |
 
 ---
 
@@ -790,6 +784,7 @@ CREATE POLICY "Users can update own profile"
 - **Lazy loading**: Componentes pesados carregados sob demanda
 - **Realtime seletivo**: Apenas tabelas críticas (notifications)
 - **Clara Cache**: Respostas frequentes cacheadas por categoria
+- **Embeddings Cache**: Vetores reutilizados para economia de API
 
 ---
 
@@ -821,68 +816,39 @@ CREATE POLICY "Users can update own profile"
 
 ---
 
-## Notas Técnicas - Referências Legadas
+## Notas Técnicas
+
+### Calculadora NBS (Serviços)
+
+A Calculadora NBS foi criada porque a API oficial (Receita Federal) só suporta NCM (produtos), não NBS (serviços de 9 dígitos). Usa alíquotas estimadas da LC 214/2025:
+- Taxa padrão: 26.5% (8.8% CBS + 17.7% IBS)
+- Setores reduzidos (Saúde, Educação): -40%
+
+### DRE - Precisão de Cálculos
+
+Para evitar duplicação:
+- Custos de mão de obra direta são excluídos do peso da folha operacional
+- Campo "aluguel" não deve ser informado simultaneamente em despesas totais e campo específico
+
+### Branding
+
+- Nome oficial: **TribuTalks Inteligência Tributária**
+- Logotipo obrigatório em todos os relatórios PDF
+- Remoção/substituição do logo: apenas plano Enterprise
 
 ### Tabela tributbot_messages
-A tabela `tributbot_messages` no banco de dados mantém o nome original por razões de compatibilidade. 
-Esta tabela armazena o histórico de mensagens da Clara AI. O nome interno não afeta a experiência do usuário.
 
-### Feature Key
-A feature key `clara_ai` substituiu `tribubot` em:
-- `src/hooks/useFeatureAccess.ts`
-- `src/hooks/useUserCredits.ts`
-
-Novos registros usam `clara_ai`, mas registros históricos podem conter `tribubot`.
-
-### Redirect Legado
-A rota `/tribubot` redireciona automaticamente para `/clara-ai` para manter compatibilidade com links antigos.
+A tabela `tributbot_messages` no banco mantém nome original por compatibilidade. Armazena histórico de mensagens da Clara AI.
 
 ---
 
-## Estratégia AI-Native: Roadmap
+## Documentação Adicional
 
-### Fase 1: Coleta de Dados ✅
-- [x] Tabelas de memória, feedback e conversas
-- [x] Botões de thumbs up/down no chat
-- [x] Extração automática de memórias
-- [x] Painel admin Training Data Center
-- [x] Export JSONL para fine-tuning
+| Arquivo | Descrição |
+|---------|-----------|
+| `docs/CLARA_AI_PROMPT.md` | Prompt completo da Clara AI |
+| `.lovable/plan.md` | Plano de implementação atual |
 
-### Fase 2: Agentes Especializados ✅
-- [x] FiscalAgent (créditos, NCM, compliance)
-- [x] MarginAgent (DRE, pricing, custos)
-- [x] ComplianceAgent (prazos, reforma, adequação)
-- [x] Router inteligente (keyword + context)
-- [x] UI ClaraAgentBadge
+---
 
-### Fase 3: Memória Evolutiva ✅
-- [x] Tabela clara_learned_patterns
-- [x] Tracking de decisões do usuário
-- [x] Sistema de confidence (0.1 → 0.95)
-- [x] Decay de relevância
-- [x] Hook useClaraLearning
-
-### Fase 4: Ações Autônomas ✅
-- [x] Tabela clara_autonomous_actions
-- [x] Sistema de triggers (AUTO_TRIGGERS)
-- [x] Fila de aprovação para ações de alto impacto
-- [x] Status flow (pending → approved → executed)
-- [x] UI ClaraAutonomousPanel
-
-### Fase 5: RAG Semântico (Próximo)
-- [ ] Habilitar pgvector para embeddings
-- [ ] Embeddings da knowledge_base
-- [ ] Busca semântica em memórias
-- [ ] Threshold de similaridade configurável
-
-### Fase 6: Fine-Tuning
-- [ ] Atingir 100+ feedbacks positivos
-- [ ] Curar dataset (remover ruído)
-- [ ] Fine-tune modelo especializado
-- [ ] A/B test vs modelo base
-
-### Fase 7: Orquestração MCP
-- [ ] Model Context Protocol
-- [ ] Integração cross-tool
-- [ ] Clara controla ERPs e ferramentas externas
-- [ ] UI "invisível" (auditoria apenas)
+**Fim da Documentação**
