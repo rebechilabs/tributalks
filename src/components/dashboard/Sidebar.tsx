@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUnreadNotificationsByCategory } from "@/hooks/useUnreadNotificationsByCategory";
+import { useClaraInsights } from "@/hooks/useClaraInsights";
 import { getGroupForPath } from "@/hooks/useRouteInfo";
 import logoTributalks from "@/assets/logo-tributalks.png";
 import { cn } from "@/lib/utils";
@@ -44,6 +45,7 @@ export function Sidebar() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { counts: unreadCounts } = useUnreadNotificationsByCategory();
+  const { unreadCount: claraInsightsCount } = useClaraInsights();
   const activeItemRef = useRef<HTMLAnchorElement>(null);
   
   const rawPlan = profile?.plano || 'STARTER';
@@ -132,6 +134,10 @@ export function Sidebar() {
       );
     }
 
+    // Check if this is Clara AI item (has shortcut 'k')
+    const isClaraItem = item.shortcut === 'k';
+    const hasClaraInsights = isClaraItem && claraInsightsCount > 0;
+
     // Item em destaque (featured) - Clara AI ou NEXUS
     if (item.featured) {
       return (
@@ -141,7 +147,7 @@ export function Sidebar() {
           ref={isActive ? activeItemRef : undefined}
           onClick={item.shortcut === 'k' ? (e) => { e.preventDefault(); handleClaraShortcut(); } : undefined}
           className={cn(
-            "flex items-center gap-3 px-3 py-3 rounded-lg transition-all",
+            "flex items-center gap-3 px-3 py-3 rounded-lg transition-all relative",
             "bg-gradient-to-r from-primary/10 via-primary/5 to-transparent",
             "border-l-4 border-primary",
             "hover:from-primary/15 hover:via-primary/10",
@@ -149,10 +155,20 @@ export function Sidebar() {
           )}
         >
           <div className="relative">
-            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+            <div className={cn(
+              "w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center",
+              hasClaraInsights && "ring-2 ring-primary ring-offset-1 ring-offset-background"
+            )}>
               <Icon className="w-4 h-4 text-primary" />
             </div>
-            {item.shortcut && (
+            {/* Pulse indicator for Clara insights */}
+            {hasClaraInsights && (
+              <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+              </span>
+            )}
+            {item.shortcut && !hasClaraInsights && (
               <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded bg-muted flex items-center justify-center">
                 <Command className="w-2.5 h-2.5 text-muted-foreground" />
               </span>
@@ -161,7 +177,14 @@ export function Sidebar() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold text-foreground">{item.label}</span>
-              {item.badge && (
+              {hasClaraInsights ? (
+                <Badge 
+                  variant="default"
+                  className="text-[10px] px-1.5 py-0 bg-primary text-primary-foreground animate-pulse"
+                >
+                  {claraInsightsCount} {claraInsightsCount === 1 ? 'insight' : 'insights'}
+                </Badge>
+              ) : item.badge ? (
                 <Badge 
                   variant={item.badgeVariant === 'success' ? 'default' : 'secondary'}
                   className={cn(
@@ -171,10 +194,12 @@ export function Sidebar() {
                 >
                   {item.badge}
                 </Badge>
-              )}
+              ) : null}
             </div>
             {item.description && (
-              <span className="text-xs text-muted-foreground block truncate">{item.description}</span>
+              <span className="text-xs text-muted-foreground block truncate">
+                {hasClaraInsights ? 'Clara tem sugestões para você!' : item.description}
+              </span>
             )}
           </div>
         </Link>
