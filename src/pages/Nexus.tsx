@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
-import { NexusHeader, NexusGrid, NexusInsightsSection } from '@/components/nexus';
+import { NexusHeader, NexusGrid, NexusInsightsSection, NexusClaraCard } from '@/components/nexus';
 import { useNexusData } from '@/hooks/useNexusData';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -117,8 +117,15 @@ export default function Nexus() {
           </Card>
         )}
 
-        {/* KPI Grid */}
-        <NexusGrid data={kpiData} loading={loading} />
+        {/* Clara AI Card + KPI Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="lg:col-span-2">
+            <NexusGrid data={kpiData} loading={loading} />
+          </div>
+          <div className="lg:col-span-1">
+            <NexusClaraCard />
+          </div>
+        </div>
 
         {/* Insights Section */}
         <NexusInsightsSection insights={insights} loading={loading} />
