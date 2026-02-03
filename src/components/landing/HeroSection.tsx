@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Check, Star, TrendingUp, Shield, Zap, Bot, Brain, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import logoHero from "@/assets/logo-tributalks-hero.jpg";
-import claraDashboard from "@/assets/clara-dashboard-preview.png";
+import claraAiHero from "@/assets/clara-ai-hero.png";
 import { CONFIG } from "@/config/site";
 
 export function HeroSection() {
@@ -76,8 +76,8 @@ export function HeroSection() {
                     {/* Left - Image */}
                     <div className="relative">
                       <img 
-                        src={claraDashboard} 
-                        alt="Clara AI Dashboard Preview" 
+                        src={claraAiHero} 
+                        alt="Clara AI - Inteligência Tributária" 
                         className="rounded-lg border border-border shadow-lg w-full"
                       />
                       <div className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full shadow-lg">
