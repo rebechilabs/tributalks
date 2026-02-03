@@ -4007,6 +4007,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_memory_decay: {
+        Args: never
+        Returns: {
+          avg_importance_after: number
+          avg_importance_before: number
+          memories_decayed: number
+          memories_expired: number
+        }[]
+      }
+      apply_pattern_decay: {
+        Args: never
+        Returns: {
+          avg_confidence_after: number
+          avg_confidence_before: number
+          patterns_decayed: number
+          patterns_removed: number
+        }[]
+      }
       create_autonomous_action: {
         Args: {
           p_action_payload: Json
@@ -4019,6 +4037,20 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      get_memory_stats: {
+        Args: { p_user_id: string }
+        Returns: {
+          active_memories: number
+          active_patterns: number
+          avg_memory_importance: number
+          avg_pattern_confidence: number
+          high_confidence_patterns: number
+          most_used_pattern_key: string
+          oldest_pattern_days: number
+          total_memories: number
+          total_patterns: number
+        }[]
       }
       get_recent_conversations: {
         Args: { p_limit?: number; p_user_id: string }
@@ -4104,6 +4136,19 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      reinforce_pattern: {
+        Args: {
+          p_boost?: number
+          p_pattern_key: string
+          p_pattern_type: string
+          p_user_id: string
+        }
+        Returns: {
+          new_confidence: number
+          new_times_observed: number
+          pattern_id: string
+        }[]
       }
       search_knowledge_base: {
         Args: {
