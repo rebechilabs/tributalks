@@ -595,6 +595,45 @@ export type Database = {
         }
         Relationships: []
       }
+      clara_prompt_configs: {
+        Row: {
+          config_key: string
+          config_type: string
+          content: Json
+          created_at: string | null
+          id: string
+          priority: number | null
+          status: string | null
+          updated_at: string | null
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          config_key: string
+          config_type: string
+          content: Json
+          created_at?: string | null
+          id?: string
+          priority?: number | null
+          status?: string | null
+          updated_at?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          config_key?: string
+          config_type?: string
+          content?: Json
+          created_at?: string | null
+          id?: string
+          priority?: number | null
+          status?: string | null
+          updated_at?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
       clara_roadmaps: {
         Row: {
           completed_steps: string[] | null
@@ -3903,6 +3942,48 @@ export type Database = {
           id?: string
           metadata?: Json | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_ai_journey: {
+        Row: {
+          completed_tools: string[] | null
+          created_at: string | null
+          id: string
+          last_activity: string | null
+          priority: string | null
+          satisfaction_score: number | null
+          tool_plan: Json | null
+          tool_results: Json | null
+          updated_at: string | null
+          user_id: string
+          welcome_seen_at: string | null
+        }
+        Insert: {
+          completed_tools?: string[] | null
+          created_at?: string | null
+          id?: string
+          last_activity?: string | null
+          priority?: string | null
+          satisfaction_score?: number | null
+          tool_plan?: Json | null
+          tool_results?: Json | null
+          updated_at?: string | null
+          user_id: string
+          welcome_seen_at?: string | null
+        }
+        Update: {
+          completed_tools?: string[] | null
+          created_at?: string | null
+          id?: string
+          last_activity?: string | null
+          priority?: string | null
+          satisfaction_score?: number | null
+          tool_plan?: Json | null
+          tool_results?: Json | null
+          updated_at?: string | null
+          user_id?: string
+          welcome_seen_at?: string | null
         }
         Relationships: []
       }

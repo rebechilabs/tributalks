@@ -27,6 +27,7 @@ import OAuthCallback from "./pages/OAuthCallback";
 // Páginas protegidas
 import Onboarding from "./pages/Onboarding";
 import OnboardingAI from "./pages/OnboardingAI";
+import WelcomeAI from "./pages/WelcomeAI";
 import Dashboard from "./pages/Dashboard";
 import Upgrade from "./pages/Upgrade";
 import Perfil from "./pages/Perfil";
@@ -122,6 +123,15 @@ const App = () => (
               element={
                 <ProtectedRoute requireOnboarding={false}>
                   <Onboarding />
+                </ProtectedRoute>
+              } 
+            />
+            {/* Welcome AI-First - 1 pergunta */}
+            <Route 
+              path="/welcome" 
+              element={
+                <ProtectedRoute>
+                  <WelcomeAI />
                 </ProtectedRoute>
               } 
             />
