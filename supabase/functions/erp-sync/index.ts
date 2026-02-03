@@ -768,7 +768,8 @@ class BlingAdapter implements ERPAdapter {
 // ============================================================================
 
 class ContaAzulAdapter implements ERPAdapter {
-  private baseUrl = 'https://api.contaazul.com/v1';
+  // API Conta Azul v2 - URL correta conforme documentação oficial
+  private baseUrl = 'https://api-v2.contaazul.com/v1';
   // deno-lint-ignore no-explicit-any
   private supabase: any = null;
   private connectionId: string | null = null;
@@ -779,6 +780,7 @@ class ContaAzulAdapter implements ERPAdapter {
     this.supabase = supabase;
     this.connectionId = connectionId;
     this.credentials = credentials;
+    console.log('[ContaAzulAdapter] Context set with connection:', connectionId);
   }
 
   private async refreshAccessToken(): Promise<string> {
@@ -879,18 +881,30 @@ class ContaAzulAdapter implements ERPAdapter {
   }
 
   async syncEmpresa(credentials: ERPCredentials): Promise<Record<string, unknown>> {
+    // Validate credentials before making API call
+    if (!credentials.access_token) {
+      console.error('[ContaAzul syncEmpresa] Missing access_token');
+      throw new Error('Credenciais Conta Azul incompletas: access_token é obrigatório');
+    }
+    
+    console.log('[ContaAzul syncEmpresa] Fetching company data...');
+    
     try {
       const data = await this.makeRequest('/companies', credentials);
+      
+      console.log('[ContaAzul syncEmpresa] Response received:', data ? 'success' : 'empty');
       
       if (data) {
         return {
           razao_social: data.name,
           cnpj_principal: data.federalTaxNumber,
+          // API v2 may return additional fields
+          nome_fantasia: data.tradingName || data.name,
         };
       }
       return {};
     } catch (error) {
-      console.error('Conta Azul syncEmpresa error:', error);
+      console.error('[ContaAzul syncEmpresa] API error:', error);
       throw error;
     }
   }
