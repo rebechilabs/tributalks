@@ -54,16 +54,18 @@ interface UserAnalysisData {
   };
 }
 
-// Regras de insights baseadas em dados
+// Regras de insights baseadas em dados e agentes especializados
 const INSIGHT_RULES: InsightRule[] = [
-  // SCORE TRIBUTÁRIO
+  // ============================================
+  // AGENTE FISCAL - Triggers
+  // ============================================
   {
     id: 'score_drop_alert',
     type: 'alert',
     priority: 'high',
     condition: (d) => d.score.total !== null && d.score.total < 50,
-    title: 'Score Tributário em zona de risco',
-    description: (d) => `Seu Score caiu para ${d.score.total} pontos. Isso indica exposição a autuações. Vamos revisar os pontos críticos?`,
+    title: '🔴 Score Tributário em zona de risco',
+    description: (d) => `Seu Score caiu para ${d.score.total} pontos. O Agente Fiscal detectou exposição a autuações.`,
     actionCta: 'Ver Score',
     actionRoute: '/dashboard/score-tributario',
     triggerCondition: 'score_below_50',
@@ -73,21 +75,34 @@ const INSIGHT_RULES: InsightRule[] = [
     type: 'recommendation',
     priority: 'medium',
     condition: (d) => d.score.daysSinceCalculation !== null && d.score.daysSinceCalculation > 30,
-    title: 'Score desatualizado há mais de 30 dias',
-    description: () => 'Sua situação fiscal pode ter mudado. Recalcule o Score para ter uma visão atualizada.',
+    title: '📊 Score desatualizado',
+    description: () => 'Sua situação fiscal pode ter mudado nos últimos 30 dias. Recalcule para uma visão atualizada.',
     actionCta: 'Recalcular',
     actionRoute: '/dashboard/score-tributario',
     triggerCondition: 'score_older_than_30_days',
   },
+  {
+    id: 'score_excellent',
+    type: 'opportunity',
+    priority: 'low',
+    condition: (d) => d.score.total !== null && d.score.total >= 85,
+    title: '🏆 Score excelente!',
+    description: (d) => `Parabéns! Seu Score de ${d.score.total} pontos indica conformidade exemplar. Continue assim!`,
+    actionCta: 'Ver detalhes',
+    actionRoute: '/dashboard/score-tributario',
+    triggerCondition: 'score_excellent',
+  },
   
-  // DRE / MARGEM
+  // ============================================
+  // AGENTE DE MARGEM - Triggers
+  // ============================================
   {
     id: 'margin_at_risk',
     type: 'risk',
     priority: 'high',
     condition: (d) => d.dre.reformaImpactoPercent !== null && d.dre.reformaImpactoPercent < -2,
-    title: 'Margem vai cair com a Reforma',
-    description: (d) => `Sua margem pode cair ${Math.abs(d.dre.reformaImpactoPercent || 0).toFixed(1)}pp com a Reforma. Vamos simular estratégias de mitigação?`,
+    title: '⚠️ Margem em risco com a Reforma',
+    description: (d) => `O Agente de Margem projeta queda de ${Math.abs(d.dre.reformaImpactoPercent || 0).toFixed(1)}pp. Simule estratégias de mitigação.`,
     actionCta: 'Simular cenários',
     actionRoute: '/dashboard/dre',
     triggerCondition: 'reforma_impact_negative',
@@ -97,23 +112,47 @@ const INSIGHT_RULES: InsightRule[] = [
     type: 'alert',
     priority: 'critical',
     condition: (d) => d.dre.margemLiquida !== null && d.dre.margemLiquida < 5,
-    title: 'Margem líquida crítica',
-    description: (d) => `Sua margem líquida está em ${d.dre.margemLiquida?.toFixed(1)}%. Qualquer aumento de carga tributária pode gerar prejuízo.`,
+    title: '🚨 Margem líquida crítica',
+    description: (d) => `Margem de ${d.dre.margemLiquida?.toFixed(1)}% está muito baixa. Aumento de carga pode gerar prejuízo.`,
     actionCta: 'Analisar DRE',
     actionRoute: '/dashboard/dre',
     triggerCondition: 'margin_below_5',
   },
+  {
+    id: 'margin_healthy',
+    type: 'opportunity',
+    priority: 'low',
+    condition: (d) => d.dre.margemLiquida !== null && d.dre.margemLiquida >= 15,
+    title: '💚 Margem saudável',
+    description: (d) => `Sua margem de ${d.dre.margemLiquida?.toFixed(1)}% oferece boa resiliência tributária. Explore otimizações.`,
+    actionCta: 'Ver DRE',
+    actionRoute: '/dashboard/dre',
+    triggerCondition: 'margin_healthy',
+  },
+  {
+    id: 'dre_outdated',
+    type: 'recommendation',
+    priority: 'medium',
+    condition: (d) => d.dre.daysSinceUpdate !== null && d.dre.daysSinceUpdate > 60,
+    title: '📈 Atualize sua DRE',
+    description: () => 'Sua DRE está há mais de 60 dias sem atualização. Dados recentes melhoram as projeções.',
+    actionCta: 'Atualizar',
+    actionRoute: '/dashboard/dre',
+    triggerCondition: 'dre_outdated',
+  },
   
-  // CRÉDITOS
+  // ============================================
+  // AGENTE DE COMPLIANCE - Triggers
+  // ============================================
   {
     id: 'credits_available',
     type: 'opportunity',
     priority: 'high',
     condition: (d) => d.credits.totalPotential !== null && d.credits.totalPotential > 10000,
-    title: 'Créditos tributários identificados',
-    description: (d) => `Encontrei R$ ${((d.credits.totalPotential || 0) / 1000).toFixed(0)}k em créditos que podem ser recuperados. Vamos validar?`,
+    title: '💰 Créditos tributários identificados',
+    description: (d) => `O Agente Fiscal encontrou R$ ${((d.credits.totalPotential || 0) / 1000).toFixed(0)}k em créditos recuperáveis.`,
     actionCta: 'Ver créditos',
-    actionRoute: '/dashboard/radar-creditos',
+    actionRoute: '/dashboard/analise-notas',
     triggerCondition: 'credits_above_10k',
   },
   {
@@ -121,50 +160,96 @@ const INSIGHT_RULES: InsightRule[] = [
     type: 'recommendation',
     priority: 'medium',
     condition: (d) => d.credits.countPending > 5,
-    title: 'Créditos aguardando validação',
-    description: (d) => `Você tem ${d.credits.countPending} créditos pendentes de validação. Revise para confirmar a recuperação.`,
+    title: '📋 Créditos aguardando validação',
+    description: (d) => `${d.credits.countPending} créditos precisam de validação para confirmar recuperação.`,
     actionCta: 'Revisar',
-    actionRoute: '/dashboard/radar-creditos',
+    actionRoute: '/dashboard/analise-notas',
     triggerCondition: 'pending_credits',
   },
+  {
+    id: 'credits_significant',
+    type: 'opportunity',
+    priority: 'critical',
+    condition: (d) => d.credits.totalPotential !== null && d.credits.totalPotential > 50000,
+    title: '🎯 Créditos significativos disponíveis',
+    description: (d) => `R$ ${((d.credits.totalPotential || 0) / 1000).toFixed(0)}k em créditos! Priorize a validação e recuperação.`,
+    actionCta: 'Priorizar',
+    actionRoute: '/dashboard/analise-notas',
+    triggerCondition: 'credits_above_50k',
+  },
   
-  // OPORTUNIDADES
+  // ============================================
+  // OPORTUNIDADES & ECONOMIA
+  // ============================================
   {
     id: 'opportunities_available',
     type: 'opportunity',
     priority: 'medium',
     condition: (d) => d.opportunities.activeCount > 0 && d.opportunities.totalSavings > 5000,
-    title: 'Economia fiscal identificada',
+    title: '💡 Economia fiscal identificada',
     description: (d) => `${d.opportunities.activeCount} oportunidades podem gerar R$ ${((d.opportunities.totalSavings || 0) / 1000).toFixed(0)}k/ano de economia.`,
     actionCta: 'Ver oportunidades',
     actionRoute: '/dashboard/oportunidades',
     triggerCondition: 'opportunities_available',
   },
+  {
+    id: 'quick_wins_available',
+    type: 'opportunity',
+    priority: 'high',
+    condition: (d) => d.opportunities.activeCount >= 3,
+    title: '🚀 Quick wins disponíveis',
+    description: (d) => `Você tem ${d.opportunities.activeCount} oportunidades ativas. Comece pelas mais rápidas de implementar.`,
+    actionCta: 'Ver quick wins',
+    actionRoute: '/dashboard/oportunidades',
+    triggerCondition: 'multiple_opportunities',
+  },
   
-  // ONBOARDING
+  // ============================================
+  // PROGRESSO & ONBOARDING
+  // ============================================
   {
     id: 'complete_onboarding',
     type: 'recommendation',
     priority: 'low',
     condition: (d) => !d.progress.onboardingComplete && d.progress.xmlsProcessed > 0,
-    title: 'Complete seu setup inicial',
-    description: () => 'Você já importou XMLs, mas ainda não completou o setup. Finalize para desbloquear todos os recursos.',
+    title: '✅ Complete seu setup inicial',
+    description: () => 'Você já importou XMLs! Finalize o setup para desbloquear todos os recursos.',
     actionCta: 'Continuar',
     actionRoute: '/dashboard',
     triggerCondition: 'incomplete_onboarding',
   },
-  
-  // XMLS
   {
     id: 'import_more_xmls',
     type: 'recommendation',
     priority: 'low',
     condition: (d) => d.progress.xmlsProcessed < 10 && d.progress.xmlsProcessed > 0,
-    title: 'Importe mais XMLs para análise completa',
-    description: (d) => `Você tem apenas ${d.progress.xmlsProcessed} XMLs. Importe mais para diagnósticos mais precisos.`,
+    title: '📤 Importe mais XMLs',
+    description: (d) => `Com apenas ${d.progress.xmlsProcessed} XMLs, os diagnósticos ficam limitados. Mais dados = mais precisão.`,
     actionCta: 'Importar',
-    actionRoute: '/dashboard/importar-xmls',
+    actionRoute: '/dashboard/analise-notas',
     triggerCondition: 'few_xmls',
+  },
+  {
+    id: 'workflows_in_progress',
+    type: 'recommendation',
+    priority: 'medium',
+    condition: (d) => d.progress.workflowsInProgress > 0,
+    title: '🔄 Workflows em andamento',
+    description: (d) => `Você tem ${d.progress.workflowsInProgress} workflow(s) iniciado(s). Continue para concluí-los.`,
+    actionCta: 'Continuar',
+    actionRoute: '/dashboard/workflows',
+    triggerCondition: 'pending_workflows',
+  },
+  {
+    id: 'first_xml_success',
+    type: 'opportunity',
+    priority: 'low',
+    condition: (d) => d.progress.xmlsProcessed >= 1 && d.progress.xmlsProcessed <= 3,
+    title: '🎉 Primeiros XMLs importados!',
+    description: () => 'Excelente início! Importe mais XMLs para análises ainda mais precisas.',
+    actionCta: 'Importar mais',
+    actionRoute: '/dashboard/analise-notas',
+    triggerCondition: 'first_xmls_imported',
   },
 ];
 
