@@ -1,149 +1,142 @@
 
-# Plano: Identificação de Produtos Monofásicos no Radar XML
+# Plano: Preencher DRE Automaticamente com Dados do Conta Azul
 
-## Objetivo
-Aprimorar o sistema para identificar corretamente produtos monofásicos nos XMLs importados e alertar quando a empresa está pagando PIS/COFINS indevidamente em produtos onde o imposto já foi recolhido na indústria.
+## Resumo
 
----
+Você quer que os dados sincronizados do Conta Azul preencham automaticamente o formulário DRE Inteligente. Identifiquei que há dois problemas bloqueando a sincronização que precisam ser resolvidos primeiro, e depois implementaremos o preenchimento automático do DRE.
 
-## Contexto do Problema
+## Problemas Identificados na Sincronização
 
-Produtos monofásicos são aqueles onde PIS/COFINS já foi recolhido na primeira etapa da cadeia (indústria/importação). Na revenda, esses produtos devem usar:
-- **CST PIS/COFINS 04** = Operação tributável monofásica - revenda a alíquota zero
-- **pPIS/pCOFINS = 0.00** e **vPIS/vCOFINS = 0.00**
+Analisando os logs de sincronização recentes, encontrei dois erros:
 
-O problema ocorre quando empresas revendem produtos monofásicos com CST incorreto ou com valores de PIS/COFINS sendo cobrados.
+1. **NF-e**: A API do Conta Azul exige período máximo de 15 dias entre datas (`data_competencia_de` e `data_competencia_ate`)
+   - Atualmente: 90 dias de busca (causa erro 400)
+   - Solução: Fazer múltiplas requisições em janelas de 15 dias
 
-### NCMs Monofásicos Cobertos
+2. **Financeiro → DRE**: Erro de constraint no upsert do `company_dre`
+   - Causa: Falta de unique constraint na combinação `user_id, period_type, period_year, period_month`
+   - Solução: Adicionar constraint no banco
 
-| Categoria | NCMs | Base Legal |
-|-----------|------|------------|
-| Combustíveis | 2710, 2207 | Lei 11.116/2005 |
-| Medicamentos | 3003, 3004 | Lei 10.147/2000 |
-| Cosméticos | 3303, 3304, 3305 | Lei 10.147/2000 |
-| Bebidas Frias | 2201, 2202, 2203, 2204 | Lei 13.097/2015 |
-| Autopeças | 8708, 4011 | Lei 10.485/2002 |
+## Etapas de Implementação
 
----
+### Etapa 1: Corrigir Sincronização da API Conta Azul
 
-## Alterações Necessárias
+**1.1 - Corrigir busca de NF-e (período de 15 dias)**
 
-### 1. Edge Function `analyze-credits/index.ts`
+Modificar `syncNFe` no adapter ContaAzul para buscar em janelas de 15 dias:
 
-**Arquivo:** `supabase/functions/analyze-credits/index.ts`
+- Dividir período de 90 dias em 6 requisições de 15 dias cada
+- Acumular resultados de todas as janelas
+- Respeitar rate limiting entre chamadas
 
-#### 1.1. Expandir Lista de NCMs Monofásicos
-Adicionar mais NCMs à função `isMonophasicNCM()`:
-- 8708 (autopeças)
-- 4011 (pneus)
-- 8507 (baterias)
+**1.2 - Corrigir busca Financeira**
 
-#### 1.2. Nova Função de Detecção de CST Monofásico
-```text
-Criar função isMonophasicCST() que verifica se CST indica tributação monofásica:
-- CST 04 = Tributação monofásica - revenda a alíquota zero
-- CST 05 = Tributação monofásica - revenda sujeita à substituição
-- CST 06 = Tributação monofásica - alíquota zero
+Verificar se o mesmo limite se aplica aos endpoints financeiros e ajustar se necessário.
+
+### Etapa 2: Corrigir Constraint do Banco de Dados
+
+Criar migration para adicionar unique constraint na tabela `company_dre`:
+
+```sql
+ALTER TABLE company_dre 
+ADD CONSTRAINT company_dre_user_period_unique 
+UNIQUE (user_id, period_type, period_year, period_month);
 ```
 
-#### 1.3. Atualizar Regra PIS_COFINS_008
-Modificar para detectar quando:
-- NCM é monofásico
-- Operação é de saída (CFOP 5xxx ou 6xxx)
-- CST PIS/COFINS NÃO é 04/05/06 **OU** vPIS > 0
+### Etapa 3: Melhorar Mapeamento Financeiro → DRE
 
-Isso indica que a empresa pode estar pagando PIS/COFINS indevidamente.
+Atualmente os dados financeiros são mapeados de forma genérica (60% custos, 20% salários, 20% outras). Melhorar para:
 
-#### 1.4. Adicionar Regra para Autopeças (PIS_COFINS_010)
-Nova regra específica para NCM 8708/4011 (autopeças/pneus).
+- Categorizar receitas: vendas produtos vs serviços (baseado em tipo de nota)
+- Categorizar despesas: usar categorias do Conta Azul quando disponíveis
+- Separar custos operacionais de custos de vendas
 
----
+### Etapa 4: Implementar Auto-Preenchimento no DRE Wizard
 
-### 2. Banco de Dados - Novas Regras de Crédito
+**4.1 - Criar hook `useERPDREData`**
 
-Inserir novas regras na tabela `credit_rules`:
+Hook que busca dados sincronizados do ERP para o período selecionado:
 
-| rule_code | rule_name | NCMs | Descrição |
-|-----------|-----------|------|-----------|
-| PIS_COFINS_010 | Autopeças - tributação monofásica | 8708, 4011 | Autopeças e pneus com tributação concentrada |
-| PIS_COFINS_011 | Cosméticos - tributação monofásica | 3303, 3304, 3305 | Cosméticos com tributação na indústria |
+- Verifica se há conexão ERP ativa
+- Busca último DRE criado via sync para o mês/ano selecionado
+- Retorna dados formatados para o formulário
 
----
+**4.2 - Modificar `DREWizard.tsx`**
 
-### 3. Componente de Alertas - Front-end
+Adicionar:
+- Detecção de conexão ERP ativa
+- Botão/banner para "Preencher com dados do Conta Azul"
+- Preview dos valores antes de aplicar
+- Mesclagem inteligente (mantém valores já editados manualmente)
 
-**Arquivo:** `src/components/credits/MonophasicAlert.tsx` (novo)
+**4.3 - UX do Auto-Preenchimento**
 
-Criar componente que exibe alertas específicos para produtos monofásicos identificados:
-- Card com destaque visual (cor diferenciada)
-- Lista de NCMs monofásicos encontrados
-- Valor estimado de PIS/COFINS pago indevidamente
-- Link para base legal
+Quando o usuário acessa o DRE Wizard:
 
----
+```text
+┌──────────────────────────────────────────────────────────────┐
+│  🔗 Conta Azul Conectado                                     │
+│                                                              │
+│  Encontramos dados financeiros do seu ERP para Jan/2026:     │
+│  • Receitas: R$ 150.000                                     │
+│  • Despesas: R$ 80.000                                      │
+│                                                              │
+│  [Preencher Automaticamente]    [Continuar Manualmente]      │
+└──────────────────────────────────────────────────────────────┘
+```
 
-### 4. Integração no CreditRadar
+## Arquivos a Modificar
 
-**Arquivo:** `src/components/credits/CreditRadar.tsx`
-
-- Adicionar seção específica "Produtos Monofásicos" no topo
-- Mostrar contagem de produtos monofásicos identificados
-- Filtro específico para regras de monofásicos
-
----
-
-### 5. Processamento XML Batch
-
-**Arquivo:** `supabase/functions/process-xml-batch/index.ts`
-
-Adicionar campo `is_monophasic` no resultado do parsing para marcar itens com NCM monofásico durante o processamento inicial.
-
----
+| Arquivo | Alteração |
+|---------|-----------|
+| `supabase/functions/erp-sync/index.ts` | Corrigir janelas de 15 dias, melhorar categorização |
+| `src/components/dre/DREWizard.tsx` | Adicionar detecção ERP e botão de auto-preenchimento |
+| `src/hooks/useERPDREData.ts` | Novo hook para buscar dados ERP para DRE |
+| Migration SQL | Adicionar unique constraint em company_dre |
 
 ## Detalhes Técnicos
 
-### Lógica de Identificação Aprimorada
+### Lógica de Janelas de 15 Dias (NF-e)
 
-```text
-Para cada item do XML:
-1. Verificar se NCM está na lista de monofásicos
-2. Se SIM e operação é SAÍDA (CFOP 5xxx/6xxx):
-   a. Se CST PIS = 04/05/06 E vPIS = 0 → Correto (não gera alerta)
-   b. Se CST PIS ≠ 04/05/06 OU vPIS > 0 → Potencial pagamento indevido
-      - Gerar crédito identificado com:
-        - potential_recovery = vPIS + vCOFINS
-        - confidence_level = 'high'
-        - confidence_score = 92
+```typescript
+// Dividir 90 dias em janelas de 15 dias
+const windows: Array<{start: string, end: string}> = [];
+let currentStart = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+const finalEnd = new Date();
+
+while (currentStart < finalEnd) {
+  const windowEnd = new Date(Math.min(
+    currentStart.getTime() + 15 * 24 * 60 * 60 * 1000,
+    finalEnd.getTime()
+  ));
+  windows.push({
+    start: currentStart.toISOString().split('T')[0],
+    end: windowEnd.toISOString().split('T')[0]
+  });
+  currentStart = windowEnd;
+}
 ```
 
-### CSTs de PIS/COFINS Relevantes
+### Mapeamento Categorias Conta Azul → DRE
 
-| CST | Descrição | Gera Crédito? |
-|-----|-----------|---------------|
-| 01 | Tributação Normal | Sim, se NCM monofásico |
-| 02 | Tributação Diferenciada | Sim, se NCM monofásico |
-| 04 | Monofásico - Alíquota Zero | Não (correto) |
-| 05 | Monofásico - Substituição | Não (correto) |
-| 06 | Alíquota Zero | Depende do contexto |
-
----
-
-## Resumo de Arquivos a Modificar
-
-| Arquivo | Tipo de Alteração |
-|---------|------------------|
-| `supabase/functions/analyze-credits/index.ts` | Expandir lógica de detecção |
-| `supabase/functions/process-xml-batch/index.ts` | Adicionar flag monofásico |
-| `src/components/credits/MonophasicAlert.tsx` | Novo componente |
-| `src/components/credits/CreditRadar.tsx` | Integrar alertas |
-| Migração SQL | Adicionar novas regras |
-
----
+| Conta Azul | Campo DRE |
+|------------|-----------|
+| `receita` / `contas_a_receber` | `vendas_produtos` ou `vendas_servicos` |
+| `despesa` / Aluguel | `aluguel` |
+| `despesa` / Folha | `salarios_encargos` |
+| `despesa` / Marketing | `marketing` |
+| `despesa` / Outras | `outras_despesas` |
 
 ## Resultado Esperado
 
-Após implementação:
-1. XMLs com produtos monofásicos serão identificados automaticamente
-2. Alertas serão exibidos quando houver pagamento indevido de PIS/COFINS
-3. Potencial de recuperação será calculado com alta confiança (92%)
-4. Usuário verá seção dedicada "Monofásicos" no Radar de Créditos
+1. ✅ Sincronização do Conta Azul funcionando sem erros
+2. ✅ Dados financeiros salvos corretamente no `company_dre`
+3. ✅ DRE Wizard detecta dados disponíveis do ERP
+4. ✅ Usuário pode preencher automaticamente com 1 clique
+5. ✅ Valores podem ser ajustados manualmente após auto-preenchimento
+
+## Observações
+
+- Os valores importados são estimativas baseadas nos lançamentos financeiros
+- Recomendamos que o usuário revise os valores antes de calcular
+- Dados como pró-labore e despesas específicas podem precisar de ajuste manual (ERP nem sempre categoriza)
