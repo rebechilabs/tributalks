@@ -32,6 +32,7 @@ import { ClaraInsightsPanel, ClaraAutonomousPanel } from "@/components/clara";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAchievements } from "@/hooks/useAchievements";
 import { useQueryClient } from "@tanstack/react-query";
+import { useGenerateInsights } from "@/hooks/useGenerateInsights";
 
 interface Simulation {
   id: string;
@@ -221,6 +222,9 @@ const Dashboard = () => {
   
   // Consolidated dashboard data hook - single batch request
   const { data: dashboardData, isLoading: dashboardLoading } = useDashboardData();
+  
+  // Gera insights proativos da Clara ao carregar (uma vez por sessão)
+  useGenerateInsights();
   
   // Fetch company profile for CNPJ management
   useEffect(() => {
