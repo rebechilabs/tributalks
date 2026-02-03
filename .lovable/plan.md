@@ -1,16 +1,20 @@
 
-# Atualização do Card "Preciso Monitorar" (Navigator)
+# Atualização do Card "Preciso Decidir" (Professional)
 
 ## Objetivo
-Substituir a lista de features técnicas por blocos de benefícios no card Navigator, seguindo o mesmo padrão visual do Starter.
+Substituir a lista de features técnicas por blocos de benefícios no card Professional, seguindo o mesmo padrão visual dos cards Starter e Navigator.
 
-## Blocos de Benefícios
+## Blocos de Benefícios (5 blocos)
 
-1. "Tudo do Starter, com mais poder de análise e acompanhamento contínuo."
-2. "Clara AI com 100 mensagens/dia para te guiar nas decisões do dia a dia."
-3. "Fique por dentro das notícias da Reforma em tempo real e meça sua prontidão com o Checklist."
-4. "Analise documentos fiscais com IA e siga Workflows Guiados para organizar suas tarefas."
-5. "Acesse a comunidade TribuTalks Connect e exporte relatórios em PDF."
+1. **"Tudo do Navigator, com Clara AI ilimitada e poder total de decisão."**
+
+2. **"Identifique créditos tributários com análise de XMLs, Radar de Créditos e 61+ oportunidades fiscais mapeadas."**
+
+3. **"Controle sua rentabilidade com DRE Inteligente e a Suíte Margem Ativa 2026: OMC-AI, PriceGuard e Dashboard Executivo."**
+
+4. **"Monitore tudo em tempo real no NEXUS, seu centro de comando com 8 KPIs executivos."**
+
+5. **"Conecte seu ERP e exporte relatórios PDF profissionais prontos para apresentar."**
 
 ---
 
@@ -18,39 +22,63 @@ Substituir a lista de features técnicas por blocos de benefícios no card Navig
 
 **Arquivo:** `src/components/landing/JourneysSection.tsx`
 
-1. Substituir o array `features` por `benefitBlocks` no objeto do plano Navigator (linhas 25-35)
-2. Adicionar `trialBadge: "7 DIAS GRÁTIS"` (se aplicável)
-3. Atualizar `ctaText` para "Testar 7 dias grátis"
+1. Substituir o array `features` (linhas 50-57) por `benefitBlocks` no objeto do plano Professional
+2. Manter `badge: "MAIS POPULAR"` e `highlighted: true`
+3. Manter `roi: "ROI médio: 10x nos primeiros 90 dias"`
+4. Atualizar `ctaText` para "Começar Agora →" (ou manter "Plano Professional →")
 
-**Estrutura:**
+**Estrutura proposta:**
 ```typescript
 {
-  id: "navigator",
-  icon: BarChart3,
-  title: "Preciso Monitorar",
-  description: '"Quero acompanhar mudanças e me preparar gradualmente."',
+  id: "professional",
+  icon: Gauge,
+  title: "Preciso Decidir",
+  description: '"Preciso tomar decisões informadas e proteger meu caixa AGORA."',
   benefitBlocks: [
-    "Tudo do Starter, com mais poder de análise e acompanhamento contínuo.",
-    "Clara AI com 100 mensagens/dia para te guiar nas decisões do dia a dia.",
-    "Fique por dentro das notícias da Reforma em tempo real e meça sua prontidão com o Checklist.",
-    "Analise documentos fiscais com IA e siga Workflows Guiados para organizar suas tarefas.",
-    "Acesse a comunidade TribuTalks Connect e exporte relatórios em PDF."
+    "Tudo do Navigator, com Clara AI ilimitada e poder total de decisão.",
+    "Identifique créditos tributários com análise de XMLs, Radar de Créditos e 61+ oportunidades fiscais mapeadas.",
+    "Controle sua rentabilidade com DRE Inteligente e a Suíte Margem Ativa 2026: OMC-AI, PriceGuard e Dashboard Executivo.",
+    "Monitore tudo em tempo real no NEXUS, seu centro de comando com 8 KPIs executivos.",
+    "Conecte seu ERP e exporte relatórios PDF profissionais prontos para apresentar."
   ],
-  price: 1297,
+  price: 2997,
   priceText: "/mês",
-  ctaText: "Testar 7 dias grátis",
-  trialBadge: "7 DIAS GRÁTIS",
-  highlighted: false,
+  ctaText: "Plano Professional →",
+  link: CONFIG.PAYMENT_LINKS.PROFESSIONAL_MENSAL,
+  highlighted: true,
+  badge: "MAIS POPULAR",
+  roi: "ROI médio: 10x nos primeiros 90 dias",
 }
 ```
 
 ---
 
+## Funcionalidades Cobertas nos Blocos
+
+| Funcionalidade Original | Bloco |
+|-------------------------|-------|
+| Clara AI ilimitada | 1 |
+| Tudo do Navigator + | 1 |
+| Análise de Créditos (XMLs) | 2 |
+| Radar de Créditos Tributários | 2 |
+| 61+ Oportunidades Fiscais | 2 |
+| DRE Inteligente | 3 |
+| Suíte Margem Ativa 2026 | 3 |
+| OMC-AI (Análise de Fornecedores) | 3 |
+| PriceGuard (Simulação de Preços) | 3 |
+| Dashboard Executivo de Margem | 3 |
+| NEXUS (Centro de Comando) | 4 |
+| Conectar ERP | 5 |
+| Relatórios PDF Profissionais | 5 |
+
+---
+
 ## Resultado Visual
 
-O card "Preciso Monitorar" terá:
+O card "Preciso Decidir" terá:
 - Ícone + título + citação (mantidos)
+- Badge "MAIS POPULAR" azul (mantido)
 - 5 blocos de benefícios com checkmarks verdes
-- Badge "7 DIAS GRÁTIS" verde
-- Preço R$ 1.297/mês
-- Botão "Testar 7 dias grátis"
+- Preço R$ 2.997/mês
+- Botão primário "Plano Professional →"
+- Nota de ROI abaixo do botão (mantida)
