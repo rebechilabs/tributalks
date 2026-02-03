@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Header } from "@/components/landing/Header";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { VideoDemoSection } from "@/components/landing/VideoDemoSection";
@@ -11,14 +12,25 @@ import { CredibilitySection } from "@/components/landing/CredibilitySection";
 import { FAQSection } from "@/components/landing/FAQSection";
 import { CTASection } from "@/components/landing/CTASection";
 import { Footer } from "@/components/landing/Footer";
+import { InteractiveDemo } from "@/components/landing/InteractiveDemo";
 
 const Index = () => {
+  const [showDemo, setShowDemo] = useState(false);
+
+  const handleDemoComplete = () => {
+    // Scrolla para a seção de pricing
+    const pricingSection = document.getElementById("pricing");
+    if (pricingSection) {
+      pricingSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main>
         <HeroSection />
-        <VideoDemoSection />
+        <VideoDemoSection onOpenDemo={() => setShowDemo(true)} />
         <HowItWorksSection />
         <PricingSection />
         <IntegrationsSection />
@@ -30,6 +42,12 @@ const Index = () => {
         <CTASection />
       </main>
       <Footer />
+      
+      <InteractiveDemo
+        open={showDemo}
+        onOpenChange={setShowDemo}
+        onComplete={handleDemoComplete}
+      />
     </div>
   );
 };
