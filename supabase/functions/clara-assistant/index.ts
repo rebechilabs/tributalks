@@ -390,7 +390,105 @@ function formatUserContextForPrompt(ctx: UserPlatformContext): string {
 }
 
 // ============================================
-// KNOWLEDGE BASE - Busca dinâmica de conhecimento jurídico
+// RAG SEMÂNTICO - Busca por Embeddings
+// ============================================
+interface SemanticSearchResult {
+  type: 'knowledge' | 'memory' | 'pattern';
+  id: string;
+  content: string;
+  title?: string;
+  category?: string;
+  similarity: number;
+  metadata?: Record<string, unknown>;
+}
+
+// Busca contexto semântico relevante usando a edge function de busca
+async function fetchSemanticContext(
+  supabaseUrl: string,
+  anonKey: string,
+  query: string,
+  userId: string | null
+): Promise<{ knowledge: SemanticSearchResult[]; userContext: SemanticSearchResult[] }> {
+  try {
+    const response = await fetch(`${supabaseUrl}/functions/v1/semantic-search`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${anonKey}`,
+      },
+      body: JSON.stringify({
+        query,
+        userId,
+        searchTypes: userId ? ['knowledge', 'memory', 'pattern'] : ['knowledge'],
+        similarityThreshold: 0.6,
+        maxResults: 8,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('Semantic search failed:', response.status);
+      return { knowledge: [], userContext: [] };
+    }
+
+    const data = await response.json();
+    const results = data.results as SemanticSearchResult[];
+    
+    return {
+      knowledge: results.filter(r => r.type === 'knowledge'),
+      userContext: results.filter(r => r.type === 'memory' || r.type === 'pattern'),
+    };
+  } catch (err) {
+    console.error('Semantic search error:', err);
+    return { knowledge: [], userContext: [] };
+  }
+}
+
+// Formata resultados semânticos para injeção no prompt
+function formatSemanticContextForPrompt(
+  knowledge: SemanticSearchResult[],
+  userContext: SemanticSearchResult[]
+): string {
+  if (knowledge.length === 0 && userContext.length === 0) return '';
+
+  const lines: string[] = [];
+  lines.push('');
+  lines.push('='.repeat(50));
+  lines.push('CONTEXTO SEMÂNTICO RELEVANTE (RAG)');
+  lines.push('='.repeat(50));
+  lines.push('');
+
+  if (knowledge.length > 0) {
+    lines.push('📚 CONHECIMENTO TÉCNICO ENCONTRADO:');
+    for (const k of knowledge) {
+      const sim = Math.round(k.similarity * 100);
+      lines.push(`\n### ${k.title || k.category} (${sim}% relevância)`);
+      lines.push(k.content.substring(0, 500) + (k.content.length > 500 ? '...' : ''));
+    }
+    lines.push('');
+  }
+
+  if (userContext.length > 0) {
+    lines.push('🧠 MEMÓRIAS DO USUÁRIO:');
+    for (const m of userContext) {
+      const sim = Math.round(m.similarity * 100);
+      if (m.type === 'memory') {
+        lines.push(`- [${m.category}] ${m.content} (${sim}%)`);
+      } else if (m.type === 'pattern') {
+        const confidence = (m.metadata?.confidence as number) || 0;
+        lines.push(`- Padrão: ${m.content} (confiança: ${Math.round(confidence * 100)}%)`);
+      }
+    }
+    lines.push('');
+  }
+
+  lines.push('Use este contexto para personalizar e enriquecer sua resposta.');
+  lines.push('');
+
+  return lines.join('\n');
+}
+
+// ============================================
+// KNOWLEDGE BASE - Busca dinâmica de conhecimento jurídico (fallback)
 // ============================================
 interface KnowledgeEntry {
   slug: string;
@@ -1855,17 +1953,34 @@ serve(async (req) => {
     }
     
     // ============================================
-    // KNOWLEDGE BASE - Busca conhecimento jurídico relevante
+    // CONHECIMENTO & RAG SEMÂNTICO - Busca em paralelo
     // ============================================
     const userRegime = userContext?.regime || null;
-    const relevantKnowledge = await fetchRelevantKnowledge(supabase, lastMessage, userRegime);
+    const supabaseUrlForRag = Deno.env.get('SUPABASE_URL') || '';
+    const anonKeyForRag = Deno.env.get('SUPABASE_ANON_KEY') || '';
+    
+    // Busca conhecimento tradicional (keywords) e semântico (embeddings) em paralelo
+    const [relevantKnowledge, semanticContext] = await Promise.all([
+      fetchRelevantKnowledge(supabase, lastMessage, userRegime),
+      fetchSemanticContext(supabaseUrlForRag, anonKeyForRag, lastMessage, user?.id || null),
+    ]);
+    
+    // Formata ambos os contextos
     const knowledgePrompt = formatKnowledgeForPrompt(relevantKnowledge);
+    const semanticPrompt = formatSemanticContextForPrompt(
+      semanticContext.knowledge,
+      semanticContext.userContext
+    );
     
     if (relevantKnowledge.length > 0) {
-      console.log(`Found ${relevantKnowledge.length} relevant knowledge entries for query`);
+      console.log(`Found ${relevantKnowledge.length} keyword-matched knowledge entries`);
+    }
+    if (semanticContext.knowledge.length > 0 || semanticContext.userContext.length > 0) {
+      console.log(`RAG: ${semanticContext.knowledge.length} knowledge + ${semanticContext.userContext.length} user context via embeddings`);
     }
     
-    const systemPrompt = buildSystemPrompt(toolContext, userPlan, userName, isSimple, userContext) + knowledgePrompt;
+    // Combina tudo no prompt: base + conhecimento jurídico + contexto semântico
+    const systemPrompt = buildSystemPrompt(toolContext, userPlan, userName, isSimple, userContext) + knowledgePrompt + semanticPrompt;
 
     // ============================================
     // ANÁLISE LINHA A LINHA - Responde pedidos de explicação
