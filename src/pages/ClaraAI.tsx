@@ -36,10 +36,11 @@ const ClaraAI = () => {
   const { profile, user } = useAuth();
   const { credits, consumeCredit, refetch: refetchCredits } = useUserCredits();
   const balance = credits?.balance ?? 0;
-  const currentPlan = profile?.plano || "FREE";
+  const currentPlan = (profile?.plano || "FREE").toUpperCase();
   const hasAccess = currentPlan !== "FREE";
-  const isUnlimited = ["PROFISSIONAL", "PREMIUM", "ENTERPRISE"].includes(currentPlan);
-  const isNavigator = currentPlan === "BASICO";
+  // Support both legacy (Portuguese) and new (English) plan names
+  const isUnlimited = ["PROFISSIONAL", "PROFESSIONAL", "PREMIUM", "ENTERPRISE"].includes(currentPlan);
+  const isNavigator = ["BASICO", "NAVIGATOR", "STARTER"].includes(currentPlan);
 
   const [messages, setMessages] = useState<Message[]>([
     {
