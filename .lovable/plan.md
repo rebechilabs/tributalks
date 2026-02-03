@@ -1,51 +1,46 @@
 
-# Plano: Correção do Fluxo OAuth Conta Azul
 
-## Problema Identificado
+# Plano: Correção Definitiva do OAuth Callback para Conta Azul
 
-Dois problemas críticos impedem o funcionamento do OAuth Conta Azul:
+## Diagnóstico Confirmado
 
-### Problema 1: redirect_uri Inconsistente
-O arquivo `OAuthCallback.tsx` usa `window.location.origin` para construir a redirect_uri durante a troca de tokens:
+Analisando os logs e o código-fonte, identifiquei que o arquivo `src/pages/OAuthCallback.tsx` **não foi atualizado** conforme o plano aprovado anteriormente. O problema persiste porque:
 
-```typescript
-redirect_uri: `${window.location.origin}/oauth/callback`
-```
-
-Isso causa falha quando:
-- Usuário testa no preview (`id-preview--*.lovable.app`)
-- URL enviada não corresponde ao cadastrado no Portal Conta Azul
-
-### Problema 2: Parâmetro action Ausente
-A chamada à Edge Function na linha 70 usa `method: 'POST'` mas não inclui `action=exchange`:
-
+### Código Atual (com problema) - Linhas 70-82:
 ```typescript
 const response = await supabase.functions.invoke('contaazul-oauth', {
   method: 'POST',
-  body: { ... }
+  body: {
+    code,
+    redirect_uri: `${window.location.origin}/oauth/callback`, // PROBLEMA 1: URL dinâmica
+    state,
+    stored_state: storedState,
+    connection_name: connectionName,
+  },
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
+// PROBLEMA 2: Não inclui action=exchange
 ```
 
-A Edge Function retorna erro 400 se `action` não for `authorize` ou `exchange`.
+### Evidências nos Logs:
+Os logs mostram que a Edge Function `contaazul-oauth` gera URLs de autorização corretamente, mas **nunca recebe uma chamada com `action=exchange`** - por isso retorna erro 400 "Ação não suportada".
 
-## Solução Proposta
+---
 
-### Alteração no Arquivo `src/pages/OAuthCallback.tsx`
+## Solução: Atualizar `OAuthCallback.tsx`
 
-**Linha 74:** Usar URL fixa de produção (igual ao ERPConnectionWizard)
+### Alteração Necessária
 
-```typescript
-// Antes
-redirect_uri: `${window.location.origin}/oauth/callback`,
+Substituir a chamada `supabase.functions.invoke()` por `fetch()` direto com:
+1. URL fixa de produção: `https://tributechai.lovable.app/oauth/callback`
+2. Query parameter: `action=exchange`
 
-// Depois  
-redirect_uri: 'https://tributechai.lovable.app/oauth/callback',
-```
-
-**Linhas 69-82:** Adicionar `action=exchange` via query parameter
+### Código Corrigido (Linhas 69-94):
 
 ```typescript
-// Usar fetch direto para incluir action parameter
+// Exchange code for tokens via edge function - usando fetch direto para incluir action parameter
 const response = await fetch(
   `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/contaazul-oauth?action=exchange`,
   {
@@ -66,6 +61,10 @@ const response = await fetch(
 
 const data = await response.json();
 
+// Clear stored state
+sessionStorage.removeItem('contaazul_oauth_state');
+sessionStorage.removeItem('contaazul_connection_name');
+
 if (!response.ok) {
   throw new Error(data.error || 'Falha ao trocar código por tokens');
 }
@@ -73,18 +72,35 @@ if (!response.ok) {
 if (!data.success) {
   throw new Error(data.error || 'Resposta inválida do servidor');
 }
+
+setStatus('success');
+setMessage(data.message || 'Conta Azul conectado com sucesso!');
 ```
+
+---
 
 ## Resumo das Alterações
 
-| Arquivo | Linha | Alteração |
-|---------|-------|-----------|
-| `src/pages/OAuthCallback.tsx` | 69-82 | Trocar `supabase.functions.invoke` por `fetch` com `action=exchange` |
-| `src/pages/OAuthCallback.tsx` | 74 | Usar URL fixa de produção |
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/pages/OAuthCallback.tsx` | Substituir `supabase.functions.invoke()` por `fetch()` com `action=exchange` e URL fixa de produção |
+
+---
 
 ## Resultado Esperado
 
 Após a correção:
-1. A requisição incluirá `action=exchange` (evita erro 400)
-2. A `redirect_uri` será sempre `https://tributechai.lovable.app/oauth/callback` (evita mismatch com Conta Azul)
-3. O fluxo OAuth funcionará corretamente em qualquer ambiente
+1. A requisição incluirá `?action=exchange` na URL (evita erro 400)
+2. O `redirect_uri` será sempre `https://tributechai.lovable.app/oauth/callback` (corresponde ao cadastro no Portal Conta Azul)
+3. O fluxo OAuth funcionará corretamente em qualquer ambiente (preview ou produção)
+
+---
+
+## Verificação Pós-Implementação
+
+1. Publicar as alterações
+2. Acessar https://tributechai.lovable.app/integracoes
+3. Clicar em "Conectar" no card Conta Azul
+4. Autorizar no portal Conta Azul
+5. Verificar redirecionamento de volta e mensagem de sucesso
+
