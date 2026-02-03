@@ -17,14 +17,6 @@ export function BenefitsCtaSection() {
             <strong className="text-foreground">você já estará 3 passos à frente.</strong>
           </p>
 
-          {/* Separator phrase */}
-          <div className="mb-10 animate-fade-in-up animation-delay-50">
-            <p className="text-xl md:text-2xl font-bold text-foreground">
-              Você está pensando em retorno do investimento?{" "}
-              <span className="text-primary">Veja isso!</span>
-            </p>
-          </div>
-
           {/* Benefits Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 animate-fade-in-up animation-delay-100 max-w-3xl mx-auto">
             {[

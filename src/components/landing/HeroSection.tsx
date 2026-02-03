@@ -112,8 +112,9 @@ export function HeroSection() {
 
           {/* Section Separator */}
           <div className="my-10 text-center animate-fade-in-up animation-delay-200">
-            <p className="text-lg md:text-xl text-muted-foreground">
-              Não acredita? Veja o que nossos clientes dizem:
+            <p className="text-xl md:text-2xl font-bold text-foreground">
+              Você está pensando em retorno do investimento?{" "}
+              <span className="text-primary">Veja isso!</span>
             </p>
           </div>
 
