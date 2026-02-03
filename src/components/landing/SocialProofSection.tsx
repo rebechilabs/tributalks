@@ -8,7 +8,7 @@ const testimonials = [
     metric: "R$ 127k",
     metricLabel: "Créditos ICMS-ST identificados",
     metricColor: "text-success",
-    quote: "Em 48 horas o Radar encontrou créditos que estavam sendo perdidos há 2 anos. ROI de 42x no primeiro mês.",
+    quote: "Em 48 horas o Radar encontrou créditos que estavam sendo perdidos há 2 anos. O TribuTalks se pagou 42 vezes no primeiro mês.",
   },
   {
     sector: "Empresa de Tecnologia",
@@ -24,7 +24,7 @@ const testimonials = [
     revenue: "R$ 42M/ano",
     icon: "🏭",
     metric: "R$ 340k",
-    metricLabel: "Economia anual identificada",
+    metricLabel: "Economia identificada",
     metricColor: "text-success",
     quote: "Simulamos mudança de regime tributário no NEXUS. Economizamos R$ 340k/ano. Se pagou 11x.",
   },
@@ -89,7 +89,6 @@ export function SocialProofSection() {
         <p className="text-xs text-muted-foreground/70 text-center mt-8">
           *Casos ilustrativos baseados em resultados reais. Valores podem variar conforme perfil da empresa.
         </p>
-
       </div>
     </section>
   );

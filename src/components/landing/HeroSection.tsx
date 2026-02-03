@@ -1,8 +1,30 @@
-import { Bot, Brain, Sparkles, Shield } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, ChevronDown, Check } from "lucide-react";
 import logoHero from "@/assets/logo-tributalks-hero.jpg";
-import claraAiHero from "@/assets/clara-ai-hero.png";
+import { CONFIG } from "@/config/site";
+
+const benefits = [
+  {
+    title: "Identifique créditos ocultos",
+    description: "Média de R$ 47k recuperados por empresa",
+  },
+  {
+    title: "Proteja sua margem",
+    description: "Veja impacto exato de CBS/IBS no seu lucro",
+  },
+  {
+    title: "Decisões com Clara AI",
+    description: "Sua copilota tributária 24/7",
+  },
+];
 
 export function HeroSection() {
+  const scrollToHowItWorks = () => {
+    const element = document.getElementById("como-funciona");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   return (
     <section className="relative min-h-screen flex items-center pt-16 md:pt-20 bg-background">
@@ -17,7 +39,7 @@ export function HeroSection() {
       </div>
 
       <div className="container mx-auto px-4 md:px-6 lg:px-8 py-12 md:py-20 relative">
-        <div className="flex flex-col items-center max-w-2xl mx-auto">
+        <div className="flex flex-col items-center max-w-3xl mx-auto text-center">
           
           {/* Logo */}
           <div className="flex justify-center mb-4 md:mb-6 animate-fade-in-up">
@@ -28,14 +50,8 @@ export function HeroSection() {
             />
           </div>
 
-          {/* Main Heading */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 animate-fade-in-up leading-tight text-center">
-            Transforme a Reforma Tributária em{" "}
-            <span className="text-primary">vantagem competitiva</span>
-          </h1>
-
           {/* Tagline */}
-          <div className="mb-8 animate-fade-in-up text-center">
+          <div className="mb-6 animate-fade-in-up">
             <p className="text-xl md:text-2xl font-extrabold text-primary tracking-tight leading-tight">
               PLATAFORMA DE INTELIGÊNCIA TRIBUTÁRIA
               <br />
@@ -43,72 +59,73 @@ export function HeroSection() {
             </p>
           </div>
 
-          {/* Clara AI-First Explainer */}
-          <div className="w-full bg-card/80 backdrop-blur-sm rounded-2xl border border-border overflow-hidden shadow-xl mb-8 animate-fade-in-up animation-delay-100">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-primary/10 to-primary/5 px-6 py-4 border-b border-border">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                  <Bot className="w-5 h-5 text-primary" />
+          {/* Main Heading */}
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 animate-fade-in-up leading-tight">
+            Transforme a Reforma Tributária em{" "}
+            <span className="text-primary">vantagem competitiva</span>
+          </h1>
+
+          {/* Subheadline */}
+          <p className="text-lg md:text-xl text-muted-foreground mb-6 animate-fade-in-up animation-delay-100 max-w-2xl">
+            Software de diagnóstico tributário com IA que identifica créditos ocultos, 
+            protege margens e automatiza decisões fiscais em minutos.
+          </p>
+
+          {/* Urgency Line */}
+          <p className="text-base md:text-lg text-foreground/80 mb-8 animate-fade-in-up animation-delay-200 font-medium">
+            Enquanto seus concorrentes vão descobrir o impacto tarde demais, 
+            <br className="hidden sm:block" />
+            <span className="text-primary font-bold"> você já estará 3 passos à frente.</span>
+          </p>
+
+          {/* Benefits */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 w-full animate-fade-in-up animation-delay-300">
+            {benefits.map((benefit) => (
+              <div 
+                key={benefit.title} 
+                className="flex items-start gap-3 text-left p-4 bg-card/50 rounded-lg border border-border"
+              >
+                <div className="bg-primary/20 rounded-full p-1 flex-shrink-0 mt-0.5">
+                  <Check className="w-4 h-4 text-primary" />
                 </div>
-                <div className="text-left">
-                  <h3 className="font-bold text-foreground flex items-center gap-2">
-                    Conheça a Clara
-                    <Sparkles className="w-4 h-4 text-primary" />
-                  </h3>
-                  <p className="text-sm text-muted-foreground">Sua copiloto de inteligência tributária</p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Content */}
-            <div className="p-6">
-              <div className="grid md:grid-cols-2 gap-6 items-center">
-                {/* Left - Image */}
-                <div className="relative">
-                  <img 
-                    src={claraAiHero} 
-                    alt="Clara AI - Inteligência Tributária" 
-                    className="rounded-lg border border-border shadow-lg w-full"
-                  />
-                  <div className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-                    AI-First
-                  </div>
-                </div>
-                
-                {/* Right - Features */}
-                <div className="space-y-4 text-left">
-                  <div className="flex items-start gap-3">
-                    <div className="bg-primary/20 text-primary rounded-full p-2 flex-shrink-0">
-                      <Brain className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <strong className="text-foreground text-sm">Inteligência Contextual</strong>
-                      <p className="text-xs text-muted-foreground">Clara entende seu negócio e aprende com cada interação</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="bg-primary/20 text-primary rounded-full p-2 flex-shrink-0">
-                      <Sparkles className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <strong className="text-foreground text-sm">Ações Autônomas</strong>
-                      <p className="text-xs text-muted-foreground">Identifica oportunidades e age proativamente</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="bg-primary/20 text-primary rounded-full p-2 flex-shrink-0">
-                      <Shield className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <strong className="text-foreground text-sm">Memória Evolutiva</strong>
-                      <p className="text-xs text-muted-foreground">Lembra decisões passadas para recomendações precisas</p>
-                    </div>
-                  </div>
+                <div>
+                  <strong className="text-foreground text-sm block">{benefit.title}</strong>
+                  <span className="text-muted-foreground text-xs">{benefit.description}</span>
                 </div>
               </div>
-            </div>
+            ))}
           </div>
+
+          {/* CTAs */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-6 animate-fade-in-up animation-delay-400">
+            <a 
+              href={CONFIG.PAYMENT_LINKS.STARTER_MENSAL} 
+              target="_blank" 
+              rel="noopener noreferrer"
+            >
+              <Button 
+                size="lg" 
+                className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-8 py-6 text-lg group"
+              >
+                Testar Grátis por 7 Dias
+                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </a>
+            <Button 
+              size="lg" 
+              variant="outline"
+              onClick={scrollToHowItWorks}
+              className="font-semibold px-8 py-6 text-lg group"
+            >
+              Ver Como Funciona
+              <ChevronDown className="w-5 h-5 ml-2 group-hover:translate-y-1 transition-transform" />
+            </Button>
+          </div>
+
+          {/* Trust Text */}
+          <p className="text-sm text-muted-foreground animate-fade-in-up animation-delay-500">
+            Teste grátis. Cancele quando quiser.
+          </p>
         </div>
       </div>
 

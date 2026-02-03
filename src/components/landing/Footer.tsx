@@ -1,109 +1,164 @@
 import { Link } from "react-router-dom";
 import { CONFIG } from "@/config/site";
 import logoTributalks from "@/assets/logo-tributalks.png";
-import { TrustBadges } from "./TrustBadges";
-import { Linkedin, Instagram, Youtube, Phone, Mail } from "lucide-react";
-import { NewsletterForm } from "@/components/common/NewsletterForm";
+import { Linkedin, Instagram, Youtube, Scale } from "lucide-react";
+
+const productLinks = [
+  { label: "Score Tributário", href: "/score-tributario" },
+  { label: "Radar de Créditos", href: "/analise-notas" },
+  { label: "DRE Inteligente", href: "/dre" },
+  { label: "NEXUS", href: "/nexus" },
+  { label: "Clara AI", href: "/clara-ai" },
+];
+
+const companyLinks = [
+  { label: "Sobre nós", href: "/contato" },
+  { label: "Contato", href: "/contato" },
+  { label: "Comunidade", href: CONFIG.CIRCLE_COMMUNITY, external: true },
+];
+
+const legalLinks = [
+  { label: "Termos de Uso", href: "/termos" },
+  { label: "Política de Privacidade", href: "/privacidade" },
+];
 
 export function Footer() {
   return (
-    <footer className="py-12 bg-background border-t border-border">
+    <footer className="py-12 md:py-16 bg-background border-t border-border">
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
-        <div className="flex flex-col items-center text-center gap-6">
-          {/* Logo */}
-          <img src={logoTributalks} alt="TribuTalks" className="h-10 w-auto" />
-
-          {/* Description */}
-          <p className="text-muted-foreground text-sm">
-            Uma iniciativa Rebechi & Silva Produções
-          </p>
-
-          {/* Newsletter Form */}
-          <NewsletterForm />
-
-          {/* Contact Info */}
-          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
-            <a
-              href={`mailto:${CONFIG.CONTACT_EMAIL}`}
-              className="flex items-center gap-1.5 hover:text-primary transition-colors"
-            >
-              <Mail className="h-4 w-4" />
-              {CONFIG.CONTACT_EMAIL}
-            </a>
-            <a
-              href={CONFIG.WHATSAPP}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 hover:text-primary transition-colors"
-            >
-              <Phone className="h-4 w-4" />
-              {CONFIG.PHONE}
-            </a>
-            <a
-              href={CONFIG.LINKEDIN}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 hover:text-primary transition-colors"
-            >
-              <Linkedin className="h-4 w-4" />
-              LinkedIn
-            </a>
-            <a
-              href={CONFIG.INSTAGRAM}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 hover:text-primary transition-colors"
-            >
-              <Instagram className="h-4 w-4" />
-              Instagram
-            </a>
-            <a
-              href={CONFIG.YOUTUBE}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 hover:text-primary transition-colors"
-            >
-              <Youtube className="h-4 w-4" />
-              YouTube
-            </a>
+        {/* Main Footer Content */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12 mb-10">
+          {/* Brand Column */}
+          <div className="md:col-span-1">
+            <img src={logoTributalks} alt="TribuTalks" className="h-10 w-auto mb-4" />
+            <p className="text-sm text-muted-foreground mb-2">
+              Plataforma de Inteligência Tributária
+            </p>
+            <p className="text-sm text-primary font-medium mb-4">
+              A 1ª AI-First do Brasil
+            </p>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Scale className="w-4 h-4" />
+              <span>Powered by Rebechi & Silva Advogados</span>
+            </div>
           </div>
 
-          {/* Links */}
-          <nav className="flex flex-wrap items-center justify-center gap-6">
-            <Link
-              to="/termos"
-              className="text-muted-foreground hover:text-primary transition-colors text-sm"
-            >
-              Termos de Uso
-            </Link>
-            <Link
-              to="/privacidade"
-              className="text-muted-foreground hover:text-primary transition-colors text-sm"
-            >
-              Política de Privacidade
-            </Link>
-            <Link
-              to="/contato"
-              className="text-muted-foreground hover:text-primary transition-colors text-sm"
-            >
-              Contato
-            </Link>
-          </nav>
+          {/* Product Column */}
+          <div>
+            <h4 className="font-semibold text-foreground mb-4">PRODUTO</h4>
+            <ul className="space-y-3">
+              {productLinks.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    to={link.href}
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-          {/* Trust Badges */}
-          <TrustBadges variant="compact" className="mt-2" />
+          {/* Company Column */}
+          <div>
+            <h4 className="font-semibold text-foreground mb-4">EMPRESA</h4>
+            <ul className="space-y-3">
+              {companyLinks.map((link) =>
+                link.external ? (
+                  <li key={link.label}>
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      {link.label}
+                    </a>
+                  </li>
+                ) : (
+                  <li key={link.label}>
+                    <Link
+                      to={link.href}
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                )
+              )}
+            </ul>
+          </div>
+
+          {/* Legal Column */}
+          <div>
+            <h4 className="font-semibold text-foreground mb-4">LEGAL</h4>
+            <ul className="space-y-3">
+              {legalLinks.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    to={link.href}
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="border-t border-border pt-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            {/* Copyright & Contact */}
+            <div className="text-center md:text-left">
+              <p className="text-sm text-muted-foreground">
+                © 2026 TribuTalks. Todos os direitos reservados.
+              </p>
+              <p className="text-xs text-muted-foreground/70 mt-1">
+                CNPJ: 47.706.144/0001-21 • {CONFIG.CONTACT_EMAIL}
+              </p>
+            </div>
+
+            {/* Social Links */}
+            <div className="flex items-center gap-4">
+              <a
+                href={CONFIG.LINKEDIN}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary transition-colors"
+                aria-label="LinkedIn"
+              >
+                <Linkedin className="w-5 h-5" />
+              </a>
+              <a
+                href={CONFIG.INSTAGRAM}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary transition-colors"
+                aria-label="Instagram"
+              >
+                <Instagram className="w-5 h-5" />
+              </a>
+              <a
+                href={CONFIG.YOUTUBE}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary transition-colors"
+                aria-label="YouTube"
+              >
+                <Youtube className="w-5 h-5" />
+              </a>
+            </div>
+          </div>
 
           {/* Legal Disclaimer */}
-          <p className="text-muted-foreground/70 text-xs max-w-2xl leading-relaxed">
-            As simulações e informações desta plataforma têm caráter exclusivamente educativo e informativo, 
-            não constituindo parecer jurídico, contábil ou recomendação de decisão. 
+          <p className="text-muted-foreground/70 text-xs max-w-3xl mx-auto text-center mt-6 leading-relaxed">
+            As simulações e informações desta plataforma têm caráter exclusivamente educativo e
+            informativo, não constituindo parecer jurídico, contábil ou recomendação de decisão.
             Consulte um profissional habilitado antes de tomar qualquer decisão tributária.
           </p>
-
-          {/* Copyright */}
-          <div className="text-muted-foreground text-xs">
-            © 2026 TribuTalks. Todos os direitos reservados.
-          </div>
         </div>
       </div>
     </footer>

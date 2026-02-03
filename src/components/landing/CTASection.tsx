@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Heart } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { CONFIG } from "@/config/site";
 
 export function CTASection() {
@@ -17,22 +17,16 @@ export function CTASection() {
 
       <div className="container mx-auto px-4 md:px-6 lg:px-8 relative">
         <div className="max-w-3xl mx-auto text-center">
-          {/* Icon */}
-          <div className="flex justify-center mb-4 md:mb-6">
-            <div className="p-3 md:p-4 rounded-full bg-primary-foreground/10">
-              <Heart className="w-8 h-8 md:w-10 md:h-10 text-primary-foreground" />
-            </div>
-          </div>
-
           {/* Heading */}
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary-foreground mb-4 md:mb-6 px-4">
-            Descubra a saúde fiscal
+            Transforme a Reforma Tributária
             <br className="hidden sm:block" />
-            <span className="sm:hidden"> </span>da sua empresa
+            <span className="sm:hidden"> </span>em vantagem competitiva
           </h2>
 
           <p className="text-base md:text-lg text-primary-foreground/80 mb-6 md:mb-8 px-4">
-            Faça um diagnóstico completo e veja quanto sua empresa pode economizar com a Reforma Tributária.
+            Enquanto seus concorrentes vão descobrir o impacto tarde demais, 
+            você já estará 3 passos à frente.
           </p>
 
           {/* CTA Button */}
@@ -48,7 +42,7 @@ export function CTASection() {
 
           {/* Guarantee Text */}
           <p className="text-xs md:text-sm text-primary-foreground/80 mt-4 md:mt-6">
-            Acesso completo ao plano Starter • Cancele quando quiser • Sem surpresas
+            Teste grátis por 7 dias. Cancele quando quiser.
           </p>
         </div>
       </div>
