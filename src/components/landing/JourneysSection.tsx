@@ -9,18 +9,13 @@ const journeys = [
     icon: Target,
     title: "Preciso Entender",
     description: '"A Reforma parece complexa. Quero entender o impacto antes de agir."',
-    features: [
-      { text: "Clara AI (Assistente)", included: true, limit: "30 msgs/dia" },
-      { text: "Score da sua saúde fiscal", included: true },
-      { text: "Calculadoras oficiais (CBS/IBS/IS)", included: true },
-      { text: "Simulador Split Payment", included: true },
-      { text: "Timeline 2026-2033 detalhada", included: true },
-    ],
+    benefitText: "O ponto de partida ideal para quem quer se preparar para a Reforma Tributária. Faça um diagnóstico completo da saúde fiscal da sua empresa com o Score Tributário, simule diferentes cenários com as calculadoras de Split Payment e comparativo de regimes, e acompanhe todos os prazos importantes na Timeline 2026-2033. Conte ainda com a Clara AI para tirar dúvidas do dia a dia e a newsletter Tributalks News para se manter atualizado.",
     price: 397,
     priceText: "/mês",
-    ctaText: "Plano Starter →",
+    ctaText: "Testar 7 dias grátis",
     link: CONFIG.PAYMENT_LINKS.STARTER_MENSAL,
     highlighted: false,
+    trialBadge: "7 DIAS GRÁTIS",
   },
   {
     id: "navigator",
@@ -91,11 +86,15 @@ export function JourneysSection() {
               }`}
             >
               {/* Badge */}
-              {journey.badge && (
+              {(journey.badge || journey.trialBadge) && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-bold whitespace-nowrap">
+                  <div className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-bold whitespace-nowrap ${
+                    journey.trialBadge 
+                      ? "bg-success text-success-foreground" 
+                      : "bg-primary text-primary-foreground"
+                  }`}>
                     <Star className="w-4 h-4 fill-current" />
-                    {journey.badge}
+                    {journey.badge || journey.trialBadge}
                   </div>
                 </div>
               )}
@@ -113,26 +112,34 @@ export function JourneysSection() {
                 </p>
               </div>
 
-              {/* Features */}
-              <div className="space-y-3 mb-6">
-                {journey.features.map((feature) => (
-                  <div key={feature.text} className="flex items-center gap-2 text-sm">
-                    {feature.locked ? (
-                      <Lock className="w-4 h-4 text-muted-foreground" />
-                    ) : (
-                      <Check className={`w-4 h-4 ${feature.highlight ? "text-primary" : "text-success"}`} />
-                    )}
-                    <span className={`${feature.locked ? "text-muted-foreground" : feature.highlight ? "font-semibold text-foreground" : "text-foreground"}`}>
-                      {feature.text}
-                    </span>
-                    {feature.limit && (
-                      <span className="text-xs text-warning">({feature.limit})</span>
-                    )}
-                    {feature.locked && (
-                      <span className="text-xs text-muted-foreground">(Pro)</span>
-                    )}
+              {/* Features or Benefit Text */}
+              <div className="mb-6">
+                {journey.benefitText ? (
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {journey.benefitText}
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {journey.features?.map((feature) => (
+                      <div key={feature.text} className="flex items-center gap-2 text-sm">
+                        {feature.locked ? (
+                          <Lock className="w-4 h-4 text-muted-foreground" />
+                        ) : (
+                          <Check className={`w-4 h-4 ${feature.highlight ? "text-primary" : "text-success"}`} />
+                        )}
+                        <span className={`${feature.locked ? "text-muted-foreground" : feature.highlight ? "font-semibold text-foreground" : "text-foreground"}`}>
+                          {feature.text}
+                        </span>
+                        {feature.limit && (
+                          <span className="text-xs text-warning">({feature.limit})</span>
+                        )}
+                        {feature.locked && (
+                          <span className="text-xs text-muted-foreground">(Pro)</span>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
 
               {/* Price */}
