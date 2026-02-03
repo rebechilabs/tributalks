@@ -1,16 +1,22 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Send, Building, DollarSign, FileText, Briefcase, Check, Loader2 } from "lucide-react";
+import { 
+  Sparkles, Send, Building, DollarSign, FileText, Briefcase, 
+  Loader2, Search, CheckCircle2, ArrowRight, PartyPopper,
+  MapPin, Receipt, Factory, Store, Laptop, HelpCircle
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CnpjData } from "@/hooks/useCnpjLookup";
+import { useCnpjLookup, formatCnpj } from "@/hooks/useCnpjLookup";
 import ReactMarkdown from "react-markdown";
+import { cn } from "@/lib/utils";
 
 interface Message {
   id: string;
@@ -19,12 +25,14 @@ interface Message {
   options?: OnboardingOption[];
   inputType?: "text" | "cnpj" | "select";
   field?: string;
+  showCnpjInput?: boolean;
 }
 
 interface OnboardingOption {
   value: string;
   label: string;
   icon?: React.ReactNode;
+  description?: string;
 }
 
 interface FormData {
@@ -44,32 +52,31 @@ const ESTADOS = [
 ];
 
 const REGIMES_OPTIONS: OnboardingOption[] = [
-  { value: 'SIMPLES', label: 'Simples Nacional' },
-  { value: 'PRESUMIDO', label: 'Lucro Presumido' },
-  { value: 'REAL', label: 'Lucro Real' },
+  { value: 'SIMPLES', label: 'Simples Nacional', icon: <Receipt className="w-4 h-4" />, description: 'Até R$ 4,8M/ano' },
+  { value: 'PRESUMIDO', label: 'Lucro Presumido', icon: <DollarSign className="w-4 h-4" />, description: 'Margens definidas' },
+  { value: 'REAL', label: 'Lucro Real', icon: <FileText className="w-4 h-4" />, description: 'Apuração completa' },
 ];
 
 const SETORES_OPTIONS: OnboardingOption[] = [
-  { value: 'industria', label: 'Indústria', icon: <Building className="w-4 h-4" /> },
-  { value: 'comercio', label: 'Comércio', icon: <DollarSign className="w-4 h-4" /> },
-  { value: 'servicos', label: 'Serviços', icon: <Briefcase className="w-4 h-4" /> },
-  { value: 'tecnologia', label: 'Tecnologia', icon: <FileText className="w-4 h-4" /> },
-  { value: 'outro', label: 'Outro' },
+  { value: 'industria', label: 'Indústria', icon: <Factory className="w-5 h-5" /> },
+  { value: 'comercio', label: 'Comércio', icon: <Store className="w-5 h-5" /> },
+  { value: 'servicos', label: 'Serviços', icon: <Briefcase className="w-5 h-5" /> },
+  { value: 'tecnologia', label: 'Tecnologia', icon: <Laptop className="w-5 h-5" /> },
+  { value: 'outro', label: 'Outro', icon: <HelpCircle className="w-5 h-5" /> },
 ];
 
 const FATURAMENTO_OPTIONS: OnboardingOption[] = [
-  { value: '200000', label: 'R$ 200k - R$ 500k' },
+  { value: '200000', label: 'Até R$ 500k/mês' },
   { value: '500000', label: 'R$ 500k - R$ 1M' },
   { value: '1000000', label: 'R$ 1M - R$ 2,5M' },
   { value: '2500000', label: 'R$ 2,5M - R$ 5M' },
   { value: '5000000', label: 'R$ 5M - R$ 10M' },
-  { value: '10000000', label: 'R$ 10M - R$ 25M' },
-  { value: '25000000', label: 'R$ 25M - R$ 50M' },
-  { value: '50000000', label: 'Acima de R$ 50M' },
+  { value: '10000000', label: 'Acima de R$ 10M' },
 ];
 
 type OnboardingStep = 
   | "welcome"
+  | "cnpj"
   | "empresa"
   | "estado"
   | "faturamento"
@@ -80,13 +87,26 @@ type OnboardingStep =
 
 const STEP_PROGRESS: Record<OnboardingStep, number> = {
   welcome: 0,
-  empresa: 15,
-  estado: 30,
-  faturamento: 45,
-  regime: 60,
-  setor: 75,
-  summary: 90,
+  cnpj: 10,
+  empresa: 25,
+  estado: 40,
+  faturamento: 55,
+  regime: 70,
+  setor: 85,
+  summary: 95,
   complete: 100,
+};
+
+// Mensagens variadas da Clara para parecer mais humana
+const CLARA_REACTIONS = {
+  gotIt: ["Entendi!", "Perfeito!", "Ótimo!", "Show!", "Anotado!"],
+  almostThere: ["Quase lá!", "Falta pouco!", "Última pergunta!"],
+  thinking: ["Deixa eu ver...", "Um momento...", "Processando..."],
+};
+
+const getRandomReaction = (type: keyof typeof CLARA_REACTIONS) => {
+  const options = CLARA_REACTIONS[type];
+  return options[Math.floor(Math.random() * options.length)];
 };
 
 export function ClaraOnboardingChat() {
@@ -96,6 +116,7 @@ export function ClaraOnboardingChat() {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>("welcome");
   const [isTyping, setIsTyping] = useState(false);
   const [input, setInput] = useState("");
+  const [cnpjInput, setCnpjInput] = useState("");
   const [formData, setFormData] = useState<FormData>({
     cnpj: "",
     empresa: "",
@@ -106,7 +127,9 @@ export function ClaraOnboardingChat() {
     cnae: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { lookup: lookupCnpj, isLoading: cnpjLoading } = useCnpjLookup();
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -135,8 +158,17 @@ export function ClaraOnboardingChat() {
   }, [profile, navigate]);
 
   // Add Clara message with typing effect
-  const addClaraMessage = useCallback((content: string, options?: OnboardingOption[], inputType?: "text" | "cnpj" | "select", field?: string) => {
+  const addClaraMessage = useCallback((
+    content: string, 
+    options?: OnboardingOption[], 
+    inputType?: "text" | "cnpj" | "select", 
+    field?: string,
+    showCnpjInput?: boolean
+  ) => {
     setIsTyping(true);
+    
+    // Tempo de digitação proporcional ao tamanho da mensagem (mais natural)
+    const typingTime = Math.min(600 + content.length * 8, 1500);
     
     setTimeout(() => {
       setIsTyping(false);
@@ -147,8 +179,9 @@ export function ClaraOnboardingChat() {
         options,
         inputType,
         field,
+        showCnpjInput,
       }]);
-    }, 800 + Math.random() * 400);
+    }, typingTime);
   }, []);
 
   // Add user message
@@ -160,28 +193,88 @@ export function ClaraOnboardingChat() {
     }]);
   }, []);
 
+  // Get user's first name
+  const getUserFirstName = () => {
+    if (profile?.empresa) {
+      return profile.empresa.split(' ')[0];
+    }
+    if (user?.email) {
+      return user.email.split('@')[0].split('.')[0];
+    }
+    return "você";
+  };
+
   // Initialize conversation
   useEffect(() => {
     if (currentStep === "welcome" && messages.length === 0) {
-      const userName = profile?.empresa ? ` da ${profile.empresa}` : "";
+      const greeting = new Date().getHours() < 12 ? "Bom dia" : 
+                       new Date().getHours() < 18 ? "Boa tarde" : "Boa noite";
+      
       addClaraMessage(
-        `Olá! 👋 Sou a **Clara**, sua consultora de inteligência tributária.\n\nVou te guiar rapidamente para configurar seu perfil${userName}. Isso me ajuda a dar orientações **personalizadas** sobre a Reforma Tributária.\n\nVamos começar?`,
+        `${greeting}! 👋 Sou a **Clara**, sua parceira de inteligência tributária.\n\nEm menos de 2 minutos, vou configurar seu perfil para te dar insights **personalizados** sobre a Reforma Tributária. Bora?`,
         [
           { value: "start", label: "Vamos lá! 🚀" },
-          { value: "skip", label: "Pular por agora" },
         ]
       );
     }
-  }, [currentStep, messages.length, profile?.empresa, addClaraMessage]);
+  }, [currentStep, messages.length, addClaraMessage]);
+
+  // Handle CNPJ lookup
+  const handleCnpjLookup = async () => {
+    if (!cnpjInput.trim() || cnpjInput.replace(/\D/g, '').length < 14) {
+      toast.error("Digite um CNPJ válido com 14 dígitos");
+      return;
+    }
+
+    addUserMessage(formatCnpj(cnpjInput));
+    
+    const data = await lookupCnpj(cnpjInput);
+    
+    if (data) {
+      setFormData(prev => ({
+        ...prev,
+        cnpj: data.cnpj,
+        empresa: data.nome_fantasia || data.razao_social,
+        estado: data.uf,
+        cnae: data.cnae_fiscal?.toString() || "",
+      }));
+      
+      addClaraMessage(
+        `Achei! 🎯\n\n**${data.nome_fantasia || data.razao_social}**\n📍 ${data.municipio}/${data.uf}\n🏷️ ${data.cnae_fiscal_descricao}\n\nSão esses os dados?`,
+        [
+          { value: "confirm_cnpj", label: "Isso mesmo! ✓" },
+          { value: "edit_cnpj", label: "Preciso ajustar" },
+        ]
+      );
+    } else {
+      addClaraMessage(
+        "Hmm, não consegui encontrar esse CNPJ 🤔\n\nMas sem problemas! Me conta o nome da empresa:",
+        undefined,
+        "text",
+        "empresa"
+      );
+      setCurrentStep("empresa");
+    }
+  };
 
   // Handle step transitions
   const handleStepTransition = useCallback((step: OnboardingStep) => {
     setCurrentStep(step);
     
     switch (step) {
+      case "cnpj":
+        addClaraMessage(
+          "Primeiro, me passa o **CNPJ** da empresa. Assim já puxo os dados automaticamente! 🔍",
+          [{ value: "no_cnpj", label: "Prefiro digitar manualmente" }],
+          undefined,
+          undefined,
+          true
+        );
+        break;
+        
       case "empresa":
         addClaraMessage(
-          "Qual o **nome da sua empresa**? Pode digitar abaixo ou me passar o CNPJ que eu busco automaticamente 😊",
+          "Qual o **nome da empresa**?",
           undefined,
           "text",
           "empresa"
@@ -190,16 +283,14 @@ export function ClaraOnboardingChat() {
         
       case "estado":
         addClaraMessage(
-          "Em qual **estado** fica a sede principal?",
-          ESTADOS.slice(0, 10).map(uf => ({ value: uf, label: uf })).concat([
-            { value: "outros", label: "Ver todos estados..." }
-          ])
+          `${getRandomReaction('gotIt')} Em qual **estado** fica a sede?`,
+          ESTADOS.map(uf => ({ value: uf, label: uf }))
         );
         break;
         
       case "faturamento":
         addClaraMessage(
-          "Para calibrar as simulações, qual a **faixa de faturamento mensal**?",
+          "E qual a **faixa de faturamento mensal**? (Isso me ajuda a calibrar as simulações)",
           FATURAMENTO_OPTIONS
         );
         break;
@@ -213,33 +304,32 @@ export function ClaraOnboardingChat() {
         
       case "setor":
         addClaraMessage(
-          "Quase lá! Qual o **setor principal** de atuação?",
-          SETORES_OPTIONS
+          `${getRandomReaction('almostThere')} Qual o **setor** de atuação?`
         );
         break;
         
       case "summary":
-        const summary = `Perfeito! Deixa eu confirmar:\n\n` +
-          `🏢 **Empresa:** ${formData.empresa}\n` +
-          `📍 **Estado:** ${formData.estado}\n` +
-          `💰 **Faturamento:** ${FATURAMENTO_OPTIONS.find(f => f.value === formData.faturamento_mensal)?.label || formData.faturamento_mensal}\n` +
-          `📋 **Regime:** ${REGIMES_OPTIONS.find(r => r.value === formData.regime)?.label || formData.regime}\n` +
-          `🏭 **Setor:** ${SETORES_OPTIONS.find(s => s.value === formData.setor)?.label || formData.setor}\n\n` +
-          `Está tudo certo?`;
+        const faturamentoLabel = FATURAMENTO_OPTIONS.find(f => f.value === formData.faturamento_mensal)?.label || formData.faturamento_mensal;
+        const regimeLabel = REGIMES_OPTIONS.find(r => r.value === formData.regime)?.label || formData.regime;
+        const setorLabel = SETORES_OPTIONS.find(s => s.value === formData.setor)?.label || formData.setor;
         
-        addClaraMessage(summary, [
-          { value: "confirm", label: "Confirmar e continuar ✓" },
-          { value: "edit", label: "Corrigir algo" },
-        ]);
+        addClaraMessage(
+          `Deixa eu confirmar:\n\n🏢 **${formData.empresa}**\n📍 ${formData.estado}\n💰 ${faturamentoLabel}\n📋 ${regimeLabel}\n🏭 ${setorLabel}\n\nTudo certo?`,
+          [
+            { value: "confirm", label: "Confirmar ✓" },
+            { value: "edit", label: "Corrigir algo" },
+          ]
+        );
         break;
         
       case "complete":
+        setShowConfetti(true);
         addClaraMessage(
-          "🎉 **Pronto!** Seu perfil está configurado.\n\nAgora vou te levar para o Dashboard. Recomendo começar pelo **Score Tributário** — em 2 minutos você terá um panorama completo da sua situação!\n\nPosso te ajudar a qualquer momento. É só clicar no botão ✨ no canto da tela."
+          `🎉 **Pronto, ${getUserFirstName()}!**\n\nSeu perfil está configurado. Agora vou te levar pro Dashboard — recomendo começar pelo **Score Tributário** pra ter um panorama completo!\n\nQualquer dúvida, é só me chamar no botão ✨`
         );
         break;
     }
-  }, [formData, addClaraMessage]);
+  }, [formData, addClaraMessage, getUserFirstName]);
 
   // Handle option selection
   const handleOptionSelect = useCallback((option: OnboardingOption) => {
@@ -247,48 +337,44 @@ export function ClaraOnboardingChat() {
     
     switch (currentStep) {
       case "welcome":
-        if (option.value === "start") {
-          setTimeout(() => handleStepTransition("empresa"), 500);
-        } else {
-          // Skip - save minimal and redirect
-          handleSkip();
+        setTimeout(() => handleStepTransition("cnpj"), 400);
+        break;
+        
+      case "cnpj":
+        if (option.value === "no_cnpj") {
+          setTimeout(() => handleStepTransition("empresa"), 400);
+        } else if (option.value === "confirm_cnpj") {
+          setTimeout(() => handleStepTransition("faturamento"), 400);
+        } else if (option.value === "edit_cnpj") {
+          setTimeout(() => handleStepTransition("empresa"), 400);
         }
         break;
         
       case "estado":
-        if (option.value === "outros") {
-          // Show all states
-          addClaraMessage(
-            "Escolha seu estado:",
-            ESTADOS.map(uf => ({ value: uf, label: uf }))
-          );
-        } else {
-          setFormData(prev => ({ ...prev, estado: option.value }));
-          setTimeout(() => handleStepTransition("faturamento"), 500);
-        }
+        setFormData(prev => ({ ...prev, estado: option.value }));
+        setTimeout(() => handleStepTransition("faturamento"), 400);
         break;
         
       case "faturamento":
         setFormData(prev => ({ ...prev, faturamento_mensal: option.value }));
-        setTimeout(() => handleStepTransition("regime"), 500);
+        setTimeout(() => handleStepTransition("regime"), 400);
         break;
         
       case "regime":
         setFormData(prev => ({ ...prev, regime: option.value }));
-        setTimeout(() => handleStepTransition("setor"), 500);
+        setTimeout(() => handleStepTransition("setor"), 400);
         break;
         
       case "setor":
         setFormData(prev => ({ ...prev, setor: option.value }));
-        setTimeout(() => handleStepTransition("summary"), 500);
+        setTimeout(() => handleStepTransition("summary"), 400);
         break;
         
       case "summary":
         if (option.value === "confirm") {
           handleSubmit();
         } else {
-          // Go back to empresa
-          setTimeout(() => handleStepTransition("empresa"), 500);
+          setTimeout(() => handleStepTransition("empresa"), 400);
         }
         break;
     }
@@ -298,30 +384,25 @@ export function ClaraOnboardingChat() {
   const handleTextSubmit = useCallback(() => {
     if (!input.trim()) return;
     
-    addUserMessage(input);
+    addUserMessage(input.trim());
     
     if (currentStep === "empresa") {
       setFormData(prev => ({ ...prev, empresa: input.trim() }));
       setInput("");
-      setTimeout(() => handleStepTransition("estado"), 500);
+      // Se já tem estado do CNPJ, pula pra faturamento
+      if (formData.estado) {
+        setTimeout(() => handleStepTransition("faturamento"), 400);
+      } else {
+        setTimeout(() => handleStepTransition("estado"), 400);
+      }
     }
-  }, [input, currentStep, addUserMessage, handleStepTransition]);
+  }, [input, currentStep, formData.estado, addUserMessage, handleStepTransition]);
 
-  // Handle skip
-  const handleSkip = async () => {
-    if (!user) return;
-    
-    try {
-      await supabase
-        .from("profiles")
-        .update({ onboarding_complete: true })
-        .eq("user_id", user.id);
-      
-      navigate('/dashboard', { replace: true });
-    } catch (error) {
-      console.error("Error skipping onboarding:", error);
-      navigate('/dashboard', { replace: true });
-    }
+  // Handle setor selection (visual cards)
+  const handleSetorSelect = (setor: OnboardingOption) => {
+    addUserMessage(setor.label);
+    setFormData(prev => ({ ...prev, setor: setor.value }));
+    setTimeout(() => handleStepTransition("summary"), 400);
   };
 
   // Handle form submission
@@ -348,15 +429,13 @@ export function ClaraOnboardingChat() {
 
       if (error) throw error;
       
-      // Store flag for quick diagnostic
       localStorage.setItem('needs_quick_diagnostic', 'true');
       
       handleStepTransition("complete");
       
-      // Redirect after showing success message
       setTimeout(() => {
         navigate('/dashboard', { replace: true });
-      }, 3000);
+      }, 3500);
       
     } catch (error: any) {
       console.error("Onboarding save error:", error);
@@ -368,99 +447,209 @@ export function ClaraOnboardingChat() {
   const progress = STEP_PROGRESS[currentStep];
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex flex-col">
+      {/* Confetti effect */}
+      {showConfetti && (
+        <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+          {[...Array(50)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-3 h-3 rounded-full"
+              style={{
+                background: ['#10B981', '#8B5CF6', '#F59E0B', '#EC4899', '#3B82F6'][i % 5],
+                left: `${Math.random() * 100}%`,
+              }}
+              initial={{ top: -20, rotate: 0, opacity: 1 }}
+              animate={{ 
+                top: '110%', 
+                rotate: 360 * (Math.random() > 0.5 ? 1 : -1),
+                opacity: 0 
+              }}
+              transition={{ 
+                duration: 2 + Math.random() * 2, 
+                delay: Math.random() * 0.5,
+                ease: "easeOut" 
+              }}
+            />
+          ))}
+        </div>
+      )}
+
       {/* Header */}
-      <header className="border-b border-border px-4 py-4">
+      <header className="border-b border-border/50 px-4 py-4 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
               <Sparkles className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-lg font-bold text-foreground">TribuTalks</span>
+            <div>
+              <span className="text-lg font-bold text-foreground">TribuTalks</span>
+              <p className="text-xs text-muted-foreground">Configuração do Perfil</p>
+            </div>
           </div>
-          <div className="text-sm text-muted-foreground">
-            {Math.round(progress)}% configurado
-          </div>
+          <Badge variant="secondary" className="gap-1">
+            <CheckCircle2 className="w-3 h-3" />
+            {Math.round(progress)}%
+          </Badge>
         </div>
       </header>
       
       {/* Progress bar */}
       <div className="max-w-2xl mx-auto w-full px-4">
-        <Progress value={progress} className="h-1 mt-2" />
+        <Progress value={progress} className="h-1.5 mt-3" />
       </div>
 
       {/* Chat area */}
       <main className="flex-1 flex flex-col max-w-2xl mx-auto w-full px-4 py-6 overflow-hidden">
         <div 
           ref={scrollRef}
-          className="flex-1 overflow-y-auto space-y-4 pb-4"
+          className="flex-1 overflow-y-auto space-y-5 pb-4 scroll-smooth"
         >
           <AnimatePresence mode="popLayout">
-            {messages.map((message) => (
+            {messages.map((message, index) => (
               <motion.div
                 key={message.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
                 className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 {message.role === "clara" ? (
-                  <div className="flex gap-3 max-w-[85%]">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <div className="flex gap-3 max-w-[90%]">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0 border border-primary/20">
                       <Sparkles className="w-4 h-4 text-primary" />
                     </div>
-                    <div className="space-y-3">
-                      <Card className="bg-card border-border">
+                    <div className="space-y-3 flex-1">
+                      <Card className="bg-card/80 backdrop-blur-sm border-border/50 shadow-sm">
                         <CardContent className="p-4">
-                          <div className="prose prose-sm dark:prose-invert max-w-none">
+                          <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:mb-2 [&>p:last-child]:mb-0">
                             <ReactMarkdown>{message.content}</ReactMarkdown>
                           </div>
                         </CardContent>
                       </Card>
                       
+                      {/* CNPJ Input */}
+                      {message.showCnpjInput && currentStep === "cnpj" && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="flex gap-2"
+                        >
+                          <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input
+                              value={cnpjInput}
+                              onChange={(e) => setCnpjInput(e.target.value.replace(/\D/g, '').slice(0, 14))}
+                              placeholder="00.000.000/0000-00"
+                              className="pl-9 font-mono"
+                              onKeyDown={(e) => e.key === "Enter" && handleCnpjLookup()}
+                              autoFocus
+                            />
+                          </div>
+                          <Button 
+                            onClick={handleCnpjLookup} 
+                            disabled={cnpjLoading || cnpjInput.length < 14}
+                            className="gap-2"
+                          >
+                            {cnpjLoading ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <>Buscar<ArrowRight className="w-4 h-4" /></>
+                            )}
+                          </Button>
+                        </motion.div>
+                      )}
+                      
                       {/* Options */}
                       {message.options && (
-                        <div className="flex flex-wrap gap-2">
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.1 }}
+                          className="flex flex-wrap gap-2"
+                        >
                           {message.options.map((option) => (
                             <Button
                               key={option.value}
                               variant="outline"
                               size="sm"
                               onClick={() => handleOptionSelect(option)}
-                              className="gap-2"
+                              className={cn(
+                                "gap-2 transition-all hover:scale-105 hover:shadow-md",
+                                option.description && "flex-col h-auto py-2 px-3"
+                              )}
                               disabled={isSubmitting}
                             >
-                              {option.icon}
-                              {option.label}
+                              <span className="flex items-center gap-2">
+                                {option.icon}
+                                {option.label}
+                              </span>
+                              {option.description && (
+                                <span className="text-xs text-muted-foreground font-normal">
+                                  {option.description}
+                                </span>
+                              )}
                             </Button>
                           ))}
-                        </div>
+                        </motion.div>
+                      )}
+                      
+                      {/* Setor cards (special UI) */}
+                      {currentStep === "setor" && index === messages.length - 1 && !message.options && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="grid grid-cols-2 sm:grid-cols-3 gap-2"
+                        >
+                          {SETORES_OPTIONS.map((setor) => (
+                            <button
+                              key={setor.value}
+                              onClick={() => handleSetorSelect(setor)}
+                              className="flex flex-col items-center gap-2 p-4 rounded-xl border border-border bg-card/50 hover:bg-primary/5 hover:border-primary/30 transition-all hover:scale-105 hover:shadow-lg"
+                            >
+                              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                {setor.icon}
+                              </div>
+                              <span className="text-sm font-medium">{setor.label}</span>
+                            </button>
+                          ))}
+                        </motion.div>
                       )}
                       
                       {/* Text input */}
                       {message.inputType === "text" && currentStep === "empresa" && (
-                        <div className="flex gap-2">
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="flex gap-2"
+                        >
                           <Input
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             placeholder="Digite o nome da empresa..."
                             onKeyDown={(e) => e.key === "Enter" && handleTextSubmit()}
                             autoFocus
+                            className="flex-1"
                           />
-                          <Button onClick={handleTextSubmit} size="icon">
+                          <Button onClick={handleTextSubmit} size="icon" disabled={!input.trim()}>
                             <Send className="w-4 h-4" />
                           </Button>
-                        </div>
+                        </motion.div>
                       )}
                     </div>
                   </div>
                 ) : (
-                  <Card className="bg-primary text-primary-foreground max-w-[75%]">
-                    <CardContent className="p-4">
-                      <p>{message.content}</p>
-                    </CardContent>
-                  </Card>
+                  <motion.div
+                    initial={{ scale: 0.9 }}
+                    animate={{ scale: 1 }}
+                  >
+                    <Card className="bg-primary text-primary-foreground max-w-[85%] shadow-lg shadow-primary/20">
+                      <CardContent className="p-3 px-4">
+                        <p className="text-sm">{message.content}</p>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
                 )}
               </motion.div>
             ))}
@@ -473,15 +662,27 @@ export function ClaraOnboardingChat() {
               animate={{ opacity: 1 }}
               className="flex gap-3"
             >
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/20">
                 <Sparkles className="w-4 h-4 text-primary" />
               </div>
-              <Card className="bg-card border-border">
-                <CardContent className="p-4">
-                  <div className="flex gap-1">
-                    <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+              <Card className="bg-card/80 backdrop-blur-sm border-border/50">
+                <CardContent className="p-3 px-4">
+                  <div className="flex gap-1.5 items-center h-5">
+                    <motion.span 
+                      className="w-2 h-2 bg-primary/60 rounded-full"
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ repeat: Infinity, duration: 0.6, delay: 0 }}
+                    />
+                    <motion.span 
+                      className="w-2 h-2 bg-primary/60 rounded-full"
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }}
+                    />
+                    <motion.span 
+                      className="w-2 h-2 bg-primary/60 rounded-full"
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }}
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -491,16 +692,25 @@ export function ClaraOnboardingChat() {
           {/* Loading state */}
           {isSubmitting && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex items-center justify-center gap-2 text-muted-foreground"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center justify-center gap-3 py-4"
             >
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Salvando seu perfil...</span>
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Loader2 className="w-5 h-5 animate-spin text-primary" />
+              </div>
+              <span className="text-muted-foreground">Salvando seu perfil...</span>
             </motion.div>
           )}
         </div>
       </main>
+      
+      {/* Footer hint */}
+      <footer className="border-t border-border/50 py-3 px-4 bg-background/80 backdrop-blur-sm">
+        <p className="text-center text-xs text-muted-foreground max-w-2xl mx-auto">
+          💡 Seus dados são usados apenas para personalizar sua experiência
+        </p>
+      </footer>
     </div>
   );
 }
