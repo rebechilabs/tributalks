@@ -1,146 +1,118 @@
 
 
-# Plano: Corrigir Endpoints da API Conta Azul v2
+# Plano: Corrigir Endpoints Financeiros da API Conta Azul v2
 
 ## Problema Identificado
 
-Os endpoints da API Conta Azul no arquivo `erp-sync/index.ts` estão incorretos, usando paths e parâmetros que não correspondem à documentação oficial da API v2.
-
-## Endpoints a Corrigir
+Os endpoints de Contas a Receber e Contas a Pagar estão usando método HTTP e caminho incorretos:
 
 | Módulo | Atual (ERRADO) | Correto (Documentação) |
 |--------|----------------|------------------------|
-| Produtos | `/v1/produto/busca?limite=200` | `/v1/produtos?pagina=1&tamanho_pagina=200` |
-| Vendas | `/v1/venda/busca?limite=200` | `/v1/venda/busca` (com body POST ou params corretos) |
-| Notas Fiscais | (não implementado) | `/v1/notas-fiscais?data_inicial=...&data_final=...&pagina=1&tamanho_pagina=200` |
-| Contas a Receber | `/v1/venda/busca` | `/v1/financeiro/eventos-financeiros/contas-a-receber/buscar` |
-| Contas a Pagar | `/v1/compra/busca` | `/v1/financeiro/eventos-financeiros/contas-a-pagar/buscar` |
-| Empresa | `/v1/empresa` | `/v1/empresa` (OK) |
+| Contas a Receber | `POST /v1/financeiro/eventos-financeiros/contas-a-receber/buscar` | `GET /v1/financeiro/eventos-financeiros/contas-a-receber` |
+| Contas a Pagar | `POST /v1/financeiro/eventos-financeiros/contas-a-pagar/buscar` | `GET /v1/financeiro/eventos-financeiros/contas-a-pagar` |
+
+## Problemas Específicos
+
+1. Método HTTP errado: `POST` em vez de `GET`
+2. Caminho incorreto: inclui `/buscar` no final (não existe)
+3. Parâmetros enviados no body JSON em vez de query string
+4. Faltam parâmetros obrigatórios: `data_vencimento_de` e `data_vencimento_ate`
 
 ## Alterações Necessárias
 
 ### Arquivo: `supabase/functions/erp-sync/index.ts`
 
-#### 1. Corrigir `syncProdutos` (linha ~926)
+#### 1. Corrigir Contas a Receber (linhas 1019-1043)
+
 ```typescript
-// DE:
-const response = await this.makeRequest('/v1/produto/busca?limite=200', credentials);
-
-// PARA:
-const response = await this.makeRequest('/v1/produtos?pagina=1&tamanho_pagina=200', credentials);
-```
-
-#### 2. Corrigir `syncNFe` (linha ~959)
-```typescript
-// DE:
-const response = await this.makeRequest('/v1/venda/busca?limite=200', credentials);
-
-// PARA:
-// Usar endpoint de notas fiscais com filtro de data
-const dataFinal = new Date().toISOString().split('T')[0];
-const dataInicial = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-const response = await this.makeRequest(
-  `/v1/notas-fiscais?data_inicial=${dataInicial}&data_final=${dataFinal}&pagina=1&tamanho_pagina=200`, 
-  credentials
-);
-```
-
-#### 3. Corrigir `syncFinanceiro` - Receitas (linha ~1001)
-```typescript
-// DE:
-const salesResponse = await this.makeRequest('/v1/venda/busca?limite=200', credentials);
-
-// PARA:
-const salesResponse = await this.makeRequest(
+// DE (ERRADO):
+const recebivelResponse = await this.makeRequest(
   '/v1/financeiro/eventos-financeiros/contas-a-receber/buscar', 
-  credentials, 
-  'POST'
+  credentials,
+  'POST',
+  { pagina: 1, tamanho_pagina: 200 }
+);
+
+// PARA (CORRETO):
+const dataFinal = new Date().toISOString().split('T')[0];
+const dataInicial = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+const recebivelResponse = await this.makeRequest(
+  `/v1/financeiro/eventos-financeiros/contas-a-receber?data_vencimento_de=${dataInicial}&data_vencimento_ate=${dataFinal}&pagina=1&tamanho_pagina=200`, 
+  credentials,
+  'GET'
 );
 ```
 
-#### 4. Corrigir `syncFinanceiro` - Despesas (linha ~1026)
-```typescript
-// DE:
-const purchasesResponse = await this.makeRequest('/v1/compra/busca?limite=200', credentials);
+#### 2. Corrigir Contas a Pagar (linhas 1048-1072)
 
-// PARA:
-const purchasesResponse = await this.makeRequest(
+```typescript
+// DE (ERRADO):
+const pagavelResponse = await this.makeRequest(
   '/v1/financeiro/eventos-financeiros/contas-a-pagar/buscar', 
-  credentials, 
-  'POST'
+  credentials,
+  'POST',
+  { pagina: 1, tamanho_pagina: 200 }
+);
+
+// PARA (CORRETO):
+const dataFinal = new Date().toISOString().split('T')[0];
+const dataInicial = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+const pagavelResponse = await this.makeRequest(
+  `/v1/financeiro/eventos-financeiros/contas-a-pagar?data_vencimento_de=${dataInicial}&data_vencimento_ate=${dataFinal}&pagina=1&tamanho_pagina=200`, 
+  credentials,
+  'GET'
 );
 ```
 
-#### 5. Atualizar método `makeRequest` para suportar POST
+#### 3. Atualizar comentários de documentação
 
-O método `makeRequest` precisa ser modificado para aceitar requisições POST (necessárias para os endpoints financeiros):
-
-```typescript
-private async makeRequest(
-  endpoint: string, 
-  credentials: ERPCredentials, 
-  method: 'GET' | 'POST' = 'GET',
-  body?: Record<string, unknown>,
-  retryCount = 0
-): Promise<any> {
-  const fullUrl = `${this.baseUrl}${endpoint}`;
-  console.log(`[ContaAzul] ${method} ${fullUrl}`);
-  
-  const options: RequestInit = {
-    method,
-    headers: {
-      'Authorization': `Bearer ${credentials.access_token}`,
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    },
-  };
-  
-  if (method === 'POST' && body) {
-    options.body = JSON.stringify(body);
-  }
-  
-  const response = await fetch(fullUrl, options);
-  console.log(`[ContaAzul] Response status: ${response.status}`);
-  // ... resto da lógica
-}
-```
-
-#### 6. Adicionar logs detalhados por módulo
-
-Adicionar logs específicos para identificar qual módulo falhou:
+Corrigir os comentários nas linhas 1019 e 1048 para refletir o método correto:
 
 ```typescript
-console.log(`[ContaAzul] MÓDULO: ${moduleName}`);
-console.log(`[ContaAzul] Endpoint: ${fullUrl}`);
-console.log(`[ContaAzul] Method: ${method}`);
-console.log(`[ContaAzul] Status: ${response.status}`);
-if (!response.ok) {
-  const errorBody = await response.text();
-  console.error(`[ContaAzul] ERRO no módulo ${moduleName}: HTTP ${response.status} - ${errorBody}`);
-}
+// API v2: GET /v1/financeiro/eventos-financeiros/contas-a-receber (com query params)
+// API v2: GET /v1/financeiro/eventos-financeiros/contas-a-pagar (com query params)
 ```
 
-## Parâmetros de Paginação Corretos
+## Resumo das Correções
 
-| Parâmetro Atual | Parâmetro Correto |
-|-----------------|-------------------|
-| `limite` | `tamanho_pagina` |
-| `page` | `pagina` |
+| Aspecto | Antes | Depois |
+|---------|-------|--------|
+| Método HTTP | POST | GET |
+| Caminho (Receber) | `.../contas-a-receber/buscar` | `.../contas-a-receber` |
+| Caminho (Pagar) | `.../contas-a-pagar/buscar` | `.../contas-a-pagar` |
+| Parâmetros | Body JSON | Query String |
+| Filtro de Data | Ausente | `data_vencimento_de` + `data_vencimento_ate` (365 dias) |
+
+## Seção Técnica
+
+### Exemplo de Chamada Correta
+
+```text
+GET https://api-v2.contaazul.com/v1/financeiro/eventos-financeiros/contas-a-receber
+    ?data_vencimento_de=2025-02-03
+    &data_vencimento_ate=2026-02-03
+    &pagina=1
+    &tamanho_pagina=200
+
+Headers:
+  Authorization: Bearer {access_token}
+  Accept: application/json
+```
+
+### Parâmetros Obrigatórios
+
+| Parâmetro | Tipo | Formato | Descrição |
+|-----------|------|---------|-----------|
+| `data_vencimento_de` | date | YYYY-MM-DD | Data inicial do filtro (OBRIGATÓRIO) |
+| `data_vencimento_ate` | date | YYYY-MM-DD | Data final do filtro (OBRIGATÓRIO) |
+| `pagina` | number | inteiro | Página da paginação (default: 1) |
+| `tamanho_pagina` | number | inteiro | Itens por página (default: 10) |
 
 ## Resultado Esperado
 
 Após as correções:
-1. Todos os 4 módulos sincronizarão corretamente
-2. Os logs mostrarão qual endpoint específico está sendo chamado
-3. Erros serão exibidos com o código HTTP e mensagem detalhada
-4. A mensagem "Alguns módulos falharam" será substituída por "Sincronização concluída"
-
-## Ordem de Implementação
-
-1. Modificar `makeRequest` para suportar POST
-2. Corrigir endpoint de Produtos
-3. Corrigir endpoint de Notas Fiscais  
-4. Corrigir endpoints Financeiros (Contas a Receber/Pagar)
-5. Adicionar logs detalhados
-6. Testar cada módulo individualmente
+1. O módulo Financeiro sincronizará corretamente
+2. Serão importados dados de contas a receber e a pagar dos últimos 365 dias
+3. A mensagem "Alguns módulos falharam" será substituída por "Sincronização concluída"
+4. Os dados financeiros alimentarão o DRE Inteligente e Score Tributário
 
