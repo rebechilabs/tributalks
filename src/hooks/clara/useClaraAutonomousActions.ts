@@ -1,7 +1,8 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AgentType } from "./useClaraAgents";
+import { toast } from "sonner";
 
 // ============================================
 // TIPOS PARA AÇÕES AUTÔNOMAS
@@ -107,7 +108,9 @@ export function useClaraAutonomousActions() {
   const { user } = useAuth();
   const [actions, setActions] = useState<AutonomousAction[]>([]);
   const [pendingCount, setPendingCount] = useState(0);
+  const [executingIds, setExecutingIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   // Busca ações do usuário
   const fetchActions = useCallback(async (
@@ -171,11 +174,14 @@ export function useClaraAutonomousActions() {
     }
   }, [user?.id, fetchActions]);
 
-  // Aprova uma ação pendente
+  // Aprova e executa uma ação pendente
   const approveAction = useCallback(async (actionId: string): Promise<boolean> => {
     if (!user?.id) return false;
     
+    setExecutingIds(prev => new Set([...prev, actionId]));
+    
     try {
+      // Atualiza para aprovado - o trigger do banco vai disparar a execução
       const { error } = await supabase
         .from('clara_autonomous_actions')
         .update({ status: 'approved' })
@@ -184,15 +190,27 @@ export function useClaraAutonomousActions() {
 
       if (error) throw error;
       
+      toast.success("Ação aprovada", {
+        description: "A Clara está executando a ação...",
+      });
+      
+      // Atualização otimista
       setActions(prev => 
         prev.map(a => a.id === actionId ? { ...a, status: 'approved' as const } : a)
       );
-      setPendingCount(prev => prev - 1);
+      setPendingCount(prev => Math.max(0, prev - 1));
       
       return true;
     } catch (error) {
       console.error('Erro ao aprovar ação:', error);
+      toast.error("Erro ao aprovar ação");
       return false;
+    } finally {
+      setExecutingIds(prev => {
+        const next = new Set(prev);
+        next.delete(actionId);
+        return next;
+      });
     }
   }, [user?.id]);
 
@@ -209,12 +227,14 @@ export function useClaraAutonomousActions() {
 
       if (error) throw error;
       
+      toast.info("Ação rejeitada");
       setActions(prev => prev.filter(a => a.id !== actionId));
-      setPendingCount(prev => prev - 1);
+      setPendingCount(prev => Math.max(0, prev - 1));
       
       return true;
     } catch (error) {
       console.error('Erro ao rejeitar ação:', error);
+      toast.error("Erro ao rejeitar ação");
       return false;
     }
   }, [user?.id]);
@@ -291,16 +311,77 @@ export function useClaraAutonomousActions() {
     return executed;
   }, [user?.id, actions, markExecuted]);
 
-  // Carrega ações pendentes ao montar
+  // Carrega ações e configura realtime
   useEffect(() => {
-    if (user?.id) {
-      fetchActions(['pending', 'approved']);
-    }
+    if (!user?.id) return;
+
+    fetchActions(['pending', 'approved', 'executed']);
+
+    // Configura subscription realtime
+    channelRef.current = supabase
+      .channel('clara-actions-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'clara_autonomous_actions',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const { eventType, new: newRecord, old: oldRecord } = payload;
+          
+          if (eventType === 'INSERT') {
+            const action = newRecord as AutonomousAction;
+            setActions(prev => [action, ...prev]);
+            if (action.status === 'pending') {
+              setPendingCount(prev => prev + 1);
+              toast.info("Nova ação detectada", {
+                description: `Clara sugere: ${action.action_type.replace(/_/g, ' ')}`,
+              });
+            }
+          } else if (eventType === 'UPDATE') {
+            const action = newRecord as AutonomousAction;
+            const oldAction = oldRecord as AutonomousAction;
+            
+            setActions(prev => 
+              prev.map(a => a.id === action.id ? action : a)
+            );
+            
+            // Se mudou para executed, notifica
+            if (action.status === 'executed' && oldAction?.status !== 'executed') {
+              toast.success("Ação executada com sucesso", {
+                description: action.action_type.replace(/_/g, ' '),
+              });
+            } else if (action.status === 'failed' && oldAction?.status !== 'failed') {
+              toast.error("Falha na execução", {
+                description: (action.result as { message?: string })?.message || action.action_type,
+              });
+            }
+            
+            // Recalcula pending count
+            if (oldAction?.status === 'pending' && action.status !== 'pending') {
+              setPendingCount(prev => Math.max(0, prev - 1));
+            }
+          } else if (eventType === 'DELETE') {
+            const id = (oldRecord as AutonomousAction).id;
+            setActions(prev => prev.filter(a => a.id !== id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+      }
+    };
   }, [user?.id, fetchActions]);
 
   return {
     actions,
     pendingCount,
+    executingIds,
     loading,
     fetchActions,
     createAction,
