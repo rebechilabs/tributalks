@@ -60,6 +60,7 @@ const plans: Plan[] = [
     priceMonthly: 1297,
     priceAnnual: 12970,
     trialDays: 7,
+    hasAnnual: true,
     cnpjLimit: "2 CNPJs • 2 Usuários",
     features: [
       { text: "Clara AI (Copiloto)", included: "limited", limitText: "100 msgs/dia" },
@@ -86,6 +87,7 @@ const plans: Plan[] = [
     highlighted: true,
     popular: true,
     trialDays: 7,
+    hasAnnual: true,
     cnpjLimit: "5 CNPJs • 4 Usuários",
     features: [
       { text: "Clara AI ilimitada", included: true },
