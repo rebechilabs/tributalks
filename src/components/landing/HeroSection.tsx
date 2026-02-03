@@ -46,7 +46,7 @@ export function HeroSection() {
             </div>
 
             {/* Clara AI-First Explainer */}
-            <div className="w-full max-w-3xl mb-8 animate-fade-in-up animation-delay-100">
+            <div className="w-full max-w-2xl mb-8 animate-fade-in-up animation-delay-100">
               <div className="relative bg-card/80 backdrop-blur-sm rounded-2xl border border-border overflow-hidden shadow-xl">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-primary/10 to-primary/5 px-6 py-4 border-b border-border">
@@ -117,7 +117,7 @@ export function HeroSection() {
           </div>
 
           {/* Case Study Card */}
-          <div className="w-full max-w-2xl mt-12 bg-card rounded-2xl shadow-2xl p-6 md:p-8 border border-border animate-fade-in-up animation-delay-300">
+          <div className="w-full max-w-2xl mt-8 bg-card rounded-2xl shadow-2xl p-6 md:p-8 border border-border animate-fade-in-up animation-delay-300">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
                 <TrendingUp className="w-6 h-6 text-primary" />
