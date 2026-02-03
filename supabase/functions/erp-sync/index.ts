@@ -1017,18 +1017,18 @@ class ContaAzulAdapter implements ERPAdapter {
     const financeiro: UnifiedFinancial[] = [];
     console.log('[ContaAzul] MÓDULO: Financeiro');
 
-    // Receitas (API v2: GET /v1/financeiro/receitas - endpoint correto para listar receitas)
+    // API v2: GET /v1/financeiro/eventos-financeiros/contas-a-receber (documentação oficial)
     try {
       await delay(RATE_LIMITS.contaazul.delayMs);
-      console.log('[ContaAzul] Buscando Receitas...');
+      console.log('[ContaAzul] Buscando Contas a Receber...');
       
-      // Parâmetros de filtro por data de vencimento (últimos 365 dias)
+      // Parâmetros obrigatórios: data_vencimento_de e data_vencimento_ate (últimos 365 dias)
       const dataFinalReceber = new Date().toISOString().split('T')[0];
       const dataInicialReceber = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       
-      // Endpoint correto: /v1/financeiro/receitas (tamanho_pagina máximo: 100)
+      // Endpoint correto conforme documentação: GET /v1/financeiro/eventos-financeiros/contas-a-receber
       const recebivelResponse = await this.makeRequest(
-        `/v1/financeiro/receitas?data_vencimento_de=${dataInicialReceber}&data_vencimento_ate=${dataFinalReceber}&pagina=1&tamanho_pagina=100`, 
+        `/v1/financeiro/eventos-financeiros/contas-a-receber?data_vencimento_de=${dataInicialReceber}&data_vencimento_ate=${dataFinalReceber}&pagina=1&tamanho_pagina=100`, 
         credentials,
         'GET'
       );
@@ -1050,18 +1050,18 @@ class ContaAzulAdapter implements ERPAdapter {
       console.error('[ContaAzul syncFinanceiro] ❌ ERRO em Contas a Receber:', error);
     }
 
-    // Despesas (API v2: GET /v1/financeiro/despesas - endpoint correto para listar despesas)
+    // API v2: GET /v1/financeiro/eventos-financeiros/contas-a-pagar (documentação oficial)
     try {
       await delay(RATE_LIMITS.contaazul.delayMs);
-      console.log('[ContaAzul] Buscando Despesas...');
+      console.log('[ContaAzul] Buscando Contas a Pagar...');
       
-      // Parâmetros de filtro por data de vencimento (últimos 365 dias)
+      // Parâmetros obrigatórios: data_vencimento_de e data_vencimento_ate (últimos 365 dias)
       const dataFinalPagar = new Date().toISOString().split('T')[0];
       const dataInicialPagar = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       
-      // Endpoint correto: /v1/financeiro/despesas (tamanho_pagina máximo: 100)
+      // Endpoint correto conforme documentação: GET /v1/financeiro/eventos-financeiros/contas-a-pagar
       const pagavelResponse = await this.makeRequest(
-        `/v1/financeiro/despesas?data_vencimento_de=${dataInicialPagar}&data_vencimento_ate=${dataFinalPagar}&pagina=1&tamanho_pagina=100`, 
+        `/v1/financeiro/eventos-financeiros/contas-a-pagar?data_vencimento_de=${dataInicialPagar}&data_vencimento_ate=${dataFinalPagar}&pagina=1&tamanho_pagina=100`, 
         credentials,
         'GET'
       );
