@@ -2,13 +2,15 @@
 
 ## Resumo Executivo
 
-O TribuTalks é uma **plataforma SaaS de inteligência tributária AI-First** voltada para CEOs e CFOs de empresas com faturamento acima de R$ 1 milhão/mês. A plataforma ajuda empresas a se prepararem para a **Reforma Tributária brasileira** (2026-2033), oferecendo simuladores, diagnósticos, IA assistente com memória de longo prazo e comunidade.
+O TribuTalks é uma **plataforma SaaS de inteligência tributária AI-Native** voltada para CEOs e CFOs de empresas com faturamento acima de R$ 1 milhão/mês. A plataforma ajuda empresas a se prepararem para a **Reforma Tributária brasileira** (2026-2033), oferecendo simuladores, diagnósticos, IA assistente com memória evolutiva, agentes especializados e comunidade.
 
-### Diferenciais AI-First
+### Diferenciais AI-Native
 
 | Característica | Implementação |
 |----------------|---------------|
-| **Memória de Longo Prazo** | Clara lembra contexto entre sessões via `clara_memory` |
+| **Agentes Especializados** | 3 agentes (Fiscal, Margem, Compliance) com routing inteligente |
+| **Memória Evolutiva** | Clara aprende padrões e preferências de cada usuário |
+| **Ações Autônomas** | Sistema de triggers que executa tarefas automaticamente |
 | **Feedback Loop** | Coleta thumbs up/down para fine-tuning futuro |
 | **Insights Proativos** | Sistema detecta problemas e gera alertas automáticos |
 | **Contexto Rico** | Dados reais do usuário (DRE, Score, créditos) injetados no prompt |
@@ -26,7 +28,7 @@ O TribuTalks é uma **plataforma SaaS de inteligência tributária AI-First** vo
 | Falta de visibilidade sobre impacto no caixa | NEXUS: 8 KPIs em tempo real |
 | Créditos tributários não aproveitados | Radar de Créditos (24 regras automatizadas) |
 | Precificação sem considerar novos impostos | PriceGuard com gross-up reverso |
-| Dúvidas tributárias fora do horário comercial | Clara AI 24/7 com memória e contexto |
+| Dúvidas tributárias fora do horário comercial | Clara AI 24/7 com agentes especializados |
 
 ---
 
@@ -75,7 +77,7 @@ O TribuTalks é uma **plataforma SaaS de inteligência tributária AI-First** vo
 ### EXTRAS
 | Ferramenta | Descrição | Plano Mínimo |
 |------------|-----------|--------------|
-| Clara AI | Copiloto de decisão tributária com memória | STARTER |
+| Clara AI | Copiloto tributário com agentes especializados | STARTER |
 | Analisador de Documentos | IA analisa contratos | NAVIGATOR |
 | Workflows Guiados | Jornadas estruturadas (4 roteiros) | NAVIGATOR |
 | Comunidade Circle | Network + fóruns + lives | NAVIGATOR |
@@ -94,9 +96,31 @@ O TribuTalks é uma **plataforma SaaS de inteligência tributária AI-First** vo
 
 ---
 
-## Clara AI — Insights Proativos
+## Clara AI — Sistema de Agentes Especializados
 
-O sistema de insights proativos monitora os dados do usuário e gera alertas automáticos:
+A Clara utiliza uma arquitetura AI-Native com 3 agentes especializados que colaboram:
+
+### Agentes
+
+| Agente | Domínio | Capabilities |
+|--------|---------|--------------|
+| **Fiscal** | Créditos, NCM, obrigações | Análise de créditos, classificação NCM, compliance fiscal |
+| **Margem** | DRE, pricing, custos | Proteção de margem, simulação de preços, análise de custos |
+| **Compliance** | Prazos, reforma, regulatório | Monitoramento de deadlines, alertas de mudanças, adequação |
+
+### Routing Inteligente
+
+O sistema usa keyword scoring + análise de contexto de tela para rotear automaticamente:
+
+```
+Usuário: "Qual o impacto do CBS na minha margem?"
+           ↓
+Router: Detecta "CBS" (fiscal) + "margem" (margin)
+           ↓
+Agente Selecionado: MarginAgent (margem tem prioridade pelo contexto)
+```
+
+### Insights Proativos
 
 | Tipo | Exemplos |
 |------|----------|
@@ -170,9 +194,13 @@ Ao assinar Professional, o usuário recebe automaticamente:
 
 | Feature | Status |
 |---------|--------|
+| Agentes Especializados (Fiscal, Margem, Compliance) | ✅ Implementado |
+| Memória Evolutiva | ✅ Implementado |
+| Ações Autônomas | ✅ Implementado |
 | Fine-tuning da Clara com dados coletados | Em coleta |
 | Embeddings vetoriais (busca semântica) | Planejado |
 | App Mobile (iOS/Android) | Planejado |
+| Orquestração MCP | Planejado |
 
 ---
 
@@ -195,86 +223,209 @@ Ao assinar Professional, o usuário recebe automaticamente:
 
 ---
 
-## Arquitetura AI-First
+## Arquitetura AI-Native (v6)
 
-### Visão Geral
+### Diagrama Geral
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        FRONTEND                                  │
-│  ┌──────────┐  ┌──────────────┐  ┌───────────────────────────┐  │
-│  │ Chat UI  │  │ Feedback 👍👎│  │ Insights Panel (proativo) │  │
-│  └────┬─────┘  └──────┬───────┘  └────────────┬──────────────┘  │
-└───────┼───────────────┼───────────────────────┼─────────────────┘
-        │               │                       │
-        ▼               ▼                       ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     EDGE FUNCTIONS                               │
-│  ┌──────────────────┐  ┌──────────────────────────────────────┐ │
-│  │ clara-assistant  │  │ generate-clara-insights (cron)      │ │
-│  │ - Salva conversas│  │ - Analisa dados                     │ │
-│  │ - Extrai memórias│  │ - Gera alertas automáticos          │ │
-│  │ - Injeta contexto│  │ - Cria recomendações                │ │
-│  └────────┬─────────┘  └──────────────────────────────────────┘ │
-└───────────┼─────────────────────────────────────────────────────┘
-            │
-            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     DATABASE (Supabase)                          │
-│  ┌────────────────┐  ┌──────────────┐  ┌─────────────────────┐  │
-│  │ clara_memory   │  │ clara_feedback│  │ clara_conversations│  │
-│  │ (longo prazo)  │  │ (fine-tuning) │  │ (histórico)        │  │
-│  └────────────────┘  └──────────────┘  └─────────────────────┘  │
-│  ┌────────────────┐  ┌──────────────────────────────────────┐   │
-│  │ clara_insights │  │ clara_knowledge_base (regras)        │   │
-│  │ (proativo)     │  │ clara_cache (respostas frequentes)   │   │
-│  └────────────────┘  └──────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           CLARA AI SYSTEM                                │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  ┌────────────────────────────────────────────────────────────────────┐ │
+│  │                    ORQUESTRADOR CENTRAL                            │ │
+│  │                                                                     │ │
+│  │     ┌──────────────┐ ┌──────────────┐ ┌──────────────┐            │ │
+│  │     │ FISCAL AGENT │ │ MARGIN AGENT │ │ COMPLIANCE   │            │ │
+│  │     │              │ │              │ │ AGENT        │            │ │
+│  │     │ • Créditos   │ │ • DRE        │ │ • Prazos     │            │ │
+│  │     │ • NCM        │ │ • Pricing    │ │ • Reforma    │            │ │
+│  │     │ • Compliance │ │ • Custos     │ │ • Adequação  │            │ │
+│  │     └──────┬───────┘ └──────┬───────┘ └──────┬───────┘            │ │
+│  │            │                │                │                     │ │
+│  │            └────────────────┼────────────────┘                     │ │
+│  │                             │                                      │ │
+│  │                     ┌───────▼───────┐                              │ │
+│  │                     │    ROUTER     │                              │ │
+│  │                     │ (keyword +    │                              │ │
+│  │                     │  context)     │                              │ │
+│  │                     └───────────────┘                              │ │
+│  └────────────────────────────────────────────────────────────────────┘ │
+│                                                                          │
+│  ┌────────────────────────────────────────────────────────────────────┐ │
+│  │                     MEMÓRIA EVOLUTIVA                              │ │
+│  │                                                                     │ │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────────┐ │ │
+│  │  │ Preferências │  │   Padrões    │  │ Decisões do Usuário      │ │ │
+│  │  │ (confidence) │  │  Detectados  │  │ (histórico)              │ │ │
+│  │  └──────────────┘  └──────────────┘  └──────────────────────────┘ │ │
+│  │                                                                     │ │
+│  │  Confidence Score: 0.1 → 0.95 (aumenta com reforço)               │ │
+│  │  Decay Rate: Padrões antigos perdem relevância                     │ │
+│  └────────────────────────────────────────────────────────────────────┘ │
+│                                                                          │
+│  ┌────────────────────────────────────────────────────────────────────┐ │
+│  │                     AÇÕES AUTÔNOMAS                                │ │
+│  │                                                                     │ │
+│  │  Triggers:                                                          │ │
+│  │  • xml_imported → analyze_credits (auto)                           │ │
+│  │  • score_below_60 → compliance_alert (auto)                        │ │
+│  │  • margin_drop_5pp → margin_alert (auto)                           │ │
+│  │  • deadline_7_days → send_reminder (auto)                          │ │
+│  │  • benefit_expiring → alert_expiration (auto)                      │ │
+│  │                                                                     │ │
+│  │  Status: pending → approved → executed                              │ │
+│  │  Priority: low | medium | high | urgent                             │ │
+│  └────────────────────────────────────────────────────────────────────┘ │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Tabelas AI-First
+### Tabelas AI-Native
 
 | Tabela | Descrição | Uso |
 |--------|-----------|-----|
-| `clara_memory` | Memórias de longo prazo por usuário | Contexto entre sessões |
+| `clara_agents` | Configuração dos agentes especializados | Capabilities, triggers, prioridades |
+| `clara_autonomous_actions` | Fila de ações autônomas | Triggers, payloads, status, resultados |
+| `clara_user_decisions` | Decisões do usuário rastreadas | Contexto, opções, escolha, feedback |
+| `clara_learned_patterns` | Padrões aprendidos por usuário | Tipo, valor, confidence, decay |
+| `clara_memory` | Memórias de longo prazo | Contexto, importância, reforços |
 | `clara_conversations` | Histórico de todas as conversas | Continuidade de contexto |
 | `clara_feedback` | Avaliações 👍👎 das respostas | Base para fine-tuning |
 | `clara_insights` | Insights proativos gerados | Alertas automáticos |
 | `clara_knowledge_base` | Base de conhecimento jurídico | RAG / Injeção de contexto |
 | `clara_cache` | Cache de respostas frequentes | Economia de tokens |
 
-### Fluxo de Coleta de Dados (Data Flywheel)
+### Hooks AI-Native
 
-```
-Usuário faz pergunta
-       ↓
-Clara responde (com contexto injetado)
-       ↓
-Usuário avalia 👍 ou 👎
-       ↓
-Sistema salva:
-├── clara_conversations (pergunta + resposta)
-├── clara_feedback (rating + comentário opcional)
-└── clara_memory (se detectar informação importante)
-       ↓
-Admin exporta JSONL para fine-tuning
+```typescript
+// src/hooks/clara/index.ts
+
+// Agentes Especializados
+export { useClaraAgents, useFiscalAgent, useMarginAgent, useComplianceAgent } from './useClaraAgents';
+
+// Memória Evolutiva e Aprendizado
+export { useClaraLearning, useClaraContextMemory } from './useClaraLearning';
+
+// Ações Autônomas
+export { useClaraAutonomousActions, AUTO_TRIGGERS } from './useClaraAutonomousActions';
 ```
 
-### Painel Admin: Training Data Center
+### Componentes AI-Native
 
-Rota: `/admin/training-data`
+```typescript
+// src/components/clara/index.ts
 
-| Aba | Conteúdo |
-|-----|----------|
-| **Visão Geral** | KPIs de coleta, prontidão para fine-tuning |
-| **Feedback** | Lista de avaliações com filtros |
-| **Conversas** | Histórico completo de interações |
-| **Memórias** | Contextos extraídos automaticamente |
+export { ClaraAgentBadge } from './ClaraAgentBadge';           // Badge do agente ativo
+export { ClaraAutonomousActionCard } from './ClaraAutonomousActionCard';  // Card de ação
+export { ClaraAutonomousPanel } from './ClaraAutonomousPanel';  // Painel de ações pendentes
+export { ClaraFeedbackButtons } from './ClaraFeedbackButtons';  // Thumbs up/down
+export { ClaraInsightCard } from './ClaraInsightCard';          // Card de insight
+export { ClaraInsightsPanel } from './ClaraInsightsPanel';      // Painel de insights
+```
 
-Funcionalidades:
-- Exportar feedbacks positivos em formato JSONL (OpenAI fine-tuning)
-- Exportar feedbacks negativos em CSV para análise
-- Indicadores de prontidão (metas: 100 positivos, 20 negativos, 50 memórias)
+### Sistema de Agentes
+
+```typescript
+// Tipos de Agentes
+type AgentType = 'fiscal' | 'margin' | 'compliance' | 'general';
+
+// Interface do Agente
+interface ClaraAgent {
+  id: string;
+  name: string;
+  description: string;
+  type: AgentType;
+  capabilities: string[];
+  triggerConditions: Record<string, unknown>;
+  priorityRules: Record<string, unknown>;
+  status: 'active' | 'inactive' | 'learning';
+}
+
+// Routing
+const routeQuery = (query: string, screenContext?: string): AgentType => {
+  // 1. Conta keywords de cada domínio
+  // 2. Considera contexto de tela
+  // 3. Retorna agente com maior score
+};
+```
+
+### Sistema de Memória Evolutiva
+
+```typescript
+// Padrão Aprendido
+interface LearnedPattern {
+  id: string;
+  userId: string;
+  patternType: 'preference' | 'behavior' | 'decision' | 'context';
+  patternKey: string;
+  patternValue: Record<string, unknown>;
+  confidence: number;        // 0.1 a 0.95
+  timesObserved: number;
+  decayRate: number;         // Quanto perde por dia sem uso
+  lastObservedAt: Date;
+}
+
+// Ajuste de Confidence
+const adjustConfidence = (current: number, positive: boolean): number => {
+  const delta = positive ? 0.1 : -0.15;
+  return Math.max(0.1, Math.min(0.95, current + delta));
+};
+```
+
+### Sistema de Ações Autônomas
+
+```typescript
+// Triggers Disponíveis
+const AUTO_TRIGGERS = {
+  'xml_imported': {
+    event: 'xml_imported',
+    agentType: 'fiscal',
+    actionType: 'analyze_credits',
+    requiresApproval: false,
+    priority: 'medium',
+  },
+  'score_below_60': {
+    event: 'score_below_threshold',
+    agentType: 'fiscal',
+    actionType: 'generate_compliance_alert',
+    requiresApproval: false,
+    priority: 'high',
+  },
+  'margin_drop_5pp': {
+    event: 'margin_drop_detected',
+    agentType: 'margin',
+    actionType: 'generate_margin_alert',
+    requiresApproval: false,
+    priority: 'high',
+  },
+  // ... mais triggers
+};
+
+// Status Flow
+// pending → approved → executed
+// pending → rejected
+// approved → failed
+```
+
+### Fluxo de Dados (Data Flywheel)
+
+```
+Usuário interage com plataforma
+        ↓
+Sistema detecta eventos (XML importado, DRE atualizado, etc.)
+        ↓
+AUTO_TRIGGERS disparam ações autônomas
+        ↓
+Agente especializado processa a tarefa
+        ↓
+Sistema aprende com resultado:
+├── clara_learned_patterns (padrões detectados)
+├── clara_user_decisions (escolhas do usuário)
+└── clara_memory (contexto importante)
+        ↓
+Clara se torna mais inteligente e personalizada
+```
 
 ---
 
@@ -286,7 +437,10 @@ src/
 │   ├── ui/                    # shadcn/ui (50+ componentes)
 │   ├── landing/               # Página de vendas
 │   ├── dashboard/             # Layout + cards do dashboard
-│   ├── clara/                 # Componentes AI-First
+│   ├── clara/                 # Componentes AI-Native
+│   │   ├── ClaraAgentBadge.tsx        # Badge do agente ativo
+│   │   ├── ClaraAutonomousActionCard.tsx  # Card de ação autônoma
+│   │   ├── ClaraAutonomousPanel.tsx   # Painel de ações pendentes
 │   │   ├── ClaraFeedbackButtons.tsx   # Thumbs up/down
 │   │   ├── ClaraInsightCard.tsx       # Card de insight
 │   │   └── ClaraInsightsPanel.tsx     # Painel de insights
@@ -309,6 +463,11 @@ src/
 │       └── ...
 ├── hooks/
 │   ├── useAuth.tsx            # Autenticação + perfil
+│   ├── clara/                 # Hooks AI-Native
+│   │   ├── index.ts           # Exports centralizados
+│   │   ├── useClaraAgents.ts  # Agentes especializados + routing
+│   │   ├── useClaraLearning.ts    # Memória evolutiva + padrões
+│   │   └── useClaraAutonomousActions.ts  # Ações autônomas
 │   ├── useClaraMemory.ts      # Memória + feedback + insights
 │   ├── useClaraContext.ts     # Contexto de navegação
 │   ├── useNexusData.ts        # 8 KPIs do NEXUS
@@ -360,9 +519,13 @@ src/
 | `company_dre` | DREs + cálculos + impacto reforma |
 | `tax_score` | Score tributário + dimensões |
 
-### AI-First
+### AI-Native
 | Tabela | Descrição |
 |--------|-----------|
+| `clara_agents` | Configuração dos agentes especializados |
+| `clara_autonomous_actions` | Fila de ações autônomas com triggers |
+| `clara_user_decisions` | Decisões rastreadas para aprendizado |
+| `clara_learned_patterns` | Padrões aprendidos (preferências, comportamentos) |
 | `clara_memory` | Memórias de longo prazo (contexto, decisões, preferências) |
 | `clara_conversations` | Histórico de conversas (user + assistant) |
 | `clara_feedback` | Avaliações de respostas (positive, negative, neutral) |
@@ -383,7 +546,7 @@ src/
 
 ---
 
-## Clara AI — Arquitetura v5 (AI-First)
+## Clara AI — Prompt Architecture
 
 ### Componentes do Sistema
 
@@ -402,10 +565,16 @@ src/
 │  ┌────────────────────────────────────────────────────┐         │
 │  │              CONTEXT INJECTION                      │         │
 │  │  ┌──────────┐  ┌──────────┐  ┌──────────────────┐  │         │
-│  │  │ User Data│  │ Memory   │  │ Knowledge Base   │  │         │
-│  │  │ (DRE,    │  │ (longo   │  │ (jurídico/       │  │         │
-│  │  │ Score...)│  │  prazo)  │  │  fiscal)         │  │         │
+│  │  │ User Data│  │ Memory   │  │ Learned Patterns │  │         │
+│  │  │ (DRE,    │  │ (longo   │  │ (preferências)   │  │         │
+│  │  │ Score...)│  │  prazo)  │  │                  │  │         │
 │  │  └──────────┘  └──────────┘  └──────────────────┘  │         │
+│  └────────────────────────────────────────────────────┘         │
+│                           │                                      │
+│                           ▼                                      │
+│  ┌────────────────────────────────────────────────────┐         │
+│  │              AGENT ROUTER                           │         │
+│  │  Fiscal | Margin | Compliance | General            │         │
 │  └────────────────────────────────────────────────────┘         │
 │                           │                                      │
 │                           ▼                                      │
@@ -419,6 +588,7 @@ src/
 │  │  - Disclaimer jurídico                             │         │
 │  │  - Salva conversa                                  │         │
 │  │  - Extrai memórias importantes                     │         │
+│  │  - Aprende padrões                                 │         │
 │  │  - Cache de respostas frequentes                   │         │
 │  └────────────────────────────────────────────────────┘         │
 │                                                                  │
@@ -600,6 +770,7 @@ CREATE POLICY "Users can update own profile"
 | `credit_usage` | Uso de créditos Clara AI |
 | `clara_conversations` | Histórico de interações Clara |
 | `clara_feedback` | Avaliações de qualidade |
+| `clara_autonomous_actions` | Ações executadas automaticamente |
 
 ---
 
@@ -668,29 +839,50 @@ A rota `/tribubot` redireciona automaticamente para `/clara-ai` para manter comp
 
 ---
 
-## Estratégia AI-First: Próximos Passos
+## Estratégia AI-Native: Roadmap
 
-### Fase 1: Coleta de Dados (ATUAL)
+### Fase 1: Coleta de Dados ✅
 - [x] Tabelas de memória, feedback e conversas
 - [x] Botões de thumbs up/down no chat
 - [x] Extração automática de memórias
 - [x] Painel admin Training Data Center
 - [x] Export JSONL para fine-tuning
 
-### Fase 2: RAG Semântico
+### Fase 2: Agentes Especializados ✅
+- [x] FiscalAgent (créditos, NCM, compliance)
+- [x] MarginAgent (DRE, pricing, custos)
+- [x] ComplianceAgent (prazos, reforma, adequação)
+- [x] Router inteligente (keyword + context)
+- [x] UI ClaraAgentBadge
+
+### Fase 3: Memória Evolutiva ✅
+- [x] Tabela clara_learned_patterns
+- [x] Tracking de decisões do usuário
+- [x] Sistema de confidence (0.1 → 0.95)
+- [x] Decay de relevância
+- [x] Hook useClaraLearning
+
+### Fase 4: Ações Autônomas ✅
+- [x] Tabela clara_autonomous_actions
+- [x] Sistema de triggers (AUTO_TRIGGERS)
+- [x] Fila de aprovação para ações de alto impacto
+- [x] Status flow (pending → approved → executed)
+- [x] UI ClaraAutonomousPanel
+
+### Fase 5: RAG Semântico (Próximo)
 - [ ] Habilitar pgvector para embeddings
 - [ ] Embeddings da knowledge_base
 - [ ] Busca semântica em memórias
 - [ ] Threshold de similaridade configurável
 
-### Fase 3: Fine-Tuning
+### Fase 6: Fine-Tuning
 - [ ] Atingir 100+ feedbacks positivos
 - [ ] Curar dataset (remover ruído)
 - [ ] Fine-tune modelo especializado
 - [ ] A/B test vs modelo base
 
-### Fase 4: Agentes Autônomos
-- [ ] Clara executa ações (não só responde)
-- [ ] Workflows end-to-end automatizados
+### Fase 7: Orquestração MCP
+- [ ] Model Context Protocol
+- [ ] Integração cross-tool
+- [ ] Clara controla ERPs e ferramentas externas
 - [ ] UI "invisível" (auditoria apenas)
-- [ ] MCP para integração cross-tool
