@@ -9,6 +9,7 @@ import { ScorePdfReport } from "@/components/score/ScorePdfReport";
 import { ScoreHistoryChart } from "@/components/score/ScoreHistoryChart";
 import { ScoreBenchmarkCard } from "@/components/score/ScoreBenchmarkCard";
 import { ClaraContextualCard } from "@/components/common/ClaraContextualCard";
+import { SmartFormAssistant } from "@/components/welcome/SmartFormAssistant";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -18,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { FeatureGateLimit } from "@/components/FeatureGate";
 import { usePlanAccess } from "@/hooks/useFeatureAccess";
+import { useSmartPrefill } from "@/hooks/useSmartPrefill";
 
 interface TaxScoreData {
   id: string;
@@ -74,6 +76,9 @@ export default function ScoreTributario() {
   const [loading, setLoading] = useState(true);
   const [calculating, setCalculating] = useState(false);
   const [showPdfReport, setShowPdfReport] = useState(false);
+  
+  // Smart prefill integration
+  const { preFilled, missing, hasEnoughData } = useSmartPrefill({ tool: 'score' });
 
   const fetchScoreData = useCallback(async () => {
     if (!user) return;
@@ -653,6 +658,13 @@ export default function ScoreTributario() {
         </div>
       </div>
       </FeatureGateLimit>
+      
+      {/* Smart Form Assistant */}
+      <SmartFormAssistant 
+        toolId="score-tributario"
+        prefillData={preFilled}
+        missingFields={missing}
+      />
     </DashboardLayout>
   );
 }

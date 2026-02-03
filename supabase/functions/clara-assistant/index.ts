@@ -96,6 +96,65 @@ interface UserPlatformContext {
 const contextCache = new Map<string, { context: UserPlatformContext; timestamp: number }>();
 const CONTEXT_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
+// Cache em memória para configs dinâmicas (10 minutos)
+const configCache = new Map<string, { data: any; timestamp: number }>();
+const CONFIG_CACHE_TTL = 10 * 60 * 1000; // 10 minutos
+
+// Busca config dinâmica do banco com cache
+async function getDynamicConfig(
+  supabase: SupabaseClient, 
+  configKey: string
+): Promise<any | null> {
+  // Verifica cache
+  const cached = configCache.get(configKey);
+  if (cached && Date.now() - cached.timestamp < CONFIG_CACHE_TTL) {
+    console.log(`Config cache HIT for ${configKey}`);
+    return cached.data;
+  }
+
+  console.log(`Fetching config from DB: ${configKey}`);
+
+  try {
+    const { data, error } = await supabase
+      .from('clara_prompt_configs')
+      .select('content')
+      .eq('config_key', configKey)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching config:', error);
+      return null;
+    }
+
+    if (data?.content) {
+      configCache.set(configKey, { data: data.content, timestamp: Date.now() });
+      return data.content;
+    }
+
+    return null;
+  } catch (err) {
+    console.error('Error in getDynamicConfig:', err);
+    return null;
+  }
+}
+
+// Busca resposta por plano do banco (com fallback para hardcoded)
+async function getDynamicPlanResponse(
+  supabase: SupabaseClient, 
+  plan: string
+): Promise<string> {
+  const configKey = `plan_response:${plan}`;
+  const config = await getDynamicConfig(supabase, configKey);
+
+  if (config?.greeting) {
+    return config.greeting;
+  }
+
+  // Fallback para respostas hardcoded
+  return PLAN_RESPONSES[plan] || PLAN_RESPONSES.STARTER;
+}
+
 // Busca contexto completo do usuário em paralelo
 async function buildUserContext(supabase: SupabaseClient, userId: string): Promise<UserPlatformContext> {
   // Verifica cache
