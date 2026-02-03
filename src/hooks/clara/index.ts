@@ -1,5 +1,5 @@
 // ============================================
-// CLARA AI-FIRST - Sistema de Agentes Especializados
+// CLARA AI-NATIVE - Sistema Completo
 // ============================================
 
 // Agentes Especializados
@@ -30,3 +30,12 @@ export {
   type AutonomousAction,
   type ActionTrigger,
 } from './useClaraAutonomousActions';
+
+// Busca Semântica (RAG)
+export {
+  useSemanticSearch,
+  useEmbeddings,
+  type SemanticSearchResult,
+  type SemanticSearchResponse,
+  type SemanticSearchOptions,
+} from './useSemanticSearch';
