@@ -768,8 +768,8 @@ class BlingAdapter implements ERPAdapter {
 // ============================================================================
 
 class ContaAzulAdapter implements ERPAdapter {
-  // API Conta Azul v2 - URL correta conforme documentação oficial
-  private baseUrl = 'https://api-v2.contaazul.com/v1';
+  // API Conta Azul v2 - URL base SEM /v1 (cada endpoint inclui /v1/)
+  private baseUrl = 'https://api-v2.contaazul.com';
   // deno-lint-ignore no-explicit-any
   private supabase: any = null;
   private connectionId: string | null = null;
@@ -845,7 +845,10 @@ class ContaAzulAdapter implements ERPAdapter {
   }
 
   private async makeRequest(endpoint: string, credentials: ERPCredentials, retryCount = 0): Promise<any> {
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+    const fullUrl = `${this.baseUrl}${endpoint}`;
+    console.log(`[ContaAzul] Requesting: ${fullUrl}`);
+    
+    const response = await fetch(fullUrl, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${credentials.access_token}`,
@@ -853,9 +856,12 @@ class ContaAzulAdapter implements ERPAdapter {
       },
     });
 
+    console.log(`[ContaAzul] Response status: ${response.status}`);
+
     // Check for token expiration (401 Unauthorized)
     if (response.status === 401 && retryCount === 0) {
       const errorText = await response.text();
+      console.log(`[ContaAzul] 401 Error body: ${errorText}`);
       
       // Check if it's a token expiration issue
       if (errorText.includes('invalid_token') || errorText.includes('expired') || errorText.includes('Unauthorized')) {
@@ -874,6 +880,7 @@ class ContaAzulAdapter implements ERPAdapter {
 
     if (!response.ok) {
       const error = await response.text();
+      console.error(`[ContaAzul] API Error for ${endpoint}: ${error}`);
       throw new Error(`Conta Azul API error: ${error}`);
     }
 
@@ -887,19 +894,20 @@ class ContaAzulAdapter implements ERPAdapter {
       throw new Error('Credenciais Conta Azul incompletas: access_token é obrigatório');
     }
     
-    console.log('[ContaAzul syncEmpresa] Fetching company data...');
+    console.log('[ContaAzul syncEmpresa] Fetching company data via API v2...');
     
     try {
-      const data = await this.makeRequest('/companies', credentials);
+      // API v2 usa endpoint em português: /v1/empresa
+      const data = await this.makeRequest('/v1/empresa', credentials);
       
       console.log('[ContaAzul syncEmpresa] Response received:', data ? 'success' : 'empty');
       
       if (data) {
         return {
-          razao_social: data.name,
-          cnpj_principal: data.federalTaxNumber,
-          // API v2 may return additional fields
-          nome_fantasia: data.tradingName || data.name,
+          // API v2 retorna campos em português
+          razao_social: data.razao_social || data.name,
+          cnpj_principal: data.cnpj || data.federalTaxNumber,
+          nome_fantasia: data.nome_fantasia || data.tradingName || data.razao_social,
         };
       }
       return {};
@@ -914,13 +922,18 @@ class ContaAzulAdapter implements ERPAdapter {
 
     try {
       await delay(RATE_LIMITS.contaazul.delayMs);
-      const data = await this.makeRequest('/products?size=200', credentials);
+      // API v2 usa endpoint em português: /v1/produto/busca com parâmetro 'limite'
+      const response = await this.makeRequest('/v1/produto/busca?limite=200', credentials);
+      
+      // API v2 pode retornar array diretamente ou objeto com 'itens'/'data'
+      const data = Array.isArray(response) ? response : (response.itens || response.data || []);
 
       if (data && Array.isArray(data)) {
         for (const produto of data) {
           products.push({
+            // API v2 retorna 'descricao' ao invés de 'name', 'codigo' ao invés de 'code'
             ncm_code: produto.ncm || '00000000',
-            product_name: produto.name || produto.code,
+            product_name: produto.descricao || produto.nome || produto.name || produto.codigo,
             cfops_frequentes: [],
             tipo_operacao: 'misto',
             qtd_operacoes: 0,
@@ -928,6 +941,7 @@ class ContaAzulAdapter implements ERPAdapter {
           });
         }
       }
+      console.log(`[ContaAzul syncProdutos] ${products.length} produtos sincronizados`);
     } catch (error) {
       console.error('Conta Azul syncProdutos error:', error);
     }
@@ -936,25 +950,33 @@ class ContaAzulAdapter implements ERPAdapter {
   }
 
   async syncNFe(credentials: ERPCredentials): Promise<UnifiedNFe[]> {
-    // Conta Azul uses sales endpoint for invoice data
+    // Conta Azul API v2 usa /v1/venda/busca para dados de vendas/NF-e
     const nfes: UnifiedNFe[] = [];
 
     try {
       await delay(RATE_LIMITS.contaazul.delayMs);
-      const data = await this.makeRequest('/sales?size=200', credentials);
+      // API v2 usa endpoint em português: /v1/venda/busca com parâmetro 'limite'
+      const response = await this.makeRequest('/v1/venda/busca?limite=200', credentials);
+      
+      // API v2 pode retornar array diretamente ou objeto com 'itens'/'data'
+      const data = Array.isArray(response) ? response : (response.itens || response.data || []);
 
       if (data && Array.isArray(data)) {
         for (const sale of data) {
           nfes.push({
             nfe_key: sale.id || '',
-            nfe_number: sale.number?.toString() || '',
-            nfe_date: sale.emission || new Date().toISOString(),
+            // API v2 retorna 'numero' ao invés de 'number'
+            nfe_number: sale.numero?.toString() || sale.number?.toString() || '',
+            // API v2 retorna 'data_emissao' ao invés de 'emission'
+            nfe_date: sale.data_emissao || sale.emission || new Date().toISOString(),
             supplier_cnpj: '',
-            supplier_name: sale.customer?.name || '',
+            // API v2 retorna 'cliente.nome' ao invés de 'customer.name'
+            supplier_name: sale.cliente?.nome || sale.customer?.name || '',
             cfop: '',
             ncm_code: '',
             product_description: '',
-            valor_total: sale.total || 0,
+            // API v2 retorna 'valor_total' ao invés de 'total'
+            valor_total: sale.valor_total || sale.total || 0,
             icms_value: 0,
             pis_value: 0,
             cofins_value: 0,
@@ -962,6 +984,7 @@ class ContaAzulAdapter implements ERPAdapter {
           });
         }
       }
+      console.log(`[ContaAzul syncNFe] ${nfes.length} notas fiscais sincronizadas`);
     } catch (error) {
       console.error('Conta Azul syncNFe error:', error);
     }
@@ -972,42 +995,52 @@ class ContaAzulAdapter implements ERPAdapter {
   async syncFinanceiro(credentials: ERPCredentials): Promise<UnifiedFinancial[]> {
     const financeiro: UnifiedFinancial[] = [];
 
-    // Sales = Receitas
+    // Sales = Receitas (API v2: /v1/venda/busca)
     try {
       await delay(RATE_LIMITS.contaazul.delayMs);
-      const sales = await this.makeRequest('/sales?size=200', credentials);
+      const salesResponse = await this.makeRequest('/v1/venda/busca?limite=200', credentials);
+      const sales = Array.isArray(salesResponse) ? salesResponse : (salesResponse.itens || salesResponse.data || []);
 
       if (sales && Array.isArray(sales)) {
         for (const sale of sales) {
           financeiro.push({
             tipo: 'receita',
             categoria: 'vendas',
-            valor: sale.total || 0,
-            data: sale.emission || new Date().toISOString(),
-            descricao: `Venda #${sale.number}`,
+            // API v2 retorna 'valor_total' ao invés de 'total'
+            valor: sale.valor_total || sale.total || 0,
+            // API v2 retorna 'data_emissao' ao invés de 'emission'
+            data: sale.data_emissao || sale.emission || new Date().toISOString(),
+            // API v2 retorna 'numero' ao invés de 'number'
+            descricao: `Venda #${sale.numero || sale.number}`,
           });
         }
       }
+      console.log(`[ContaAzul syncFinanceiro] ${sales.length} receitas sincronizadas`);
     } catch (error) {
       console.error('Conta Azul syncFinanceiro sales error:', error);
     }
 
-    // Purchases = Despesas
+    // Purchases = Despesas (API v2: /v1/compra/busca)
     try {
       await delay(RATE_LIMITS.contaazul.delayMs);
-      const purchases = await this.makeRequest('/purchases?size=200', credentials);
+      const purchasesResponse = await this.makeRequest('/v1/compra/busca?limite=200', credentials);
+      const purchases = Array.isArray(purchasesResponse) ? purchasesResponse : (purchasesResponse.itens || purchasesResponse.data || []);
 
       if (purchases && Array.isArray(purchases)) {
         for (const purchase of purchases) {
           financeiro.push({
             tipo: 'despesa',
             categoria: 'compras',
-            valor: purchase.total || 0,
-            data: purchase.emission || new Date().toISOString(),
-            descricao: `Compra #${purchase.number}`,
+            // API v2 retorna 'valor_total' ao invés de 'total'
+            valor: purchase.valor_total || purchase.total || 0,
+            // API v2 retorna 'data_emissao' ao invés de 'emission'
+            data: purchase.data_emissao || purchase.emission || new Date().toISOString(),
+            // API v2 retorna 'numero' ao invés de 'number'
+            descricao: `Compra #${purchase.numero || purchase.number}`,
           });
         }
       }
+      console.log(`[ContaAzul syncFinanceiro] ${purchases.length} despesas sincronizadas`);
     } catch (error) {
       console.error('Conta Azul syncFinanceiro purchases error:', error);
     }
