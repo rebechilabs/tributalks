@@ -60,3 +60,8 @@ export {
   type RelationshipPath,
   type ReformImpact,
 } from './useKnowledgeGraph';
+
+// Triggers Automáticos
+export {
+  useClaraTrigger,
+} from './useClaraTrigger';
