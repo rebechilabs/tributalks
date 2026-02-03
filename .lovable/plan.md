@@ -1,90 +1,150 @@
 
-# Plano: Atualização Completa da Integração OAuth 2.0 Conta Azul
+# Plano: Corrigir Endpoints da API Conta Azul
 
 ## Diagnóstico do Problema
 
-O erro **"Client does not exist - client_id=95398421"** indica que:
-1. As credenciais atuais (`CONTAAZUL_CLIENT_ID` e `CONTAAZUL_CLIENT_SECRET`) armazenadas nos Supabase Secrets estão expiradas ou são inválidas
-2. O client_id `95398421` não existe mais no Portal do Desenvolvedor do Conta Azul
+Os logs da Edge Function `erp-sync` revelam que **TODOS os 4 módulos falharam** com o mesmo erro:
 
-## Credenciais Armazenadas
-
-As credenciais estão nos **Supabase Secrets**:
-- `CONTAAZUL_CLIENT_ID` - precisa ser atualizado com o novo valor
-- `CONTAAZUL_CLIENT_SECRET` - precisa ser atualizado com o novo valor
-
-## Ações Necessárias
-
-### 1. Atualizar as Credenciais nos Supabase Secrets
-
-Você precisará fornecer as novas credenciais obtidas no Portal do Desenvolvedor do Conta Azul para que eu possa solicitar a atualização:
-
-| Secret | Valor Atual | Ação |
-|--------|-------------|------|
-| `CONTAAZUL_CLIENT_ID` | `95398421` (inválido) | Substituir pelo novo client_id |
-| `CONTAAZUL_CLIENT_SECRET` | (valor antigo) | Substituir pelo novo secret |
-
-### 2. Verificar Endpoints da API
-
-De acordo com a mensagem do usuário, os endpoints corretos seriam:
-- **Autorização**: `https://api.contaazul.com/auth/authorize`  
-- **Token**: `https://api.contaazul.com/oauth2/token`
-
-Porém, o código atual usa:
-- **Autorização**: `https://auth.contaazul.com/login`
-- **Token**: `https://auth.contaazul.com/oauth2/token`
-
-Precisarei atualizar o código da Edge Function se a API v1 for a correta.
-
-### 3. Confirmar Redirect URI
-
-O redirect_uri está configurado como:
 ```
-https://tributalks.com.br/oauth/callback
+"A URL informada não corresponde a um recurso da API. Verifique a URL e os exemplos da documentação."
 ```
 
-Mas a mensagem do usuário sugere:
+### Causa Raiz
+O código está usando endpoints **incorretos** para a API v2 do Conta Azul:
+
+| Módulo | Endpoint Atual (ERRADO) | Endpoint Correto (API v2) |
+|--------|-------------------------|---------------------------|
+| Empresa | `/companies` | `/v1/empresa` |
+| Produtos | `/products?size=200` | `/v1/produto/busca` |
+| NF-e/Vendas | `/sales?size=200` | `/v1/venda/busca` |
+| Financeiro | `/purchases?size=200` | `/v1/compra/busca` |
+
+### URL Base
+O código usa `https://api-v2.contaazul.com/v1`, mas deveria ser apenas `https://api-v2.contaazul.com` (sem o `/v1` no final, pois cada endpoint já inclui `/v1/`).
+
+## Alterações Necessárias
+
+### 1. Arquivo: `supabase/functions/erp-sync/index.ts`
+
+#### 1.1 Corrigir URL Base (linha 772)
+```typescript
+// DE:
+private baseUrl = 'https://api-v2.contaazul.com/v1';
+
+// PARA:
+private baseUrl = 'https://api-v2.contaazul.com';
 ```
-https://tributalks.com.br/integracoes/contaazul/callback
+
+#### 1.2 Corrigir Endpoint Empresa (linha 893)
+```typescript
+// DE:
+const data = await this.makeRequest('/companies', credentials);
+
+// PARA:
+const data = await this.makeRequest('/v1/empresa', credentials);
 ```
 
-Precisamos confirmar qual está cadastrado no Portal.
+#### 1.3 Corrigir Endpoint Produtos (linha 917)
+```typescript
+// DE:
+const data = await this.makeRequest('/products?size=200', credentials);
 
-## Resumo das Alterações
+// PARA:
+const data = await this.makeRequest('/v1/produto/busca?limite=200', credentials);
+```
 
-| Componente | Arquivo/Local | Alteração |
-|------------|---------------|-----------|
-| Secrets | Supabase Secrets | Atualizar `CONTAAZUL_CLIENT_ID` e `CONTAAZUL_CLIENT_SECRET` |
-| Endpoint de Autorização | `supabase/functions/contaazul-oauth/index.ts` | Possivelmente trocar de `auth.contaazul.com/login` para `api.contaazul.com/auth/authorize` |
-| Endpoint de Token | `supabase/functions/contaazul-oauth/index.ts` | Possivelmente trocar de `auth.contaazul.com/oauth2/token` para `api.contaazul.com/oauth2/token` |
-| Redirect URI | `ERPConnectionWizard.tsx` + `OAuthCallback.tsx` | Confirmar se precisa mudar para `/integracoes/contaazul/callback` |
+#### 1.4 Corrigir Endpoint Vendas/NF-e (linha 944)
+```typescript
+// DE:
+const data = await this.makeRequest('/sales?size=200', credentials);
 
-## Próximos Passos
+// PARA:
+const data = await this.makeRequest('/v1/venda/busca?limite=200', credentials);
+```
 
-1. **Forneça as novas credenciais** - Eu solicitarei a atualização dos secrets via ferramenta
-2. **Confirme a versão da API** - Você está usando API v1 (`api.contaazul.com`) ou v2 (`auth.contaazul.com`)?
-3. **Confirme o redirect_uri exato** cadastrado no portal
+#### 1.5 Corrigir Endpoints Financeiro (linhas 978, 998)
+```typescript
+// DE:
+const sales = await this.makeRequest('/sales?size=200', credentials);
+const purchases = await this.makeRequest('/purchases?size=200', credentials);
+
+// PARA:
+const sales = await this.makeRequest('/v1/venda/busca?limite=200', credentials);
+const purchases = await this.makeRequest('/v1/compra/busca?limite=200', credentials);
+```
+
+#### 1.6 Atualizar Parsing das Respostas
+Os campos retornados pela API v2 também precisam de ajuste:
+
+```typescript
+// Empresa - campos da API v2
+razao_social: data.razao_social,
+cnpj_principal: data.cnpj,
+nome_fantasia: data.nome_fantasia,
+
+// Produtos - campos da API v2
+ncm_code: produto.ncm || '00000000',
+product_name: produto.descricao || produto.codigo,
+
+// Vendas - campos da API v2
+nfe_number: venda.numero?.toString() || '',
+nfe_date: venda.data_emissao || new Date().toISOString(),
+valor_total: venda.valor_total || 0,
+```
+
+### 2. Adicionar Logs Detalhados
+
+Para facilitar debug futuro, adicionar logs antes de cada chamada de API:
+
+```typescript
+console.log(`[ContaAzul] Requesting: ${this.baseUrl}${endpoint}`);
+console.log(`[ContaAzul] Response status: ${response.status}`);
+```
 
 ## Seção Técnica
 
-### Diferenças entre API v1 e v2
+### Mapeamento Completo de Endpoints
 
 ```text
-┌─────────────────────┬───────────────────────────────────────┬────────────────────────────────────┐
-│ Aspecto             │ API v1 (api.contaazul.com)            │ API v2 (auth.contaazul.com)        │
-├─────────────────────┼───────────────────────────────────────┼────────────────────────────────────┤
-│ URL Autorização     │ api.contaazul.com/auth/authorize      │ auth.contaazul.com/login           │
-│ URL Token           │ api.contaazul.com/oauth2/token        │ auth.contaazul.com/oauth2/token    │
-│ Scope               │ sales, accounting, etc                │ openid+profile+aws.cognito...      │
-│ Credenciais         │ Portal antigo                         │ Novo Portal do Desenvolvedor       │
-└─────────────────────┴───────────────────────────────────────┴────────────────────────────────────┘
+┌─────────────────────┬────────────────────────────────┬──────────────────────────────────┐
+│ Funcionalidade      │ API v1 (antiga)                │ API v2 (atual)                   │
+├─────────────────────┼────────────────────────────────┼──────────────────────────────────┤
+│ Base URL            │ https://api.contaazul.com/v1   │ https://api-v2.contaazul.com     │
+├─────────────────────┼────────────────────────────────┼──────────────────────────────────┤
+│ Empresa             │ /companies                     │ /v1/empresa                      │
+│ Produtos            │ /products                      │ /v1/produto/busca                │
+│ Vendas              │ /sales                         │ /v1/venda/busca                  │
+│ Compras             │ /purchases                     │ /v1/compra/busca                 │
+│ Clientes            │ /customers                     │ /v1/cliente/busca                │
+│ Fornecedores        │ /suppliers                     │ /v1/fornecedor/busca             │
+│ NFS-e               │ N/A                            │ /v1/nfs-e/busca                  │
+└─────────────────────┴────────────────────────────────┴──────────────────────────────────┘
 ```
 
-### Fluxo OAuth 2.0 (após correções)
+### Parâmetros de Paginação
+
+| API v1 | API v2 |
+|--------|--------|
+| `?size=200` | `?limite=200` |
+| `?page=1` | `?pagina=1` |
+
+### Campos de Resposta Alterados
 
 ```text
-Usuário → [Tributalks] → [Conta Azul Auth] → [Tributalks Callback] → [Token Exchange] → [Conexão Salva]
-    │          │                │                    │                     │                 │
-    │     1. Clica          2. Redireciona      3. Retorna           4. Troca code      5. Salva
-    │     "Conectar"        com state           com code             por tokens         no banco
+API v1 → API v2
+─────────────────────
+name → razao_social
+federalTaxNumber → cnpj
+tradingName → nome_fantasia
+number → numero
+emission → data_emissao
+total → valor_total
+customer.name → cliente.nome
 ```
+
+## Resultado Esperado
+
+Após a implementação:
+- Os 4 módulos (Empresa, Produtos, NF-e, Financeiro) sincronizarão corretamente
+- A mensagem "Alguns módulos falharam" será substituída por "Sincronização concluída"
+- Os dados do Conta Azul alimentarão o Radar de Créditos, DRE e Score Tributário
