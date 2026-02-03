@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, ArrowRight, Calculator, BookOpen } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Sparkles, Send, Calculator, BookOpen } from "lucide-react";
 
 const QUICK_ACTIONS = [
   { 
@@ -20,6 +21,7 @@ const QUICK_ACTIONS = [
 
 export function NexusClaraCard() {
   const [hoveredAction, setHoveredAction] = useState<string | null>(null);
+  const [userMessage, setUserMessage] = useState("");
 
   const handleQuestionClick = (question: string) => {
     window.dispatchEvent(new CustomEvent('openClaraWithQuestion', { 
@@ -27,10 +29,19 @@ export function NexusClaraCard() {
     }));
   };
 
-  const handleMainCTA = () => {
+  const handleSubmit = () => {
+    if (!userMessage.trim()) return;
     window.dispatchEvent(new CustomEvent('openClaraWithQuestion', { 
-      detail: { question: "Quero te contar sobre um desafio que estou enfrentando na minha empresa em relação à Reforma Tributária" } 
+      detail: { question: userMessage.trim() } 
     }));
+    setUserMessage("");
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
   };
 
   return (
@@ -60,22 +71,24 @@ export function NexusClaraCard() {
           O que você quer calcular ou entender melhor sobre a Reforma Tributária?
         </p>
 
-        {/* Quote box */}
-        <div className="bg-muted/50 border border-border/50 rounded-lg p-3 mb-4">
-          <p className="text-sm text-foreground italic">
-            "Me conta um pouco sobre o desafio que você está enfrentando no momento. Posso te orientar!"
-          </p>
+        {/* Text input area */}
+        <div className="relative mb-4">
+          <Textarea
+            value={userMessage}
+            onChange={(e) => setUserMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Me conta um pouco sobre o desafio que você está enfrentando..."
+            className="min-h-[80px] pr-12 resize-none bg-muted/50 border-border/50 focus:border-primary/50 placeholder:text-muted-foreground/60"
+          />
+          <Button
+            size="icon"
+            onClick={handleSubmit}
+            disabled={!userMessage.trim()}
+            className="absolute bottom-2 right-2 h-8 w-8 bg-primary hover:bg-primary/90 disabled:opacity-50"
+          >
+            <Send className="w-4 h-4" />
+          </Button>
         </div>
-
-        {/* Main CTA */}
-        <Button 
-          onClick={handleMainCTA} 
-          className="w-full gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md hover:shadow-lg transition-all group mb-4"
-          size="default"
-        >
-          Clique para conversar
-          <ArrowRight className="w-4 h-4 ml-auto group-hover:translate-x-1 transition-transform" />
-        </Button>
 
         {/* Quick actions */}
         <div>
