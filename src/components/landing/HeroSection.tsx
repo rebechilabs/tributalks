@@ -77,7 +77,7 @@ export function HeroSection() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up animation-delay-200">
-              <a href={CONFIG.PAYMENT_LINKS.STARTER_MENSAL} target="_blank" rel="noopener noreferrer">
+              <a href={CONFIG.PAYMENT_LINKS.NAVIGATOR_MENSAL} target="_blank" rel="noopener noreferrer">
                 <Button
                   size="lg"
                   className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-8 py-6 text-lg group"
