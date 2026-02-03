@@ -90,7 +90,7 @@ export function DemoStepNexus({ onComplete }: DemoStepNexusProps) {
           Testar Grátis por 7 Dias
         </Button>
         <p className="text-xs text-muted-foreground">
-          Sem cartão de crédito • Cancele quando quiser
+          Cancele a qualquer momento durante o trial
         </p>
       </motion.div>
     </div>
