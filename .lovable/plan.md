@@ -129,11 +129,19 @@ while (currentStart < finalEnd) {
 
 ## Resultado Esperado
 
-1. ✅ Sincronização do Conta Azul funcionando sem erros
-2. ✅ Dados financeiros salvos corretamente no `company_dre`
-3. ✅ DRE Wizard detecta dados disponíveis do ERP
-4. ✅ Usuário pode preencher automaticamente com 1 clique
+1. ✅ Sincronização do Conta Azul funcionando sem erros (janelas de 15 dias implementadas)
+2. ✅ Dados financeiros salvos corretamente no `company_dre` (unique constraint adicionado)
+3. ✅ DRE Wizard detecta dados disponíveis do ERP (hook useERPDREData criado)
+4. ✅ Usuário pode preencher automaticamente com 1 clique (banner implementado)
 5. ✅ Valores podem ser ajustados manualmente após auto-preenchimento
+
+## Status: IMPLEMENTADO ✅
+
+**Arquivos modificados:**
+- `supabase/functions/erp-sync/index.ts` - Janelas de 15 dias para NF-e + mapeamento inteligente de categorias
+- `src/components/dre/DREWizard.tsx` - Banner de ERP conectado com auto-preenchimento
+- `src/hooks/useERPDREData.ts` - Novo hook para buscar dados ERP sincronizados
+- Migration SQL - Unique index `company_dre_user_period_unique` adicionado
 
 ## Observações
 

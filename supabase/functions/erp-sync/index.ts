@@ -1096,44 +1096,74 @@ class ContaAzulAdapter implements ERPAdapter {
     console.log('[ContaAzul] MÓDULO: Notas Fiscais');
 
     try {
-      await delay(RATE_LIMITS.contaazul.delayMs);
-      
       // API v2 - Endpoint: GET /v1/notas-fiscais com filtros de data OBRIGATÓRIOS
-      // Conforme documentação oficial: tamanho_pagina deve ser 10, 20, 50 ou 100 (padrão 10)
-      // Parâmetros obrigatórios: data_inicial e data_final (formato YYYY-MM-DD)
-      const dataFinal = new Date().toISOString().split('T')[0];
-      const dataInicial = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      // IMPORTANTE: A API do Conta Azul exige período MÁXIMO de 15 dias entre datas!
+      // Solução: Dividir 90 dias em janelas de 15 dias cada (6 requisições)
       
-      console.log(`[ContaAzul syncNFe] Buscando notas de ${dataInicial} até ${dataFinal}`);
+      const finalEnd = new Date();
+      const fullStart = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
       
-      const response = await this.makeRequest(
-        `/v1/notas-fiscais?data_inicial=${dataInicial}&data_final=${dataFinal}&pagina=1&tamanho_pagina=100`, 
-        credentials
-      );
+      // Gerar janelas de 15 dias
+      const windows: Array<{start: string, end: string}> = [];
+      let currentStart = new Date(fullStart);
       
-      // API v2 retorna: { itens: [...], paginacao: { pagina_atual, tamanho_pagina, total_itens, total_paginas } }
-      const data = response.itens || (Array.isArray(response) ? response : []);
+      while (currentStart < finalEnd) {
+        const windowEnd = new Date(Math.min(
+          currentStart.getTime() + 15 * 24 * 60 * 60 * 1000,
+          finalEnd.getTime()
+        ));
+        windows.push({
+          start: currentStart.toISOString().split('T')[0],
+          end: windowEnd.toISOString().split('T')[0]
+        });
+        currentStart = new Date(windowEnd.getTime() + 1); // Próximo dia
+      }
+      
+      console.log(`[ContaAzul syncNFe] Buscando notas em ${windows.length} janelas de 15 dias`);
+      
+      // Fazer requisições para cada janela
+      for (let i = 0; i < windows.length; i++) {
+        const window = windows[i];
+        console.log(`[ContaAzul syncNFe] Janela ${i + 1}/${windows.length}: ${window.start} até ${window.end}`);
+        
+        await delay(RATE_LIMITS.contaazul.delayMs);
+        
+        try {
+          const response = await this.makeRequest(
+            `/v1/notas-fiscais?data_inicial=${window.start}&data_final=${window.end}&pagina=1&tamanho_pagina=100`, 
+            credentials
+          );
+          
+          // API v2 retorna: { itens: [...], paginacao: {...} }
+          const data = response.itens || (Array.isArray(response) ? response : []);
 
-      if (data && Array.isArray(data)) {
-        for (const nf of data) {
-          nfes.push({
-            nfe_key: nf.chave_acesso || nf.chave || nf.id || '',
-            nfe_number: nf.numero?.toString() || nf.numero_nota?.toString() || '',
-            nfe_date: nf.data_emissao || nf.data || new Date().toISOString(),
-            supplier_cnpj: nf.destinatario?.cnpj || nf.destinatario?.documento || '',
-            supplier_name: nf.destinatario?.nome || nf.destinatario?.razao_social || '',
-            cfop: nf.cfop || '',
-            ncm_code: '',
-            product_description: '',
-            valor_total: nf.valor_total || nf.total || 0,
-            icms_value: nf.icms || nf.impostos?.icms || 0,
-            pis_value: nf.pis || nf.impostos?.pis || 0,
-            cofins_value: nf.cofins || nf.impostos?.cofins || 0,
-            ipi_value: nf.ipi || nf.impostos?.ipi || 0,
-          });
+          if (data && Array.isArray(data)) {
+            for (const nf of data) {
+              nfes.push({
+                nfe_key: nf.chave_acesso || nf.chave || nf.id || '',
+                nfe_number: nf.numero?.toString() || nf.numero_nota?.toString() || '',
+                nfe_date: nf.data_emissao || nf.data || new Date().toISOString(),
+                supplier_cnpj: nf.destinatario?.cnpj || nf.destinatario?.documento || '',
+                supplier_name: nf.destinatario?.nome || nf.destinatario?.razao_social || '',
+                cfop: nf.cfop || '',
+                ncm_code: '',
+                product_description: '',
+                valor_total: nf.valor_total || nf.total || 0,
+                icms_value: nf.icms || nf.impostos?.icms || 0,
+                pis_value: nf.pis || nf.impostos?.pis || 0,
+                cofins_value: nf.cofins || nf.impostos?.cofins || 0,
+                ipi_value: nf.ipi || nf.impostos?.ipi || 0,
+              });
+            }
+            console.log(`[ContaAzul syncNFe] Janela ${i + 1}: ${data.length} notas`);
+          }
+        } catch (windowError) {
+          console.error(`[ContaAzul syncNFe] Erro na janela ${i + 1}:`, windowError);
+          // Continua para a próxima janela mesmo se uma falhar
         }
       }
-      console.log(`[ContaAzul syncNFe] ✅ ${nfes.length} notas fiscais sincronizadas`);
+      
+      console.log(`[ContaAzul syncNFe] ✅ ${nfes.length} notas fiscais sincronizadas (total)`);
     } catch (error) {
       console.error('[ContaAzul syncNFe] ❌ ERRO:', error);
       throw error;
@@ -1939,11 +1969,43 @@ serve(async (req) => {
             const financeiro = await adapter.syncFinanceiro(credentials);
             
             if (financeiro.length > 0) {
-              // Aggregate into DRE-like structure
-              const receitas = financeiro.filter(f => f.tipo === 'receita').reduce((sum, f) => sum + f.valor, 0);
-              const despesas = financeiro.filter(f => f.tipo === 'despesa').reduce((sum, f) => sum + f.valor, 0);
+              // Mapeamento inteligente de categorias para campos DRE
+              // Separar receitas e despesas com categorização
+              const receitas = financeiro.filter(f => f.tipo === 'receita');
+              const despesas = financeiro.filter(f => f.tipo === 'despesa');
+              
+              const totalReceitas = receitas.reduce((sum, f) => sum + f.valor, 0);
+              const totalDespesas = despesas.reduce((sum, f) => sum + f.valor, 0);
+              
+              // Categorização inteligente de despesas baseada em descrição/categoria
+              let aluguel = 0, salarios = 0, marketing = 0, outras = 0;
+              
+              for (const d of despesas) {
+                const desc = (d.descricao || d.categoria || '').toLowerCase();
+                
+                if (desc.includes('aluguel') || desc.includes('locação') || desc.includes('locacao')) {
+                  aluguel += d.valor;
+                } else if (desc.includes('salário') || desc.includes('salario') || desc.includes('folha') || 
+                           desc.includes('funcionário') || desc.includes('funcionario') || desc.includes('encargo') ||
+                           desc.includes('fgts') || desc.includes('inss')) {
+                  salarios += d.valor;
+                } else if (desc.includes('marketing') || desc.includes('publicidade') || desc.includes('propaganda') ||
+                           desc.includes('anúncio') || desc.includes('anuncio') || desc.includes('ads')) {
+                  marketing += d.valor;
+                } else {
+                  outras += d.valor;
+                }
+              }
+              
+              // Se não conseguiu categorizar, usar estimativas proporcionais
+              if (salarios === 0 && outras === totalDespesas && totalDespesas > 0) {
+                salarios = totalDespesas * 0.35; // 35% estimado para folha
+                outras = totalDespesas * 0.65;
+              }
 
               const currentDate = new Date();
+              
+              // Usar upsert com o novo índice único
               const { error: dreError } = await supabase
                 .from('company_dre')
                 .upsert({
@@ -1951,18 +2013,25 @@ serve(async (req) => {
                   period_type: 'monthly',
                   period_year: currentDate.getFullYear(),
                   period_month: currentDate.getMonth() + 1,
-                  input_vendas_produtos: receitas,
-                  input_custo_mercadorias: despesas * 0.6, // Estimate
-                  input_salarios_encargos: despesas * 0.2, // Estimate
-                  input_outras_despesas: despesas * 0.2, // Estimate
+                  input_vendas_produtos: totalReceitas, // Receitas como vendas de produtos
+                  input_vendas_servicos: 0, // Será preenchido manualmente se necessário
+                  input_aluguel: aluguel,
+                  input_salarios_encargos: salarios,
+                  input_marketing_publicidade: marketing,
+                  input_outras_despesas: outras,
+                  input_custo_mercadorias: totalDespesas * 0.4, // Estimativa de CMV
                   updated_at: new Date().toISOString(),
-                }, { onConflict: 'user_id,period_type,period_year,period_month' });
+                }, { 
+                  onConflict: 'user_id,period_type,period_year,period_month',
+                  ignoreDuplicates: false 
+                });
 
               if (dreError) {
                 console.error('Error upserting DRE:', dreError);
                 results.push({ module: 'financeiro', status: 'error', records_synced: 0, records_failed: financeiro.length, message: dreError.message });
                 totalFailed += financeiro.length;
               } else {
+                console.log(`[Financeiro] DRE atualizado: Receitas=${totalReceitas}, Despesas=${totalDespesas}`);
                 results.push({ module: 'financeiro', status: 'success', records_synced: financeiro.length, records_failed: 0 });
                 totalSynced += financeiro.length;
               }

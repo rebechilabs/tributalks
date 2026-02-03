@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingCart, Package, Briefcase, Landmark, Calculator, ChevronRight, ChevronLeft, Loader2, CheckCircle2, Users, Building2, Settings, BarChart3, Tag } from 'lucide-react';
+import { ShoppingCart, Package, Briefcase, Landmark, Calculator, ChevronRight, ChevronLeft, Loader2, CheckCircle2, Users, Building2, Settings, BarChart3, Tag, Link2, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -9,8 +9,10 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useERPDREData } from '@/hooks/useERPDREData';
 import { toast } from 'sonner';
 import { VoiceCurrencyInput } from './VoiceCurrencyInput';
 import { ProductCatalogStep, type ProductCatalogItem } from './ProductCatalogStep';
@@ -78,6 +80,10 @@ export function DREWizard({ onComplete, initialData }: DREWizardProps) {
   const [productCatalog, setProductCatalog] = useState<ProductCatalogItem[]>([]);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [erpDataApplied, setErpDataApplied] = useState(false);
+
+  // Hook para buscar dados do ERP
+  const { hasERPConnection, erpConnection, dreData, isLoading: loadingERP, hasSyncedData } = useERPDREData(selectedMonth, selectedYear);
 
   const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
@@ -93,6 +99,37 @@ export function DREWizard({ onComplete, initialData }: DREWizardProps) {
   const parseCurrencyInput = (value: string): number => {
     const cleaned = value.replace(/[^\d,.-]/g, '').replace(',', '.');
     return parseFloat(cleaned) || 0;
+  };
+
+  // Função para aplicar dados do ERP ao formulário
+  const applyERPData = () => {
+    if (!dreData) return;
+    
+    setFormData(prev => ({
+      ...prev,
+      vendas_produtos: dreData.vendas_produtos || prev.vendas_produtos,
+      vendas_servicos: dreData.vendas_servicos || prev.vendas_servicos,
+      custo_mercadorias: dreData.custo_mercadorias || prev.custo_mercadorias,
+      salarios_encargos: dreData.salarios_encargos || prev.salarios_encargos,
+      outras_despesas: dreData.outras_despesas || prev.outras_despesas,
+    }));
+    
+    setErpDataApplied(true);
+    toast.success('Dados do ERP aplicados! Revise e ajuste se necessário.');
+  };
+
+  // Formatar nome do ERP para exibição
+  const getERPDisplayName = () => {
+    if (!erpConnection) return 'ERP';
+    const names: Record<string, string> = {
+      contaazul: 'Conta Azul',
+      bling: 'Bling',
+      omie: 'Omie',
+      tiny: 'Tiny',
+      sankhya: 'Sankhya',
+      totvs: 'TOTVS',
+    };
+    return names[erpConnection.erp_type] || erpConnection.erp_type;
   };
 
   const receitaBruta = formData.vendas_produtos + formData.vendas_servicos + formData.outras_receitas;
@@ -253,10 +290,50 @@ export function DREWizard({ onComplete, initialData }: DREWizardProps) {
       <div className="mb-6 flex items-center justify-between">
         <div><h2 className="text-2xl font-bold">DRE Inteligente</h2><p className="text-muted-foreground">Preencha os dados e receba um diagnóstico completo</p></div>
         <div className="flex gap-2">
-          <Select value={selectedMonth.toString()} onValueChange={(v) => setSelectedMonth(parseInt(v))}><SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger><SelectContent>{['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'].map((m, i) => (<SelectItem key={i} value={(i + 1).toString()}>{m}</SelectItem>))}</SelectContent></Select>
-          <Select value={selectedYear.toString()} onValueChange={(v) => setSelectedYear(parseInt(v))}><SelectTrigger className="w-[100px]"><SelectValue /></SelectTrigger><SelectContent>{[2024, 2025, 2026].map((y) => (<SelectItem key={y} value={y.toString()}>{y}</SelectItem>))}</SelectContent></Select>
+          <Select value={selectedMonth.toString()} onValueChange={(v) => { setSelectedMonth(parseInt(v)); setErpDataApplied(false); }}><SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger><SelectContent>{['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'].map((m, i) => (<SelectItem key={i} value={(i + 1).toString()}>{m}</SelectItem>))}</SelectContent></Select>
+          <Select value={selectedYear.toString()} onValueChange={(v) => { setSelectedYear(parseInt(v)); setErpDataApplied(false); }}><SelectTrigger className="w-[100px]"><SelectValue /></SelectTrigger><SelectContent>{[2024, 2025, 2026].map((y) => (<SelectItem key={y} value={y.toString()}>{y}</SelectItem>))}</SelectContent></Select>
         </div>
       </div>
+
+      {/* Banner de ERP Conectado com dados disponíveis */}
+      {hasERPConnection && hasSyncedData && !erpDataApplied && currentStep === 1 && (
+        <Alert className="mb-6 border-primary/30 bg-primary/5">
+          <Link2 className="h-4 w-4 text-primary" />
+          <AlertTitle className="text-primary flex items-center gap-2">
+            {getERPDisplayName()} Conectado
+          </AlertTitle>
+          <AlertDescription className="mt-2">
+            <div className="text-sm text-muted-foreground mb-3">
+              Encontramos dados financeiros do seu ERP para {getPeriodLabel()}:
+              <div className="grid grid-cols-2 gap-2 mt-2 text-foreground">
+                <span>• Receitas: {formatCurrency(dreData?.vendas_produtos || 0)}</span>
+                <span>• Custos: {formatCurrency(dreData?.custo_mercadorias || 0)}</span>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={applyERPData} className="gap-2">
+                <RefreshCw className="h-4 w-4" />
+                Preencher Automaticamente
+              </Button>
+              <Button size="sm" variant="outline">
+                Continuar Manualmente
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Indicador de dados aplicados */}
+      {erpDataApplied && currentStep === 1 && (
+        <Alert className="mb-6 border-success/30 bg-success/5">
+          <CheckCircle2 className="h-4 w-4 text-success" />
+          <AlertTitle className="text-success">Dados do {getERPDisplayName()} aplicados</AlertTitle>
+          <AlertDescription className="text-sm text-muted-foreground">
+            Revise os valores e ajuste manualmente se necessário.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="mb-8">
         <div className="flex justify-between mb-2">
           {steps.map((step) => {
