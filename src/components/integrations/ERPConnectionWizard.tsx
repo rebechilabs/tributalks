@@ -121,7 +121,8 @@ export function ERPConnectionWizard({
     setIsStartingOAuth(true);
 
     try {
-      const redirectUri = `${window.location.origin}/oauth/callback`;
+      // Força URL de produção para corresponder ao cadastro no Portal do Desenvolvedor
+      const redirectUri = 'https://tributechai.lovable.app/oauth/callback';
       
       // Get authorization URL from backend
       const response = await supabase.functions.invoke("contaazul-oauth", {
