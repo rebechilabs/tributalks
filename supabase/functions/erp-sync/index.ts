@@ -908,27 +908,18 @@ class ContaAzulAdapter implements ERPAdapter {
       throw new Error('Credenciais Conta Azul incompletas: access_token é obrigatório');
     }
     
-    console.log('[ContaAzul syncEmpresa] Fetching company data via API v2...');
+    console.log('[ContaAzul syncEmpresa] NOTA: Endpoint de empresa não disponível na nova API v2');
     
-    try {
-      // API v2 usa endpoint em português: /v1/empresa
-      const data = await this.makeRequest('/v1/empresa', credentials);
-      
-      console.log('[ContaAzul syncEmpresa] Response received:', data ? 'success' : 'empty');
-      
-      if (data) {
-        return {
-          // API v2 retorna campos em português
-          razao_social: data.razao_social || data.name,
-          cnpj_principal: data.cnpj || data.federalTaxNumber,
-          nome_fantasia: data.nome_fantasia || data.tradingName || data.razao_social,
-        };
-      }
-      return {};
-    } catch (error) {
-      console.error('[ContaAzul syncEmpresa] API error:', error);
-      throw error;
-    }
+    // IMPORTANTE: A nova API v2 do Conta Azul NÃO possui endpoint para dados da empresa.
+    // O endpoint /v1/empresa foi descontinuado junto com a API legada.
+    // Conforme documentação oficial, não há equivalente na nova API v2.
+    // Retornamos dados vazios para não bloquear a sincronização dos outros módulos.
+    
+    console.log('[ContaAzul syncEmpresa] Módulo de empresa marcado como não disponível na API v2');
+    return {
+      _status: 'not_available',
+      _message: 'Endpoint de empresa não disponível na nova API v2 do Conta Azul',
+    };
   }
 
   async syncProdutos(credentials: ERPCredentials): Promise<UnifiedProduct[]> {
@@ -973,35 +964,38 @@ class ContaAzulAdapter implements ERPAdapter {
     try {
       await delay(RATE_LIMITS.contaazul.delayMs);
       
-      // API v2 - Endpoint: /v1/notas-fiscais com filtros de data (documentação oficial)
+      // API v2 - Endpoint: GET /v1/notas-fiscais com filtros de data OBRIGATÓRIOS
+      // Conforme documentação oficial: tamanho_pagina deve ser 10, 20, 50 ou 100 (padrão 10)
+      // Parâmetros obrigatórios: data_inicial e data_final (formato YYYY-MM-DD)
       const dataFinal = new Date().toISOString().split('T')[0];
       const dataInicial = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       
-      // Conforme documentação: tamanho_pagina=200 é permitido para notas fiscais
+      console.log(`[ContaAzul syncNFe] Buscando notas de ${dataInicial} até ${dataFinal}`);
+      
       const response = await this.makeRequest(
-        `/v1/notas-fiscais?data_inicial=${dataInicial}&data_final=${dataFinal}&pagina=1&tamanho_pagina=200`, 
+        `/v1/notas-fiscais?data_inicial=${dataInicial}&data_final=${dataFinal}&pagina=1&tamanho_pagina=100`, 
         credentials
       );
       
-      // API v2 pode retornar array diretamente ou objeto com 'itens'/'data'
-      const data = Array.isArray(response) ? response : (response.itens || response.data || []);
+      // API v2 retorna: { itens: [...], paginacao: { pagina_atual, tamanho_pagina, total_itens, total_paginas } }
+      const data = response.itens || (Array.isArray(response) ? response : []);
 
       if (data && Array.isArray(data)) {
         for (const nf of data) {
           nfes.push({
-            nfe_key: nf.chave_acesso || nf.id || '',
-            nfe_number: nf.numero?.toString() || '',
-            nfe_date: nf.data_emissao || new Date().toISOString(),
-            supplier_cnpj: nf.destinatario?.cnpj || '',
-            supplier_name: nf.destinatario?.nome || nf.cliente?.nome || '',
+            nfe_key: nf.chave_acesso || nf.chave || nf.id || '',
+            nfe_number: nf.numero?.toString() || nf.numero_nota?.toString() || '',
+            nfe_date: nf.data_emissao || nf.data || new Date().toISOString(),
+            supplier_cnpj: nf.destinatario?.cnpj || nf.destinatario?.documento || '',
+            supplier_name: nf.destinatario?.nome || nf.destinatario?.razao_social || '',
             cfop: nf.cfop || '',
             ncm_code: '',
             product_description: '',
             valor_total: nf.valor_total || nf.total || 0,
-            icms_value: nf.icms || 0,
-            pis_value: nf.pis || 0,
-            cofins_value: nf.cofins || 0,
-            ipi_value: nf.ipi || 0,
+            icms_value: nf.icms || nf.impostos?.icms || 0,
+            pis_value: nf.pis || nf.impostos?.pis || 0,
+            cofins_value: nf.cofins || nf.impostos?.cofins || 0,
+            ipi_value: nf.ipi || nf.impostos?.ipi || 0,
           });
         }
       }
@@ -1671,7 +1665,19 @@ serve(async (req) => {
           try {
             const empresaData = await adapter.syncEmpresa(credentials);
             
-            if (Object.keys(empresaData).length > 0) {
+            // Verifica se o módulo está disponível na API do ERP
+            if (empresaData._status === 'not_available') {
+              // Módulo não disponível na API - não conta como erro
+              console.log('[Sync] Módulo empresa não disponível na API do ERP');
+              const msgValue = empresaData._message;
+              results.push({ 
+                module: 'empresa', 
+                status: 'skipped', 
+                records_synced: 0, 
+                records_failed: 0, 
+                message: typeof msgValue === 'string' ? msgValue : 'Módulo não disponível na API'
+              });
+            } else if (Object.keys(empresaData).length > 0) {
               // Upsert to company_profile
               const { error: upsertError } = await supabase
                 .from('company_profile')
