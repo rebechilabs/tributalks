@@ -18,6 +18,7 @@ export function ClaraAutonomousPanel({
   const {
     actions,
     pendingCount,
+    executingIds,
     loading,
     fetchActions,
     approveAction,
@@ -94,6 +95,7 @@ export function ClaraAutonomousPanel({
                       action={action}
                       onApprove={approveAction}
                       onReject={rejectAction}
+                      isExecuting={executingIds.has(action.id)}
                     />
                   ))}
                 </div>
@@ -112,6 +114,7 @@ export function ClaraAutonomousPanel({
                       action={action}
                       onApprove={() => {}}
                       onReject={() => {}}
+                      isExecuting={false}
                     />
                   ))}
                 </div>
