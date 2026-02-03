@@ -26,6 +26,7 @@ import OAuthCallback from "./pages/OAuthCallback";
 
 // Páginas protegidas
 import Onboarding from "./pages/Onboarding";
+import OnboardingAI from "./pages/OnboardingAI";
 import Dashboard from "./pages/Dashboard";
 import Upgrade from "./pages/Upgrade";
 import Perfil from "./pages/Perfil";
@@ -108,6 +109,15 @@ const App = () => (
             {/* Protegidas */}
             <Route 
               path="/onboarding" 
+              element={
+                <ProtectedRoute requireOnboarding={false}>
+                  <OnboardingAI />
+                </ProtectedRoute>
+              } 
+            />
+            {/* Onboarding tradicional (fallback) */}
+            <Route 
+              path="/onboarding-classic" 
               element={
                 <ProtectedRoute requireOnboarding={false}>
                   <Onboarding />
