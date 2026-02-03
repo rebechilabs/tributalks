@@ -1129,8 +1129,9 @@ class ContaAzulAdapter implements ERPAdapter {
         await delay(RATE_LIMITS.contaazul.delayMs);
         
         try {
+          // Conta Azul API v2 usa data_competencia_de e data_competencia_ate
           const response = await this.makeRequest(
-            `/v1/notas-fiscais?data_inicial=${window.start}&data_final=${window.end}&pagina=1&tamanho_pagina=100`, 
+            `/v1/notas-fiscais?data_competencia_de=${window.start}&data_competencia_ate=${window.end}&pagina=1&tamanho_pagina=50`, 
             credentials
           );
           
@@ -2004,27 +2005,49 @@ serve(async (req) => {
               }
 
               const currentDate = new Date();
+              const periodYear = currentDate.getFullYear();
+              const periodMonth = currentDate.getMonth() + 1;
               
-              // Usar upsert com o novo índice único
-              const { error: dreError } = await supabase
+              // Verificar se já existe um DRE para o período
+              const { data: existingDre } = await supabase
                 .from('company_dre')
-                .upsert({
-                  user_id: userId,
-                  period_type: 'monthly',
-                  period_year: currentDate.getFullYear(),
-                  period_month: currentDate.getMonth() + 1,
-                  input_vendas_produtos: totalReceitas, // Receitas como vendas de produtos
-                  input_vendas_servicos: 0, // Será preenchido manualmente se necessário
-                  input_aluguel: aluguel,
-                  input_salarios_encargos: salarios,
-                  input_marketing_publicidade: marketing,
-                  input_outras_despesas: outras,
-                  input_custo_mercadorias: totalDespesas * 0.4, // Estimativa de CMV
-                  updated_at: new Date().toISOString(),
-                }, { 
-                  onConflict: 'user_id,period_type,period_year,period_month',
-                  ignoreDuplicates: false 
-                });
+                .select('id')
+                .eq('user_id', userId)
+                .eq('period_type', 'monthly')
+                .eq('period_year', periodYear)
+                .eq('period_month', periodMonth)
+                .maybeSingle();
+              
+              const dreData = {
+                user_id: userId,
+                period_type: 'monthly',
+                period_year: periodYear,
+                period_month: periodMonth,
+                input_vendas_produtos: totalReceitas, // Receitas como vendas de produtos
+                input_vendas_servicos: 0, // Será preenchido manualmente se necessário
+                input_aluguel: aluguel,
+                input_salarios_encargos: salarios,
+                input_marketing_publicidade: marketing,
+                input_outras_despesas: outras,
+                input_custo_mercadorias: totalDespesas * 0.4, // Estimativa de CMV
+                updated_at: new Date().toISOString(),
+              };
+              
+              let dreError;
+              if (existingDre?.id) {
+                // Atualizar registro existente
+                const { error } = await supabase
+                  .from('company_dre')
+                  .update(dreData)
+                  .eq('id', existingDre.id);
+                dreError = error;
+              } else {
+                // Inserir novo registro
+                const { error } = await supabase
+                  .from('company_dre')
+                  .insert(dreData);
+                dreError = error;
+              }
 
               if (dreError) {
                 console.error('Error upserting DRE:', dreError);

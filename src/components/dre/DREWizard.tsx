@@ -323,6 +323,21 @@ export function DREWizard({ onComplete, initialData }: DREWizardProps) {
         </Alert>
       )}
 
+      {/* Banner de ERP Conectado SEM dados para o período */}
+      {hasERPConnection && !hasSyncedData && !loadingERP && currentStep === 1 && (
+        <Alert className="mb-6 border-yellow-500/30 bg-yellow-500/5">
+          <Link2 className="h-4 w-4 text-yellow-600" />
+          <AlertTitle className="text-yellow-700 flex items-center gap-2">
+            {getERPDisplayName()} Conectado
+          </AlertTitle>
+          <AlertDescription className="mt-2 text-sm text-muted-foreground">
+            Não encontramos dados financeiros sincronizados para {getPeriodLabel()}.
+            <br />
+            <span className="text-xs">Vá em Integrações e execute uma sincronização, ou preencha manualmente.</span>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Indicador de dados aplicados */}
       {erpDataApplied && currentStep === 1 && (
         <Alert className="mb-6 border-success/30 bg-success/5">
