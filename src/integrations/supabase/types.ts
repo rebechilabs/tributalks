@@ -3346,6 +3346,102 @@ export type Database = {
         }
         Relationships: []
       }
+      tax_knowledge_edges: {
+        Row: {
+          created_at: string | null
+          edge_type: Database["public"]["Enums"]["kg_edge_type"]
+          id: string
+          properties: Json | null
+          source: string | null
+          source_node_id: string
+          target_node_id: string
+          valid_from: string | null
+          valid_until: string | null
+          weight: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          edge_type: Database["public"]["Enums"]["kg_edge_type"]
+          id?: string
+          properties?: Json | null
+          source?: string | null
+          source_node_id: string
+          target_node_id: string
+          valid_from?: string | null
+          valid_until?: string | null
+          weight?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          edge_type?: Database["public"]["Enums"]["kg_edge_type"]
+          id?: string
+          properties?: Json | null
+          source?: string | null
+          source_node_id?: string
+          target_node_id?: string
+          valid_from?: string | null
+          valid_until?: string | null
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_knowledge_edges_source_node_id_fkey"
+            columns: ["source_node_id"]
+            isOneToOne: false
+            referencedRelation: "tax_knowledge_nodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_knowledge_edges_target_node_id_fkey"
+            columns: ["target_node_id"]
+            isOneToOne: false
+            referencedRelation: "tax_knowledge_nodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tax_knowledge_nodes: {
+        Row: {
+          code: string
+          created_at: string | null
+          description: string | null
+          id: string
+          label: string
+          node_type: Database["public"]["Enums"]["kg_node_type"]
+          properties: Json | null
+          source: string | null
+          updated_at: string | null
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          label: string
+          node_type: Database["public"]["Enums"]["kg_node_type"]
+          properties?: Json | null
+          source?: string | null
+          updated_at?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          label?: string
+          node_type?: Database["public"]["Enums"]["kg_node_type"]
+          properties?: Json | null
+          source?: string | null
+          updated_at?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
       tax_opportunities: {
         Row: {
           base_legal: string | null
@@ -3483,6 +3579,53 @@ export type Database = {
           validade_ate?: string | null
         }
         Relationships: []
+      }
+      tax_reform_impacts: {
+        Row: {
+          analysis_date: string | null
+          current_value: number | null
+          delta_value: number | null
+          details: Json | null
+          effective_date: string | null
+          id: string
+          impact_type: string
+          node_id: string | null
+          projected_value: number | null
+          user_id: string
+        }
+        Insert: {
+          analysis_date?: string | null
+          current_value?: number | null
+          delta_value?: number | null
+          details?: Json | null
+          effective_date?: string | null
+          id?: string
+          impact_type: string
+          node_id?: string | null
+          projected_value?: number | null
+          user_id: string
+        }
+        Update: {
+          analysis_date?: string | null
+          current_value?: number | null
+          delta_value?: number | null
+          details?: Json | null
+          effective_date?: string | null
+          id?: string
+          impact_type?: string
+          node_id?: string | null
+          projected_value?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_reform_impacts_node_id_fkey"
+            columns: ["node_id"]
+            isOneToOne: false
+            referencedRelation: "tax_knowledge_nodes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tax_score: {
         Row: {
@@ -4007,6 +4150,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      analyze_cascade_impact: {
+        Args: {
+          p_max_depth?: number
+          p_start_node_code: string
+          p_start_node_type: Database["public"]["Enums"]["kg_node_type"]
+        }
+        Returns: {
+          depth: number
+          edge_chain: Database["public"]["Enums"]["kg_edge_type"][]
+          impact_weight: number
+          node_code: string
+          node_id: string
+          node_label: string
+          node_type: Database["public"]["Enums"]["kg_node_type"]
+          path: string[]
+        }[]
+      }
       apply_memory_decay: {
         Args: never
         Returns: {
@@ -4038,6 +4198,21 @@ export type Database = {
         }
         Returns: string
       }
+      find_relationship_path: {
+        Args: {
+          p_from_code: string
+          p_from_type: Database["public"]["Enums"]["kg_node_type"]
+          p_max_depth?: number
+          p_to_code: string
+          p_to_type: Database["public"]["Enums"]["kg_node_type"]
+        }
+        Returns: {
+          edge_path: Database["public"]["Enums"]["kg_edge_type"][]
+          node_path: string[]
+          path_length: number
+          total_weight: number
+        }[]
+      }
       get_memory_stats: {
         Args: { p_user_id: string }
         Returns: {
@@ -4050,6 +4225,25 @@ export type Database = {
           oldest_pattern_days: number
           total_memories: number
           total_patterns: number
+        }[]
+      }
+      get_node_relationships: {
+        Args: {
+          p_direction?: string
+          p_edge_types?: Database["public"]["Enums"]["kg_edge_type"][]
+          p_node_code: string
+          p_node_type: Database["public"]["Enums"]["kg_node_type"]
+        }
+        Returns: {
+          direction: string
+          edge_type: Database["public"]["Enums"]["kg_edge_type"]
+          properties: Json
+          related_node_code: string
+          related_node_id: string
+          related_node_label: string
+          related_node_type: Database["public"]["Enums"]["kg_node_type"]
+          relationship_id: string
+          weight: number
         }[]
       }
       get_recent_conversations: {
@@ -4220,6 +4414,29 @@ export type Database = {
         | "auto"
         | "manual"
       erp_type: "omie" | "bling" | "contaazul" | "tiny" | "sankhya" | "totvs"
+      kg_edge_type:
+        | "tributado_por"
+        | "tem_beneficio"
+        | "aplica_em"
+        | "fornece"
+        | "opera_com"
+        | "gera_credito"
+        | "impacta"
+        | "pertence_a"
+        | "substitui"
+        | "depende_de"
+        | "conflita_com"
+      kg_node_type:
+        | "ncm"
+        | "nbs"
+        | "cfop"
+        | "regime"
+        | "beneficio"
+        | "tributo"
+        | "fornecedor"
+        | "estado"
+        | "setor"
+        | "aliquota"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4361,6 +4578,31 @@ export const Constants = {
         "manual",
       ],
       erp_type: ["omie", "bling", "contaazul", "tiny", "sankhya", "totvs"],
+      kg_edge_type: [
+        "tributado_por",
+        "tem_beneficio",
+        "aplica_em",
+        "fornece",
+        "opera_com",
+        "gera_credito",
+        "impacta",
+        "pertence_a",
+        "substitui",
+        "depende_de",
+        "conflita_com",
+      ],
+      kg_node_type: [
+        "ncm",
+        "nbs",
+        "cfop",
+        "regime",
+        "beneficio",
+        "tributo",
+        "fornecedor",
+        "estado",
+        "setor",
+        "aliquota",
+      ],
     },
   },
 } as const

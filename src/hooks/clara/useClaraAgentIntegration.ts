@@ -4,10 +4,18 @@ import { useAuth } from "@/hooks/useAuth";
 import { useClaraAgents, type AgentType, type ClaraAgent } from "./useClaraAgents";
 import { useClaraAutonomousActions, type AutonomousAction } from "./useClaraAutonomousActions";
 import { useSemanticSearch, type SemanticSearchResult } from "./useSemanticSearch";
+import { useKnowledgeGraph, type CascadeImpact, type KGRelationship } from "./useKnowledgeGraph";
 
 // ============================================
 // TIPOS PARA INTEGRAÇÃO DE AGENTES NO CHAT
 // ============================================
+
+export interface KnowledgeGraphContext {
+  ncmImpacts: CascadeImpact[];
+  tributeTransitions: KGRelationship[];
+  sectorBenefits: KGRelationship[];
+  formattedContext: string;
+}
 
 export interface ClaraEnrichedContext {
   // Contexto do agente ativo
@@ -21,9 +29,13 @@ export interface ClaraEnrichedContext {
   semanticKnowledge: SemanticSearchResult[];
   semanticUserContext: SemanticSearchResult[];
   
+  // Knowledge Graph
+  knowledgeGraph: KnowledgeGraphContext | null;
+  
   // Flags
   hasUrgentAction: boolean;
   hasRelevantKnowledge: boolean;
+  hasGraphContext: boolean;
 }
 
 export interface AgentSuggestion {
@@ -42,6 +54,7 @@ export function useClaraAgentIntegration() {
   const { agents, routeToAgent, fetchAgents } = useClaraAgents();
   const { actions, approveAction, rejectAction, fetchActions } = useClaraAutonomousActions();
   const { searchForClaraContext, formatForPrompt } = useSemanticSearch();
+  const { getRelationships, analyzeCascadeImpact, generateGraphContext } = useKnowledgeGraph();
   const [currentAgent, setCurrentAgent] = useState<AgentType | null>(null);
 
   /**
@@ -101,10 +114,12 @@ export function useClaraAgentIntegration() {
   }, []);
 
   /**
-   * Enriquece o contexto do chat com informações de agentes e RAG
+   * Enriquece o contexto do chat com informações de agentes, RAG e Knowledge Graph
    */
   const enrichChatContext = useCallback(async (
-    message: string
+    message: string,
+    userNcms: string[] = [],
+    userRegime?: string
   ): Promise<ClaraEnrichedContext> => {
     // Analisa qual agente deve atuar
     const suggestion = analyzeMessageForAgent(message);
@@ -137,6 +152,49 @@ export function useClaraAgentIntegration() {
       console.error("Error fetching semantic context:", err);
     }
 
+    // === KNOWLEDGE GRAPH ===
+    let knowledgeGraph: KnowledgeGraphContext | null = null;
+    
+    try {
+      // Busca impactos de NCMs se o agente fiscal está ativo ou há NCMs
+      const ncmImpacts: CascadeImpact[] = [];
+      if ((activeAgent === 'fiscal' || userNcms.length > 0) && userNcms.length > 0) {
+        for (const ncm of userNcms.slice(0, 3)) {
+          const impacts = await analyzeCascadeImpact(ncm, 'ncm', 2);
+          ncmImpacts.push(...impacts);
+        }
+      }
+
+      // Busca transições tributárias (reforma)
+      const tributeTransitions = await getRelationships('ICMS', 'tributo', 'outgoing', ['substitui']);
+      
+      // Busca benefícios setoriais se relevante
+      let sectorBenefits: KGRelationship[] = [];
+      if (message.match(/saúde|educação|transporte|agro|cesta básica/i)) {
+        const sectors = ['SAUDE', 'EDUCACAO', 'TRANSPORTE', 'AGRO', 'CESTA_BASICA'];
+        for (const sector of sectors) {
+          if (message.toLowerCase().includes(sector.toLowerCase().replace('_', ' '))) {
+            const benefits = await getRelationships(sector, 'setor', 'outgoing', ['tem_beneficio']);
+            sectorBenefits.push(...benefits);
+          }
+        }
+      }
+
+      // Gera contexto formatado
+      const formattedContext = await generateGraphContext(userNcms, [], userRegime);
+
+      if (ncmImpacts.length > 0 || tributeTransitions.length > 0 || sectorBenefits.length > 0 || formattedContext) {
+        knowledgeGraph = {
+          ncmImpacts,
+          tributeTransitions,
+          sectorBenefits,
+          formattedContext,
+        };
+      }
+    } catch (err) {
+      console.error("Error fetching knowledge graph context:", err);
+    }
+
     // Filtra ações pendentes de alta prioridade
     const urgentActions = pendingActions.filter(a => a.priority === 'high' || a.priority === 'urgent');
 
@@ -146,10 +204,12 @@ export function useClaraAgentIntegration() {
       pendingActions,
       semanticKnowledge,
       semanticUserContext,
+      knowledgeGraph,
       hasUrgentAction: urgentActions.length > 0,
       hasRelevantKnowledge: semanticKnowledge.length > 0 || semanticUserContext.length > 0,
+      hasGraphContext: knowledgeGraph !== null,
     };
-  }, [analyzeMessageForAgent, agents, fetchAgents, actions, searchForClaraContext]);
+  }, [analyzeMessageForAgent, agents, fetchAgents, actions, searchForClaraContext, analyzeCascadeImpact, getRelationships, generateGraphContext]);
 
   /**
    * Formata o contexto enriquecido para injeção no prompt
@@ -192,6 +252,41 @@ export function useClaraAgentIntegration() {
       const knowledgeCount = context.semanticKnowledge.length;
       const userContextCount = context.semanticUserContext.length;
       lines.push(`\n[RAG: ${knowledgeCount} conhecimentos + ${userContextCount} memórias encontrados]`);
+    }
+
+    // Knowledge Graph context
+    if (context.hasGraphContext && context.knowledgeGraph) {
+      lines.push(`\n[KNOWLEDGE GRAPH TRIBUTÁRIO]`);
+      
+      // Impactos de NCM
+      if (context.knowledgeGraph.ncmImpacts.length > 0) {
+        const topImpacts = context.knowledgeGraph.ncmImpacts
+          .slice(0, 5)
+          .map(i => `• ${i.node_label} (${(i.impact_weight * 100).toFixed(0)}% impacto)`);
+        lines.push(`Impactos em cascata:`);
+        lines.push(...topImpacts);
+      }
+      
+      // Transições tributárias
+      if (context.knowledgeGraph.tributeTransitions.length > 0) {
+        lines.push(`Transições ativas: ${context.knowledgeGraph.tributeTransitions.map(t => 
+          `${t.related_node_code}`
+        ).join(', ')}`);
+      }
+      
+      // Benefícios setoriais
+      if (context.knowledgeGraph.sectorBenefits.length > 0) {
+        const benefits = context.knowledgeGraph.sectorBenefits.map(b => {
+          const reduction = (b.properties as Record<string, unknown>)?.percentual || '60';
+          return `${b.related_node_label} (${reduction}% redução)`;
+        });
+        lines.push(`Benefícios aplicáveis: ${benefits.join(', ')}`);
+      }
+      
+      // Contexto formatado adicional
+      if (context.knowledgeGraph.formattedContext) {
+        lines.push(context.knowledgeGraph.formattedContext);
+      }
     }
 
     return lines.join('\n');
