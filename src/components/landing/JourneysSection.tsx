@@ -1,4 +1,4 @@
-import { Target, BarChart3, Gauge, Lock, Check, Star, Lightbulb } from "lucide-react";
+import { Target, BarChart3, Gauge, Check, Star, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { CONFIG } from "@/config/site";
@@ -47,13 +47,12 @@ const journeys = [
     icon: Gauge,
     title: "Preciso Decidir",
     description: '"Preciso tomar decisões informadas e proteger meu caixa AGORA."',
-    features: [
-      { text: "Clara AI ilimitada", included: true, highlight: true },
-      { text: "Tudo do Navigator +", included: true },
-      { text: "NEXUS (8 KPIs executivos)", included: true, highlight: true },
-      { text: "Radar de Créditos (XMLs)", included: true, highlight: true },
-      { text: "DRE Inteligente (margem)", included: true, highlight: true },
-      { text: "Integração ERP automática", included: true },
+    benefitBlocks: [
+      "Tudo do Navigator, com Clara AI ilimitada e poder total de decisão.",
+      "Identifique créditos tributários com análise de XMLs, Radar de Créditos e 61+ oportunidades fiscais mapeadas.",
+      "Controle sua rentabilidade com DRE Inteligente e a Suíte Margem Ativa 2026: OMC-AI, PriceGuard e Dashboard Executivo.",
+      "Monitore tudo em tempo real no NEXUS, seu centro de comando com 8 KPIs executivos.",
+      "Conecte seu ERP e exporte relatórios PDF profissionais prontos para apresentar."
     ],
     price: 2997,
     priceText: "/mês",
@@ -118,39 +117,16 @@ export function JourneysSection() {
                 </p>
               </div>
 
-              {/* Features or Benefit Blocks */}
+              {/* Benefit Blocks */}
               <div className="mb-6">
-                {journey.benefitBlocks ? (
-                  <div className="space-y-3">
-                    {journey.benefitBlocks.map((block, index) => (
-                      <div key={index} className="flex items-start gap-2 text-sm">
-                        <Check className="w-4 h-4 text-success mt-0.5 shrink-0" />
-                        <span className="text-foreground">{block}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {journey.features?.map((feature) => (
-                      <div key={feature.text} className="flex items-center gap-2 text-sm">
-                        {'locked' in feature && feature.locked ? (
-                          <Lock className="w-4 h-4 text-muted-foreground" />
-                        ) : (
-                          <Check className={`w-4 h-4 ${feature.highlight ? "text-primary" : "text-success"}`} />
-                        )}
-                        <span className={`${'locked' in feature && feature.locked ? "text-muted-foreground" : feature.highlight ? "font-semibold text-foreground" : "text-foreground"}`}>
-                          {feature.text}
-                        </span>
-                        {'limit' in feature && feature.limit && (
-                          <span className="text-xs text-warning">({String(feature.limit)})</span>
-                        )}
-                        {'locked' in feature && feature.locked && (
-                          <span className="text-xs text-muted-foreground">(Pro)</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <div className="space-y-3">
+                  {journey.benefitBlocks.map((block, index) => (
+                    <div key={index} className="flex items-start gap-2 text-sm">
+                      <Check className="w-4 h-4 text-success mt-0.5 shrink-0" />
+                      <span className="text-foreground">{block}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Price */}
