@@ -1,150 +1,146 @@
 
-# Plano: Corrigir Endpoints da API Conta Azul
 
-## Diagnóstico do Problema
+# Plano: Corrigir Endpoints da API Conta Azul v2
 
-Os logs da Edge Function `erp-sync` revelam que **TODOS os 4 módulos falharam** com o mesmo erro:
+## Problema Identificado
 
-```
-"A URL informada não corresponde a um recurso da API. Verifique a URL e os exemplos da documentação."
-```
+Os endpoints da API Conta Azul no arquivo `erp-sync/index.ts` estão incorretos, usando paths e parâmetros que não correspondem à documentação oficial da API v2.
 
-### Causa Raiz
-O código está usando endpoints **incorretos** para a API v2 do Conta Azul:
+## Endpoints a Corrigir
 
-| Módulo | Endpoint Atual (ERRADO) | Endpoint Correto (API v2) |
-|--------|-------------------------|---------------------------|
-| Empresa | `/companies` | `/v1/empresa` |
-| Produtos | `/products?size=200` | `/v1/produto/busca` |
-| NF-e/Vendas | `/sales?size=200` | `/v1/venda/busca` |
-| Financeiro | `/purchases?size=200` | `/v1/compra/busca` |
-
-### URL Base
-O código usa `https://api-v2.contaazul.com/v1`, mas deveria ser apenas `https://api-v2.contaazul.com` (sem o `/v1` no final, pois cada endpoint já inclui `/v1/`).
+| Módulo | Atual (ERRADO) | Correto (Documentação) |
+|--------|----------------|------------------------|
+| Produtos | `/v1/produto/busca?limite=200` | `/v1/produtos?pagina=1&tamanho_pagina=200` |
+| Vendas | `/v1/venda/busca?limite=200` | `/v1/venda/busca` (com body POST ou params corretos) |
+| Notas Fiscais | (não implementado) | `/v1/notas-fiscais?data_inicial=...&data_final=...&pagina=1&tamanho_pagina=200` |
+| Contas a Receber | `/v1/venda/busca` | `/v1/financeiro/eventos-financeiros/contas-a-receber/buscar` |
+| Contas a Pagar | `/v1/compra/busca` | `/v1/financeiro/eventos-financeiros/contas-a-pagar/buscar` |
+| Empresa | `/v1/empresa` | `/v1/empresa` (OK) |
 
 ## Alterações Necessárias
 
-### 1. Arquivo: `supabase/functions/erp-sync/index.ts`
+### Arquivo: `supabase/functions/erp-sync/index.ts`
 
-#### 1.1 Corrigir URL Base (linha 772)
+#### 1. Corrigir `syncProdutos` (linha ~926)
 ```typescript
 // DE:
-private baseUrl = 'https://api-v2.contaazul.com/v1';
+const response = await this.makeRequest('/v1/produto/busca?limite=200', credentials);
 
 // PARA:
-private baseUrl = 'https://api-v2.contaazul.com';
+const response = await this.makeRequest('/v1/produtos?pagina=1&tamanho_pagina=200', credentials);
 ```
 
-#### 1.2 Corrigir Endpoint Empresa (linha 893)
+#### 2. Corrigir `syncNFe` (linha ~959)
 ```typescript
 // DE:
-const data = await this.makeRequest('/companies', credentials);
+const response = await this.makeRequest('/v1/venda/busca?limite=200', credentials);
 
 // PARA:
-const data = await this.makeRequest('/v1/empresa', credentials);
+// Usar endpoint de notas fiscais com filtro de data
+const dataFinal = new Date().toISOString().split('T')[0];
+const dataInicial = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+const response = await this.makeRequest(
+  `/v1/notas-fiscais?data_inicial=${dataInicial}&data_final=${dataFinal}&pagina=1&tamanho_pagina=200`, 
+  credentials
+);
 ```
 
-#### 1.3 Corrigir Endpoint Produtos (linha 917)
+#### 3. Corrigir `syncFinanceiro` - Receitas (linha ~1001)
 ```typescript
 // DE:
-const data = await this.makeRequest('/products?size=200', credentials);
+const salesResponse = await this.makeRequest('/v1/venda/busca?limite=200', credentials);
 
 // PARA:
-const data = await this.makeRequest('/v1/produto/busca?limite=200', credentials);
+const salesResponse = await this.makeRequest(
+  '/v1/financeiro/eventos-financeiros/contas-a-receber/buscar', 
+  credentials, 
+  'POST'
+);
 ```
 
-#### 1.4 Corrigir Endpoint Vendas/NF-e (linha 944)
+#### 4. Corrigir `syncFinanceiro` - Despesas (linha ~1026)
 ```typescript
 // DE:
-const data = await this.makeRequest('/sales?size=200', credentials);
+const purchasesResponse = await this.makeRequest('/v1/compra/busca?limite=200', credentials);
 
 // PARA:
-const data = await this.makeRequest('/v1/venda/busca?limite=200', credentials);
+const purchasesResponse = await this.makeRequest(
+  '/v1/financeiro/eventos-financeiros/contas-a-pagar/buscar', 
+  credentials, 
+  'POST'
+);
 ```
 
-#### 1.5 Corrigir Endpoints Financeiro (linhas 978, 998)
-```typescript
-// DE:
-const sales = await this.makeRequest('/sales?size=200', credentials);
-const purchases = await this.makeRequest('/purchases?size=200', credentials);
+#### 5. Atualizar método `makeRequest` para suportar POST
 
-// PARA:
-const sales = await this.makeRequest('/v1/venda/busca?limite=200', credentials);
-const purchases = await this.makeRequest('/v1/compra/busca?limite=200', credentials);
-```
-
-#### 1.6 Atualizar Parsing das Respostas
-Os campos retornados pela API v2 também precisam de ajuste:
+O método `makeRequest` precisa ser modificado para aceitar requisições POST (necessárias para os endpoints financeiros):
 
 ```typescript
-// Empresa - campos da API v2
-razao_social: data.razao_social,
-cnpj_principal: data.cnpj,
-nome_fantasia: data.nome_fantasia,
-
-// Produtos - campos da API v2
-ncm_code: produto.ncm || '00000000',
-product_name: produto.descricao || produto.codigo,
-
-// Vendas - campos da API v2
-nfe_number: venda.numero?.toString() || '',
-nfe_date: venda.data_emissao || new Date().toISOString(),
-valor_total: venda.valor_total || 0,
+private async makeRequest(
+  endpoint: string, 
+  credentials: ERPCredentials, 
+  method: 'GET' | 'POST' = 'GET',
+  body?: Record<string, unknown>,
+  retryCount = 0
+): Promise<any> {
+  const fullUrl = `${this.baseUrl}${endpoint}`;
+  console.log(`[ContaAzul] ${method} ${fullUrl}`);
+  
+  const options: RequestInit = {
+    method,
+    headers: {
+      'Authorization': `Bearer ${credentials.access_token}`,
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+  };
+  
+  if (method === 'POST' && body) {
+    options.body = JSON.stringify(body);
+  }
+  
+  const response = await fetch(fullUrl, options);
+  console.log(`[ContaAzul] Response status: ${response.status}`);
+  // ... resto da lógica
+}
 ```
 
-### 2. Adicionar Logs Detalhados
+#### 6. Adicionar logs detalhados por módulo
 
-Para facilitar debug futuro, adicionar logs antes de cada chamada de API:
+Adicionar logs específicos para identificar qual módulo falhou:
 
 ```typescript
-console.log(`[ContaAzul] Requesting: ${this.baseUrl}${endpoint}`);
-console.log(`[ContaAzul] Response status: ${response.status}`);
+console.log(`[ContaAzul] MÓDULO: ${moduleName}`);
+console.log(`[ContaAzul] Endpoint: ${fullUrl}`);
+console.log(`[ContaAzul] Method: ${method}`);
+console.log(`[ContaAzul] Status: ${response.status}`);
+if (!response.ok) {
+  const errorBody = await response.text();
+  console.error(`[ContaAzul] ERRO no módulo ${moduleName}: HTTP ${response.status} - ${errorBody}`);
+}
 ```
 
-## Seção Técnica
+## Parâmetros de Paginação Corretos
 
-### Mapeamento Completo de Endpoints
-
-```text
-┌─────────────────────┬────────────────────────────────┬──────────────────────────────────┐
-│ Funcionalidade      │ API v1 (antiga)                │ API v2 (atual)                   │
-├─────────────────────┼────────────────────────────────┼──────────────────────────────────┤
-│ Base URL            │ https://api.contaazul.com/v1   │ https://api-v2.contaazul.com     │
-├─────────────────────┼────────────────────────────────┼──────────────────────────────────┤
-│ Empresa             │ /companies                     │ /v1/empresa                      │
-│ Produtos            │ /products                      │ /v1/produto/busca                │
-│ Vendas              │ /sales                         │ /v1/venda/busca                  │
-│ Compras             │ /purchases                     │ /v1/compra/busca                 │
-│ Clientes            │ /customers                     │ /v1/cliente/busca                │
-│ Fornecedores        │ /suppliers                     │ /v1/fornecedor/busca             │
-│ NFS-e               │ N/A                            │ /v1/nfs-e/busca                  │
-└─────────────────────┴────────────────────────────────┴──────────────────────────────────┘
-```
-
-### Parâmetros de Paginação
-
-| API v1 | API v2 |
-|--------|--------|
-| `?size=200` | `?limite=200` |
-| `?page=1` | `?pagina=1` |
-
-### Campos de Resposta Alterados
-
-```text
-API v1 → API v2
-─────────────────────
-name → razao_social
-federalTaxNumber → cnpj
-tradingName → nome_fantasia
-number → numero
-emission → data_emissao
-total → valor_total
-customer.name → cliente.nome
-```
+| Parâmetro Atual | Parâmetro Correto |
+|-----------------|-------------------|
+| `limite` | `tamanho_pagina` |
+| `page` | `pagina` |
 
 ## Resultado Esperado
 
-Após a implementação:
-- Os 4 módulos (Empresa, Produtos, NF-e, Financeiro) sincronizarão corretamente
-- A mensagem "Alguns módulos falharam" será substituída por "Sincronização concluída"
-- Os dados do Conta Azul alimentarão o Radar de Créditos, DRE e Score Tributário
+Após as correções:
+1. Todos os 4 módulos sincronizarão corretamente
+2. Os logs mostrarão qual endpoint específico está sendo chamado
+3. Erros serão exibidos com o código HTTP e mensagem detalhada
+4. A mensagem "Alguns módulos falharam" será substituída por "Sincronização concluída"
+
+## Ordem de Implementação
+
+1. Modificar `makeRequest` para suportar POST
+2. Corrigir endpoint de Produtos
+3. Corrigir endpoint de Notas Fiscais  
+4. Corrigir endpoints Financeiros (Contas a Receber/Pagar)
+5. Adicionar logs detalhados
+6. Testar cada módulo individualmente
+
