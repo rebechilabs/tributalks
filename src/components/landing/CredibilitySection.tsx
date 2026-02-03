@@ -1,6 +1,6 @@
 import { TrendingUp, Users, Building, Scale, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
+import logoRebechiSilva from "@/assets/logo-rebechi-silva.png";
 const stats = [
   {
     icon: TrendingUp,
@@ -36,6 +36,11 @@ export function CredibilitySection() {
                 Powered by Rebechi & Silva Advogados Associados
               </span>
             </div>
+            <img 
+              src={logoRebechiSilva} 
+              alt="Rebechi & Silva Advogados Associados" 
+              className="h-12 md:h-16 object-contain"
+            />
           </div>
           
           <p className="text-sm md:text-lg text-muted-foreground max-w-3xl mx-auto px-4">
