@@ -1,21 +1,16 @@
 
-
-# Atualização do Card "Preciso Entender" na Seção Jornadas
+# Atualização do Card "Preciso Monitorar" (Navigator)
 
 ## Objetivo
-Substituir a lista de features técnicas por um texto descritivo focado em benefícios no card do plano Starter.
+Substituir a lista de features técnicas por blocos de benefícios no card Navigator, seguindo o mesmo padrão visual do Starter.
 
-## Mudança
+## Blocos de Benefícios
 
-**De (lista de features):**
-- Clara AI (Assistente) - 30 msgs/dia
-- Score da sua saúde fiscal
-- Calculadoras oficiais (CBS/IBS/IS)
-- Simulador Split Payment
-- Timeline 2026-2033 detalhada
-
-**Para (texto descritivo):**
-> "O ponto de partida ideal para quem quer se preparar para a Reforma Tributária. Faça um diagnóstico completo da saúde fiscal da sua empresa com o Score Tributário, simule diferentes cenários com as calculadoras de Split Payment e comparativo de regimes, e acompanhe todos os prazos importantes na Timeline 2026-2033. Conte ainda com a Clara AI para tirar dúvidas do dia a dia e a newsletter Tributalks News para se manter atualizado."
+1. "Tudo do Starter, com mais poder de análise e acompanhamento contínuo."
+2. "Clara AI com 100 mensagens/dia para te guiar nas decisões do dia a dia."
+3. "Fique por dentro das notícias da Reforma em tempo real e meça sua prontidão com o Checklist."
+4. "Analise documentos fiscais com IA e siga Workflows Guiados para organizar suas tarefas."
+5. "Acesse a comunidade TribuTalks Connect e exporte relatórios em PDF."
 
 ---
 
@@ -23,20 +18,39 @@ Substituir a lista de features técnicas por um texto descritivo focado em benef
 
 **Arquivo:** `src/components/landing/JourneysSection.tsx`
 
-1. **Adicionar novo campo `benefitText`** ao objeto do plano Starter (linhas 6-24)
-2. **Remover array `features`** do Starter (ou manter vazio)
-3. **Ajustar renderização do card** para exibir o texto descritivo ao invés da lista quando `benefitText` existir
-4. **Manter badge "7 DIAS GRÁTIS"** no card (adicionar campo `trialDays: 7`)
-5. **Atualizar CTA** para "Testar 7 dias grátis"
+1. Substituir o array `features` por `benefitBlocks` no objeto do plano Navigator (linhas 25-35)
+2. Adicionar `trialBadge: "7 DIAS GRÁTIS"` (se aplicável)
+3. Atualizar `ctaText` para "Testar 7 dias grátis"
+
+**Estrutura:**
+```typescript
+{
+  id: "navigator",
+  icon: BarChart3,
+  title: "Preciso Monitorar",
+  description: '"Quero acompanhar mudanças e me preparar gradualmente."',
+  benefitBlocks: [
+    "Tudo do Starter, com mais poder de análise e acompanhamento contínuo.",
+    "Clara AI com 100 mensagens/dia para te guiar nas decisões do dia a dia.",
+    "Fique por dentro das notícias da Reforma em tempo real e meça sua prontidão com o Checklist.",
+    "Analise documentos fiscais com IA e siga Workflows Guiados para organizar suas tarefas.",
+    "Acesse a comunidade TribuTalks Connect e exporte relatórios em PDF."
+  ],
+  price: 1297,
+  priceText: "/mês",
+  ctaText: "Testar 7 dias grátis",
+  trialBadge: "7 DIAS GRÁTIS",
+  highlighted: false,
+}
+```
 
 ---
 
-## Resultado Visual Esperado
+## Resultado Visual
 
-O card "Preciso Entender" terá:
+O card "Preciso Monitorar" terá:
 - Ícone + título + citação (mantidos)
-- Parágrafo descritivo com os benefícios
+- 5 blocos de benefícios com checkmarks verdes
 - Badge "7 DIAS GRÁTIS" verde
-- Preço R$ 397/mês
+- Preço R$ 1.297/mês
 - Botão "Testar 7 dias grátis"
-
