@@ -11,12 +11,18 @@ import { supabase } from "@/integrations/supabase/client";
 import DOMPurify from "dompurify";
 import { CreditDisplay } from "@/components/credits/CreditDisplay";
 import { useUserCredits } from "@/hooks/useUserCredits";
-import { ClaraFeedbackButtons } from "@/components/clara";
+import { 
+  ClaraFeedbackButtons, 
+  ClaraConfidenceIndicator,
+  parseConfidenceFromResponse,
+  type ConfidenceData,
+} from "@/components/clara";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
   userMessage?: string; // Para rastrear a pergunta que gerou esta resposta
+  confidence?: ConfidenceData | null; // Confidence score para mensagens da assistente
 }
 
 const SUGGESTIONS = [
@@ -133,9 +139,11 @@ Como posso te ajudar hoje?`,
       if (contentType?.includes("application/json")) {
         const data = await resp.json();
         if (data.message) {
+          const confidence = parseConfidenceFromResponse(data);
           setMessages(prev => [...prev, { 
             role: "assistant", 
-            content: data.message 
+            content: data.message,
+            confidence,
           }]);
         }
         setDailyCount(prev => prev + 1);
@@ -305,21 +313,27 @@ Como posso te ajudar hoje?`,
                   {msg.role === "assistant" && (
                     <Bot className="w-4 h-4 mt-1 shrink-0 text-primary" />
                   )}
-                  <div className="text-sm leading-relaxed">
+                  <div className="text-sm leading-relaxed flex-1">
                     {msg.role === "assistant" ? renderMarkdown(msg.content) : msg.content}
                   </div>
                   {msg.role === "user" && (
                     <User className="w-4 h-4 mt-1 shrink-0" />
                   )}
                 </div>
-                {/* Feedback buttons for assistant messages (skip the first greeting) */}
+                {/* Confidence indicator + Feedback buttons for assistant messages (skip the first greeting) */}
                 {msg.role === "assistant" && i > 0 && (
-                  <div className="mt-2 pt-2 border-t border-border/30">
+                  <div className="mt-2 pt-2 border-t border-border/30 flex items-center justify-between gap-2">
                     <ClaraFeedbackButtons
                       messageContent={messages[i - 1]?.content || ""}
                       responseContent={msg.content}
                       contextScreen="clara-ai"
                     />
+                    {msg.confidence && (
+                      <ClaraConfidenceIndicator 
+                        confidence={msg.confidence} 
+                        variant="badge" 
+                      />
+                    )}
                   </div>
                 )}
               </div>
