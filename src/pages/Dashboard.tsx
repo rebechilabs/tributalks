@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Calculator, Wallet, Scale, FileText, Users, Calendar, 
   Lock, ArrowRight, Clock, Sparkles, Upload, Target, BarChart3,
-  Trophy, Lightbulb, Newspaper
+  Trophy, Lightbulb, Newspaper, Building2
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -531,6 +531,50 @@ const Dashboard = () => {
         {/* Sugestão Contextual da Clara */}
         <ClaraContextualSuggestion currentRoute={location.pathname} className="mb-6" />
 
+        {/* Gerenciamento de CNPJs - Card dedicado e visível */}
+        {user?.id && companyProfile && (currentPlan === 'NAVIGATOR' || currentPlan === 'PROFESSIONAL' || currentPlan === 'ENTERPRISE') && (
+          <Card className="mb-6 border-primary/30 bg-primary/5">
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/20">
+                    <Building2 className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground">Gerenciar CNPJs do Grupo</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Adicione outras empresas para análise consolidada
+                    </p>
+                  </div>
+                </div>
+                <QuickAddCnpj
+                  userId={user.id}
+                  userPlan={currentPlan}
+                  cnpjPrincipal={companyProfile.cnpj_principal}
+                  cnpjsGrupo={companyProfile.cnpjs_grupo}
+                  onUpdate={() => {
+                    queryClient.invalidateQueries({ queryKey: ['company-profile'] });
+                    supabase
+                      .from('company_profile')
+                      .select('cnpj_principal, cnpjs_grupo')
+                      .eq('user_id', user.id)
+                      .maybeSingle()
+                      .then(({ data }) => {
+                        if (data) {
+                          setCompanyProfile({
+                            cnpj_principal: data.cnpj_principal,
+                            cnpjs_grupo: data.cnpjs_grupo || []
+                          });
+                        }
+                      });
+                  }}
+                  compact
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Resumo Executivo - Semáforo do CEO/CFO */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -538,33 +582,6 @@ const Dashboard = () => {
               <Target className="w-5 h-5 text-primary" />
               Diagnóstico Empresarial
             </h2>
-            {/* Quick Add CNPJ - Próximo ao diagnóstico */}
-            {user?.id && companyProfile && (
-              <QuickAddCnpj
-                userId={user.id}
-                userPlan={currentPlan}
-                cnpjPrincipal={companyProfile.cnpj_principal}
-                cnpjsGrupo={companyProfile.cnpjs_grupo}
-                onUpdate={() => {
-                  queryClient.invalidateQueries({ queryKey: ['company-profile'] });
-                  // Refresh local state
-                  supabase
-                    .from('company_profile')
-                    .select('cnpj_principal, cnpjs_grupo')
-                    .eq('user_id', user.id)
-                    .maybeSingle()
-                    .then(({ data }) => {
-                      if (data) {
-                        setCompanyProfile({
-                          cnpj_principal: data.cnpj_principal,
-                          cnpjs_grupo: data.cnpjs_grupo || []
-                        });
-                      }
-                    });
-                }}
-                compact
-              />
-            )}
           </div>
           <ExecutiveSummaryCard 
             thermometerData={dashboardData?.thermometerData || null} 
