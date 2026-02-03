@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Target, CheckCircle, AlertTriangle, AlertCircle, FileText, Download, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { CreditPdfReport } from './CreditPdfReport';
-
+import { MonophasicAlert, extractMonophasicProducts } from './MonophasicAlert';
 interface IdentifiedCredit {
   id: string;
   nfe_key: string;
@@ -159,6 +159,14 @@ export function CreditRadar() {
     return true;
   });
 
+  // Extract monophasic products from credits
+  const monophasicProducts = useMemo(() => {
+    return extractMonophasicProducts(credits);
+  }, [credits]);
+
+  const monophasicTotalRecovery = useMemo(() => {
+    return monophasicProducts.reduce((sum, p) => sum + p.totalPisCofinsPaid, 0);
+  }, [monophasicProducts]);
   const taxBreakdown = [
     { 
       name: 'PIS/COFINS', 
@@ -194,6 +202,8 @@ export function CreditRadar() {
 
   return (
     <div className="space-y-6">
+      {/* Monophasic Alert - destaque no topo */}
+      <MonophasicAlert products={monophasicProducts} totalRecovery={monophasicTotalRecovery} />
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
