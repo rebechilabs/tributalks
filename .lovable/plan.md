@@ -1,71 +1,90 @@
 
-# Plano: Correção da URL de Autorização OAuth Conta Azul
+# Plano: Atualização Completa da Integração OAuth 2.0 Conta Azul
 
-## Problema Identificado
+## Diagnóstico do Problema
 
-Consultando a documentação oficial da API Conta Azul (https://developers.contaazul.com/requestingcode), descobri que o código está usando o **endpoint errado** para a autorização:
+O erro **"Client does not exist - client_id=95398421"** indica que:
+1. As credenciais atuais (`CONTAAZUL_CLIENT_ID` e `CONTAAZUL_CLIENT_SECRET`) armazenadas nos Supabase Secrets estão expiradas ou são inválidas
+2. O client_id `95398421` não existe mais no Portal do Desenvolvedor do Conta Azul
 
-### Código Atual (ERRADO):
-```typescript
-// supabase/functions/contaazul-oauth/index.ts - Linha 102
-const authUrl = `https://auth.contaazul.com/oauth2/authorize?${authParams.toString()}`;
+## Credenciais Armazenadas
+
+As credenciais estão nos **Supabase Secrets**:
+- `CONTAAZUL_CLIENT_ID` - precisa ser atualizado com o novo valor
+- `CONTAAZUL_CLIENT_SECRET` - precisa ser atualizado com o novo valor
+
+## Ações Necessárias
+
+### 1. Atualizar as Credenciais nos Supabase Secrets
+
+Você precisará fornecer as novas credenciais obtidas no Portal do Desenvolvedor do Conta Azul para que eu possa solicitar a atualização:
+
+| Secret | Valor Atual | Ação |
+|--------|-------------|------|
+| `CONTAAZUL_CLIENT_ID` | `95398421` (inválido) | Substituir pelo novo client_id |
+| `CONTAAZUL_CLIENT_SECRET` | (valor antigo) | Substituir pelo novo secret |
+
+### 2. Verificar Endpoints da API
+
+De acordo com a mensagem do usuário, os endpoints corretos seriam:
+- **Autorização**: `https://api.contaazul.com/auth/authorize`  
+- **Token**: `https://api.contaazul.com/oauth2/token`
+
+Porém, o código atual usa:
+- **Autorização**: `https://auth.contaazul.com/login`
+- **Token**: `https://auth.contaazul.com/oauth2/token`
+
+Precisarei atualizar o código da Edge Function se a API v1 for a correta.
+
+### 3. Confirmar Redirect URI
+
+O redirect_uri está configurado como:
+```
+https://tributalks.com.br/oauth/callback
 ```
 
-### Documentação Oficial da Conta Azul:
+Mas a mensagem do usuário sugere:
 ```
-https://auth.contaazul.com/login?response_type=code&client_id=SEU_CLIENT_ID&redirect_uri=...&state=...&scope=openid+profile+aws.cognito.signin.user.admin
+https://tributalks.com.br/integracoes/contaazul/callback
 ```
 
-### Diferenças Críticas:
-
-| Aspecto | Código Atual | Documentação Oficial |
-|---------|--------------|---------------------|
-| Endpoint | `/oauth2/authorize` | `/login` |
-| Scope | `openid profile ...` (espaços) | `openid+profile+...` (com +) |
-
-## Solução Proposta
-
-### Alteração no Arquivo `supabase/functions/contaazul-oauth/index.ts`
-
-**Linhas 91-102:**
-
-```typescript
-// ANTES (errado)
-const scopes = 'openid profile aws.cognito.signin.user.admin';
-
-const authParams = new URLSearchParams({
-  client_id: clientId,
-  redirect_uri: redirectUri,
-  response_type: 'code',
-  scope: scopes,
-  state: state,
-});
-
-const authUrl = `https://auth.contaazul.com/oauth2/authorize?${authParams.toString()}`;
-
-// DEPOIS (correto conforme documentação)
-// API Conta Azul v2 - Scope deve usar + como separador (não URLSearchParams que codifica espaços)
-const authUrl = `https://auth.contaazul.com/login?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=openid+profile+aws.cognito.signin.user.admin`;
-```
+Precisamos confirmar qual está cadastrado no Portal.
 
 ## Resumo das Alterações
 
-| Arquivo | Alteração |
-|---------|-----------|
-| `supabase/functions/contaazul-oauth/index.ts` | Linhas 91-102: Trocar endpoint `/oauth2/authorize` por `/login` e construir URL manualmente com scope usando `+` como separador |
+| Componente | Arquivo/Local | Alteração |
+|------------|---------------|-----------|
+| Secrets | Supabase Secrets | Atualizar `CONTAAZUL_CLIENT_ID` e `CONTAAZUL_CLIENT_SECRET` |
+| Endpoint de Autorização | `supabase/functions/contaazul-oauth/index.ts` | Possivelmente trocar de `auth.contaazul.com/login` para `api.contaazul.com/auth/authorize` |
+| Endpoint de Token | `supabase/functions/contaazul-oauth/index.ts` | Possivelmente trocar de `auth.contaazul.com/oauth2/token` para `api.contaazul.com/oauth2/token` |
+| Redirect URI | `ERPConnectionWizard.tsx` + `OAuthCallback.tsx` | Confirmar se precisa mudar para `/integracoes/contaazul/callback` |
 
-## Resultado Esperado
+## Próximos Passos
 
-Após a correção:
-1. A URL de autorização será `https://auth.contaazul.com/login?...` (correto)
-2. O scope terá `+` como separador em vez de `%20`
-3. O erro `invalid_request` será eliminado
-4. O fluxo OAuth funcionará corretamente
+1. **Forneça as novas credenciais** - Eu solicitarei a atualização dos secrets via ferramenta
+2. **Confirme a versão da API** - Você está usando API v1 (`api.contaazul.com`) ou v2 (`auth.contaazul.com`)?
+3. **Confirme o redirect_uri exato** cadastrado no portal
 
 ## Seção Técnica
 
-A diferença está no endpoint de autorização:
-- **Cognito genérico** usa `/oauth2/authorize`
-- **Conta Azul** customizou e usa `/login`
+### Diferenças entre API v1 e v2
 
-Além disso, o `URLSearchParams` codifica espaços como `%20` ou `+` dependendo do contexto, mas a Conta Azul espera literalmente `+` no scope.
+```text
+┌─────────────────────┬───────────────────────────────────────┬────────────────────────────────────┐
+│ Aspecto             │ API v1 (api.contaazul.com)            │ API v2 (auth.contaazul.com)        │
+├─────────────────────┼───────────────────────────────────────┼────────────────────────────────────┤
+│ URL Autorização     │ api.contaazul.com/auth/authorize      │ auth.contaazul.com/login           │
+│ URL Token           │ api.contaazul.com/oauth2/token        │ auth.contaazul.com/oauth2/token    │
+│ Scope               │ sales, accounting, etc                │ openid+profile+aws.cognito...      │
+│ Credenciais         │ Portal antigo                         │ Novo Portal do Desenvolvedor       │
+└─────────────────────┴───────────────────────────────────────┴────────────────────────────────────┘
+```
+
+### Fluxo OAuth 2.0 (após correções)
+
+```text
+Usuário → [Tributalks] → [Conta Azul Auth] → [Tributalks Callback] → [Token Exchange] → [Conexão Salva]
+    │          │                │                    │                     │                 │
+    │     1. Clica          2. Redireciona      3. Retorna           4. Troca code      5. Salva
+    │     "Conectar"        com state           com code             por tokens         no banco
+```
