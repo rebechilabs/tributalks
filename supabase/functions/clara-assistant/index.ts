@@ -1525,18 +1525,18 @@ const PLAN_RESPONSES: Record<string, string> = {
 Para conversar comigo e ter orientação personalizada sobre a Reforma Tributária, você precisa de um plano pago.
 
 💡 **Suas opções:**
-- **Starter (R$ 297/mês)** - 30 mensagens/dia comigo
-- **Navigator (R$ 1.997/mês)** - 100 mensagens/dia comigo
-- **Professional (R$ 2.997/mês)** - Mensagens ilimitadas
+- **Starter (R$ 297/mês)** - 30 mensagens/dia + 1 CNPJ
+- **Navigator (R$ 1.997/mês)** - 100 mensagens/dia + até 2 CNPJs
+- **Professional (R$ 2.997/mês)** - Mensagens ilimitadas + até 6 CNPJs
 
 Quer conhecer os planos?`,
 
   STARTER: `Oi! Vou te ajudar a começar do jeito certo. 🎯
 
-No plano **Starter** você tem acesso às ferramentas essenciais:
+No plano **Starter** você gerencia **1 CNPJ** e tem acesso às ferramentas essenciais:
 
 📍 **Suas ferramentas:**
-- **Score Tributário** - Descubra sua situação tributária (ilimitado)
+- **Score Tributário** - Descubra sua situação tributária
 - **Simulador Split Payment** - Entenda a nova forma de pagamento
 - **Comparativo de Regimes** - Compare Simples, Presumido e Real
 - **Calculadora RTC** - Simule CBS, IBS e IS
@@ -1548,6 +1548,8 @@ Comece pelo **Score Tributário**. Em 10 minutos você descobre sua situação a
 Quer que eu te guie no Score?`,
 
   NAVIGATOR: `Ótimo! Você tem acesso ao GPS da Reforma completo. 🚀
+
+No plano **Navigator** você gerencia **até 2 CNPJs** (principal + 1 extra).
 
 📍 **Sua jornada ideal:**
 
@@ -1571,6 +1573,8 @@ Por onde quer começar? Timeline ou Score direto?`,
 
   PROFESSIONAL: `Perfeito! Agora sim você tem o arsenal completo. 🏆
 
+No plano **Professional** você gerencia **até 6 CNPJs** (principal + 5 extras).
+
 🚀 **Você tem 4 Workflows + Diagnóstico Completo:**
 
 **1. Diagnóstico Completo**
@@ -1586,6 +1590,7 @@ Análise de fornecedores → Simulação de preços → Oportunidades de negocia
 Seus dados reais → Simulações personalizadas → Relatórios PDF profissionais
 
 🎁 **Exclusividades Professional:**
+✅ Até 6 CNPJs
 ✅ XMLs ilimitados
 ✅ Radar de Créditos
 ✅ DRE Inteligente
@@ -1605,10 +1610,13 @@ Por onde quer começar?`,
 
   ENTERPRISE: `Excelente escolha! Você tem a plataforma completa + acompanhamento especializado. 👑
 
+No plano **Enterprise** você gerencia **CNPJs ilimitados** para todo o grupo econômico.
+
 🏆 **Você tem tudo do Professional:**
 4 Workflows, XMLs ilimitados, Radar de Créditos, DRE, NEXUS, 37+ Oportunidades, Clara AI ilimitada.
 
 ✨ **Exclusividades Enterprise:**
+- CNPJs ilimitados
 - Painel Executivo com KPIs em tempo real
 - Diagnóstico estratégico com advogado tributarista (Rebechi & Silva)
 - Consultorias ilimitadas com acesso direto aos advogados
