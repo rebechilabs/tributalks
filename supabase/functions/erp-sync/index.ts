@@ -976,8 +976,9 @@ class ContaAzulAdapter implements ERPAdapter {
       const dataFinal = new Date().toISOString().split('T')[0];
       const dataInicial = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       
+      // tamanho_pagina deve ser 10, 20, 50 ou 100 (máximo permitido pela API)
       const response = await this.makeRequest(
-        `/v1/notas-fiscais?data_inicial=${dataInicial}&data_final=${dataFinal}&pagina=1&tamanho_pagina=200`, 
+        `/v1/notas-fiscais?data_inicial=${dataInicial}&data_final=${dataFinal}&pagina=1&tamanho_pagina=100`, 
         credentials
       );
       
@@ -1016,21 +1017,22 @@ class ContaAzulAdapter implements ERPAdapter {
     const financeiro: UnifiedFinancial[] = [];
     console.log('[ContaAzul] MÓDULO: Financeiro');
 
-    // Contas a Receber (API v2: GET /v1/financeiro/eventos-financeiros/contas-a-receber com query params)
+    // Receitas (API v2: GET /v1/financeiro/receitas - endpoint correto para listar receitas)
     try {
       await delay(RATE_LIMITS.contaazul.delayMs);
-      console.log('[ContaAzul] Buscando Contas a Receber...');
+      console.log('[ContaAzul] Buscando Receitas...');
       
-      // Parâmetros obrigatórios: data_vencimento_de e data_vencimento_ate
+      // Parâmetros de filtro por data de vencimento (últimos 365 dias)
       const dataFinalReceber = new Date().toISOString().split('T')[0];
       const dataInicialReceber = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       
+      // Endpoint correto: /v1/financeiro/receitas (tamanho_pagina máximo: 100)
       const recebivelResponse = await this.makeRequest(
-        `/v1/financeiro/eventos-financeiros/contas-a-receber?data_vencimento_de=${dataInicialReceber}&data_vencimento_ate=${dataFinalReceber}&pagina=1&tamanho_pagina=200`, 
+        `/v1/financeiro/receitas?data_vencimento_de=${dataInicialReceber}&data_vencimento_ate=${dataFinalReceber}&pagina=1&tamanho_pagina=100`, 
         credentials,
         'GET'
       );
-      const recebiveis = Array.isArray(recebivelResponse) ? recebivelResponse : (recebivelResponse.itens || recebivelResponse.data || []);
+      const recebiveis = Array.isArray(recebivelResponse) ? recebivelResponse : (recebivelResponse.itens || recebivelResponse.items || recebivelResponse.data || []);
 
       if (recebiveis && Array.isArray(recebiveis)) {
         for (const recebivel of recebiveis) {
@@ -1039,30 +1041,31 @@ class ContaAzulAdapter implements ERPAdapter {
             categoria: 'contas_a_receber',
             valor: recebivel.valor || recebivel.valor_total || 0,
             data: recebivel.data_vencimento || recebivel.data_emissao || new Date().toISOString(),
-            descricao: recebivel.historico || recebivel.descricao || `Recebível #${recebivel.numero || recebivel.id}`,
+            descricao: recebivel.historico || recebivel.descricao || `Receita #${recebivel.numero || recebivel.id}`,
           });
         }
       }
-      console.log(`[ContaAzul syncFinanceiro] ✅ ${recebiveis.length} contas a receber sincronizadas`);
+      console.log(`[ContaAzul syncFinanceiro] ✅ ${recebiveis.length} receitas sincronizadas`);
     } catch (error) {
       console.error('[ContaAzul syncFinanceiro] ❌ ERRO em Contas a Receber:', error);
     }
 
-    // Contas a Pagar (API v2: GET /v1/financeiro/eventos-financeiros/contas-a-pagar com query params)
+    // Despesas (API v2: GET /v1/financeiro/despesas - endpoint correto para listar despesas)
     try {
       await delay(RATE_LIMITS.contaazul.delayMs);
-      console.log('[ContaAzul] Buscando Contas a Pagar...');
+      console.log('[ContaAzul] Buscando Despesas...');
       
-      // Parâmetros obrigatórios: data_vencimento_de e data_vencimento_ate
+      // Parâmetros de filtro por data de vencimento (últimos 365 dias)
       const dataFinalPagar = new Date().toISOString().split('T')[0];
       const dataInicialPagar = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       
+      // Endpoint correto: /v1/financeiro/despesas (tamanho_pagina máximo: 100)
       const pagavelResponse = await this.makeRequest(
-        `/v1/financeiro/eventos-financeiros/contas-a-pagar?data_vencimento_de=${dataInicialPagar}&data_vencimento_ate=${dataFinalPagar}&pagina=1&tamanho_pagina=200`, 
+        `/v1/financeiro/despesas?data_vencimento_de=${dataInicialPagar}&data_vencimento_ate=${dataFinalPagar}&pagina=1&tamanho_pagina=100`, 
         credentials,
         'GET'
       );
-      const pagaveis = Array.isArray(pagavelResponse) ? pagavelResponse : (pagavelResponse.itens || pagavelResponse.data || []);
+      const pagaveis = Array.isArray(pagavelResponse) ? pagavelResponse : (pagavelResponse.itens || pagavelResponse.items || pagavelResponse.data || []);
 
       if (pagaveis && Array.isArray(pagaveis)) {
         for (const pagavel of pagaveis) {
@@ -1071,13 +1074,13 @@ class ContaAzulAdapter implements ERPAdapter {
             categoria: 'contas_a_pagar',
             valor: pagavel.valor || pagavel.valor_total || 0,
             data: pagavel.data_vencimento || pagavel.data_emissao || new Date().toISOString(),
-            descricao: pagavel.historico || pagavel.descricao || `Pagável #${pagavel.numero || pagavel.id}`,
+            descricao: pagavel.historico || pagavel.descricao || `Despesa #${pagavel.numero || pagavel.id}`,
           });
         }
       }
-      console.log(`[ContaAzul syncFinanceiro] ✅ ${pagaveis.length} contas a pagar sincronizadas`);
+      console.log(`[ContaAzul syncFinanceiro] ✅ ${pagaveis.length} despesas sincronizadas`);
     } catch (error) {
-      console.error('[ContaAzul syncFinanceiro] ❌ ERRO em Contas a Pagar:', error);
+      console.error('[ContaAzul syncFinanceiro] ❌ ERRO em Despesas:', error);
     }
 
     return financeiro;
