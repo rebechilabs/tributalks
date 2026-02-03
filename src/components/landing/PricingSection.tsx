@@ -59,6 +59,7 @@ const plans: Plan[] = [
     description: "Para monitorar a reforma",
     priceMonthly: 1297,
     priceAnnual: 12970,
+    trialDays: 7,
     cnpjLimit: "2 CNPJs • 2 Usuários",
     features: [
       { text: "Clara AI (Copiloto)", included: "limited", limitText: "100 msgs/dia" },
@@ -73,7 +74,7 @@ const plans: Plan[] = [
       { text: "Relatórios PDF Clara AI", included: true },
       { text: "Compra de créditos Clara", included: true },
     ],
-    ctaText: "Assinar Navigator",
+    ctaText: "Testar 7 dias grátis",
     linkMonthly: CONFIG.PAYMENT_LINKS.NAVIGATOR_MENSAL,
     linkAnnual: CONFIG.PAYMENT_LINKS.NAVIGATOR_ANUAL,
   },
@@ -84,6 +85,7 @@ const plans: Plan[] = [
     priceAnnual: 29970,
     highlighted: true,
     popular: true,
+    trialDays: 7,
     cnpjLimit: "5 CNPJs • 4 Usuários",
     features: [
       { text: "Clara AI ilimitada", included: true },
@@ -101,7 +103,7 @@ const plans: Plan[] = [
       { text: "Conectar ERP", included: true },
       { text: "Relatórios PDF Profissionais", included: true },
     ],
-    ctaText: "Assinar Professional",
+    ctaText: "Testar 7 dias grátis",
     linkMonthly: CONFIG.PAYMENT_LINKS.PROFESSIONAL_MENSAL,
     linkAnnual: CONFIG.PAYMENT_LINKS.PROFESSIONAL_ANUAL,
   },
@@ -192,18 +194,18 @@ export function PricingSection() {
                 }`}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                {/* Popular Badge */}
+                {/* Popular Badge with Trial info */}
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <div className="inline-flex items-center gap-1 px-2 md:px-3 py-1 rounded-full bg-primary text-primary-foreground text-[10px] md:text-xs font-semibold whitespace-nowrap">
                       <Star className="w-3 h-3" />
-                      MAIS POPULAR
+                      MAIS POPULAR • 7 DIAS GRÁTIS
                     </div>
                   </div>
                 )}
 
-                {/* Trial Badge for Starter */}
-                {plan.trialDays && (
+                {/* Trial Badge for non-popular plans */}
+                {plan.trialDays && !plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <div className="inline-flex items-center gap-1 px-2 md:px-3 py-1 rounded-full bg-success text-success-foreground text-[10px] md:text-xs font-semibold whitespace-nowrap">
                       <Sparkles className="w-3 h-3" />
