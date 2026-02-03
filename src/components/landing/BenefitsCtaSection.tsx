@@ -12,13 +12,21 @@ export function BenefitsCtaSection() {
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           {/* Headline */}
-          <p className="text-lg md:text-2xl text-muted-foreground mb-12 max-w-2xl mx-auto animate-fade-in-up leading-relaxed">
+          <p className="text-lg md:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-fade-in-up leading-relaxed">
             Enquanto seus concorrentes vão descobrir o impacto tarde demais,{" "}
             <strong className="text-foreground">você já estará 3 passos à frente.</strong>
           </p>
 
+          {/* Separator phrase */}
+          <div className="mb-10 animate-fade-in-up animation-delay-50">
+            <p className="text-xl md:text-2xl font-bold text-foreground">
+              Você está pensando em retorno do investimento?{" "}
+              <span className="text-primary">Veja isso!</span>
+            </p>
+          </div>
+
           {/* Benefits Grid */}
-          <div className="grid md:grid-cols-3 gap-6 mb-12 animate-fade-in-up animation-delay-100">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 animate-fade-in-up animation-delay-100 max-w-3xl mx-auto">
             {[
               { 
                 icon: TrendingUp, 
@@ -41,9 +49,9 @@ export function BenefitsCtaSection() {
             ].map((benefit) => (
               <div 
                 key={benefit.title} 
-                className="bg-card rounded-xl border border-border p-6 hover:border-primary/50 hover:shadow-lg transition-all duration-300"
+                className="bg-card rounded-xl border border-border p-6 hover:border-primary/50 hover:shadow-lg transition-all duration-300 text-center"
               >
-                <div className={`w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4`}>
+                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                   <benefit.icon className={`w-7 h-7 ${benefit.color}`} />
                 </div>
                 <h3 className="font-bold text-foreground text-lg mb-2">{benefit.title}</h3>
