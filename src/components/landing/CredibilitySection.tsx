@@ -75,7 +75,7 @@ export function CredibilitySection() {
         {/* PDF Download CTA */}
         <div className="text-center mt-10 md:mt-12">
           <a 
-            href="https://bit.ly/TribuTalks" 
+            href="https://drive.google.com/uc?id=1DPVjjKTrRpcRLMBtPT-pO2nbV48ZA5uv&export=download"
             target="_blank" 
             rel="noopener noreferrer"
           >
