@@ -488,6 +488,197 @@ function formatSemanticContextForPrompt(
 }
 
 // ============================================
+// AGENT ORCHESTRATION - Roteamento Inteligente para Agentes
+// ============================================
+type AgentType = 'fiscal' | 'margin' | 'compliance' | null;
+
+interface AgentSuggestion {
+  agentType: AgentType;
+  reason: string;
+  priority: 'high' | 'medium' | 'low';
+  suggestedAction?: string;
+}
+
+interface PendingAction {
+  id: string;
+  action_type: string;
+  trigger_event: string;
+  priority: string;
+  agent_type: string;
+  created_at: string;
+}
+
+// Analisa mensagem para detectar qual agente deve atuar
+function analyzeMessageForAgent(message: string): AgentSuggestion | null {
+  const lowerMessage = message.toLowerCase();
+
+  // Padrões para agente FISCAL
+  const fiscalPatterns = [
+    /imposto|tribut|icms|pis|cofins|ibs|cbs|ncm|cfop|xml|nota fiscal|crédito fiscal/i,
+    /reforma tributária|split payment|alíquota/i,
+    /simples nacional|lucro real|lucro presumido/i,
+    /recuper(ar|ação) crédit/i,
+    /soneg|elisão|evasão/i,
+  ];
+
+  // Padrões para agente MARGEM
+  const marginPatterns = [
+    /margem|lucro|prejuízo|receita|despesa|custo|dre|ebitda/i,
+    /preço|fornecedor|negociação|desconto/i,
+    /rentabilidade|lucratividade|break.?even|ponto de equilíbrio/i,
+    /fluxo de caixa|capital de giro/i,
+  ];
+
+  // Padrões para agente COMPLIANCE
+  const compliancePatterns = [
+    /prazo|obrigação|declaração|dctf|efd|sped|compliance/i,
+    /multa|penalidade|autuação|fiscalização/i,
+    /certidão|regularidade|débito/i,
+    /vencimento|entrega|obrigação acessória/i,
+  ];
+
+  if (fiscalPatterns.some(p => p.test(lowerMessage))) {
+    return {
+      agentType: 'fiscal',
+      reason: 'Pergunta sobre tributos, créditos ou reforma tributária',
+      priority: 'high',
+      suggestedAction: 'analyze_tax_opportunity',
+    };
+  }
+
+  if (marginPatterns.some(p => p.test(lowerMessage))) {
+    return {
+      agentType: 'margin',
+      reason: 'Pergunta sobre margens, custos ou análise financeira',
+      priority: 'high',
+      suggestedAction: 'analyze_margin_impact',
+    };
+  }
+
+  if (compliancePatterns.some(p => p.test(lowerMessage))) {
+    return {
+      agentType: 'compliance',
+      reason: 'Pergunta sobre prazos, obrigações ou conformidade',
+      priority: 'medium',
+      suggestedAction: 'check_deadlines',
+    };
+  }
+
+  return null;
+}
+
+// Busca ações autônomas pendentes do usuário
+async function fetchPendingActions(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<PendingAction[]> {
+  try {
+    const { data, error } = await supabase
+      .from('clara_autonomous_actions')
+      .select('id, action_type, trigger_event, priority, agent_type, created_at')
+      .eq('user_id', userId)
+      .eq('status', 'pending')
+      .eq('requires_approval', true)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    if (error) {
+      console.error('Error fetching pending actions:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (err) {
+    console.error('Error fetching pending actions:', err);
+    return [];
+  }
+}
+
+// Busca info do agente especializado
+async function fetchAgentInfo(
+  supabase: SupabaseClient,
+  agentType: string
+): Promise<{ name: string; capabilities: string[] } | null> {
+  try {
+    const { data, error } = await supabase
+      .from('clara_agents')
+      .select('name, capabilities')
+      .eq('agent_type', agentType)
+      .eq('status', 'active')
+      .single();
+
+    if (error || !data) return null;
+
+    const capabilities = Array.isArray(data.capabilities) 
+      ? data.capabilities as string[]
+      : [];
+
+    return { name: data.name, capabilities };
+  } catch {
+    return null;
+  }
+}
+
+// Formata contexto de agente para injeção no prompt
+function formatAgentContextForPrompt(
+  agentSuggestion: AgentSuggestion | null,
+  agentInfo: { name: string; capabilities: string[] } | null,
+  pendingActions: PendingAction[]
+): string {
+  if (!agentSuggestion && pendingActions.length === 0) return '';
+
+  const lines: string[] = [];
+  lines.push('');
+  lines.push('='.repeat(50));
+  lines.push('CONTEXTO DE AGENTE ESPECIALIZADO');
+  lines.push('='.repeat(50));
+  lines.push('');
+
+  // Agente ativo
+  if (agentSuggestion) {
+    const agentLabels: Record<string, string> = {
+      'fiscal': 'FISCAL - Especialista em tributação e créditos',
+      'margin': 'MARGEM - Especialista em análise financeira',
+      'compliance': 'COMPLIANCE - Especialista em conformidade e prazos',
+    };
+
+    lines.push(`🎯 AGENTE ATIVO: ${agentLabels[agentSuggestion.agentType || ''] || agentSuggestion.agentType}`);
+    lines.push(`Motivo: ${agentSuggestion.reason}`);
+    lines.push(`Prioridade: ${agentSuggestion.priority}`);
+    
+    if (agentInfo) {
+      lines.push(`Nome: ${agentInfo.name}`);
+      if (agentInfo.capabilities.length > 0) {
+        lines.push(`Capacidades: ${agentInfo.capabilities.slice(0, 4).join(', ')}`);
+      }
+    }
+    lines.push('');
+    lines.push('INSTRUÇÃO: Responda como especialista nesta área, usando linguagem técnica apropriada mas acessível.');
+    lines.push('');
+  }
+
+  // Ações pendentes urgentes
+  const urgentActions = pendingActions.filter(a => a.priority === 'high' || a.priority === 'urgent');
+  if (urgentActions.length > 0) {
+    lines.push('⚠️ AÇÕES PENDENTES QUE REQUEREM ATENÇÃO:');
+    for (const action of urgentActions.slice(0, 3)) {
+      const actionLabels: Record<string, string> = {
+        'create_alert': 'Criar alerta',
+        'analyze_credits': 'Analisar créditos',
+        'check_compliance': 'Verificar conformidade',
+        'suggest_optimization': 'Sugerir otimização',
+      };
+      lines.push(`- [${actionLabels[action.action_type] || action.action_type}] via agente ${action.agent_type} (${action.priority})`);
+    }
+    lines.push('');
+    lines.push('INSTRUÇÃO: Se relevante para a conversa, mencione estas ações pendentes e pergunte se o usuário quer aprovar.');
+    lines.push('');
+  }
+
+  return lines.join('\n');
+}
+
+// ============================================
 // KNOWLEDGE BASE - Busca dinâmica de conhecimento jurídico (fallback)
 // ============================================
 interface KnowledgeEntry {
@@ -1953,34 +2144,50 @@ serve(async (req) => {
     }
     
     // ============================================
-    // CONHECIMENTO & RAG SEMÂNTICO - Busca em paralelo
+    // ORQUESTRAÇÃO DE AGENTES + CONHECIMENTO + RAG
     // ============================================
     const userRegime = userContext?.regime || null;
     const supabaseUrlForRag = Deno.env.get('SUPABASE_URL') || '';
     const anonKeyForRag = Deno.env.get('SUPABASE_ANON_KEY') || '';
     
-    // Busca conhecimento tradicional (keywords) e semântico (embeddings) em paralelo
-    const [relevantKnowledge, semanticContext] = await Promise.all([
+    // Detecta qual agente deve atuar baseado na mensagem
+    const agentSuggestion = analyzeMessageForAgent(lastMessage);
+    
+    // Busca em paralelo: conhecimento, RAG, ações pendentes e info do agente
+    const [relevantKnowledge, semanticContext, pendingActions, agentInfo] = await Promise.all([
       fetchRelevantKnowledge(supabase, lastMessage, userRegime),
       fetchSemanticContext(supabaseUrlForRag, anonKeyForRag, lastMessage, user?.id || null),
+      fetchPendingActions(supabase, user.id),
+      agentSuggestion?.agentType ? fetchAgentInfo(supabase, agentSuggestion.agentType) : Promise.resolve(null),
     ]);
     
-    // Formata ambos os contextos
+    // Formata todos os contextos
     const knowledgePrompt = formatKnowledgeForPrompt(relevantKnowledge);
     const semanticPrompt = formatSemanticContextForPrompt(
       semanticContext.knowledge,
       semanticContext.userContext
     );
+    const agentPrompt = formatAgentContextForPrompt(agentSuggestion, agentInfo, pendingActions);
     
+    // Logs de diagnóstico
     if (relevantKnowledge.length > 0) {
       console.log(`Found ${relevantKnowledge.length} keyword-matched knowledge entries`);
     }
     if (semanticContext.knowledge.length > 0 || semanticContext.userContext.length > 0) {
       console.log(`RAG: ${semanticContext.knowledge.length} knowledge + ${semanticContext.userContext.length} user context via embeddings`);
     }
+    if (agentSuggestion) {
+      console.log(`Agent routing: ${agentSuggestion.agentType} (${agentSuggestion.priority}) - ${agentSuggestion.reason}`);
+    }
+    if (pendingActions.length > 0) {
+      console.log(`Pending actions: ${pendingActions.length} awaiting approval`);
+    }
     
-    // Combina tudo no prompt: base + conhecimento jurídico + contexto semântico
-    const systemPrompt = buildSystemPrompt(toolContext, userPlan, userName, isSimple, userContext) + knowledgePrompt + semanticPrompt;
+    // Combina tudo no prompt: base + conhecimento + RAG + contexto de agente
+    const systemPrompt = buildSystemPrompt(toolContext, userPlan, userName, isSimple, userContext) 
+      + knowledgePrompt 
+      + semanticPrompt 
+      + agentPrompt;
 
     // ============================================
     // ANÁLISE LINHA A LINHA - Responde pedidos de explicação
@@ -2258,6 +2465,28 @@ serve(async (req) => {
           console.error('Error extracting memory:', memError);
         }
         break; // Só extrai uma memória por conversa
+      }
+    }
+    
+    // ============================================
+    // REGISTRO DE INTERAÇÃO COM AGENTE (para aprendizado)
+    // ============================================
+    if (agentSuggestion) {
+      try {
+        await supabase.rpc('record_user_decision', {
+          p_user_id: user.id,
+          p_decision_type: 'agent_interaction',
+          p_context: {
+            message_preview: lastMessage.substring(0, 100),
+            response_preview: assistantMessage.substring(0, 100),
+            had_semantic_context: semanticContext.knowledge.length > 0 || semanticContext.userContext.length > 0,
+            pending_actions_count: pendingActions.length,
+          },
+          p_agent_type: agentSuggestion.agentType,
+        });
+        console.log(`Agent interaction recorded: ${agentSuggestion.agentType}`);
+      } catch (agentError) {
+        console.error('Error recording agent interaction:', agentError);
       }
     }
     
