@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { CONFIG } from "@/config/site";
 import { TrustBadges } from "./TrustBadges";
-
+import { EnterpriseModal } from "./EnterpriseModal";
 type BillingPeriod = "mensal" | "anual";
 
 interface PlanFeature {
@@ -126,7 +126,7 @@ const plans: Plan[] = [
 
 export function PricingSection() {
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("mensal");
-
+  const [enterpriseModalOpen, setEnterpriseModalOpen] = useState(false);
   return (
     <section id="planos" className="py-16 md:py-24 bg-background">
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
@@ -292,7 +292,15 @@ export function PricingSection() {
                 </ul>
 
                 {/* CTA Button */}
-                {isExternal ? (
+                {plan.isEnterprise ? (
+                  <Button
+                    onClick={() => setEnterpriseModalOpen(true)}
+                    className="w-full bg-secondary text-foreground hover:bg-secondary/80"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    {plan.ctaText}
+                  </Button>
+                ) : isExternal ? (
                   <a 
                     href={link} 
                     target="_blank" 
@@ -303,12 +311,9 @@ export function PricingSection() {
                       className={`w-full ${
                         plan.highlighted
                           ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                          : plan.isEnterprise
-                          ? "bg-secondary text-foreground hover:bg-secondary/80"
                           : "bg-transparent border border-foreground text-foreground hover:bg-foreground hover:text-background"
                       }`}
                     >
-                      {plan.isEnterprise && <MessageCircle className="w-4 h-4 mr-2" />}
                       {plan.ctaText}
                     </Button>
                   </a>
@@ -346,6 +351,12 @@ export function PricingSection() {
           </p>
           <TrustBadges variant="full" className="max-w-4xl mx-auto" />
         </div>
+
+        {/* Enterprise Modal */}
+        <EnterpriseModal 
+          open={enterpriseModalOpen} 
+          onOpenChange={setEnterpriseModalOpen} 
+        />
       </div>
     </section>
   );
