@@ -77,7 +77,44 @@ interface ParsedXmlForCredits {
     credito_icms: number;
     valor_item: number;
     descricao: string;
+    is_monophasic?: boolean;
+    monophasic_category?: string;
   }[];
+}
+
+// NCMs monofásicos - PIS/COFINS recolhido na indústria
+const MONOPHASIC_NCMS: Record<string, { category: string; legal_basis: string }> = {
+  // Combustíveis - Lei 11.116/2005
+  '2710': { category: 'Combustíveis', legal_basis: 'Lei 11.116/2005' },
+  '2207': { category: 'Combustíveis', legal_basis: 'Lei 11.116/2005' },
+  // Medicamentos - Lei 10.147/2000
+  '3003': { category: 'Medicamentos', legal_basis: 'Lei 10.147/2000' },
+  '3004': { category: 'Medicamentos', legal_basis: 'Lei 10.147/2000' },
+  // Cosméticos - Lei 10.147/2000
+  '3303': { category: 'Cosméticos', legal_basis: 'Lei 10.147/2000' },
+  '3304': { category: 'Cosméticos', legal_basis: 'Lei 10.147/2000' },
+  '3305': { category: 'Cosméticos', legal_basis: 'Lei 10.147/2000' },
+  // Bebidas Frias - Lei 13.097/2015
+  '2201': { category: 'Bebidas Frias', legal_basis: 'Lei 13.097/2015' },
+  '2202': { category: 'Bebidas Frias', legal_basis: 'Lei 13.097/2015' },
+  '2203': { category: 'Bebidas Frias', legal_basis: 'Lei 13.097/2015' },
+  '2204': { category: 'Bebidas Frias', legal_basis: 'Lei 13.097/2015' },
+  // Autopeças - Lei 10.485/2002
+  '8708': { category: 'Autopeças', legal_basis: 'Lei 10.485/2002' },
+  '4011': { category: 'Pneus', legal_basis: 'Lei 10.485/2002' },
+  '8507': { category: 'Baterias', legal_basis: 'Lei 10.485/2002' },
+};
+
+function isMonophasicNCM(ncm: string): boolean {
+  if (!ncm) return false;
+  const prefix = ncm.substring(0, 4);
+  return MONOPHASIC_NCMS.hasOwnProperty(prefix);
+}
+
+function getMonophasicCategory(ncm: string): string | null {
+  if (!ncm) return null;
+  const prefix = ncm.substring(0, 4);
+  return MONOPHASIC_NCMS[prefix]?.category || null;
 }
 
 function parseNFeXML(xmlContent: string): NFeData | null {
@@ -256,23 +293,30 @@ function convertToCreditsFormat(nfeData: NFeData): ParsedXmlForCredits {
     data_emissao: nfeData.dataEmissao,
     cnpj_emitente: nfeData.emitenteCnpj,
     nome_emitente: nfeData.emitenteNome,
-    itens: nfeData.produtos.map(prod => ({
-      ncm: prod.ncm,
-      cfop: prod.cfop,
-      cst_pis: prod.cst_pis,
-      cst_cofins: prod.cst_cofins,
-      cst_icms: prod.cst_icms,
-      valor_pis: prod.pis,
-      valor_cofins: prod.cofins,
-      valor_icms: prod.icms,
-      valor_ipi: prod.ipi,
-      valor_icms_st: prod.icms_st,
-      credito_pis: prod.credito_pis,
-      credito_cofins: prod.credito_cofins,
-      credito_icms: prod.credito_icms,
-      valor_item: prod.valorTotal,
-      descricao: prod.descricao
-    }))
+    itens: nfeData.produtos.map(prod => {
+      const isMonophasic = isMonophasicNCM(prod.ncm);
+      const monophasicCategory = getMonophasicCategory(prod.ncm);
+      
+      return {
+        ncm: prod.ncm,
+        cfop: prod.cfop,
+        cst_pis: prod.cst_pis,
+        cst_cofins: prod.cst_cofins,
+        cst_icms: prod.cst_icms,
+        valor_pis: prod.pis,
+        valor_cofins: prod.cofins,
+        valor_icms: prod.icms,
+        valor_ipi: prod.ipi,
+        valor_icms_st: prod.icms_st,
+        credito_pis: prod.credito_pis,
+        credito_cofins: prod.credito_cofins,
+        credito_icms: prod.credito_icms,
+        valor_item: prod.valorTotal,
+        descricao: prod.descricao,
+        is_monophasic: isMonophasic,
+        monophasic_category: monophasicCategory || undefined,
+      };
+    })
   };
 }
 
