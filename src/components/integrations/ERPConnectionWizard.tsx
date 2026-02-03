@@ -122,7 +122,7 @@ export function ERPConnectionWizard({
 
     try {
       // Força URL de produção para corresponder ao cadastro no Portal do Desenvolvedor
-      const redirectUri = 'https://tributechai.lovable.app/oauth/callback';
+      const redirectUri = 'https://tributalks.com.br/oauth/callback';
       
       // Get authorization URL from backend - usando fetch direto com action parameter
       const authResponse = await fetch(

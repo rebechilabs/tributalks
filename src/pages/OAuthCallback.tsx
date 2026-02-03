@@ -77,7 +77,7 @@ export default function OAuthCallback() {
             },
             body: JSON.stringify({
               code,
-              redirect_uri: 'https://tributechai.lovable.app/oauth/callback',
+              redirect_uri: 'https://tributalks.com.br/oauth/callback',
               state,
               stored_state: storedState,
               connection_name: connectionName,
