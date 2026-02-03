@@ -1,129 +1,90 @@
 
-
-# Plano de Correção: Sincronização Omie ERP - "Criptografia" 
+# Plano: Correção do Fluxo OAuth Conta Azul
 
 ## Problema Identificado
 
-A sincronização está falhando com o erro:
+Dois problemas críticos impedem o funcionamento do OAuth Conta Azul:
+
+### Problema 1: redirect_uri Inconsistente
+O arquivo `OAuthCallback.tsx` usa `window.location.origin` para construir a redirect_uri durante a troca de tokens:
+
+```typescript
+redirect_uri: `${window.location.origin}/oauth/callback`
 ```
-"A chave de acesso não está preenchida ou não é válida"
+
+Isso causa falha quando:
+- Usuário testa no preview (`id-preview--*.lovable.app`)
+- URL enviada não corresponde ao cadastrado no Portal Conta Azul
+
+### Problema 2: Parâmetro action Ausente
+A chamada à Edge Function na linha 70 usa `method: 'POST'` mas não inclui `action=exchange`:
+
+```typescript
+const response = await supabase.functions.invoke('contaazul-oauth', {
+  method: 'POST',
+  body: { ... }
+});
 ```
 
-### Causa Raiz
-
-O campo `credentials` na tabela `erp_connections` é do tipo **JSONB**, e as credenciais criptografadas são armazenadas como uma **string JSON** (ex: `"YpPoD5+..."`).
-
-Quando o código tenta descriptografar:
-1. O Supabase retorna a string JSON com formatação adequada
-2. A função `isEncryptedCredentials()` detecta corretamente que é uma string
-3. **MAS** a função `atob()` pode falhar se a string Base64 contiver caracteres problemáticos após ser processada pelo JSONB
-
-O log mostra que o Omie está recebendo credenciais vazias ou inválidas, indicando falha silenciosa na descriptografia.
+A Edge Function retorna erro 400 se `action` não for `authorize` ou `exchange`.
 
 ## Solução Proposta
 
-### 1. Melhorar Tratamento de Credenciais no `erp-sync`
+### Alteração no Arquivo `src/pages/OAuthCallback.tsx`
 
-Adicionar tratamento robusto para o formato JSONB e logging de diagnóstico:
-
-**Arquivo**: `supabase/functions/erp-sync/index.ts`
+**Linha 74:** Usar URL fixa de produção (igual ao ERPConnectionWizard)
 
 ```typescript
-async function getDecryptedCredentials(storedCredentials: unknown): Promise<ERPCredentials> {
-  console.log('[Decrypt] Raw credentials type:', typeof storedCredentials);
-  console.log('[Decrypt] Raw credentials preview:', 
-    typeof storedCredentials === 'string' 
-      ? storedCredentials.slice(0, 30) + '...' 
-      : JSON.stringify(storedCredentials).slice(0, 50));
-  
-  // Handle JSONB string (already parsed by Supabase client)
-  let credentialString: string;
-  
-  if (typeof storedCredentials === 'string') {
-    credentialString = storedCredentials;
-  } else if (typeof storedCredentials === 'object' && storedCredentials !== null) {
-    // Legacy format: plain JSON object - return directly
-    console.log('[Decrypt] Using legacy plain object format');
-    return storedCredentials as ERPCredentials;
-  } else {
-    throw new Error('Formato de credenciais inválido');
+// Antes
+redirect_uri: `${window.location.origin}/oauth/callback`,
+
+// Depois  
+redirect_uri: 'https://tributechai.lovable.app/oauth/callback',
+```
+
+**Linhas 69-82:** Adicionar `action=exchange` via query parameter
+
+```typescript
+// Usar fetch direto para incluir action parameter
+const response = await fetch(
+  `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/contaazul-oauth?action=exchange`,
+  {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session.session.access_token}`,
+    },
+    body: JSON.stringify({
+      code,
+      redirect_uri: 'https://tributechai.lovable.app/oauth/callback',
+      state,
+      stored_state: storedState,
+      connection_name: connectionName,
+    }),
   }
-  
-  // Verify it looks like Base64 encrypted data
-  if (credentialString.length < 30 || !/^[A-Za-z0-9+/=]+$/.test(credentialString.trim())) {
-    console.error('[Decrypt] Invalid Base64 format');
-    throw new Error('Credenciais em formato inválido');
-  }
-  
-  try {
-    const decrypted = await decryptCredentials(credentialString.trim());
-    console.log('[Decrypt] Successfully decrypted, keys:', Object.keys(decrypted));
-    return decrypted;
-  } catch (error) {
-    console.error('[Decrypt] Decryption failed:', error);
-    throw new Error('Falha ao descriptografar credenciais');
-  }
+);
+
+const data = await response.json();
+
+if (!response.ok) {
+  throw new Error(data.error || 'Falha ao trocar código por tokens');
+}
+
+if (!data.success) {
+  throw new Error(data.error || 'Resposta inválida do servidor');
 }
 ```
 
-### 2. Validar Chave de Criptografia
+## Resumo das Alterações
 
-Adicionar verificação explícita da `ERP_ENCRYPTION_KEY`:
+| Arquivo | Linha | Alteração |
+|---------|-------|-----------|
+| `src/pages/OAuthCallback.tsx` | 69-82 | Trocar `supabase.functions.invoke` por `fetch` com `action=exchange` |
+| `src/pages/OAuthCallback.tsx` | 74 | Usar URL fixa de produção |
 
-```typescript
-async function getEncryptionKey(): Promise<CryptoKey> {
-  const keyString = Deno.env.get("ERP_ENCRYPTION_KEY");
-  console.log('[Encrypt] Key exists:', !!keyString);
-  console.log('[Encrypt] Key length:', keyString?.length || 0);
-  
-  if (!keyString || keyString.length < 32) {
-    throw new Error("ERP_ENCRYPTION_KEY não configurada ou muito curta (mínimo 32 caracteres)");
-  }
-  // ... resto do código
-}
-```
+## Resultado Esperado
 
-### 3. Adicionar Verificação Antes de Chamar API
-
-Validar que as credenciais descriptografadas contêm os campos esperados:
-
-```typescript
-// No OmieAdapter.syncEmpresa
-async syncEmpresa(credentials: ERPCredentials): Promise<Record<string, unknown>> {
-  if (!credentials.app_key || !credentials.app_secret) {
-    console.error('[Omie] Missing credentials:', {
-      hasAppKey: !!credentials.app_key,
-      hasAppSecret: !!credentials.app_secret
-    });
-    throw new Error('Credenciais incompletas: app_key e app_secret são obrigatórios');
-  }
-  // ... resto do código
-}
-```
-
-### 4. Aplicar Mesmo Padrão nos Outros Métodos
-
-- `syncProdutos`
-- `syncNFe`  
-- `syncFinanceiro`
-
-## Arquivos a Modificar
-
-| Arquivo | Alteração |
-|---------|-----------|
-| `supabase/functions/erp-sync/index.ts` | Melhorar `getDecryptedCredentials`, `getEncryptionKey`, e validações no `OmieAdapter` |
-
-## Teste Após Implementação
-
-1. Reimplantar a Edge Function `erp-sync`
-2. Testar sincronização novamente
-3. Verificar logs para diagnosticar se a descriptografia está funcionando
-
-## Detalhes Técnicos
-
-A chave `ERP_ENCRYPTION_KEY` já está configurada (confirmado via `fetch_secrets`). O problema está no processamento da string Base64 durante a descriptografia, possivelmente devido a:
-
-1. Caracteres especiais na string Base64 (`+`, `/`, `=`)
-2. Encoding/decoding incorreto entre o armazenamento e recuperação
-3. Incompatibilidade entre a chave usada para criptografar vs descriptografar
-
+Após a correção:
+1. A requisição incluirá `action=exchange` (evita erro 400)
+2. A `redirect_uri` será sempre `https://tributechai.lovable.app/oauth/callback` (evita mismatch com Conta Azul)
+3. O fluxo OAuth funcionará corretamente em qualquer ambiente
