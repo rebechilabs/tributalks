@@ -39,7 +39,7 @@ export function CredibilitySection() {
             <img 
               src={logoRebechiSilva} 
               alt="Rebechi & Silva Advogados Associados" 
-              className="h-[72px] md:h-24 object-contain"
+              className="h-[144px] md:h-48 object-contain"
             />
           </div>
           
