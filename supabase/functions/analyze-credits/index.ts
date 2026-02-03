@@ -92,17 +92,47 @@ function isEnergyOrTelecom(cfop: string): boolean {
   return ['1253', '2253', '1254', '2254', '1255', '2255'].includes(cfop);
 }
 
-// Helper to check if NCM is monophasic (fuels, pharma, cosmetics, beverages)
+// Helper to check if NCM is monophasic (fuels, pharma, cosmetics, beverages, autoparts)
 function isMonophasicNCM(ncm: string): boolean {
-  // Fuels
+  // Fuels - Lei 11.116/2005
   if (ncm.startsWith('2710') || ncm.startsWith('2207')) return true;
-  // Pharmaceuticals
+  // Pharmaceuticals - Lei 10.147/2000
   if (ncm.startsWith('3004') || ncm.startsWith('3003')) return true;
-  // Cosmetics
+  // Cosmetics - Lei 10.147/2000
   if (ncm.startsWith('3303') || ncm.startsWith('3304') || ncm.startsWith('3305')) return true;
-  // Beverages
+  // Beverages - Lei 13.097/2015
   if (ncm.startsWith('2201') || ncm.startsWith('2202') || ncm.startsWith('2203') || ncm.startsWith('2204')) return true;
+  // Autoparts and Tires - Lei 10.485/2002
+  if (ncm.startsWith('8708') || ncm.startsWith('4011') || ncm.startsWith('8507')) return true;
   return false;
+}
+
+// Helper to get monophasic category for an NCM
+function getMonophasicCategory(ncm: string): string | null {
+  if (ncm.startsWith('2710') || ncm.startsWith('2207')) return 'Combustíveis';
+  if (ncm.startsWith('3004') || ncm.startsWith('3003')) return 'Medicamentos';
+  if (ncm.startsWith('3303') || ncm.startsWith('3304') || ncm.startsWith('3305')) return 'Cosméticos';
+  if (ncm.startsWith('2201') || ncm.startsWith('2202') || ncm.startsWith('2203') || ncm.startsWith('2204')) return 'Bebidas';
+  if (ncm.startsWith('8708') || ncm.startsWith('4011') || ncm.startsWith('8507')) return 'Autopeças';
+  return null;
+}
+
+// Helper to check if CST indicates proper monophasic treatment (zero-rated)
+function isMonophasicCST(cst: string): boolean {
+  // CST 04 = Operação tributável monofásica - revenda a alíquota zero
+  // CST 05 = Operação tributável por substituição tributária (monofásico)
+  // CST 06 = Operação tributável a alíquota zero
+  return ['04', '05', '06'].includes(cst);
+}
+
+// Helper to get legal basis for monophasic NCM
+function getMonophasicLegalBasis(ncm: string): string {
+  if (ncm.startsWith('2710') || ncm.startsWith('2207')) return 'Lei 11.116/2005';
+  if (ncm.startsWith('3004') || ncm.startsWith('3003')) return 'Lei 10.147/2000';
+  if (ncm.startsWith('3303') || ncm.startsWith('3304') || ncm.startsWith('3305')) return 'Lei 10.147/2000';
+  if (ncm.startsWith('2201') || ncm.startsWith('2202') || ncm.startsWith('2203') || ncm.startsWith('2204')) return 'Lei 13.097/2015';
+  if (ncm.startsWith('8708') || ncm.startsWith('4011') || ncm.startsWith('8507')) return 'Lei 10.485/2002';
+  return 'Legislação monofásica';
 }
 
 serve(async (req) => {
@@ -430,20 +460,61 @@ function evaluateRule(rule: CreditRule, xml: ParsedXml, item: XmlItem): Identifi
     }
   }
 
-  // PIS_COFINS_008: Pharma monophasic
+  // PIS_COFINS_008: Monophasic products on exit operations - undue payment
   if (rule.rule_code === 'PIS_COFINS_008') {
-    if (ncm.startsWith('3004') && isExitOperation(cfop)) {
-      // Pharma sales - check if PIS/COFINS was charged when it shouldn't be
-      if (valorPis > 0) {
+    // Check any monophasic NCM on exit operations
+    if (isMonophasicNCM(ncm) && isExitOperation(cfop)) {
+      // If CST is NOT monophasic (04/05/06) OR if PIS/COFINS was charged when it shouldn't be
+      if (!isMonophasicCST(cstPis) || valorPis > 0 || valorCofins > 0) {
+        const category = getMonophasicCategory(ncm);
         return {
           rule_id: rule.id,
           original_tax_value: valorPis + valorCofins,
-          potential_recovery: (valorPis + valorCofins) * 0.95,
+          potential_recovery: valorPis + valorCofins, // Full recovery - should be zero
           ncm_code: ncm,
           cfop: cfop,
           cst: cstPis,
           confidence_level: 'high',
-          confidence_score: 90
+          confidence_score: 92,
+          product_description: `Produto monofásico (${category}) - ${getMonophasicLegalBasis(ncm)}`
+        }
+      }
+    }
+  }
+
+  // PIS_COFINS_010: Autoparts monophasic (NCM 8708, 4011, 8507)
+  if (rule.rule_code === 'PIS_COFINS_010') {
+    if ((ncm.startsWith('8708') || ncm.startsWith('4011') || ncm.startsWith('8507')) && isExitOperation(cfop)) {
+      if (!isMonophasicCST(cstPis) || valorPis > 0 || valorCofins > 0) {
+        return {
+          rule_id: rule.id,
+          original_tax_value: valorPis + valorCofins,
+          potential_recovery: valorPis + valorCofins,
+          ncm_code: ncm,
+          cfop: cfop,
+          cst: cstPis,
+          confidence_level: 'high',
+          confidence_score: 92,
+          product_description: `Autopeças/Pneus - Lei 10.485/2002`
+        }
+      }
+    }
+  }
+
+  // PIS_COFINS_011: Cosmetics monophasic (NCM 3303, 3304, 3305)
+  if (rule.rule_code === 'PIS_COFINS_011') {
+    if ((ncm.startsWith('3303') || ncm.startsWith('3304') || ncm.startsWith('3305')) && isExitOperation(cfop)) {
+      if (!isMonophasicCST(cstPis) || valorPis > 0 || valorCofins > 0) {
+        return {
+          rule_id: rule.id,
+          original_tax_value: valorPis + valorCofins,
+          potential_recovery: valorPis + valorCofins,
+          ncm_code: ncm,
+          cfop: cfop,
+          cst: cstPis,
+          confidence_level: 'high',
+          confidence_score: 92,
+          product_description: `Cosméticos - Lei 10.147/2000`
         }
       }
     }
