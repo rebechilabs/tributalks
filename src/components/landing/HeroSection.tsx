@@ -22,9 +22,9 @@ export function HeroSection() {
       </div>
 
       <div className="container mx-auto px-4 md:px-6 lg:px-8 py-12 md:py-20 relative">
-        <div className="grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
+        <div className="flex flex-col items-center max-w-4xl mx-auto">
           
-          {/* Left Side - Promise */}
+          {/* Main Content */}
           <div className="text-center">
             {/* Logo */}
             <div className="flex justify-center mb-4 md:mb-6 animate-fade-in-up">
@@ -97,8 +97,8 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Right Side - Social Proof Card */}
-          <div className="bg-card rounded-2xl shadow-2xl p-6 md:p-8 border border-border animate-fade-in-up animation-delay-300">
+          {/* Case Study Card */}
+          <div className="w-full max-w-2xl mt-12 bg-card rounded-2xl shadow-2xl p-6 md:p-8 border border-border animate-fade-in-up animation-delay-300">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
                 <TrendingUp className="w-6 h-6 text-primary" />
