@@ -110,6 +110,13 @@ export function HeroSection() {
             </div>
           </div>
 
+          {/* Section Separator */}
+          <div className="my-10 text-center animate-fade-in-up animation-delay-200">
+            <p className="text-lg md:text-xl text-muted-foreground">
+              Não acredita? Veja o que nossos clientes dizem:
+            </p>
+          </div>
+
           {/* Case Study Card */}
           <div className="w-full bg-card rounded-2xl shadow-2xl p-6 md:p-8 border border-border animate-fade-in-up animation-delay-300">
             <div className="flex items-center gap-3 mb-4">
