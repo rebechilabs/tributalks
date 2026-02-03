@@ -92,3 +92,12 @@ verify_jwt = false
 
 [functions.contaazul-oauth]
 verify_jwt = false
+
+[functions.trigger-autonomous-actions]
+verify_jwt = false
+
+[functions.process-autonomous-cron]
+verify_jwt = false
+
+[functions.execute-autonomous-action]
+verify_jwt = false

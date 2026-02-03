@@ -15,6 +15,8 @@ import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
 import { useAuth } from "@/hooks/useAuth";
 import { ClaraFloatingButton } from "./ClaraFloatingButton";
 import { ClaraOnboardingTooltip } from "./ClaraProactive";
+import { ClaraActionsDrawer } from "@/components/clara/ClaraActionsDrawer";
+import { useClaraAutonomousActions } from "@/hooks/clara";
 
 interface Message {
   role: "user" | "assistant";
@@ -221,7 +223,9 @@ Posso te ajudar a preparar os dados para a consultoria? Ou prefere que eu expliq
 export function FloatingAssistant() {
   const { profile } = useAuth();
   const { context: claraContext, trackAction, trackResult } = useClaraContext();
+  const { pendingCount } = useClaraAutonomousActions();
   const [isOpen, setIsOpen] = useState(false);
+  const [isActionsDrawerOpen, setIsActionsDrawerOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -719,10 +723,18 @@ Você também pode me fazer qualquer pergunta sobre a Reforma Tributária!`;
       {/* Onboarding Tooltip - appears on first visit to each page */}
       <ClaraOnboardingTooltip />
 
+      {/* Actions Drawer */}
+      <ClaraActionsDrawer 
+        isOpen={isActionsDrawerOpen} 
+        onClose={() => setIsActionsDrawerOpen(false)} 
+      />
+
       {/* Floating Button */}
       <ClaraFloatingButton
         isOpen={isOpen}
         onClick={() => isOpen ? setIsOpen(false) : handleOpen()}
+        pendingActionsCount={pendingCount}
+        onActionsClick={() => setIsActionsDrawerOpen(true)}
       />
     </div>
   );

@@ -1,13 +1,20 @@
 import { useState, useEffect } from "react";
-import { MessageCircle, X, Sparkles } from "lucide-react";
+import { MessageCircle, X, Sparkles, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ClaraFloatingButtonProps {
   isOpen: boolean;
   onClick: () => void;
+  pendingActionsCount?: number;
+  onActionsClick?: () => void;
 }
 
-export function ClaraFloatingButton({ isOpen, onClick }: ClaraFloatingButtonProps) {
+export function ClaraFloatingButton({ 
+  isOpen, 
+  onClick, 
+  pendingActionsCount = 0,
+  onActionsClick 
+}: ClaraFloatingButtonProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -31,11 +38,32 @@ export function ClaraFloatingButton({ isOpen, onClick }: ClaraFloatingButtonProp
 
   return (
     <div className="relative">
+      {/* Pending Actions Badge - always visible if there are pending actions */}
+      {pendingActionsCount > 0 && !isOpen && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onActionsClick?.();
+          }}
+          className={cn(
+            "absolute -top-2 -left-12 flex items-center gap-1.5",
+            "bg-destructive text-destructive-foreground",
+            "px-2.5 py-1 rounded-full text-xs font-medium",
+            "shadow-lg shadow-destructive/30",
+            "hover:scale-105 hover:shadow-xl transition-all duration-200",
+            "animate-pulse"
+          )}
+        >
+          <Bot className="h-3 w-3" />
+          {pendingActionsCount} ação{pendingActionsCount > 1 ? 'ões' : ''}
+        </button>
+      )}
+
       {/* Elegant Tooltip */}
       <div
         className={cn(
           "absolute bottom-full right-0 mb-4 transition-all duration-500 ease-out",
-          showTooltip && !isOpen && !isHovered
+          showTooltip && !isOpen && !isHovered && pendingActionsCount === 0
             ? "opacity-100 translate-y-0"
             : "opacity-0 translate-y-2 pointer-events-none"
         )}
