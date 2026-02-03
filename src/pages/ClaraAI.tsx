@@ -314,7 +314,7 @@ Como posso te ajudar hoje?`,
                   {msg.role === "assistant" && (
                     <Bot className="w-4 h-4 mt-1 shrink-0 text-primary" />
                   )}
-                  <div className="text-sm leading-relaxed flex-1">
+                  <div className="text-xs leading-relaxed flex-1">
                     {msg.role === "assistant" ? renderMarkdown(msg.content) : msg.content}
                   </div>
                   {msg.role === "user" && (
