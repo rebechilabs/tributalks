@@ -268,6 +268,36 @@ export type Database = {
         }
         Relationships: []
       }
+      clara_embeddings_cache: {
+        Row: {
+          content_hash: string
+          content_preview: string | null
+          created_at: string | null
+          embedding: string
+          id: string
+          model: string | null
+          tokens_used: number | null
+        }
+        Insert: {
+          content_hash: string
+          content_preview?: string | null
+          created_at?: string | null
+          embedding: string
+          id?: string
+          model?: string | null
+          tokens_used?: number | null
+        }
+        Update: {
+          content_hash?: string
+          content_preview?: string | null
+          created_at?: string | null
+          embedding?: string
+          id?: string
+          model?: string | null
+          tokens_used?: number | null
+        }
+        Relationships: []
+      }
       clara_feedback: {
         Row: {
           category: string | null
@@ -375,6 +405,9 @@ export type Database = {
           category: string
           created_at: string
           created_by: string | null
+          embedded_at: string | null
+          embedding: string | null
+          embedding_model: string | null
           full_content: string | null
           id: string
           legal_basis: string | null
@@ -396,6 +429,9 @@ export type Database = {
           category?: string
           created_at?: string
           created_by?: string | null
+          embedded_at?: string | null
+          embedding?: string | null
+          embedding_model?: string | null
           full_content?: string | null
           id?: string
           legal_basis?: string | null
@@ -417,6 +453,9 @@ export type Database = {
           category?: string
           created_at?: string
           created_by?: string | null
+          embedded_at?: string | null
+          embedding?: string | null
+          embedding_model?: string | null
           full_content?: string | null
           id?: string
           legal_basis?: string | null
@@ -441,6 +480,9 @@ export type Database = {
           confidence: number | null
           created_at: string | null
           decay_rate: number | null
+          embedded_at: string | null
+          embedding: string | null
+          embedding_model: string | null
           id: string
           last_observed_at: string | null
           pattern_key: string
@@ -454,6 +496,9 @@ export type Database = {
           confidence?: number | null
           created_at?: string | null
           decay_rate?: number | null
+          embedded_at?: string | null
+          embedding?: string | null
+          embedding_model?: string | null
           id?: string
           last_observed_at?: string | null
           pattern_key: string
@@ -467,6 +512,9 @@ export type Database = {
           confidence?: number | null
           created_at?: string | null
           decay_rate?: number | null
+          embedded_at?: string | null
+          embedding?: string | null
+          embedding_model?: string | null
           id?: string
           last_observed_at?: string | null
           pattern_key?: string
@@ -485,6 +533,9 @@ export type Database = {
           content: string
           created_at: string | null
           decision_context: string | null
+          embedded_at: string | null
+          embedding: string | null
+          embedding_model: string | null
           expires_at: string | null
           id: string
           importance: number
@@ -504,6 +555,9 @@ export type Database = {
           content: string
           created_at?: string | null
           decision_context?: string | null
+          embedded_at?: string | null
+          embedding?: string | null
+          embedding_model?: string | null
           expires_at?: string | null
           id?: string
           importance?: number
@@ -523,6 +577,9 @@ export type Database = {
           content?: string
           created_at?: string | null
           decision_context?: string | null
+          embedded_at?: string | null
+          embedding?: string | null
+          embedding_model?: string | null
           expires_at?: string | null
           id?: string
           importance?: number
@@ -4008,6 +4065,23 @@ export type Database = {
         }
         Returns: boolean
       }
+      hybrid_search_knowledge: {
+        Args: {
+          match_count?: number
+          query_embedding: string
+          query_text: string
+          similarity_threshold?: number
+        }
+        Returns: {
+          category: string
+          combined_score: number
+          id: string
+          keyword_match: boolean
+          similarity: number
+          summary: string
+          title: string
+        }[]
+      }
       increment_referral_count: {
         Args: { referrer_user_id: string }
         Returns: undefined
@@ -4030,6 +4104,54 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      search_knowledge_base: {
+        Args: {
+          match_count?: number
+          query_embedding: string
+          similarity_threshold?: number
+        }
+        Returns: {
+          category: string
+          full_content: string
+          id: string
+          legal_basis: string
+          similarity: number
+          summary: string
+          title: string
+        }[]
+      }
+      search_user_memories: {
+        Args: {
+          match_count?: number
+          p_user_id: string
+          query_embedding: string
+          similarity_threshold?: number
+        }
+        Returns: {
+          category: string
+          content: string
+          id: string
+          importance: number
+          memory_type: string
+          similarity: number
+        }[]
+      }
+      search_user_patterns: {
+        Args: {
+          match_count?: number
+          p_user_id: string
+          query_embedding: string
+          similarity_threshold?: number
+        }
+        Returns: {
+          confidence: number
+          id: string
+          pattern_key: string
+          pattern_type: string
+          pattern_value: Json
+          similarity: number
+        }[]
       }
       validate_referral_code: {
         Args: { code_to_check: string }
