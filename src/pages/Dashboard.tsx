@@ -28,7 +28,7 @@ import { OnboardingChecklist, FirstMission, GuidedTour, QuickDiagnosticModal } f
 import { StreakDisplay } from "@/components/achievements";
 import { SwitchCompanyCard } from "@/components/profile/SwitchCompanyCard";
 import { QuickAddCnpj } from "@/components/profile/QuickAddCnpj";
-import { ClaraInsightsPanel } from "@/components/clara";
+import { ClaraInsightsPanel, ClaraAutonomousPanel } from "@/components/clara";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAchievements } from "@/hooks/useAchievements";
 import { useQueryClient } from "@tanstack/react-query";
@@ -430,6 +430,11 @@ const Dashboard = () => {
         {/* Clara Insights - Alertas e recomendações proativos */}
         <div className="mb-6">
           <ClaraInsightsPanel maxInsights={3} />
+        </div>
+
+        {/* Clara Ações Autônomas - Aprovação/Rejeição */}
+        <div className="mb-6">
+          <ClaraAutonomousPanel maxHeight="300px" />
         </div>
 
         {/* Guided Tour */}
