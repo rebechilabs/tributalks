@@ -4,8 +4,8 @@ export const CONFIG = {
     // Starter - R$397/mês ou R$3.970/ano (7 dias grátis)
     STARTER_MENSAL: "https://buy.stripe.com/4gM3co9fs3vgfij9iSbo40b",
     STARTER_ANUAL: "https://buy.stripe.com/00wbIU4Zc5Do1rt1Qqbo401",
-    // Navigator - R$1.297/mês
-    NAVIGATOR_MENSAL: "https://buy.stripe.com/aFa8wI3V8e9U7PR9iSbo403",
+    // Navigator - R$1.297/mês (7 dias grátis)
+    NAVIGATOR_MENSAL: "https://buy.stripe.com/7sYdR20IW0j45HJdz8bo40e",
     NAVIGATOR_ANUAL: "https://buy.stripe.com/fZu9AM63g2rcc67gLkbo404",
     // Professional - R$2.997/mês
     PROFESSIONAL_MENSAL: "https://buy.stripe.com/dRmfZa2R4e9U4DFeDcbo40a",
