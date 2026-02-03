@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import DOMPurify from "dompurify";
 import { CreditDisplay } from "@/components/credits/CreditDisplay";
 import { useUserCredits } from "@/hooks/useUserCredits";
+import { useClaraConversation } from "@/hooks/useClaraConversation";
 import { 
   ClaraFeedbackButtons, 
   ClaraConfidenceIndicator,
@@ -21,8 +22,8 @@ import {
 interface Message {
   role: "user" | "assistant";
   content: string;
-  userMessage?: string; // Para rastrear a pergunta que gerou esta resposta
-  confidence?: ConfidenceData | null; // Confidence score para mensagens da assistente
+  userMessage?: string;
+  confidence?: ConfidenceData | null;
 }
 
 const SUGGESTIONS = [
@@ -35,27 +36,37 @@ const SUGGESTIONS = [
 const ClaraAI = () => {
   const { profile, user } = useAuth();
   const { credits, consumeCredit, refetch: refetchCredits } = useUserCredits();
+  const { 
+    isLoading: isLoadingHistory, 
+    generateWelcome, 
+    saveMessage, 
+    getSessionId,
+    getHistoryContext,
+  } = useClaraConversation();
+  
   const balance = credits?.balance ?? 0;
   const currentPlan = (profile?.plano || "FREE").toUpperCase();
   const hasAccess = currentPlan !== "FREE";
-  // Support both legacy (Portuguese) and new (English) plan names
   const isUnlimited = ["PROFISSIONAL", "PROFESSIONAL", "PREMIUM", "ENTERPRISE"].includes(currentPlan);
   const isNavigator = ["BASICO", "NAVIGATOR", "STARTER"].includes(currentPlan);
 
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      content: `Olá! Sou a **Clara AI**, sua consultora tributária virtual. ✨
+  // Gera mensagem de boas-vindas dinâmica
+  const welcomeData = useMemo(() => {
+    if (isLoadingHistory) return null;
+    return generateWelcome();
+  }, [isLoadingHistory, generateWelcome]);
 
-Posso ajudar com dúvidas sobre:
-- Regimes tributários (Simples, Presumido, Real)
-- Split Payment e reforma tributária
-- PIS, COFINS, IRPJ, CSLL
-- Planejamento tributário
-
-Como posso te ajudar hoje?`,
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  
+  // Atualiza mensagens quando welcome data carrega
+  useEffect(() => {
+    if (welcomeData && messages.length === 0) {
+      setMessages([{
+        role: "assistant",
+        content: welcomeData.greeting,
+      }]);
+    }
+  }, [welcomeData]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [dailyCount, setDailyCount] = useState(0);
@@ -96,6 +107,9 @@ Como posso te ajudar hoje?`,
     setInput("");
     setIsLoading(true);
 
+    // Persiste mensagem do usuário no banco
+    saveMessage("user", textToSend, "clara-ai").catch(console.error);
+
     let assistantContent = "";
     
     const updateAssistant = (chunk: string) => {
@@ -114,6 +128,9 @@ Como posso te ajudar hoje?`,
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
+      // Prepara contexto de histórico para enviar ao backend
+      const historyContext = getHistoryContext();
+      
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/clara-assistant`, {
         method: "POST",
         headers: {
@@ -125,6 +142,8 @@ Como posso te ajudar hoje?`,
             role: m.role,
             content: m.content,
           })),
+          sessionId: getSessionId(),
+          conversationHistory: historyContext,
         }),
       });
 
@@ -146,6 +165,8 @@ Como posso te ajudar hoje?`,
             content: data.message,
             confidence,
           }]);
+          // Persiste resposta da assistente
+          saveMessage("assistant", data.message, "clara-ai").catch(console.error);
         }
         setDailyCount(prev => prev + 1);
         setIsLoading(false);
@@ -203,6 +224,11 @@ Como posso te ajudar hoje?`,
             if (content) updateAssistant(content);
           } catch { /* ignore */ }
         }
+      }
+
+      // Persiste resposta da assistente após streaming completo
+      if (assistantContent) {
+        saveMessage("assistant", assistantContent, "clara-ai").catch(console.error);
       }
 
       setDailyCount((prev) => prev + 1);

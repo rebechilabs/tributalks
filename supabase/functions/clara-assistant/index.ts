@@ -488,8 +488,71 @@ function formatSemanticContextForPrompt(
 }
 
 // ============================================
-// AGENT ORCHESTRATION - Roteamento Inteligente para Agentes
+// HISTÓRICO CONVERSACIONAL - Contexto de conversas anteriores
 // ============================================
+interface ConversationHistoryContext {
+  recentTopics: string[];
+  lastMessageDate: string | null;
+  totalMessages: number;
+  recentMessages: { role: string; content: string }[];
+}
+
+// Formata histórico de conversas para injeção no prompt
+function formatConversationHistoryForPrompt(history: ConversationHistoryContext | null): string {
+  if (!history || history.totalMessages === 0) return '';
+
+  const lines: string[] = [];
+  lines.push('');
+  lines.push('='.repeat(50));
+  lines.push('HISTÓRICO CONVERSACIONAL (use para continuidade)');
+  lines.push('='.repeat(50));
+  lines.push('');
+
+  // Última interação
+  if (history.lastMessageDate) {
+    const lastDate = new Date(history.lastMessageDate);
+    const now = new Date();
+    const diffHours = Math.round((now.getTime() - lastDate.getTime()) / (1000 * 60 * 60));
+    
+    if (diffHours < 1) {
+      lines.push('⏰ Última conversa: agora mesmo');
+    } else if (diffHours < 24) {
+      lines.push(`⏰ Última conversa: há ${diffHours} hora${diffHours !== 1 ? 's' : ''}`);
+    } else {
+      const diffDays = Math.round(diffHours / 24);
+      lines.push(`⏰ Última conversa: há ${diffDays} dia${diffDays !== 1 ? 's' : ''}`);
+    }
+    lines.push('');
+  }
+
+  // Tópicos recentes
+  if (history.recentTopics.length > 0) {
+    lines.push('📌 Tópicos recentes que o usuário perguntou:');
+    history.recentTopics.forEach((topic, i) => {
+      lines.push(`${i + 1}. "${topic}"`);
+    });
+    lines.push('');
+  }
+
+  // Últimas mensagens para contexto
+  if (history.recentMessages.length > 0) {
+    lines.push('💬 Últimas trocas (para contexto):');
+    history.recentMessages.forEach(msg => {
+      const prefix = msg.role === 'user' ? 'Usuário' : 'Clara';
+      lines.push(`- ${prefix}: "${msg.content.substring(0, 100)}${msg.content.length > 100 ? '...' : ''}"`);
+    });
+    lines.push('');
+  }
+
+  lines.push('INSTRUÇÃO: Use este histórico para:');
+  lines.push('- Manter continuidade ("como conversamos antes...")');
+  lines.push('- Evitar repetir informações já dadas');
+  lines.push('- Referenciar tópicos anteriores quando relevante');
+  lines.push('');
+
+  return lines.join('\n');
+}
+
 type AgentType = 'fiscal' | 'margin' | 'compliance' | null;
 
 interface AgentSuggestion {
@@ -2050,7 +2113,7 @@ serve(async (req) => {
     const userName = userContext.userName;
     const hasUserData = userContext.progresso.xmlsProcessados > 0 || userContext.financeiro !== null;
 
-    const { messages, toolSlug, isGreeting, getStarters } = await req.json();
+    const { messages, toolSlug, isGreeting, getStarters, sessionId, conversationHistory } = await req.json();
 
     // Return conversation starters if requested
     if (getStarters) {
@@ -2250,11 +2313,17 @@ serve(async (req) => {
       console.log(`Pending actions: ${pendingActions.length} awaiting approval`);
     }
     
-    // Combina tudo no prompt: base + conhecimento + RAG + contexto de agente
+    // Formata histórico conversacional se disponível
+    const conversationHistoryPrompt = conversationHistory 
+      ? formatConversationHistoryForPrompt(conversationHistory as ConversationHistoryContext)
+      : '';
+    
+    // Combina tudo no prompt: base + conhecimento + RAG + contexto de agente + histórico
     const systemPrompt = buildSystemPrompt(toolContext, userPlan, userName, isSimple, userContext) 
       + knowledgePrompt 
       + semanticPrompt 
-      + agentPrompt;
+      + agentPrompt
+      + conversationHistoryPrompt;
 
     // ============================================
     // ANÁLISE LINHA A LINHA - Responde pedidos de explicação
@@ -2460,38 +2529,8 @@ serve(async (req) => {
       console.log(`Cached response for category "${queryCategory}" with TTL ${categoryConfig.ttl_days} days`);
     }
     
-    // ============================================
-    // SALVA CONVERSA NO HISTÓRICO (para memória de longo prazo)
-    // ============================================
-    const sessionId = crypto.randomUUID(); // Idealmente recebido do frontend
-    
-    // Salva mensagem do usuário e resposta da Clara em paralelo
-    try {
-      await Promise.all([
-        supabase.from('clara_conversations').insert({
-          user_id: user.id,
-          session_id: sessionId,
-          role: 'user',
-          content: lastMessage,
-          screen_context: toolSlug || 'chat',
-          model_used: useGemini ? 'gemini-2.5-flash' : 'claude-sonnet-4',
-        }),
-        supabase.from('clara_conversations').insert({
-          user_id: user.id,
-          session_id: sessionId,
-          role: 'assistant',
-          content: assistantMessage,
-          screen_context: toolSlug || 'chat',
-          tools_used: toolSlug ? [toolSlug] : [],
-          model_used: useGemini ? 'gemini-2.5-flash' : 'claude-sonnet-4',
-          tokens_used: assistantMessage.length, // Aproximação
-        }),
-      ]);
-    } catch (convError) {
-      console.error('Error saving conversation:', convError);
-      // Não bloqueia a resposta se falhar
-    }
-    
+    // NOTA: As conversas já são salvas pelo frontend em useClaraConversation.ts
+    // Removemos a duplicação de salvamento aqui para evitar registros duplicados
     // ============================================
     // EXTRAI MEMÓRIAS IMPORTANTES (decisões, preferências)
     // ============================================
