@@ -117,18 +117,18 @@ export default function Nexus() {
           </Card>
         )}
 
-        {/* Clara AI Card + KPI Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {/* KPI Grid */}
+        <NexusGrid data={kpiData} loading={loading} />
+
+        {/* Clara AI Card + Insights Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
           <div className="lg:col-span-2">
-            <NexusGrid data={kpiData} loading={loading} />
+            <NexusInsightsSection insights={insights} loading={loading} />
           </div>
           <div className="lg:col-span-1">
             <NexusClaraCard />
           </div>
         </div>
-
-        {/* Insights Section */}
-        <NexusInsightsSection insights={insights} loading={loading} />
       </div>
 
       {/* Animation Keyframes */}
