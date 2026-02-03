@@ -31,11 +31,15 @@ interface UseERPDREDataResult {
 export function useERPDREData(selectedMonth: number, selectedYear: number): UseERPDREDataResult {
   const { user } = useAuth();
 
+  console.log('[useERPDREData] Hook init:', { userId: user?.id, selectedMonth, selectedYear });
+
   // Buscar conexões ERP ativas
   const { data: erpConnections, isLoading: loadingConnections } = useQuery({
     queryKey: ['erp-connections', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
+      
+      console.log('[useERPDREData] Fetching ERP connections for user:', user.id);
       
       const { data, error } = await supabase
         .from('erp_connections')
@@ -45,10 +49,11 @@ export function useERPDREData(selectedMonth: number, selectedYear: number): UseE
         .order('last_sync_at', { ascending: false });
       
       if (error) {
-        console.error('Erro ao buscar conexões ERP:', error);
+        console.error('[useERPDREData] Erro ao buscar conexões ERP:', error);
         return [];
       }
       
+      console.log('[useERPDREData] ERP connections found:', data?.length, data);
       return data || [];
     },
     enabled: !!user?.id,
@@ -59,6 +64,8 @@ export function useERPDREData(selectedMonth: number, selectedYear: number): UseE
     queryKey: ['erp-dre-data', user?.id, selectedMonth, selectedYear],
     queryFn: async () => {
       if (!user?.id) return null;
+      
+      console.log('[useERPDREData] Fetching DRE data for period:', { selectedMonth, selectedYear });
       
       const { data, error } = await supabase
         .from('company_dre')
@@ -72,16 +79,19 @@ export function useERPDREData(selectedMonth: number, selectedYear: number): UseE
         .maybeSingle();
       
       if (error) {
-        console.error('Erro ao buscar DRE sincronizado:', error);
+        console.error('[useERPDREData] Erro ao buscar DRE sincronizado:', error);
         return null;
       }
       
+      console.log('[useERPDREData] DRE data found:', data);
       return data;
     },
-    enabled: !!user?.id && (erpConnections?.length || 0) > 0,
+    enabled: !!user?.id,
   });
 
   const activeConnection = erpConnections?.[0] || null;
+  
+  console.log('[useERPDREData] Active connection:', activeConnection);
   
   // Formatar dados do DRE para uso no wizard
   const dreData: ERPDREData | null = syncedDRE ? {
@@ -100,6 +110,13 @@ export function useERPDREData(selectedMonth: number, selectedYear: number): UseE
     dreData.vendas_servicos > 0 || 
     dreData.custo_mercadorias > 0
   );
+
+  console.log('[useERPDREData] Result:', {
+    hasERPConnection: (erpConnections?.length || 0) > 0,
+    hasSyncedData: !!hasMeaningfulData,
+    dreData,
+    isLoading: loadingConnections || loadingDRE,
+  });
 
   return {
     hasERPConnection: (erpConnections?.length || 0) > 0,
