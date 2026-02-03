@@ -80,6 +80,107 @@ export type Database = {
         }
         Relationships: []
       }
+      clara_agents: {
+        Row: {
+          agent_type: string
+          capabilities: Json
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          priority_rules: Json | null
+          status: string
+          trigger_conditions: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          agent_type: string
+          capabilities?: Json
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          priority_rules?: Json | null
+          status?: string
+          trigger_conditions?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          agent_type?: string
+          capabilities?: Json
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          priority_rules?: Json | null
+          status?: string
+          trigger_conditions?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      clara_autonomous_actions: {
+        Row: {
+          action_payload: Json
+          action_type: string
+          agent_id: string | null
+          agent_type: string
+          created_at: string | null
+          executed_at: string | null
+          expires_at: string | null
+          id: string
+          priority: string | null
+          requires_approval: boolean | null
+          result: Json | null
+          status: string
+          trigger_data: Json | null
+          trigger_event: string
+          user_id: string
+        }
+        Insert: {
+          action_payload: Json
+          action_type: string
+          agent_id?: string | null
+          agent_type: string
+          created_at?: string | null
+          executed_at?: string | null
+          expires_at?: string | null
+          id?: string
+          priority?: string | null
+          requires_approval?: boolean | null
+          result?: Json | null
+          status?: string
+          trigger_data?: Json | null
+          trigger_event: string
+          user_id: string
+        }
+        Update: {
+          action_payload?: Json
+          action_type?: string
+          agent_id?: string | null
+          agent_type?: string
+          created_at?: string | null
+          executed_at?: string | null
+          expires_at?: string | null
+          id?: string
+          priority?: string | null
+          requires_approval?: boolean | null
+          result?: Json | null
+          status?: string
+          trigger_data?: Json | null
+          trigger_event?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clara_autonomous_actions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "clara_agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clara_cache: {
         Row: {
           category: string
@@ -335,47 +436,140 @@ export type Database = {
         }
         Relationships: []
       }
+      clara_learned_patterns: {
+        Row: {
+          confidence: number | null
+          created_at: string | null
+          decay_rate: number | null
+          id: string
+          last_observed_at: string | null
+          pattern_key: string
+          pattern_type: string
+          pattern_value: Json
+          times_observed: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string | null
+          decay_rate?: number | null
+          id?: string
+          last_observed_at?: string | null
+          pattern_key: string
+          pattern_type: string
+          pattern_value: Json
+          times_observed?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string | null
+          decay_rate?: number | null
+          id?: string
+          last_observed_at?: string | null
+          pattern_key?: string
+          pattern_type?: string
+          pattern_value?: Json
+          times_observed?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       clara_memory: {
         Row: {
           category: string
+          confidence_score: number | null
           content: string
           created_at: string | null
+          decision_context: string | null
           expires_at: string | null
           id: string
           importance: number
+          last_used_at: string | null
+          learned_pattern: Json | null
           memory_type: string
           metadata: Json | null
           source_conversation_id: string | null
           source_screen: string | null
+          times_reinforced: number | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
           category?: string
+          confidence_score?: number | null
           content: string
           created_at?: string | null
+          decision_context?: string | null
           expires_at?: string | null
           id?: string
           importance?: number
+          last_used_at?: string | null
+          learned_pattern?: Json | null
           memory_type?: string
           metadata?: Json | null
           source_conversation_id?: string | null
           source_screen?: string | null
+          times_reinforced?: number | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
           category?: string
+          confidence_score?: number | null
           content?: string
           created_at?: string | null
+          decision_context?: string | null
           expires_at?: string | null
           id?: string
           importance?: number
+          last_used_at?: string | null
+          learned_pattern?: Json | null
           memory_type?: string
           metadata?: Json | null
           source_conversation_id?: string | null
           source_screen?: string | null
+          times_reinforced?: number | null
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      clara_user_decisions: {
+        Row: {
+          agent_type: string | null
+          context: Json
+          created_at: string | null
+          decision_type: string
+          id: string
+          option_chosen: string | null
+          options_presented: Json | null
+          outcome_feedback: string | null
+          user_id: string
+        }
+        Insert: {
+          agent_type?: string | null
+          context: Json
+          created_at?: string | null
+          decision_type: string
+          id?: string
+          option_chosen?: string | null
+          options_presented?: Json | null
+          outcome_feedback?: string | null
+          user_id: string
+        }
+        Update: {
+          agent_type?: string | null
+          context?: Json
+          created_at?: string | null
+          decision_type?: string
+          id?: string
+          option_chosen?: string | null
+          options_presented?: Json | null
+          outcome_feedback?: string | null
           user_id?: string
         }
         Relationships: []
@@ -3756,6 +3950,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_autonomous_action: {
+        Args: {
+          p_action_payload: Json
+          p_action_type: string
+          p_agent_type: string
+          p_priority?: string
+          p_requires_approval?: boolean
+          p_trigger_data: Json
+          p_trigger_event: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       get_recent_conversations: {
         Args: { p_limit?: number; p_user_id: string }
         Returns: {
@@ -3779,6 +3986,21 @@ export type Database = {
           source_screen: string
         }[]
       }
+      get_user_patterns: {
+        Args: {
+          p_limit?: number
+          p_min_confidence?: number
+          p_pattern_type?: string
+          p_user_id: string
+        }
+        Returns: {
+          confidence: number
+          pattern_key: string
+          pattern_type: string
+          pattern_value: Json
+          times_observed: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -3797,6 +4019,17 @@ export type Database = {
       is_seat_owner: {
         Args: { _owner_id: string; _user_id: string }
         Returns: boolean
+      }
+      record_user_decision: {
+        Args: {
+          p_agent_type?: string
+          p_chosen?: string
+          p_context: Json
+          p_decision_type: string
+          p_options?: Json
+          p_user_id: string
+        }
+        Returns: string
       }
       validate_referral_code: {
         Args: { code_to_check: string }
