@@ -124,15 +124,7 @@ export function ERPConnectionWizard({
       // Força URL de produção para corresponder ao cadastro no Portal do Desenvolvedor
       const redirectUri = 'https://tributechai.lovable.app/oauth/callback';
       
-      // Get authorization URL from backend
-      const response = await supabase.functions.invoke("contaazul-oauth", {
-        method: "GET",
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      // Build URL with query params manually since invoke doesn't support query params well
+      // Get authorization URL from backend - usando fetch direto com action parameter
       const authResponse = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/contaazul-oauth?action=authorize&redirect_uri=${encodeURIComponent(redirectUri)}`,
         {
