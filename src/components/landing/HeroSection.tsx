@@ -1,14 +1,8 @@
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Check, Star, TrendingUp, Shield, Zap, Bot, Brain, Sparkles } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Star, TrendingUp, Bot, Brain, Sparkles, Shield } from "lucide-react";
 import logoHero from "@/assets/logo-tributalks-hero.jpg";
 import claraAiHero from "@/assets/clara-ai-hero.png";
-import { CONFIG } from "@/config/site";
 
 export function HeroSection() {
-  const scrollToPlanos = () => {
-    document.getElementById("planos")?.scrollIntoView({ behavior: "smooth" });
-  };
 
   return (
     <section className="relative min-h-screen flex items-center pt-16 md:pt-20 bg-background">
@@ -120,51 +114,6 @@ export function HeroSection() {
               </div>
             </div>
 
-            {/* Subheading */}
-            <p className="text-base md:text-xl text-muted-foreground mb-8 max-w-xl mx-auto animate-fade-in-up animation-delay-100">
-              Enquanto seus concorrentes vão descobrir o impacto tarde demais, 
-              você já estará 3 passos à frente.
-            </p>
-
-            {/* Benefits */}
-            <div className="space-y-4 mb-8 animate-fade-in-up animation-delay-150 max-w-md mx-auto">
-              {[
-                { icon: TrendingUp, text: "Identifique créditos ocultos", sub: "Média de R$ 47k recuperados por empresa" },
-                { icon: Shield, text: "Proteja sua margem", sub: "Veja impacto exato de CBS/IBS no lucro" },
-                { icon: Zap, text: "Decisões com Clara AI", sub: "Sua copiloto tributária 24/7" },
-              ].map((benefit) => (
-                <div key={benefit.text} className="flex items-start gap-3 text-left">
-                  <div className="bg-success/20 text-success rounded-full p-2 flex-shrink-0">
-                    <Check className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <strong className="text-foreground">{benefit.text}</strong>
-                    <p className="text-sm text-muted-foreground">{benefit.sub}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up animation-delay-200">
-              <a href={CONFIG.PAYMENT_LINKS.NAVIGATOR_MENSAL} target="_blank" rel="noopener noreferrer">
-                <Button
-                  size="lg"
-                  className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-8 py-6 text-lg group"
-                >
-                  Testar Grátis por 7 Dias
-                  <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </a>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={scrollToPlanos}
-                className="w-full sm:w-auto border-foreground text-foreground hover:bg-foreground hover:text-background font-semibold px-8 py-6 text-lg"
-              >
-                Ver Como Funciona ↓
-              </Button>
-            </div>
           </div>
 
           {/* Case Study Card */}
