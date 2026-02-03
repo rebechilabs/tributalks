@@ -28,19 +28,19 @@ const journeys = [
     icon: BarChart3,
     title: "Preciso Monitorar",
     description: '"Quero acompanhar mudanças e me preparar gradualmente."',
-    features: [
-      { text: "Clara AI (Copiloto)", included: true, limit: "100 msgs/dia" },
-      { text: "Tudo do Starter +", included: true },
-      { text: "Notícias diárias da Reforma", included: true },
-      { text: "Comunidade exclusiva (Circle)", included: true },
-      { text: "Checklist de Prontidão", included: true },
-      { text: "NEXUS, Radar, DRE", included: false, locked: true },
+    benefitBlocks: [
+      "Tudo do Starter, com mais poder de análise e acompanhamento contínuo.",
+      "Clara AI com 100 mensagens/dia para te guiar nas decisões do dia a dia.",
+      "Fique por dentro das notícias da Reforma em tempo real e meça sua prontidão com o Checklist.",
+      "Analise documentos fiscais com IA e siga Workflows Guiados para organizar suas tarefas.",
+      "Acesse a comunidade TribuTalks Connect e exporte relatórios em PDF."
     ],
     price: 1297,
     priceText: "/mês",
-    ctaText: "Plano Navigator →",
+    ctaText: "Testar 7 dias grátis",
     link: CONFIG.PAYMENT_LINKS.NAVIGATOR_MENSAL,
     highlighted: false,
+    trialBadge: "7 DIAS GRÁTIS",
   },
   {
     id: "professional",
@@ -133,18 +133,18 @@ export function JourneysSection() {
                   <div className="space-y-3">
                     {journey.features?.map((feature) => (
                       <div key={feature.text} className="flex items-center gap-2 text-sm">
-                        {feature.locked ? (
+                        {'locked' in feature && feature.locked ? (
                           <Lock className="w-4 h-4 text-muted-foreground" />
                         ) : (
                           <Check className={`w-4 h-4 ${feature.highlight ? "text-primary" : "text-success"}`} />
                         )}
-                        <span className={`${feature.locked ? "text-muted-foreground" : feature.highlight ? "font-semibold text-foreground" : "text-foreground"}`}>
+                        <span className={`${'locked' in feature && feature.locked ? "text-muted-foreground" : feature.highlight ? "font-semibold text-foreground" : "text-foreground"}`}>
                           {feature.text}
                         </span>
-                        {feature.limit && (
-                          <span className="text-xs text-warning">({feature.limit})</span>
+                        {'limit' in feature && feature.limit && (
+                          <span className="text-xs text-warning">({String(feature.limit)})</span>
                         )}
-                        {feature.locked && (
+                        {'locked' in feature && feature.locked && (
                           <span className="text-xs text-muted-foreground">(Pro)</span>
                         )}
                       </div>
