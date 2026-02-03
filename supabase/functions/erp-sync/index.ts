@@ -937,18 +937,19 @@ class ContaAzulAdapter implements ERPAdapter {
 
     try {
       await delay(RATE_LIMITS.contaazul.delayMs);
-      // API v2 - Endpoint correto: /v1/produtos com paginação (pagina, tamanho_pagina)
-      const response = await this.makeRequest('/v1/produtos?pagina=1&tamanho_pagina=200', credentials);
+      // API v2 - Endpoint correto conforme documentação oficial: /v1/produto/busca (SINGULAR!)
+      // Parâmetros: pagina, tamanho_pagina (max 200), status (ATIVO/INATIVO/TODOS)
+      const response = await this.makeRequest('/v1/produto/busca?pagina=1&tamanho_pagina=200&status=ATIVO', credentials);
       
-      // API v2 pode retornar array diretamente ou objeto com 'itens'/'data'
-      const data = Array.isArray(response) ? response : (response.itens || response.data || []);
+      // API v2 retorna: { itens: [...], itens_totais: number }
+      const data = response.itens || response.data || (Array.isArray(response) ? response : []);
 
       if (data && Array.isArray(data)) {
         for (const produto of data) {
           products.push({
-            // API v2 retorna campos em português
+            // API v2 campos: nome, codigo_sku, codigo_ean, ncm (se disponível)
             ncm_code: produto.ncm || produto.codigo_ncm || '00000000',
-            product_name: produto.nome || produto.descricao || produto.codigo_sku || 'Produto sem nome',
+            product_name: produto.nome || produto.codigo_sku || 'Produto sem nome',
             cfops_frequentes: [],
             tipo_operacao: 'misto',
             qtd_operacoes: 0,
@@ -1017,7 +1018,8 @@ class ContaAzulAdapter implements ERPAdapter {
     const financeiro: UnifiedFinancial[] = [];
     console.log('[ContaAzul] MÓDULO: Financeiro');
 
-    // API v2: GET /v1/financeiro/eventos-financeiros/contas-a-receber (documentação oficial)
+    // API v2: GET /v1/financeiro/eventos-financeiros/contas-a-receber/buscar (endpoint correto!)
+    // Parâmetros OBRIGATÓRIOS: data_vencimento_de e data_vencimento_ate
     try {
       await delay(RATE_LIMITS.contaazul.delayMs);
       console.log('[ContaAzul] Buscando Contas a Receber...');
@@ -1026,12 +1028,14 @@ class ContaAzulAdapter implements ERPAdapter {
       const dataFinalReceber = new Date().toISOString().split('T')[0];
       const dataInicialReceber = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       
+      // Endpoint correto conforme documentação oficial: /v1/financeiro/eventos-financeiros/contas-a-receber/buscar
       const recebivelResponse = await this.makeRequest(
-        `/v1/financeiro/eventos-financeiros/contas-a-receber?data_vencimento_de=${dataInicialReceber}&data_vencimento_ate=${dataFinalReceber}&pagina=1&tamanho_pagina=200`, 
+        `/v1/financeiro/eventos-financeiros/contas-a-receber/buscar?data_vencimento_de=${dataInicialReceber}&data_vencimento_ate=${dataFinalReceber}&pagina=1&tamanho_pagina=200`, 
         credentials,
         'GET'
       );
-      const recebiveis = Array.isArray(recebivelResponse) ? recebivelResponse : (recebivelResponse.itens || recebivelResponse.items || recebivelResponse.data || []);
+      // API retorna: { itens_totais: number, itens: [...], totais: {...} }
+      const recebiveis = recebivelResponse.itens || recebivelResponse.items || (Array.isArray(recebivelResponse) ? recebivelResponse : []);
 
       if (recebiveis && Array.isArray(recebiveis)) {
         for (const recebivel of recebiveis) {
@@ -1040,7 +1044,7 @@ class ContaAzulAdapter implements ERPAdapter {
             categoria: 'contas_a_receber',
             valor: recebivel.valor || recebivel.valor_total || 0,
             data: recebivel.data_vencimento || recebivel.data_emissao || new Date().toISOString(),
-            descricao: recebivel.historico || recebivel.descricao || `Receita #${recebivel.numero || recebivel.id}`,
+            descricao: recebivel.descricao || recebivel.historico || `Receita #${recebivel.id}`,
           });
         }
       }
@@ -1049,7 +1053,7 @@ class ContaAzulAdapter implements ERPAdapter {
       console.error('[ContaAzul syncFinanceiro] ❌ ERRO em Contas a Receber:', error);
     }
 
-    // API v2: GET /v1/financeiro/eventos-financeiros/contas-a-pagar (documentação oficial)
+    // API v2: GET /v1/financeiro/eventos-financeiros/contas-a-pagar/buscar (endpoint correto!)
     try {
       await delay(RATE_LIMITS.contaazul.delayMs);
       console.log('[ContaAzul] Buscando Contas a Pagar...');
@@ -1058,12 +1062,14 @@ class ContaAzulAdapter implements ERPAdapter {
       const dataFinalPagar = new Date().toISOString().split('T')[0];
       const dataInicialPagar = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       
+      // Endpoint correto conforme documentação oficial: /v1/financeiro/eventos-financeiros/contas-a-pagar/buscar
       const pagavelResponse = await this.makeRequest(
-        `/v1/financeiro/eventos-financeiros/contas-a-pagar?data_vencimento_de=${dataInicialPagar}&data_vencimento_ate=${dataFinalPagar}&pagina=1&tamanho_pagina=200`, 
+        `/v1/financeiro/eventos-financeiros/contas-a-pagar/buscar?data_vencimento_de=${dataInicialPagar}&data_vencimento_ate=${dataFinalPagar}&pagina=1&tamanho_pagina=200`, 
         credentials,
         'GET'
       );
-      const pagaveis = Array.isArray(pagavelResponse) ? pagavelResponse : (pagavelResponse.itens || pagavelResponse.items || pagavelResponse.data || []);
+      // API retorna: { itens_totais: number, itens: [...], totais: {...} }
+      const pagaveis = pagavelResponse.itens || pagavelResponse.items || (Array.isArray(pagavelResponse) ? pagavelResponse : []);
 
       if (pagaveis && Array.isArray(pagaveis)) {
         for (const pagavel of pagaveis) {
@@ -1072,7 +1078,7 @@ class ContaAzulAdapter implements ERPAdapter {
             categoria: 'contas_a_pagar',
             valor: pagavel.valor || pagavel.valor_total || 0,
             data: pagavel.data_vencimento || pagavel.data_emissao || new Date().toISOString(),
-            descricao: pagavel.historico || pagavel.descricao || `Despesa #${pagavel.numero || pagavel.id}`,
+            descricao: pagavel.descricao || pagavel.historico || `Despesa #${pagavel.id}`,
           });
         }
       }
