@@ -66,35 +66,41 @@ export default function OAuthCallback() {
           return;
         }
 
-        // Exchange code for tokens via edge function
-        const response = await supabase.functions.invoke('contaazul-oauth', {
-          method: 'POST',
-          body: {
-            code,
-            redirect_uri: `${window.location.origin}/oauth/callback`,
-            state,
-            stored_state: storedState,
-            connection_name: connectionName,
-          },
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+        // Exchange code for tokens via edge function - usando fetch direto para incluir action parameter
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/contaazul-oauth?action=exchange`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.session.access_token}`,
+            },
+            body: JSON.stringify({
+              code,
+              redirect_uri: 'https://tributechai.lovable.app/oauth/callback',
+              state,
+              stored_state: storedState,
+              connection_name: connectionName,
+            }),
+          }
+        );
+
+        const data = await response.json();
 
         // Clear stored state
         sessionStorage.removeItem('contaazul_oauth_state');
         sessionStorage.removeItem('contaazul_connection_name');
 
-        if (response.error) {
-          throw new Error(response.error.message || 'Falha ao trocar código por tokens');
+        if (!response.ok) {
+          throw new Error(data.error || 'Falha ao trocar código por tokens');
         }
 
-        if (!response.data?.success) {
-          throw new Error(response.data?.error || 'Resposta inválida do servidor');
+        if (!data.success) {
+          throw new Error(data.error || 'Resposta inválida do servidor');
         }
 
         setStatus('success');
-        setMessage(response.data.message || 'Conta Azul conectado com sucesso!');
+        setMessage(data.message || 'Conta Azul conectado com sucesso!');
 
         // Redirect to integrations after 2 seconds
         setTimeout(() => {
