@@ -45,4 +45,18 @@ export {
   useClaraAgentIntegration,
   type ClaraEnrichedContext,
   type AgentSuggestion,
+  type KnowledgeGraphContext,
 } from './useClaraAgentIntegration';
+
+// Knowledge Graph Tributário
+export {
+  useKnowledgeGraph,
+  useQuickGraphAnalysis,
+  type KGNodeType,
+  type KGEdgeType,
+  type KGNode,
+  type KGRelationship,
+  type CascadeImpact,
+  type RelationshipPath,
+  type ReformImpact,
+} from './useKnowledgeGraph';
