@@ -86,20 +86,22 @@ serve(async (req) => {
       // Generate cryptographically random state
       const state = crypto.randomUUID().replace(/-/g, '');
       
-      // Build authorization URL with offline scope for refresh tokens
-      // API Conta Azul - Scopes disponíveis: sales (acesso a clientes, produtos, vendas, etc)
+      // API Conta Azul v2 - OAuth via Cognito
+      // Scopes devem ser codificados corretamente (espaços se tornam %20)
+      const scopes = 'openid profile aws.cognito.signin.user.admin';
+      
       const authParams = new URLSearchParams({
         client_id: clientId,
         redirect_uri: redirectUri,
         response_type: 'code',
-        scope: 'offline sales purchases products customers suppliers fiscal-invoices bank-accounts treasury',
+        scope: scopes,
         state: state,
       });
 
-      // API Conta Azul - Endpoint de autorização padrão
-      const authUrl = `https://api.contaazul.com/auth/authorize?${authParams}`;
+      // API Conta Azul v2 - Endpoint de autorização via Cognito
+      const authUrl = `https://auth.contaazul.com/oauth2/authorize?${authParams.toString()}`;
 
-      console.log('[contaazul-oauth] Authorization URL generated');
+      console.log('[contaazul-oauth] Authorization URL generated:', authUrl);
 
       return new Response(
         JSON.stringify({ 
@@ -175,8 +177,8 @@ serve(async (req) => {
       // Exchange authorization code for tokens
       const auth = btoa(`${clientId}:${clientSecret}`);
       
-      // API Conta Azul - Endpoint de token padrão
-      const tokenResponse = await fetch('https://api.contaazul.com/oauth2/token', {
+      // API Conta Azul v2 - Endpoint de token via Cognito
+      const tokenResponse = await fetch('https://auth.contaazul.com/oauth2/token', {
         method: 'POST',
         headers: {
           'Authorization': `Basic ${auth}`,
@@ -211,8 +213,8 @@ serve(async (req) => {
         );
       }
 
-      // API Conta Azul - Validar token obtendo dados da empresa
-      const validateResponse = await fetch('https://api.contaazul.com/v1/companies', {
+      // API Conta Azul v2 - Validar token obtendo dados da empresa
+      const validateResponse = await fetch('https://api-v2.contaazul.com/v1/companies', {
         headers: {
           'Authorization': `Bearer ${tokens.access_token}`,
           'Accept': 'application/json',
