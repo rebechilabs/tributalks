@@ -9,7 +9,13 @@ const journeys = [
     icon: Target,
     title: "Preciso Entender",
     description: '"A Reforma parece complexa. Quero entender o impacto antes de agir."',
-    benefitText: "O ponto de partida ideal para quem quer se preparar para a Reforma Tributária. Faça um diagnóstico completo da saúde fiscal da sua empresa com o Score Tributário, simule diferentes cenários com as calculadoras de Split Payment e comparativo de regimes, e acompanhe todos os prazos importantes na Timeline 2026-2033. Conte ainda com a Clara AI para tirar dúvidas do dia a dia e a newsletter Tributalks News para se manter atualizado.",
+    benefitBlocks: [
+      "O ponto de partida ideal para quem quer se preparar para a Reforma Tributária.",
+      "Faça um diagnóstico completo da saúde fiscal da sua empresa com o Score Tributário.",
+      "Simule diferentes cenários com as calculadoras de Split Payment e comparativo de regimes.",
+      "Acompanhe todos os prazos importantes na Timeline 2026-2033.",
+      "Conte com a Clara AI para tirar dúvidas e a newsletter Tributalks News para se manter atualizado."
+    ],
     price: 397,
     priceText: "/mês",
     ctaText: "Testar 7 dias grátis",
@@ -112,12 +118,17 @@ export function JourneysSection() {
                 </p>
               </div>
 
-              {/* Features or Benefit Text */}
+              {/* Features or Benefit Blocks */}
               <div className="mb-6">
-                {journey.benefitText ? (
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {journey.benefitText}
-                  </p>
+                {journey.benefitBlocks ? (
+                  <div className="space-y-3">
+                    {journey.benefitBlocks.map((block, index) => (
+                      <div key={index} className="flex items-start gap-2 text-sm">
+                        <Check className="w-4 h-4 text-success mt-0.5 shrink-0" />
+                        <span className="text-foreground">{block}</span>
+                      </div>
+                    ))}
+                  </div>
                 ) : (
                   <div className="space-y-3">
                     {journey.features?.map((feature) => (
