@@ -29,7 +29,7 @@ export function NexusClaraCard() {
 
   const handleMainCTA = () => {
     window.dispatchEvent(new CustomEvent('openClaraWithQuestion', { 
-      detail: { question: "Qual é o principal produto que eu vendo? Me conta que eu simulo o impacto da Reforma." } 
+      detail: { question: "Quero te contar sobre um desafio que estou enfrentando na minha empresa em relação à Reforma Tributária" } 
     }));
   };
 
@@ -50,20 +50,20 @@ export function NexusClaraCard() {
               Clara AI
             </p>
             <h3 className="font-semibold text-foreground">
-              Vou te ajudar a calcular
+              Posso te ajudar?
             </h3>
           </div>
         </div>
 
         {/* Description */}
         <p className="text-sm text-muted-foreground mb-3">
-          Qual produto você quer simular? Posso explicar cada tributo enquanto você preenche.
+          O que você quer calcular ou entender melhor sobre a Reforma Tributária?
         </p>
 
         {/* Quote box */}
         <div className="bg-muted/50 border border-border/50 rounded-lg p-3 mb-4">
           <p className="text-sm text-foreground italic">
-            "Qual é o principal produto que você vende? Me conta que eu simulo o impacto da Reforma."
+            "Me conta um pouco sobre o desafio que você está enfrentando no momento. Posso te orientar!"
           </p>
         </div>
 
@@ -73,7 +73,7 @@ export function NexusClaraCard() {
           className="w-full gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md hover:shadow-lg transition-all group mb-4"
           size="default"
         >
-          Clique para responder
+          Clique para conversar
           <ArrowRight className="w-4 h-4 ml-auto group-hover:translate-x-1 transition-transform" />
         </Button>
 
