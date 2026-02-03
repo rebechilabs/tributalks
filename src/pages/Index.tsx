@@ -1,5 +1,6 @@
 import { Header } from "@/components/landing/Header";
 import { HeroSection } from "@/components/landing/HeroSection";
+import { ROICaseStudySection } from "@/components/landing/ROICaseStudySection";
 import { BenefitsCtaSection } from "@/components/landing/BenefitsCtaSection";
 import { JourneysSection } from "@/components/landing/JourneysSection";
 import { SocialProofSection } from "@/components/landing/SocialProofSection";
@@ -19,8 +20,8 @@ const Index = () => {
       <Header />
       <main>
         <HeroSection />
+        <ROICaseStudySection />
         <BenefitsCtaSection />
-        <JourneysSection />
         <SocialProofSection />
         <CredibilitySection />
         <HowItWorksSection />
