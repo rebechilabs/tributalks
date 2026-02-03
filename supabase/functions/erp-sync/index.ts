@@ -972,13 +972,13 @@ class ContaAzulAdapter implements ERPAdapter {
     try {
       await delay(RATE_LIMITS.contaazul.delayMs);
       
-      // API v2 - Endpoint correto: /v1/notas-fiscais com filtros de data
+      // API v2 - Endpoint: /v1/notas-fiscais com filtros de data (documentação oficial)
       const dataFinal = new Date().toISOString().split('T')[0];
       const dataInicial = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       
-      // tamanho_pagina deve ser 10, 20, 50 ou 100 (máximo permitido pela API)
+      // Conforme documentação: tamanho_pagina=200 é permitido para notas fiscais
       const response = await this.makeRequest(
-        `/v1/notas-fiscais?data_inicial=${dataInicial}&data_final=${dataFinal}&pagina=1&tamanho_pagina=100`, 
+        `/v1/notas-fiscais?data_inicial=${dataInicial}&data_final=${dataFinal}&pagina=1&tamanho_pagina=200`, 
         credentials
       );
       
