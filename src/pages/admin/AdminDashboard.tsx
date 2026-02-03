@@ -17,7 +17,8 @@ import {
   TrendingUp,
   ArrowRight,
   BarChart3,
-  Activity
+  Activity,
+  Brain
 } from "lucide-react";
 
 interface AdminStats {
@@ -161,12 +162,19 @@ export default function AdminDashboard() {
 
   const adminModules = [
     {
+      title: 'RAG Dashboard',
+      description: 'Embeddings, busca semântica e contexto da Clara AI',
+      href: '/admin/rag',
+      icon: Brain,
+      count: null,
+      highlight: true,
+    },
+    {
       title: 'Training Data Center',
       description: 'Dados de feedback e memória para fine-tuning da Clara',
       href: '/admin/training-data',
       icon: BarChart3,
       count: null,
-      highlight: true,
     },
     {
       title: 'Monitoramento Estratégico',

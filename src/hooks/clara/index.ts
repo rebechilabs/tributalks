@@ -39,3 +39,10 @@ export {
   type SemanticSearchResponse,
   type SemanticSearchOptions,
 } from './useSemanticSearch';
+
+// Integração de Agentes ao Chat
+export {
+  useClaraAgentIntegration,
+  type ClaraEnrichedContext,
+  type AgentSuggestion,
+} from './useClaraAgentIntegration';
