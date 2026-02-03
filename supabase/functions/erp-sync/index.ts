@@ -1014,20 +1014,16 @@ class ContaAzulAdapter implements ERPAdapter {
     const financeiro: UnifiedFinancial[] = [];
     console.log('[ContaAzul] MÓDULO: Financeiro');
 
-    // API v2: GET /v1/financeiro/eventos-financeiros/contas-a-receber/buscar
+    // API v2: GET /v1/financeiro/eventos-financeiros/contas-a-receber (SEM /buscar!)
     // Fonte: https://developers.contaazul.com/docs/financial-apis-openapi/v1
-    // Parâmetros: pagina, tamanho_pagina (10, 20, 50 ou 100!), data_vencimento_de, data_vencimento_ate
+    // Parâmetros: pagina, tamanho_pagina (10, 20, 50 ou 100!)
     try {
       await delay(RATE_LIMITS.contaazul.delayMs);
       console.log('[ContaAzul] Buscando Contas a Receber...');
       
-      // Parâmetros obrigatórios: data_vencimento_de e data_vencimento_ate (últimos 365 dias)
-      const dataFinalReceber = new Date().toISOString().split('T')[0];
-      const dataInicialReceber = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      
-      // Endpoint conforme documentação oficial - tamanho_pagina deve ser 10, 20, 50 ou 100!
+      // Endpoint correto conforme documentação oficial (SEM o sufixo /buscar)
       const recebivelResponse = await this.makeRequest(
-        `/v1/financeiro/eventos-financeiros/contas-a-receber/buscar?data_vencimento_de=${dataInicialReceber}&data_vencimento_ate=${dataFinalReceber}&pagina=1&tamanho_pagina=100`, 
+        `/v1/financeiro/eventos-financeiros/contas-a-receber?pagina=1&tamanho_pagina=100`, 
         credentials,
         'GET'
       );
@@ -1050,19 +1046,15 @@ class ContaAzulAdapter implements ERPAdapter {
       console.error('[ContaAzul syncFinanceiro] ❌ ERRO em Contas a Receber:', error);
     }
 
-    // API v2: GET /v1/financeiro/eventos-financeiros/contas-a-pagar/buscar
+    // API v2: GET /v1/financeiro/eventos-financeiros/contas-a-pagar (SEM /buscar!)
     // Fonte: https://developers.contaazul.com/docs/financial-apis-openapi/v1
     try {
       await delay(RATE_LIMITS.contaazul.delayMs);
       console.log('[ContaAzul] Buscando Contas a Pagar...');
       
-      // Parâmetros obrigatórios: data_vencimento_de e data_vencimento_ate (últimos 365 dias)
-      const dataFinalPagar = new Date().toISOString().split('T')[0];
-      const dataInicialPagar = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      
-      // Endpoint conforme documentação oficial - tamanho_pagina deve ser 10, 20, 50 ou 100!
+      // Endpoint correto conforme documentação oficial (SEM o sufixo /buscar)
       const pagavelResponse = await this.makeRequest(
-        `/v1/financeiro/eventos-financeiros/contas-a-pagar/buscar?data_vencimento_de=${dataInicialPagar}&data_vencimento_ate=${dataFinalPagar}&pagina=1&tamanho_pagina=100`, 
+        `/v1/financeiro/eventos-financeiros/contas-a-pagar?pagina=1&tamanho_pagina=100`, 
         credentials,
         'GET'
       );
