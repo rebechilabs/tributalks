@@ -1,4 +1,4 @@
-import { Target, BarChart3, Gauge, Check, Star, Lightbulb } from "lucide-react";
+import { Target, BarChart3, Gauge, Check, Star, Lightbulb, TrendingUp, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { CONFIG } from "@/config/site";
@@ -75,6 +75,43 @@ export function JourneysSection() {
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Cada plano resolve um job específico. Qual é o seu?
           </p>
+        </div>
+
+        {/* Case Study Card */}
+        <div className="max-w-2xl mx-auto mb-12 md:mb-16">
+          <div className="bg-card border border-border rounded-xl p-6 md:p-8 shadow-sm">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">Empresa de Logística</p>
+                <p className="text-sm text-muted-foreground">Faturamento R$ 8M/ano</p>
+              </div>
+            </div>
+            
+            <blockquote className="text-foreground italic mb-6 border-l-4 border-primary pl-4">
+              "Em 48 horas identificamos R$ 127 mil em créditos que estavam sendo perdidos. O TribuTalks se pagou 42 vezes no primeiro mês."
+            </blockquote>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-4 bg-success/10 rounded-lg">
+                <p className="text-2xl md:text-3xl font-bold text-success">R$ 127k</p>
+                <p className="text-sm text-muted-foreground">Créditos identificados</p>
+              </div>
+              <div className="text-center p-4 bg-primary/10 rounded-lg">
+                <div className="flex items-center justify-center gap-1">
+                  <p className="text-2xl md:text-3xl font-bold text-primary">42x</p>
+                  <TrendingUp className="w-5 h-5 text-primary" />
+                </div>
+                <p className="text-sm text-muted-foreground">Retorno sobre investimento</p>
+              </div>
+            </div>
+            
+            <p className="text-xs text-muted-foreground text-center mt-4">
+              *Caso ilustrativo baseado em resultados reais de clientes.
+            </p>
+          </div>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
