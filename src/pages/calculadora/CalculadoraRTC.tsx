@@ -15,6 +15,7 @@ import { TaxCalculatorForm, TaxFormData } from "@/components/rtc/TaxCalculatorFo
 import { TaxResultsDisplay } from "@/components/rtc/TaxResultsDisplay";
 import { CalculationHistory } from "@/components/rtc/CalculationHistory";
 import { ClaraContextualCard } from "@/components/common/ClaraContextualCard";
+import { ClaraSmartSetup } from "@/components/clara/ClaraSmartSetup";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Calculator, HelpCircle, ExternalLink, FileText, ArrowLeft, Zap } from "lucide-react";
@@ -27,6 +28,8 @@ export default function CalculadoraRTC() {
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
   const [formData, setFormData] = useState<TaxFormData | null>(null);
+  const [showSmartSetup, setShowSmartSetup] = useState(true);
+  const [prefillData, setPrefillData] = useState<Record<string, any> | null>(null);
 
   // DRE Integration params
   const fromDreId = searchParams.get('from_dre');
@@ -194,6 +197,18 @@ export default function CalculadoraRTC() {
               </Button>
             </AlertDescription>
           </Alert>
+        )}
+
+        {/* Clara Smart Setup - Pré-preenchimento inteligente */}
+        {showSmartSetup && activeTab === "form" && !results && (
+          <ClaraSmartSetup
+            tool="rtc"
+            onUseData={(data) => {
+              setPrefillData(data);
+              setShowSmartSetup(false);
+            }}
+            onSkip={() => setShowSmartSetup(false)}
+          />
         )}
 
         {/* Clara AI Card - Contextual Help */}
