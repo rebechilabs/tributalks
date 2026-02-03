@@ -7,3 +7,4 @@ export { ClaraInsightsPanel } from "./ClaraInsightsPanel";
 export { ClaraAgentBadge } from "./ClaraAgentBadge";
 export { ClaraAutonomousActionCard } from "./ClaraAutonomousActionCard";
 export { ClaraAutonomousPanel } from "./ClaraAutonomousPanel";
+export { ClaraActionsDrawer } from "./ClaraActionsDrawer";
