@@ -1026,9 +1026,8 @@ class ContaAzulAdapter implements ERPAdapter {
       const dataFinalReceber = new Date().toISOString().split('T')[0];
       const dataInicialReceber = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       
-      // Endpoint correto conforme documentação: GET /v1/financeiro/eventos-financeiros/contas-a-receber
       const recebivelResponse = await this.makeRequest(
-        `/v1/financeiro/eventos-financeiros/contas-a-receber?data_vencimento_de=${dataInicialReceber}&data_vencimento_ate=${dataFinalReceber}&pagina=1&tamanho_pagina=100`, 
+        `/v1/financeiro/eventos-financeiros/contas-a-receber?data_vencimento_de=${dataInicialReceber}&data_vencimento_ate=${dataFinalReceber}&pagina=1&tamanho_pagina=200`, 
         credentials,
         'GET'
       );
@@ -1059,9 +1058,8 @@ class ContaAzulAdapter implements ERPAdapter {
       const dataFinalPagar = new Date().toISOString().split('T')[0];
       const dataInicialPagar = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       
-      // Endpoint correto conforme documentação: GET /v1/financeiro/eventos-financeiros/contas-a-pagar
       const pagavelResponse = await this.makeRequest(
-        `/v1/financeiro/eventos-financeiros/contas-a-pagar?data_vencimento_de=${dataInicialPagar}&data_vencimento_ate=${dataFinalPagar}&pagina=1&tamanho_pagina=100`, 
+        `/v1/financeiro/eventos-financeiros/contas-a-pagar?data_vencimento_de=${dataInicialPagar}&data_vencimento_ate=${dataFinalPagar}&pagina=1&tamanho_pagina=200`, 
         credentials,
         'GET'
       );
