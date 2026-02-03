@@ -2143,6 +2143,99 @@ serve(async (req) => {
     );
     const agentPrompt = formatAgentContextForPrompt(agentSuggestion, agentInfo, pendingActions);
     
+    // ============================================
+    // CONFIDENCE SCORE CALCULATION
+    // ============================================
+    interface ConfidenceFactor {
+      type: 'knowledge' | 'memory' | 'pattern' | 'agent' | 'context';
+      label: string;
+      contribution: number;
+    }
+    
+    const confidenceFactors: ConfidenceFactor[] = [];
+    let baseConfidence = 30; // Base: modelo de IA generalista
+    
+    // +20 se tem conhecimento técnico (RAG semântico)
+    if (semanticContext.knowledge.length > 0) {
+      const avgSimilarity = semanticContext.knowledge.reduce((a, b) => a + b.similarity, 0) / semanticContext.knowledge.length;
+      const contribution = Math.round(20 * avgSimilarity);
+      baseConfidence += contribution;
+      confidenceFactors.push({
+        type: 'knowledge',
+        label: `${semanticContext.knowledge.length} fonte${semanticContext.knowledge.length > 1 ? 's' : ''} técnica${semanticContext.knowledge.length > 1 ? 's' : ''}`,
+        contribution,
+      });
+    }
+    
+    // +15 se tem conhecimento por keywords (fallback)
+    if (relevantKnowledge.length > 0 && semanticContext.knowledge.length === 0) {
+      const contribution = Math.min(15, relevantKnowledge.length * 5);
+      baseConfidence += contribution;
+      confidenceFactors.push({
+        type: 'knowledge',
+        label: 'Base legal encontrada',
+        contribution,
+      });
+    }
+    
+    // +15 se tem memórias do usuário
+    if (semanticContext.userContext.length > 0) {
+      const memories = semanticContext.userContext.filter(m => m.type === 'memory');
+      const patterns = semanticContext.userContext.filter(m => m.type === 'pattern');
+      
+      if (memories.length > 0) {
+        const contribution = Math.min(10, memories.length * 3);
+        baseConfidence += contribution;
+        confidenceFactors.push({
+          type: 'memory',
+          label: `${memories.length} memória${memories.length > 1 ? 's' : ''} relevante${memories.length > 1 ? 's' : ''}`,
+          contribution,
+        });
+      }
+      
+      if (patterns.length > 0) {
+        const avgConfidence = patterns.reduce((a, p) => a + ((p.metadata?.confidence as number) || 0.5), 0) / patterns.length;
+        const contribution = Math.round(5 * avgConfidence);
+        baseConfidence += contribution;
+        confidenceFactors.push({
+          type: 'pattern',
+          label: 'Padrão aprendido',
+          contribution,
+        });
+      }
+    }
+    
+    // +10 se tem agente especializado ativo
+    if (agentSuggestion && agentInfo) {
+      const priorityBonus = agentSuggestion.priority === 'high' ? 10 : agentSuggestion.priority === 'medium' ? 7 : 5;
+      baseConfidence += priorityBonus;
+      confidenceFactors.push({
+        type: 'agent',
+        label: `Agente ${agentSuggestion.agentType}`,
+        contribution: priorityBonus,
+      });
+    }
+    
+    // +10 se tem contexto financeiro do usuário
+    if (userContext.financeiro || userContext.score) {
+      const hasFinanceiro = userContext.financeiro !== null;
+      const hasScore = userContext.score !== null;
+      const contribution = (hasFinanceiro ? 5 : 0) + (hasScore ? 5 : 0);
+      if (contribution > 0) {
+        baseConfidence += contribution;
+        confidenceFactors.push({
+          type: 'context',
+          label: 'Dados da sua empresa',
+          contribution,
+        });
+      }
+    }
+    
+    // Cap em 95% (nunca 100% - transparência sobre incerteza da IA)
+    const finalConfidence = Math.min(95, baseConfidence);
+    
+    console.log(`Confidence score: ${finalConfidence}% with ${confidenceFactors.length} factors`);
+    
     // Logs de diagnóstico
     if (relevantKnowledge.length > 0) {
       console.log(`Found ${relevantKnowledge.length} keyword-matched knowledge entries`);
@@ -2467,7 +2560,11 @@ serve(async (req) => {
     // Aplica disclaimer automaticamente no pós-processamento
     const finalMessage = appendDisclaimer(assistantMessage, userPlan);
 
-    return new Response(JSON.stringify({ message: finalMessage }), {
+    return new Response(JSON.stringify({ 
+      message: finalMessage,
+      confidence_score: finalConfidence,
+      confidence_factors: confidenceFactors,
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {

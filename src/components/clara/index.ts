@@ -8,3 +8,12 @@ export { ClaraAgentBadge } from "./ClaraAgentBadge";
 export { ClaraAutonomousActionCard } from "./ClaraAutonomousActionCard";
 export { ClaraAutonomousPanel } from "./ClaraAutonomousPanel";
 export { ClaraActionsDrawer } from "./ClaraActionsDrawer";
+
+// Indicador de Confiança
+export { 
+  ClaraConfidenceIndicator, 
+  getConfidenceLevel, 
+  parseConfidenceFromResponse,
+  type ConfidenceData,
+  type ConfidenceFactor,
+} from "./ClaraConfidenceIndicator";
