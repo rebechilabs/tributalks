@@ -180,7 +180,7 @@ async function buildUserContext(supabase: SupabaseClient, userId: string): Promi
     erpConnectionResult,
     onboardingResult,
   ] = await Promise.all([
-    supabase.from("profiles").select("nome, plano, streak_count").eq("user_id", userId).maybeSingle(),
+    supabase.from("profiles").select("nome, plano, current_streak").eq("user_id", userId).maybeSingle(),
     supabase.from("company_profile").select("razao_social, cnpj_principal, setor, regime_tributario").eq("user_id", userId).maybeSingle(),
     supabase.from("tax_score").select("score_total, score_grade, score_conformidade, score_eficiencia, score_risco, score_documentacao, score_gestao, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("company_dre").select("calc_receita_bruta, calc_margem_bruta, calc_margem_liquida, calc_ebitda, calc_despesas_operacionais_total, reforma_impacto_percentual, updated_at, input_vendas_servicos, input_vendas_produtos, input_salarios_encargos, input_prolabore, input_custo_mao_obra_direta, input_aluguel, input_marketing_publicidade, input_contador_juridico").eq("user_id", userId).order("updated_at", { ascending: false }).limit(1).maybeSingle(),
@@ -278,7 +278,7 @@ async function buildUserContext(supabase: SupabaseClient, userId: string): Promi
     },
     
     engajamento: {
-      streakDias: profile?.streak_count || 0,
+      streakDias: profile?.current_streak || 0,
       notificacoesNaoLidas: unreadNotifications,
     },
     
