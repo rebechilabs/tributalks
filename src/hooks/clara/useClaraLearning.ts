@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -12,6 +12,8 @@ export interface LearnedPattern {
   pattern_value: Record<string, unknown>;
   confidence: number;
   times_observed: number;
+  decay_rate?: number;
+  last_observed_at?: string;
 }
 
 export interface UserDecision {
@@ -33,6 +35,18 @@ export interface UserPreferences {
   avoidedTopics: string[];
 }
 
+export interface MemoryStats {
+  total_patterns: number;
+  active_patterns: number;
+  high_confidence_patterns: number;
+  total_memories: number;
+  active_memories: number;
+  avg_pattern_confidence: number;
+  avg_memory_importance: number;
+  oldest_pattern_days: number;
+  most_used_pattern_key: string;
+}
+
 // ============================================
 // HOOK - Sistema de Aprendizado
 // ============================================
@@ -40,6 +54,7 @@ export interface UserPreferences {
 export function useClaraLearning() {
   const { user } = useAuth();
   const [patterns, setPatterns] = useState<LearnedPattern[]>([]);
+  const [stats, setStats] = useState<MemoryStats | null>(null);
   const [loading, setLoading] = useState(false);
 
   // Busca padrões aprendidos do usuário
@@ -221,8 +236,76 @@ export function useClaraLearning() {
     );
   }, [recordDecision]);
 
+  // Reforça um padrão existente (aumenta confiança)
+  const reinforcePattern = useCallback(async (
+    patternType: string,
+    patternKey: string,
+    boost = 0.1
+  ): Promise<{ confidence: number; timesObserved: number } | null> => {
+    if (!user?.id) return null;
+    
+    try {
+      const { data, error } = await supabase.rpc('reinforce_pattern', {
+        p_user_id: user.id,
+        p_pattern_type: patternType,
+        p_pattern_key: patternKey,
+        p_boost: boost,
+      });
+
+      if (error) throw error;
+      
+      const result = data?.[0];
+      if (result) {
+        // Atualiza estado local
+        setPatterns(prev => prev.map(p => 
+          p.pattern_type === patternType && p.pattern_key === patternKey
+            ? { ...p, confidence: result.new_confidence, times_observed: result.new_times_observed }
+            : p
+        ));
+        return { 
+          confidence: result.new_confidence, 
+          timesObserved: result.new_times_observed 
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Erro ao reforçar padrão:', error);
+      return null;
+    }
+  }, [user?.id]);
+
+  // Busca estatísticas de memória evolutiva
+  const fetchMemoryStats = useCallback(async (): Promise<MemoryStats | null> => {
+    if (!user?.id) return null;
+    
+    try {
+      const { data, error } = await supabase.rpc('get_memory_stats', {
+        p_user_id: user.id,
+      });
+
+      if (error) throw error;
+      
+      const result = data?.[0] as MemoryStats | undefined;
+      if (result) {
+        setStats(result);
+      }
+      return result || null;
+    } catch (error) {
+      console.error('Erro ao buscar estatísticas:', error);
+      return null;
+    }
+  }, [user?.id]);
+
+  // Carrega estatísticas ao montar
+  useEffect(() => {
+    if (user?.id) {
+      fetchMemoryStats();
+    }
+  }, [user?.id, fetchMemoryStats]);
+
   return {
     patterns,
+    stats,
     loading,
     fetchPatterns,
     recordDecision,
@@ -230,6 +313,8 @@ export function useClaraLearning() {
     inferPreferences,
     recordToolUsage,
     recordCommunicationPreference,
+    reinforcePattern,
+    fetchMemoryStats,
   };
 }
 
