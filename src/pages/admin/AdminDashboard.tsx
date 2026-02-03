@@ -162,12 +162,19 @@ export default function AdminDashboard() {
 
   const adminModules = [
     {
+      title: 'Saúde da IA',
+      description: 'Custos, qualidade e uso dos agentes Clara em tempo real',
+      href: '/admin/ai-health',
+      icon: Activity,
+      count: null,
+      highlight: true,
+    },
+    {
       title: 'RAG Dashboard',
       description: 'Embeddings, busca semântica e contexto da Clara AI',
       href: '/admin/rag',
       icon: Brain,
       count: null,
-      highlight: true,
     },
     {
       title: 'Training Data Center',
