@@ -29,8 +29,10 @@ import { StreakDisplay } from "@/components/achievements";
 import { SwitchCompanyCard } from "@/components/profile/SwitchCompanyCard";
 import { QuickAddCnpj } from "@/components/profile/QuickAddCnpj";
 import { ClaraInsightsPanel, ClaraAutonomousPanel } from "@/components/clara";
+import { SessionContextModal, MissionDashboard } from "@/components/roadmap";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAchievements } from "@/hooks/useAchievements";
+import { useAdaptiveRoadmap, SessionContext } from "@/hooks/useAdaptiveRoadmap";
 import { useQueryClient } from "@tanstack/react-query";
 import { useGenerateInsights } from "@/hooks/useGenerateInsights";
 
@@ -223,8 +225,49 @@ const Dashboard = () => {
   // Consolidated dashboard data hook - single batch request
   const { data: dashboardData, isLoading: dashboardLoading } = useDashboardData();
   
+  // Adaptive Roadmap - Jornada personalizada
+  const { 
+    roadmap, 
+    preferences,
+    shouldShowWelcome,
+    isGenerating,
+    generateRoadmap,
+    completeStep,
+    skipStep,
+    submitFeedback,
+    dismissWelcomeModal,
+  } = useAdaptiveRoadmap();
+  
+  const [showSessionModal, setShowSessionModal] = useState(false);
+  
+  // Mostrar modal de contexto quando necessário
+  useEffect(() => {
+    if (shouldShowWelcome && !roadmap && !dashboardLoading) {
+      // Delay para não aparecer imediatamente
+      const timer = setTimeout(() => {
+        setShowSessionModal(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [shouldShowWelcome, roadmap, dashboardLoading]);
+  
+  const handleSessionSubmit = (context: SessionContext) => {
+    generateRoadmap(context);
+    setShowSessionModal(false);
+  };
+  
+  const handleSessionSkip = () => {
+    dismissWelcomeModal();
+    setShowSessionModal(false);
+  };
+  
+  const handleRefreshRoadmap = () => {
+    setShowSessionModal(true);
+  };
+  
   // Gera insights proativos da Clara ao carregar (uma vez por sessão)
   useGenerateInsights();
+
   
   // Fetch company profile for CNPJ management
   useEffect(() => {
@@ -392,6 +435,15 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout title="Dashboard">
+      {/* Session Context Modal - Adaptive Roadmap */}
+      <SessionContextModal
+        open={showSessionModal}
+        onSubmit={handleSessionSubmit}
+        onSkip={handleSessionSkip}
+        isLoading={isGenerating}
+        userName={profile?.nome}
+      />
+      
       {/* Quick Diagnostic Modal */}
       <QuickDiagnosticModal
         open={showQuickDiagnostic}
@@ -412,6 +464,20 @@ const Dashboard = () => {
           </div>
           <StreakDisplay streakData={dashboardData?.streakData} showLongest />
         </div>
+        
+        {/* 🎯 Adaptive Roadmap - Mission Dashboard */}
+        {roadmap && preferences?.roadmapEnabled && (
+          <div className="mb-6">
+            <MissionDashboard
+              roadmap={roadmap}
+              onCompleteStep={completeStep}
+              onSkipStep={skipStep}
+              onFeedback={(feedback) => submitFeedback({ feedback })}
+              onRefresh={handleRefreshRoadmap}
+              isRefreshing={isGenerating}
+            />
+          </div>
+        )}
         
         {/* Onboarding - First Mission (appears for new users) */}
         <div className="mb-6">

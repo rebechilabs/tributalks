@@ -595,6 +595,75 @@ export type Database = {
         }
         Relationships: []
       }
+      clara_roadmaps: {
+        Row: {
+          completed_steps: string[] | null
+          created_at: string | null
+          data_signals: Json | null
+          decision_style: string | null
+          effectiveness_score: number | null
+          estimated_total_time: number | null
+          feedback_text: string | null
+          id: string
+          model_used: string | null
+          session_date: string
+          session_goal: string | null
+          skipped_steps: string[] | null
+          steps: Json | null
+          time_available: string | null
+          time_spent: number | null
+          updated_at: string | null
+          urgent_concern: string | null
+          user_feedback: string | null
+          user_id: string
+          user_priority: string | null
+        }
+        Insert: {
+          completed_steps?: string[] | null
+          created_at?: string | null
+          data_signals?: Json | null
+          decision_style?: string | null
+          effectiveness_score?: number | null
+          estimated_total_time?: number | null
+          feedback_text?: string | null
+          id?: string
+          model_used?: string | null
+          session_date?: string
+          session_goal?: string | null
+          skipped_steps?: string[] | null
+          steps?: Json | null
+          time_available?: string | null
+          time_spent?: number | null
+          updated_at?: string | null
+          urgent_concern?: string | null
+          user_feedback?: string | null
+          user_id: string
+          user_priority?: string | null
+        }
+        Update: {
+          completed_steps?: string[] | null
+          created_at?: string | null
+          data_signals?: Json | null
+          decision_style?: string | null
+          effectiveness_score?: number | null
+          estimated_total_time?: number | null
+          feedback_text?: string | null
+          id?: string
+          model_used?: string | null
+          session_date?: string
+          session_goal?: string | null
+          skipped_steps?: string[] | null
+          steps?: Json | null
+          time_available?: string | null
+          time_spent?: number | null
+          updated_at?: string | null
+          urgent_concern?: string | null
+          user_feedback?: string | null
+          user_id?: string
+          user_priority?: string | null
+        }
+        Relationships: []
+      }
       clara_user_decisions: {
         Row: {
           agent_type: string | null
@@ -3993,6 +4062,57 @@ export type Database = {
         }
         Relationships: []
       }
+      user_session_preferences: {
+        Row: {
+          avg_session_duration: number | null
+          business_stage: string | null
+          created_at: string | null
+          decision_style: string | null
+          id: string
+          last_session_date: string | null
+          learning_pattern: string | null
+          main_pain: string | null
+          preferred_tools: string[] | null
+          roadmap_enabled: boolean | null
+          show_welcome_modal: boolean | null
+          sophistication_level: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          avg_session_duration?: number | null
+          business_stage?: string | null
+          created_at?: string | null
+          decision_style?: string | null
+          id?: string
+          last_session_date?: string | null
+          learning_pattern?: string | null
+          main_pain?: string | null
+          preferred_tools?: string[] | null
+          roadmap_enabled?: boolean | null
+          show_welcome_modal?: boolean | null
+          sophistication_level?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          avg_session_duration?: number | null
+          business_stage?: string | null
+          created_at?: string | null
+          decision_style?: string | null
+          id?: string
+          last_session_date?: string | null
+          learning_pattern?: string | null
+          main_pain?: string | null
+          preferred_tools?: string[] | null
+          roadmap_enabled?: boolean | null
+          show_welcome_modal?: boolean | null
+          sophistication_level?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       workflow_progress: {
         Row: {
           completed_at: string | null
@@ -4184,6 +4304,10 @@ export type Database = {
           patterns_decayed: number
           patterns_removed: number
         }[]
+      }
+      calculate_roadmap_effectiveness: {
+        Args: { p_roadmap_id: string }
+        Returns: number
       }
       create_autonomous_action: {
         Args: {
@@ -4391,6 +4515,10 @@ export type Database = {
           pattern_value: Json
           similarity: number
         }[]
+      }
+      update_user_sophistication: {
+        Args: { p_user_id: string }
+        Returns: number
       }
       validate_referral_code: {
         Args: { code_to_check: string }
