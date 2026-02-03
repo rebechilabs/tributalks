@@ -1,74 +1,154 @@
 
-
-# Correções nos Termos de Uso
+# Plano: Humanizar a Clara AI com Memória Conversacional
 
 ## Resumo
 
-Atualizar a página de Termos de Uso para alinhar com a estrutura de planos atual e corrigir inconsistências identificadas.
+Transformar a experiência da Clara para ser mais humana - ela vai reconhecer o usuário pelo nome, lembrar de conversas passadas, e ter um fluxo conversacional mais natural.
 
 ---
 
-## Alterações Necessárias
+## Diagnóstico do Problema
 
-### 1. Seção 3.3 - Correção de Typo
-| Atual | Correto |
-|-------|---------|
-| "TribuTech" | "TribuTalks" |
+Atualmente a Clara tem toda a infraestrutura de memória (tabelas `clara_memory`, `clara_conversations`), mas:
 
-**Linha 53**
-
----
-
-### 2. Seção 4.1 - Atualização dos Planos e Preços
-
-| Atual | Correto |
-|-------|---------|
-| Free, Básico (R$ 99), Profissional (R$ 197), Premium (R$ 500) | Grátis, Starter (R$ 297/mês), Navigator (R$ 1.997/mês), Professional (R$ 2.997/mês) e Enterprise (sob consulta) |
-
-**Linha 59**
+1. **Mensagem de boas-vindas hardcoded**: A primeira mensagem é estática no código
+2. **Conversas não são salvas**: O histórico some ao sair da página
+3. **Memória não é recuperada**: Quando o usuário volta, a Clara não lembra de nada
+4. **Nome não é usado na entrada**: O usuário já está logado mas a Clara não personaliza a saudação inicial
 
 ---
 
-### 3. Seção 6 - Consultorias (Reformulação Completa)
+## Solução Proposta
 
-**Título atual:** "6. CONSULTORIAS (PLANO PREMIUM)"
+### Fase 1: Saudação Personalizada Dinâmica
 
-**Novo título:** "6. CONSULTORIAS (PLANO ENTERPRISE)"
+**Arquivo:** `src/pages/ClaraAI.tsx`
 
-| Item | Atual | Novo |
-|------|-------|------|
-| 6.1 | "O plano Premium inclui 2 sessões de 30 min/mês" | "O plano Enterprise inclui consultorias ilimitadas com especialistas da Rebechi & Silva Advogados Associados" |
-| 6.2 | Mantido | Mantido (natureza orientativa) |
-| 6.3 | "Sessões não cumulativas" | **REMOVER** (não aplicável a ilimitado) |
-| 6.4 | Mantido | Mantido (disponibilidade de horários) |
-| 6.5 | Mantido | Mantido (política de cancelamento 24h) |
+| Antes | Depois |
+|-------|--------|
+| Mensagem inicial hardcoded | Saudação dinâmica baseada no perfil |
+| "Olá! Sou a Clara AI..." | "Oi [Nome]! Que bom te ver de novo..." ou "Oi! Ainda não sei seu nome..." |
 
-**Linhas 87-94**
-
----
-
-### 4. Seção 9.4 - Atualização dos Nomes de Planos no SLA
-
-| Atual | Correto |
-|-------|---------|
-| "planos Básico e Profissional" e "plano Premium" | "planos Starter e Professional" e "plano Enterprise" |
-
-**Linha 134**
+**Comportamento:**
+- Se tem nome no perfil → usa o nome
+- Se não tem nome → pergunta gentilmente
+- Se tem conversas anteriores → menciona ("Lembro que você estava perguntando sobre...")
 
 ---
 
-## Arquivo a Modificar
+### Fase 2: Persistência de Conversas
 
-`src/pages/Termos.tsx`
+**Arquivo:** `src/pages/ClaraAI.tsx`
+
+Salvar cada mensagem na tabela `clara_conversations`:
+- Ao enviar mensagem do usuário
+- Ao receber resposta da Clara
+- Incluir contexto da tela e session_id
+
+---
+
+### Fase 3: Recuperação de Contexto Anterior
+
+**Arquivo:** `src/pages/ClaraAI.tsx`
+
+Ao carregar a página:
+1. Buscar últimas 5 conversas do usuário
+2. Se há conversas recentes (< 24h) → mostrar resumo
+3. Se há conversas antigas → oferecer "Continuar de onde parou?"
+
+---
+
+### Fase 4: Prompt Enriquecido no Backend
+
+**Arquivo:** `supabase/functions/clara-assistant/index.ts`
+
+Adicionar ao contexto do sistema:
+- Últimas 3 perguntas do usuário (resumidas)
+- Preferências aprendidas
+- Tópicos de interesse recorrentes
+
+---
+
+## Arquivos a Modificar
+
+1. `src/pages/ClaraAI.tsx`
+   - Remover mensagem hardcoded
+   - Adicionar lógica de saudação dinâmica
+   - Implementar persistência de conversas
+   - Carregar histórico ao iniciar
+
+2. `supabase/functions/clara-assistant/index.ts`
+   - Adicionar seção "HISTÓRICO CONVERSACIONAL" ao prompt
+   - Buscar últimas conversas do usuário
+   - Incluir resumo no contexto
+
+---
+
+## Exemplo de Experiência Final
+
+**Primeira visita (sem nome):**
+```
+Clara: "Oi! 👋 Sou a Clara, sua copiloto tributária. 
+       Como posso te chamar?"
+```
+
+**Visita de usuário conhecido:**
+```
+Clara: "Oi Roberto! Bom te ver de novo. 🎯
+       Da última vez falamos sobre Split Payment. 
+       Quer continuar ou tem outra dúvida?"
+```
+
+**Retorno após dias:**
+```
+Clara: "Oi Roberto! Faz uns dias que não conversamos.
+       Vi que seu Score melhorou 15 pontos. 🎉
+       Como posso ajudar hoje?"
+```
+
+---
+
+## Detalhes Técnicos
+
+### Estrutura da Saudação Dinâmica
+
+```text
+SE usuário.nome existe:
+  SE conversas_ultimas_24h.length > 0:
+    "Oi {nome}! Continuamos de onde paramos?"
+  SE NÃO:
+    "Oi {nome}! Como posso ajudar hoje?"
+SE NÃO:
+  "Oi! Ainda não sei seu nome. Como posso te chamar?"
+```
+
+### Salvamento de Conversas
+
+```text
+Ao enviar/receber mensagem:
+1. Gerar session_id (se não existir)
+2. Inserir na tabela clara_conversations
+3. Incluir: user_id, role, content, screen_context, created_at
+```
+
+### Contexto para o LLM
+
+```text
+HISTÓRICO CONVERSACIONAL:
+- Última conversa: há 2 dias
+- Último tópico: "Split Payment e impacto no caixa"
+- Perguntas frequentes: regime tributário, prazos reforma
+- Preferência de resposta: técnica com exemplos
+```
 
 ---
 
 ## Resultado Esperado
 
-Os Termos de Uso refletirão a estrutura de planos atual:
-- **Grátis**: Acesso limitado (sem Clara AI)
-- **Starter**: R$ 297/mês (30 mensagens/dia Clara)
-- **Navigator**: R$ 1.997/mês (100 mensagens/dia Clara)
-- **Professional**: R$ 2.997/mês (ilimitado Clara)
-- **Enterprise**: Sob consulta (ilimitado + consultorias + white label)
+A Clara vai parecer uma pessoa real que:
+- Conhece o usuário pelo nome
+- Lembra das conversas anteriores
+- Continua de onde parou
+- Aprende preferências ao longo do tempo
 
+Isso transforma a experiência de "chatbot genérico" para "assistente pessoal".
