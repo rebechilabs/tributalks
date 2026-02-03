@@ -7,13 +7,13 @@ const steps = [
     number: "1",
     icon: Upload,
     title: "Diagnóstico Rápido",
-    description: "Faça upload de 3 XMLs ou conecte seu ERP. Em 2 minutos você vê o impacto real da Reforma.",
+    description: "Faça upload de 3 XMLs ou conecte seu ERP. Em 2 minutos você vê o impacto real da Reforma na sua empresa com o Score Tributário.",
   },
   {
     number: "2",
     icon: Search,
     title: "Identifique Oportunidades",
-    description: "Radar analisa automaticamente e encontra créditos tributários não aproveitados (média R$ 47k).",
+    description: "Radar analisa automaticamente e encontra créditos tributários não aproveitados (média R$ 47k). 61+ oportunidades fiscais mapeadas.",
   },
   {
     number: "3",
@@ -82,7 +82,7 @@ export function HowItWorksSection() {
               size="lg"
               className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-10 py-6 text-lg group"
             >
-              Verifique a Saúde da Sua Empresa
+              Verificar a Saúde da Sua Empresa
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           </a>
