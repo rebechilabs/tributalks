@@ -10,7 +10,8 @@ import {
   Truck,
   UtensilsCrossed,
   GraduationCap,
-  Store
+  Store,
+  Palette
 } from "lucide-react";
 
 // Step 1: Setor options - expanded with new sectors
@@ -27,6 +28,7 @@ export const SETOR_OPTIONS = [
   { value: 'educacao', label: 'Educação', icon: GraduationCap, description: 'Escola, curso, treinamento' },
   { value: 'energia', label: 'Energia Solar', icon: Sun, description: 'Geração, instalação solar' },
   { value: 'ecommerce', label: 'E-commerce', icon: Store, description: 'Loja online, marketplace' },
+  { value: 'artesanato', label: 'Artesanato', icon: Palette, description: 'Artesão, produtos manuais, arte popular' },
 ];
 
 // Step 2: Porte/Faturamento options
@@ -100,6 +102,15 @@ export const SECTOR_CHARACTERISTICS: Record<string, { field: string; label: stri
     { field: 'cursos_livres', label: 'Cursos livres / Treinamentos' },
     { field: 'fins_lucrativos', label: 'Instituição COM fins lucrativos', description: 'Se não marcar, pode ser imune' },
     { field: 'investe_tecnologia_educacional', label: 'Invisto em tecnologia educacional', description: 'Dedução IR' },
+  ],
+  artesanato: [
+    { field: 'tem_carteira_artesao', label: 'Possuo Carteira Nacional do Artesão', description: 'Benefícios PAB' },
+    { field: 'artesanato_regional', label: 'Produzo artesanato regional/típico', description: 'Isenção ICMS Convênio 32/75' },
+    { field: 'mei_artesao', label: 'Sou MEI como artesão', description: 'CNAE específico de artesanato' },
+    { field: 'venda_direta_consumidor', label: 'Vendo diretamente ao consumidor final', description: 'Sem ST' },
+    { field: 'participa_feiras', label: 'Participo de feiras e exposições', description: 'Regime especial eventos' },
+    { field: 'exporta_artesanato', label: 'Exporto produtos artesanais', description: 'Imunidade exportação' },
+    { field: 'usa_insumos_naturais', label: 'Uso matérias-primas naturais/recicladas', description: 'Isenção IPI' },
   ],
 };
 
@@ -224,6 +235,15 @@ export interface ProfileFormData {
   cursos_livres: boolean;
   fins_lucrativos: boolean;
   investe_tecnologia_educacional: boolean;
+  
+  // Artesanato
+  tem_carteira_artesao: boolean;
+  artesanato_regional: boolean;
+  mei_artesao: boolean;
+  venda_direta_consumidor: boolean;
+  participa_feiras: boolean;
+  exporta_artesanato: boolean;
+  usa_insumos_naturais: boolean;
 }
 
 export const INITIAL_PROFILE_DATA: ProfileFormData = {
@@ -300,4 +320,12 @@ export const INITIAL_PROFILE_DATA: ProfileFormData = {
   cursos_livres: false,
   fins_lucrativos: true, // Default true (most are for-profit)
   investe_tecnologia_educacional: false,
+  // Artesanato
+  tem_carteira_artesao: false,
+  artesanato_regional: false,
+  mei_artesao: false,
+  venda_direta_consumidor: false,
+  participa_feiras: false,
+  exporta_artesanato: false,
+  usa_insumos_naturais: false,
 };
