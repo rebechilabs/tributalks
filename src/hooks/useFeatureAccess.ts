@@ -44,6 +44,7 @@ export type FeatureKey =
   | 'score_tributario'      // ILIMITADO para todos
   | 'split_payment'         // ILIMITADO para todos
   | 'comparativo_regimes'   // ILIMITADO para todos
+  | 'simpronto'             // STARTER+ (simulação 2027)
   | 'calculadora_rtc'       // STARTER+
   | 'calculadora_nbs'       // NAVIGATOR+
   // Notícias
@@ -51,9 +52,9 @@ export type FeatureKey =
   | 'timeline_reforma'      // STARTER+ (calendário prazos)
   | 'news_email_alerts'     // PROFESSIONAL+
   // Diagnóstico
+  | 'dre_inteligente'       // STARTER+ (liberado para Starter)
   | 'importar_xmls'         // PROFESSIONAL+
   | 'radar_creditos'        // PROFESSIONAL+
-  | 'dre_inteligente'       // PROFESSIONAL+
   | 'oportunidades'         // PROFESSIONAL+
   | 'margem_ativa'          // PROFESSIONAL+
   | 'nexus'                 // PROFESSIONAL+
@@ -82,6 +83,7 @@ export const FEATURE_CONFIG: Record<FeatureKey, FeatureConfig> = {
   score_tributario: { minPlan: 'FREE', limit: 'unlimited' },
   split_payment: { minPlan: 'FREE', limit: 'unlimited' },
   comparativo_regimes: { minPlan: 'FREE', limit: 'unlimited' },
+  simpronto: { minPlan: 'STARTER', limit: 'unlimited' },  // Starter+
   
   // Calculadoras - níveis diferentes
   calculadora_rtc: { minPlan: 'STARTER' },
@@ -92,10 +94,10 @@ export const FEATURE_CONFIG: Record<FeatureKey, FeatureConfig> = {
   timeline_reforma: { minPlan: 'STARTER' },
   news_email_alerts: { minPlan: 'PROFESSIONAL' },
   
-  // Diagnóstico - PROFESSIONAL+
+  // Diagnóstico - Níveis diferentes
+  dre_inteligente: { minPlan: 'STARTER' },  // DRE liberado para Starter
   importar_xmls: { minPlan: 'PROFESSIONAL' },
   radar_creditos: { minPlan: 'PROFESSIONAL' },
-  dre_inteligente: { minPlan: 'PROFESSIONAL' },
   oportunidades: { minPlan: 'PROFESSIONAL' },
   margem_ativa: { minPlan: 'PROFESSIONAL' },
   nexus: { minPlan: 'PROFESSIONAL' },
@@ -144,7 +146,9 @@ export const CLARA_TOOL_SCOPE: Record<UserPlan, string[]> = {
     'split_payment', 
     'comparativo_regimes', 
     'calculadora_rtc', 
-    'timeline_reforma'
+    'timeline_reforma',
+    'dre_inteligente',
+    'simpronto'
   ],
   'NAVIGATOR': [
     'score_tributario', 

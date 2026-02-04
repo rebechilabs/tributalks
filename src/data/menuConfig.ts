@@ -47,37 +47,53 @@ export const CLARA_AI_ITEM: MenuItem = {
 };
 
 /**
- * MENU STARTER (R$ 397/mês)
- * Filosofia: Educacional e exploratório
- * Clara com limite de 20 msgs/dia, foco em Score e Calculadoras básicas
+ * MENU STARTER V2 (R$ 297/mês)
+ * Filosofia: Mesmo layout modular do Professional, mas apenas módulo ENTENDER
+ * Clara com limite de 30 msgs/dia, foco em diagnóstico e simulação
  */
 export const MENU_STARTER: MenuElement[] = [
+  // Clara AI no topo
   {
     title: '',
     items: [
-      { ...CLARA_AI_ITEM, badge: '20/dia', description: 'Pergunte sobre a Reforma' },
+      { ...CLARA_AI_ITEM, badge: '30/dia', description: 'Pergunte sobre a Reforma' },
     ]
   },
+  // HOME
   {
-    title: 'Diagnóstico',
+    title: '',
     items: [
-      { label: 'Meu Score', href: '/dashboard/score-tributario', icon: Trophy, description: 'Avaliação fiscal' },
-      { label: 'Dashboard', href: '/dashboard', icon: Home },
+      { label: 'Home', href: '/dashboard/home', icon: Home },
     ]
   },
+  // Módulo ENTENDER - mesmo layout do Professional
   {
-    title: 'Simuladores',
+    title: 'ENTENDER MEU NEGÓCIO',
     collapsible: true,
+    moduleHref: '/dashboard/entender',
     items: [
-      { label: 'Calculadora RTC', href: '/calculadora/rtc', icon: Calculator, badge: 'NCM' },
-      { label: 'Split Payment', href: '/calculadora/split-payment', icon: Wallet },
-      { label: 'Comparativo de Regimes', href: '/calculadora/comparativo-regimes', icon: Scale },
+      { label: 'DRE Inteligente', href: '/dashboard/entender/dre', icon: BarChart3, description: 'Base para análises' },
+      { label: 'Score Tributário', href: '/dashboard/entender/score', icon: Trophy, description: 'Diagnóstico 0-1000' },
+      { label: 'Comparativo de Regimes', href: '/calculadora/comparativo-regimes', icon: Scale, description: 'Qual regime ideal?' },
+      { label: 'Simpronto', href: '/dashboard/entender/simpronto', icon: Lightbulb, description: 'Simulação 2027', badge: '2027' },
     ]
   },
+  // PIT - Prazos Importantes Tributários
   {
     title: 'PIT',
+    collapsible: true,
     items: [
       { label: 'Timeline 2026-2033', href: '/dashboard/timeline-reforma', icon: MapPin },
+    ]
+  },
+  { type: 'divider' as const },
+  // Preview de ferramentas PRO (FOMO)
+  {
+    title: 'Ferramentas Pro',
+    items: [
+      { label: 'Radar de Créditos', href: '/upgrade?feature=radar', icon: FileText, locked: true, description: 'Análise de XMLs' },
+      { label: 'NEXUS', href: '/upgrade?feature=nexus', icon: LayoutDashboard, locked: true, description: 'Centro de Comando' },
+      { label: 'Margem Ativa', href: '/upgrade?feature=margem', icon: Target, locked: true, description: 'Precificação inteligente' },
     ]
   },
   { type: 'divider' as const },
@@ -284,10 +300,10 @@ export function getDefaultRouteForPlan(plan: PlanType): string {
   switch (plan) {
     case 'PROFESSIONAL':
     case 'ENTERPRISE':
+    case 'STARTER':  // Starter agora usa Home Inteligente
       return '/dashboard/home';
     case 'NAVIGATOR':
       return '/dashboard';
-    case 'STARTER':
     default:
       return '/dashboard/score-tributario';
   }
