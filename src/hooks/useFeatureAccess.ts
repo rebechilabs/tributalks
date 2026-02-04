@@ -96,9 +96,9 @@ export const FEATURE_CONFIG: Record<FeatureKey, FeatureConfig> = {
   
   // Diagnóstico - Níveis diferentes
   dre_inteligente: { minPlan: 'STARTER' },  // DRE liberado para Starter
-  importar_xmls: { minPlan: 'PROFESSIONAL' },
-  radar_creditos: { minPlan: 'PROFESSIONAL' },
-  oportunidades: { minPlan: 'PROFESSIONAL' },
+  importar_xmls: { minPlan: 'NAVIGATOR' },  // Navigator+ pode importar XMLs
+  radar_creditos: { minPlan: 'NAVIGATOR' }, // Navigator+ tem Radar de Créditos
+  oportunidades: { minPlan: 'NAVIGATOR' },  // Navigator+ tem Oportunidades Fiscais
   margem_ativa: { minPlan: 'PROFESSIONAL' },
   nexus: { minPlan: 'PROFESSIONAL' },
   relatorios_pdf: { minPlan: 'NAVIGATOR' },

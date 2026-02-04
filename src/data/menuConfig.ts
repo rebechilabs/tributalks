@@ -105,7 +105,7 @@ export const MENU_STARTER: MenuElement[] = [
   },
 ];
 
-// Itens bloqueados para Navigator (cria FOMO)
+// Itens bloqueados para Starter (cria FOMO para Navigator)
 export const STARTER_LOCKED_PREVIEW: MenuItem[] = [
   { label: 'Notícias da Reforma', href: '/upgrade?feature=noticias', icon: Newspaper, locked: true, requiredPlan: 'NAVIGATOR', description: 'Atualizações diárias' },
   { label: 'Comunidade', href: '/upgrade?feature=comunidade', icon: Users, locked: true, requiredPlan: 'NAVIGATOR', description: 'Circle exclusivo' },
@@ -113,64 +113,74 @@ export const STARTER_LOCKED_PREVIEW: MenuItem[] = [
 ];
 
 /**
- * MENU NAVIGATOR (R$ 1.297/mês)
- * Filosofia: Monitoramento ativo
- * Clara com 60 msgs/dia, adiciona conteúdo e comunidade
- * Ferramentas Professional aparecem bloqueadas (FOMO)
+ * MENU NAVIGATOR V2 (R$ 697/mês → R$ 1.997/mês)
+ * Filosofia: Mesmo layout modular do Professional, mas apenas ENTENDER + RECUPERAR
+ * Clara com 100 msgs/dia, foco em diagnóstico completo e recuperação de créditos
+ * 2 CNPJs permitidos
  */
 export const MENU_NAVIGATOR: MenuElement[] = [
+  // Clara AI no topo
   {
     title: '',
     items: [
-      { ...CLARA_AI_ITEM, badge: '60/dia', description: 'Tire dúvidas complexas' },
+      { ...CLARA_AI_ITEM, badge: '100/dia', description: 'Análise e recuperação' },
     ]
   },
+  // HOME
   {
-    title: 'Diagnóstico',
+    title: '',
     items: [
-      { label: 'Meu Score', href: '/dashboard/score-tributario', icon: Trophy },
-      { label: 'Dashboard', href: '/dashboard', icon: Home },
+      { label: 'Home', href: '/dashboard/home', icon: Home },
     ]
   },
+  // Módulo ENTENDER - igual ao Professional
   {
-    title: 'Simuladores',
+    title: 'ENTENDER MEU NEGÓCIO',
     collapsible: true,
+    moduleHref: '/dashboard/entender',
     items: [
-      { label: 'Calculadora RTC', href: '/calculadora/rtc', icon: Calculator, badge: 'NCM' },
-      { label: 'Calculadora NBS', href: '/calculadora/servicos', icon: Briefcase, badge: 'Serviços' },
-      { label: 'Split Payment', href: '/calculadora/split-payment', icon: Wallet },
-      { label: 'Comparativo de Regimes', href: '/calculadora/comparativo-regimes', icon: Scale },
+      { label: 'DRE Inteligente', href: '/dashboard/entender/dre', icon: BarChart3, description: 'Base para análises' },
+      { label: 'Score Tributário', href: '/dashboard/entender/score', icon: Trophy, description: 'Diagnóstico 0-1000' },
+      { label: 'Comparativo de Regimes', href: '/calculadora/comparativo-regimes', icon: Scale, description: 'Qual regime ideal?' },
+      { label: 'Simpronto', href: '/dashboard/entender/simpronto', icon: Lightbulb, description: 'Simulação 2027', badge: '2027' },
     ]
   },
+  // Módulo RECUPERAR - igual ao Professional
+  {
+    title: 'RECUPERAR CRÉDITOS',
+    collapsible: true,
+    moduleHref: '/dashboard/recuperar',
+    items: [
+      { label: 'Radar de Créditos', href: '/dashboard/recuperar/radar', icon: FileText, description: 'Análise de XMLs' },
+      { label: 'Oportunidades Fiscais', href: '/dashboard/recuperar/oportunidades', icon: Lightbulb, badge: '61+' },
+    ]
+  },
+  // PIT - Prazos Importantes Tributários
   {
     title: 'PIT',
+    collapsible: true,
     items: [
-      { label: 'Notícias da Reforma', href: '/noticias', icon: Newspaper, badge: 'Novo' },
       { label: 'Timeline 2026-2033', href: '/dashboard/timeline-reforma', icon: MapPin },
       { label: 'Checklist de Prontidão', href: '/dashboard/checklist-reforma', icon: ClipboardCheck },
     ]
   },
-  {
-    title: 'Central Inteligente',
-    items: [
-      { label: 'Analisador de Documentos', href: '/dashboard/analisador-documentos', icon: FileSearch },
-      { label: 'Workflows', href: '/dashboard/workflows', icon: Route },
-      { label: 'Comunidade', href: '/comunidade', icon: Users },
-    ]
-  },
   { type: 'divider' as const },
+  // Preview de ferramentas PRO (FOMO para Professional)
   {
     title: 'Ferramentas Pro',
     items: [
-      { label: 'NEXUS', href: '/upgrade?feature=nexus', icon: LayoutDashboard, locked: true, description: 'Centro de Comando - 8 KPIs' },
-      { label: 'Radar de Créditos', href: '/upgrade?feature=radar', icon: FileText, locked: true, description: 'Análise automática de XMLs' },
-      { label: 'DRE Inteligente', href: '/upgrade?feature=dre', icon: BarChart3, locked: true, description: 'Impacto na margem' },
+      { label: 'NEXUS', href: '/upgrade?feature=nexus', icon: LayoutDashboard, locked: true, description: 'Centro de Comando' },
+      { label: 'Margem Ativa', href: '/upgrade?feature=margem', icon: Target, locked: true, description: 'Precificação inteligente' },
+      { label: 'PriceGuard', href: '/upgrade?feature=priceguard', icon: Shield, locked: true, description: 'Proteção de preços' },
     ]
   },
   { type: 'divider' as const },
+  // Seções secundárias
   {
     title: '',
     items: [
+      { label: 'Newsletter', href: '/noticias', icon: Newspaper, description: 'Toda terça às 07h07' },
+      { label: 'Comunidade', href: '/comunidade', icon: Users, description: 'Conexões e negócios' },
       { label: 'Configurações', href: '/configuracoes', icon: Settings },
     ]
   },
@@ -300,10 +310,9 @@ export function getDefaultRouteForPlan(plan: PlanType): string {
   switch (plan) {
     case 'PROFESSIONAL':
     case 'ENTERPRISE':
-    case 'STARTER':  // Starter agora usa Home Inteligente
+    case 'NAVIGATOR':  // Navigator agora usa Home Inteligente
+    case 'STARTER':    // Starter também usa Home Inteligente
       return '/dashboard/home';
-    case 'NAVIGATOR':
-      return '/dashboard';
     default:
       return '/dashboard/score-tributario';
   }
