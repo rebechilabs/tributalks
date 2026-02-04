@@ -42,10 +42,21 @@ export interface RiskItem {
   scoreAtual: number;
 }
 
-export interface ValuationData {
+export interface ValuationMethodResult {
   valuationMin: number;
   valuationMax: number;
-  multiploBase: number;
+  multiple: number;
+  label: string;
+}
+
+export interface ValuationData {
+  // EBITDA Method (primary)
+  ebitda: ValuationMethodResult;
+  // DCF Method
+  dcf: ValuationMethodResult;
+  // Revenue Multiple Method
+  revenue: ValuationMethodResult;
+  // Common data
   ajusteCompliance: number; // multiplier (e.g., 1.15 for +15%)
   ajustePercentual: number; // percentage (e.g., 15 for +15%)
   potencialMelhoria: number; // additional value if score improves to A
@@ -53,7 +64,11 @@ export interface ValuationData {
   scoreGrade: string | null;
   scoreTotal: number | null;
   hasData: boolean;
-  missingData: ('ebitda' | 'score' | 'sector')[];
+  missingData: ('ebitda' | 'score' | 'sector' | 'receita')[];
+  // Raw data for display
+  ebitdaAnual: number | null;
+  receitaAnual: number | null;
+  lucroLiquido: number | null;
 }
 
 interface UseExecutiveDataReturn {
@@ -67,19 +82,51 @@ interface UseExecutiveDataReturn {
   refresh: () => Promise<void>;
 }
 
-// Default sector multiples (used when no benchmark found)
-const DEFAULT_SECTOR_MULTIPLES: Record<string, { multiple: number; name: string }> = {
-  'tecnologia': { multiple: 7.0, name: 'Tecnologia' },
-  'servicos': { multiple: 4.8, name: 'Serviços Profissionais' },
-  'saude': { multiple: 5.5, name: 'Saúde' },
-  'varejo': { multiple: 4.0, name: 'Varejo' },
-  'industria': { multiple: 5.0, name: 'Indústria' },
-  'construcao': { multiple: 4.5, name: 'Construção' },
-  'agronegocio': { multiple: 5.5, name: 'Agronegócio' },
-  'financeiro': { multiple: 6.0, name: 'Financeiro' },
-  'educacao': { multiple: 5.0, name: 'Educação' },
-  'default': { multiple: 5.0, name: 'Mercado Geral' },
+// Default sector multiples for EBITDA, Revenue and DCF discount rates
+const DEFAULT_SECTOR_MULTIPLES: Record<string, { 
+  ebitdaMultiple: number; 
+  revenueMultiple: number; 
+  dcfDiscount: number; // Discount rate (WACC) for DCF
+  name: string;
+}> = {
+  'tecnologia': { ebitdaMultiple: 7.0, revenueMultiple: 2.5, dcfDiscount: 0.12, name: 'Tecnologia' },
+  'servicos': { ebitdaMultiple: 4.8, revenueMultiple: 1.2, dcfDiscount: 0.14, name: 'Serviços Profissionais' },
+  'saude': { ebitdaMultiple: 5.5, revenueMultiple: 1.8, dcfDiscount: 0.13, name: 'Saúde' },
+  'varejo': { ebitdaMultiple: 4.0, revenueMultiple: 0.8, dcfDiscount: 0.15, name: 'Varejo' },
+  'industria': { ebitdaMultiple: 5.0, revenueMultiple: 1.0, dcfDiscount: 0.14, name: 'Indústria' },
+  'construcao': { ebitdaMultiple: 4.5, revenueMultiple: 0.9, dcfDiscount: 0.15, name: 'Construção' },
+  'agronegocio': { ebitdaMultiple: 5.5, revenueMultiple: 1.5, dcfDiscount: 0.13, name: 'Agronegócio' },
+  'financeiro': { ebitdaMultiple: 6.0, revenueMultiple: 2.0, dcfDiscount: 0.11, name: 'Financeiro' },
+  'educacao': { ebitdaMultiple: 5.0, revenueMultiple: 1.5, dcfDiscount: 0.13, name: 'Educação' },
+  'default': { ebitdaMultiple: 5.0, revenueMultiple: 1.0, dcfDiscount: 0.14, name: 'Mercado Geral' },
 };
+
+// DCF Calculation helper - 5-year projection with terminal value
+function calculateDCF(
+  lucroLiquido: number, 
+  discountRate: number, 
+  growthRate: number = 0.05, // 5% growth per year
+  terminalGrowth: number = 0.03 // 3% perpetuity growth
+): number {
+  if (lucroLiquido <= 0) return 0;
+  
+  let presentValue = 0;
+  const years = 5;
+  
+  // Project cash flows for 5 years
+  for (let year = 1; year <= years; year++) {
+    const projectedCashFlow = lucroLiquido * Math.pow(1 + growthRate, year);
+    const discountFactor = Math.pow(1 + discountRate, year);
+    presentValue += projectedCashFlow / discountFactor;
+  }
+  
+  // Terminal value (Gordon Growth Model)
+  const terminalCashFlow = lucroLiquido * Math.pow(1 + growthRate, years + 1);
+  const terminalValue = terminalCashFlow / (discountRate - terminalGrowth);
+  const discountedTerminal = terminalValue / Math.pow(1 + discountRate, years);
+  
+  return presentValue + discountedTerminal;
+}
 
 // Compliance adjustment based on tax score (0-1000)
 function getComplianceAdjustment(score: number | null): { multiplier: number; percentual: number } {
@@ -401,33 +448,67 @@ export function useExecutiveData(userId: string | undefined): UseExecutiveDataRe
       
       const sectorData = DEFAULT_SECTOR_MULTIPLES[sectorKey] || DEFAULT_SECTOR_MULTIPLES['default'];
       sectorName = sectorData.name;
-      const baseMultiple = sectorData.multiple;
+      const baseEbitdaMultiple = sectorData.ebitdaMultiple;
+      const baseRevenueMultiple = sectorData.revenueMultiple;
+      const discountRate = sectorData.dcfDiscount;
+
+      // Get receita and lucro for other methods
+      const receitaAnual = dre?.calc_receita_bruta ? Number(dre.calc_receita_bruta) * 12 : null;
+      const lucroLiquido = dre?.calc_lucro_liquido ? Number(dre.calc_lucro_liquido) * 12 : null;
+      const ebitdaAnual = ebitda ? ebitda * 12 : null;
 
       // Calculate valuation data
-      const missingData: ('ebitda' | 'score' | 'sector')[] = [];
+      const missingData: ('ebitda' | 'score' | 'sector' | 'receita')[] = [];
       if (!ebitda || ebitda <= 0) missingData.push('ebitda');
       if (scoreTotal === null) missingData.push('score');
       if (!sectorFromProfile && !cnaeFromProfile) missingData.push('sector');
+      if (!receitaAnual || receitaAnual <= 0) missingData.push('receita');
 
-      const hasValuationData = ebitda !== null && ebitda > 0;
+      const hasValuationData = (ebitda !== null && ebitda > 0) || (receitaAnual !== null && receitaAnual > 0);
 
       if (hasValuationData) {
         const { multiplier, percentual } = getComplianceAdjustment(scoreTotal);
-        const adjustedMultiple = baseMultiple * multiplier;
-        const baseValuation = (ebitda * 12) * adjustedMultiple; // Annualized EBITDA × multiple
+        
+        // 1. EBITDA Multiple Method
+        const adjustedEbitdaMultiple = baseEbitdaMultiple * multiplier;
+        const ebitdaValuation = ebitdaAnual ? ebitdaAnual * adjustedEbitdaMultiple : 0;
+        
+        // 2. DCF Method
+        const dcfValuation = lucroLiquido && lucroLiquido > 0 
+          ? calculateDCF(lucroLiquido, discountRate) * multiplier 
+          : 0;
+        
+        // 3. Revenue Multiple Method  
+        const adjustedRevenueMultiple = baseRevenueMultiple * multiplier;
+        const revenueValuation = receitaAnual ? receitaAnual * adjustedRevenueMultiple : 0;
         
         // Calculate potential improvement (what if score goes to A = 900+)
         const targetAdjustment = getComplianceAdjustment(900);
-        const targetMultiple = baseMultiple * targetAdjustment.multiplier;
-        const targetValuation = (ebitda * 12) * targetMultiple;
-        const potencialMelhoria = scoreTotal !== null && scoreTotal < 900 
-          ? Math.max(0, targetValuation - baseValuation)
+        const targetMultiple = baseEbitdaMultiple * targetAdjustment.multiplier;
+        const targetValuation = ebitdaAnual ? ebitdaAnual * targetMultiple : 0;
+        const potencialMelhoria = scoreTotal !== null && scoreTotal < 900 && ebitdaAnual
+          ? Math.max(0, targetValuation - ebitdaValuation)
           : 0;
 
         setValuationData({
-          valuationMin: baseValuation * 0.8, // -20% uncertainty
-          valuationMax: baseValuation * 1.2, // +20% uncertainty
-          multiploBase: adjustedMultiple,
+          ebitda: {
+            valuationMin: ebitdaValuation * 0.8,
+            valuationMax: ebitdaValuation * 1.2,
+            multiple: adjustedEbitdaMultiple,
+            label: 'Múltiplo de EBITDA',
+          },
+          dcf: {
+            valuationMin: dcfValuation * 0.8,
+            valuationMax: dcfValuation * 1.2,
+            multiple: discountRate * 100, // Display as percentage
+            label: 'Fluxo de Caixa Descontado',
+          },
+          revenue: {
+            valuationMin: revenueValuation * 0.8,
+            valuationMax: revenueValuation * 1.2,
+            multiple: adjustedRevenueMultiple,
+            label: 'Múltiplo de Receita',
+          },
           ajusteCompliance: multiplier,
           ajustePercentual: percentual,
           potencialMelhoria,
@@ -436,12 +517,15 @@ export function useExecutiveData(userId: string | undefined): UseExecutiveDataRe
           scoreTotal,
           hasData: true,
           missingData,
+          ebitdaAnual,
+          receitaAnual,
+          lucroLiquido,
         });
       } else {
         setValuationData({
-          valuationMin: 0,
-          valuationMax: 0,
-          multiploBase: baseMultiple,
+          ebitda: { valuationMin: 0, valuationMax: 0, multiple: baseEbitdaMultiple, label: 'Múltiplo de EBITDA' },
+          dcf: { valuationMin: 0, valuationMax: 0, multiple: discountRate * 100, label: 'Fluxo de Caixa Descontado' },
+          revenue: { valuationMin: 0, valuationMax: 0, multiple: baseRevenueMultiple, label: 'Múltiplo de Receita' },
           ajusteCompliance: 1,
           ajustePercentual: 0,
           potencialMelhoria: 0,
@@ -450,6 +534,9 @@ export function useExecutiveData(userId: string | undefined): UseExecutiveDataRe
           scoreTotal,
           hasData: false,
           missingData,
+          ebitdaAnual: null,
+          receitaAnual: null,
+          lucroLiquido: null,
         });
       }
 
