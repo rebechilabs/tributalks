@@ -68,7 +68,7 @@ const plans: Plan[] = [
       { text: "Clara AI (Copiloto)", included: "limited", limitText: "100 msgs/dia" },
       { text: "Tudo do Starter +", included: true },
       { text: "Módulo RECUPERAR CRÉDITOS", included: true },
-      { text: "Radar de Créditos (XMLs)", included: true, isSubItem: true },
+      { text: "Radar de Créditos", included: true, isSubItem: true, limitText: "XML, SPED, DCTF, PGDAS" },
       { text: "Oportunidades Fiscais (61+)", included: true, isSubItem: true },
       { text: "Calculadora NBS (Serviços)", included: true },
       { text: "Analisador de Documentos IA", included: true },
