@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import logoTributalks from "@/assets/logo-tributalks.png";
+import logoTributalksHeader from "@/assets/logo-tributalks-header.png";
 import { useAuth } from "@/hooks/useAuth";
 import { LoginModal } from "./LoginModal";
 
@@ -32,7 +32,13 @@ export function Header() {
         <div className="container mx-auto px-4 md:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
-            <div className="w-10 md:w-12" />
+            <Link to="/" className="flex items-center">
+              <img 
+                src={logoTributalksHeader} 
+                alt="TribuTalks" 
+                className="h-8 md:h-10 w-auto"
+              />
+            </Link>
 
             {/* Desktop Navigation - placeholder for future links */}
             <nav className="hidden md:flex items-center gap-6">
