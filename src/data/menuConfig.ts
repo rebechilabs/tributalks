@@ -188,7 +188,8 @@ export const MENU_PROFESSIONAL_V2: MenuElement[] = [
     items: [
       { label: 'DRE Inteligente', href: '/dashboard/entender/dre', icon: BarChart3, description: 'Base para análises' },
       { label: 'Score Tributário', href: '/dashboard/entender/score', icon: Trophy, description: 'Diagnóstico 0-1000' },
-      { label: 'Simpronto', href: '/dashboard/entender/simpronto', icon: Scale, description: 'Compare 5 regimes', badge: '2027' },
+      { label: 'Comparativo de Regimes', href: '/calculadora/comparativo-regimes', icon: Scale, description: 'Qual regime ideal?' },
+      { label: 'Simpronto', href: '/dashboard/entender/simpronto', icon: Lightbulb, description: 'Simulação 2027', badge: '2027' },
     ]
   },
   // Módulo RECUPERAR
