@@ -13,9 +13,9 @@ export function DemoStepUpload() {
           clearInterval(progressInterval);
           return 100;
         }
-        return prev + 5;
+        return prev + 3;
       });
-    }, 60);
+    }, 100);
 
     const filesInterval = setInterval(() => {
       setFilesProcessed((prev) => {
@@ -23,9 +23,9 @@ export function DemoStepUpload() {
           clearInterval(filesInterval);
           return 47;
         }
-        return prev + 3;
+        return prev + 2;
       });
-    }, 100);
+    }, 150);
 
     return () => {
       clearInterval(progressInterval);

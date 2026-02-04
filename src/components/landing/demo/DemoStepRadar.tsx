@@ -21,9 +21,9 @@ export function DemoStepRadar() {
           clearInterval(interval);
           return targetTotal;
         }
-        return prev + 1500;
+        return prev + 1200;
       });
-    }, 50);
+    }, 80);
 
     // Revela créditos um por um
     const creditInterval = setInterval(() => {
@@ -34,7 +34,7 @@ export function DemoStepRadar() {
         }
         return prev + 1;
       });
-    }, 800);
+    }, 1200);
 
     return () => {
       clearInterval(interval);

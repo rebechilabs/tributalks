@@ -14,7 +14,7 @@ export function DemoStepScore() {
         }
         return prev + 2;
       });
-    }, 40);
+    }, 60);
 
     return () => clearInterval(interval);
   }, []);
