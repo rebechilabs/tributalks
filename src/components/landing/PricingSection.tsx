@@ -74,7 +74,7 @@ const plans: Plan[] = [
       { text: "Analisador de Documentos IA", included: true, limitText: "Contratos, notas, editais" },
       { text: "Workflows Guiados", included: true, limitText: "Score + DRE + Créditos encadeados" },
       { text: "Relatórios PDF Clara AI", included: true, limitText: "Diagnósticos prontos para enviar" },
-      { text: "TribuTalks Connect", included: true, limitText: "Comunidade WhatsApp" },
+      { text: "TribuTalks Connect", included: true, limitText: "Comunidade Circle" },
     ],
     ctaText: "Testar 7 dias grátis",
     linkMonthly: CONFIG.PAYMENT_LINKS.NAVIGATOR_MENSAL,
