@@ -188,7 +188,7 @@ export const MENU_PROFESSIONAL_V2: MenuElement[] = [
     items: [
       { label: 'DRE Inteligente', href: '/dashboard/entender/dre', icon: BarChart3, description: 'Base para análises' },
       { label: 'Score Tributário', href: '/dashboard/entender/score', icon: Trophy, description: 'Diagnóstico 0-1000' },
-      { label: 'Comparativo de Regimes', href: '/dashboard/entender/comparativo', icon: Scale, description: 'Simule regimes' },
+      { label: 'Simpronto', href: '/dashboard/entender/simpronto', icon: Scale, description: 'Compare 5 regimes', badge: '2027' },
     ]
   },
   // Módulo RECUPERAR

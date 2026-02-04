@@ -113,6 +113,14 @@ const ROUTE_MAP: Record<string, RouteDefinition> = {
     relatedPaths: ['/dashboard/entender/dre', '/dashboard/entender/score'],
     icon: Scale
   },
+  '/dashboard/entender/simpronto': { 
+    label: 'Simpronto', 
+    group: 'entender',
+    groupLabel: 'Entender Meu Negócio',
+    parent: '/dashboard/entender',
+    relatedPaths: ['/dashboard/entender/dre', '/dashboard/entender/score'],
+    icon: Scale
+  },
   
   // NEW: Tools under RECUPERAR module
   '/dashboard/recuperar/radar': { 
@@ -405,7 +413,7 @@ const ROUTE_MAP: Record<string, RouteDefinition> = {
 // Group to paths mapping for auto-expand
 export const GROUP_PATHS: Record<string, string[]> = {
   home: ['/dashboard/home'],
-  entender: ['/dashboard/entender', '/dashboard/entender/dre', '/dashboard/entender/score', '/dashboard/entender/comparativo'],
+  entender: ['/dashboard/entender', '/dashboard/entender/dre', '/dashboard/entender/score', '/dashboard/entender/comparativo', '/dashboard/entender/simpronto'],
   recuperar: ['/dashboard/recuperar', '/dashboard/recuperar/radar', '/dashboard/recuperar/oportunidades'],
   precificacao: ['/dashboard/precificacao', '/dashboard/precificacao/margem', '/dashboard/precificacao/split', '/dashboard/precificacao/priceguard'],
   comandar: ['/dashboard/comandar', '/dashboard/comandar/nexus', '/dashboard/comandar/relatorios'],
