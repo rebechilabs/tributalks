@@ -16,6 +16,7 @@ import { useERPDREData } from '@/hooks/useERPDREData';
 import { toast } from 'sonner';
 import { VoiceCurrencyInput } from './VoiceCurrencyInput';
 import { ProductCatalogStep, type ProductCatalogItem } from './ProductCatalogStep';
+import { ResetCalculationButton } from '@/components/common/ResetCalculationButton';
 
 interface DREFormData {
   vendas_produtos: number;
@@ -287,11 +288,19 @@ export function DREWizard({ onComplete, initialData }: DREWizardProps) {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div><h2 className="text-2xl font-bold">DRE Inteligente</h2><p className="text-muted-foreground">Preencha os dados e receba um diagnóstico completo</p></div>
-        <div className="flex gap-2">
-          <Select value={selectedMonth.toString()} onValueChange={(v) => { setSelectedMonth(parseInt(v)); setErpDataApplied(false); }}><SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger><SelectContent>{['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'].map((m, i) => (<SelectItem key={i} value={(i + 1).toString()}>{m}</SelectItem>))}</SelectContent></Select>
-          <Select value={selectedYear.toString()} onValueChange={(v) => { setSelectedYear(parseInt(v)); setErpDataApplied(false); }}><SelectTrigger className="w-[100px]"><SelectValue /></SelectTrigger><SelectContent>{[2024, 2025, 2026].map((y) => (<SelectItem key={y} value={y.toString()}>{y}</SelectItem>))}</SelectContent></Select>
+        <div className="flex flex-wrap gap-2 items-center">
+          <Select value={selectedMonth.toString()} onValueChange={(v) => { setSelectedMonth(parseInt(v)); setErpDataApplied(false); }}><SelectTrigger className="w-[100px]"><SelectValue /></SelectTrigger><SelectContent>{['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'].map((m, i) => (<SelectItem key={i} value={(i + 1).toString()}>{m}</SelectItem>))}</SelectContent></Select>
+          <Select value={selectedYear.toString()} onValueChange={(v) => { setSelectedYear(parseInt(v)); setErpDataApplied(false); }}><SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger><SelectContent>{[2024, 2025, 2026].map((y) => (<SelectItem key={y} value={y.toString()}>{y}</SelectItem>))}</SelectContent></Select>
+          <ResetCalculationButton 
+            toolName="DRE Inteligente"
+            tables={['company_dre']}
+            onReset={() => {
+              setFormData(initialFormData);
+              setCurrentStep(1);
+            }}
+          />
         </div>
       </div>
 

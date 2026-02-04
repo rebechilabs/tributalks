@@ -123,7 +123,7 @@ export const CNPJ_LIMITS: Record<UserPlan, number | 'unlimited'> = {
   'FREE': 1,
   'STARTER': 1,
   'NAVIGATOR': 2,
-  'PROFESSIONAL': 5,
+  'PROFESSIONAL': 4,   // Updated: 4 CNPJs for Professional
   'ENTERPRISE': 'unlimited',
 };
 
