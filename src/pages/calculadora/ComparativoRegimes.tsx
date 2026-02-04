@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Scale, Info, Star, AlertTriangle, RefreshCw, FileDown, Loader2, CheckCircle, Calendar, XCircle, Package, Zap, Truck, Building2, Wrench, HelpCircle, Sparkles, ArrowRight, TrendingDown, Crown, Lock } from "lucide-react";
+import { Scale, Info, Star, AlertTriangle, RefreshCw, FileDown, Loader2, CheckCircle, Calendar, XCircle, Package, Zap, Truck, Building2, Wrench, HelpCircle, Sparkles, ArrowRight, TrendingDown, Crown, Lock, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -13,6 +13,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { TaxDisclaimer } from "@/components/common/TaxDisclaimer";
+import { HelpButton } from "@/components/common/HelpButton";
 interface RegimeResult {
   simples: number | null;
   presumido: number;
@@ -336,6 +337,21 @@ const ComparativoRegimes = () => {
   };
 
   const handleReset = () => {
+    setFormData({
+      faturamento_mensal: "",
+      margem_lucro: "0.25",
+      folha_pagamento: "",
+      setor: "",
+      regime_atual: "",
+    });
+    setInsumos({
+      mercadorias: "",
+      insumos_producao: "",
+      energia: "",
+      aluguel: "",
+      frete: "",
+      servicos_terceiros: "",
+    });
     setResult(null);
     setSaved(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -364,15 +380,31 @@ const ComparativoRegimes = () => {
 
         {/* Title */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Scale className="w-6 h-6 text-primary" />
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Scale className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">Comparativo de Regimes Tributários</h1>
+                <p className="text-muted-foreground">
+                  Descubra qual regime é mais vantajoso para sua empresa.
+                </p>
+              </div>
             </div>
-            <h1 className="text-2xl font-bold text-foreground">Comparativo de Regimes Tributários</h1>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleReset}
+                className="gap-1 text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+                Zerar Cálculo
+              </Button>
+              <HelpButton toolSlug="comparativo-regimes" size="default" />
+            </div>
           </div>
-          <p className="text-muted-foreground">
-            Descubra qual regime é mais vantajoso para sua empresa.
-          </p>
         </div>
 
         {/* Form */}

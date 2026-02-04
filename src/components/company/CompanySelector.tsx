@@ -103,6 +103,21 @@ export function CompanySelector() {
             <div className="px-2 py-1.5 text-xs text-muted-foreground">
               {companies.length} de {maxCompanies} empresa{maxCompanies !== 1 ? 's' : ''} ({PLAN_LABELS[currentPlan]})
             </div>
+
+            <DropdownMenuSeparator />
+
+            {/* Add new company button inside dropdown */}
+            <DropdownMenuItem
+              onClick={() => setIsAddModalOpen(true)}
+              disabled={!canAddMore}
+              className={cn(
+                "flex items-center gap-2 cursor-pointer",
+                !canAddMore && "opacity-50 cursor-not-allowed"
+              )}
+            >
+              <Plus className="h-4 w-4 text-primary" />
+              <span className="font-medium text-primary">Adicionar nova empresa</span>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 

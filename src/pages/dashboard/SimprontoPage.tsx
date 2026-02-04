@@ -8,6 +8,9 @@ import { calcularSimpronto } from "@/utils/simprontoCalculations";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { HelpButton } from "@/components/common/HelpButton";
+import { Trash2, Calculator } from "lucide-react";
 
 export default function SimprontoPage() {
   const { user } = useAuth();
@@ -67,32 +70,46 @@ export default function SimprontoPage() {
     <DashboardLayout title="Simpronto">
       <div className="container mx-auto px-4 py-6">
         <FeatureGate feature="comparativo_regimes">
-          {!result ? (
-            <>
-              {/* Header */}
-              <div className="mb-8 text-center max-w-2xl mx-auto">
-                <h1 className="text-2xl font-bold mb-2">Simpronto</h1>
-                <p className="text-muted-foreground">
-                  Compare 5 regimes tributários em minutos, incluindo as novas opções do Simples Nacional 2027.
-                  Descubra qual é o mais econômico para o seu negócio.
-                </p>
+          {/* Header */}
+          <div className="mb-8 max-w-2xl mx-auto">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Calculator className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold">Simpronto</h1>
+                  <p className="text-muted-foreground">
+                    Compare 5 regimes tributários em minutos, incluindo as novas opções do Simples Nacional 2027.
+                  </p>
+                </div>
               </div>
-              
-              {/* Wizard */}
-              <SimprontoWizard 
-                onSubmit={handleSubmit} 
-                isLoading={saveSimulation.isPending}
-              />
-            </>
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleReset}
+                  className="gap-1 text-destructive hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Zerar Cálculo
+                </Button>
+                <HelpButton toolSlug="simpronto" size="default" />
+              </div>
+            </div>
+          </div>
+
+          {!result ? (
+            <SimprontoWizard 
+              onSubmit={handleSubmit} 
+              isLoading={saveSimulation.isPending}
+            />
           ) : (
-            <>
-              {/* Resultados */}
-              <SimprontoResults 
-                result={result} 
-                input={currentInput!}
-                onReset={handleReset} 
-              />
-            </>
+            <SimprontoResults 
+              result={result} 
+              input={currentInput!}
+              onReset={handleReset} 
+            />
           )}
         </FeatureGate>
       </div>
