@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -66,6 +66,13 @@ import Nexus from "./pages/Nexus";
 
 // Margem Ativa
 import MargemAtiva from "./pages/dashboard/MargemAtiva";
+
+// NEW: Module Pages
+import HomePage from "./pages/dashboard/HomePage";
+import EntenderPage from "./pages/dashboard/EntenderPage";
+import RecuperarPage from "./pages/dashboard/RecuperarPage";
+import PrecificacaoPage from "./pages/dashboard/PrecificacaoPage";
+import ComandarPage from "./pages/dashboard/ComandarPage";
 
 // Admin
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -135,6 +142,8 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
+            
+            {/* Dashboard - redirect to home for Professional */}
             <Route 
               path="/dashboard" 
               element={
@@ -143,19 +152,159 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
+            
+            {/* NEW: Home Inteligente */}
+            <Route 
+              path="/dashboard/home" 
+              element={
+                <ProtectedRoute>
+                  <HomePage />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* NEW: Module Landing Pages */}
+            <Route 
+              path="/dashboard/entender" 
+              element={
+                <ProtectedRoute>
+                  <EntenderPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/recuperar" 
+              element={
+                <ProtectedRoute>
+                  <RecuperarPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/precificacao" 
+              element={
+                <ProtectedRoute>
+                  <PrecificacaoPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/comandar" 
+              element={
+                <ProtectedRoute>
+                  <ComandarPage />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* NEW: Tools under ENTENDER module */}
+            <Route 
+              path="/dashboard/entender/dre" 
+              element={
+                <ProtectedRoute>
+                  <DRE />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/entender/score" 
+              element={
+                <ProtectedRoute>
+                  <ScoreTributario />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/entender/comparativo" 
+              element={
+                <ProtectedRoute>
+                  <ComparativoRegimes />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* NEW: Tools under RECUPERAR module */}
+            <Route 
+              path="/dashboard/recuperar/radar" 
+              element={
+                <ProtectedRoute>
+                  <AnaliseNotasFiscais />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/recuperar/oportunidades" 
+              element={
+                <ProtectedRoute>
+                  <Oportunidades />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* NEW: Tools under PRECIFICACAO module */}
+            <Route 
+              path="/dashboard/precificacao/margem" 
+              element={
+                <ProtectedRoute>
+                  <MargemAtiva />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/precificacao/split" 
+              element={
+                <ProtectedRoute>
+                  <SplitPayment />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/precificacao/priceguard" 
+              element={
+                <ProtectedRoute>
+                  {/* Placeholder for PriceGuard - coming soon */}
+                  <PrecificacaoPage />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* NEW: Tools under COMANDAR module */}
+            <Route 
+              path="/dashboard/comandar/nexus" 
+              element={
+                <ProtectedRoute>
+                  <Nexus />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/comandar/relatorios" 
+              element={
+                <ProtectedRoute>
+                  {/* Placeholder for Relatórios PDF - coming soon */}
+                  <ComandarPage />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* LEGACY ROUTES - Redirects for backwards compatibility */}
+            <Route path="/dashboard/dre" element={<Navigate to="/dashboard/entender/dre" replace />} />
+            <Route path="/dashboard/score-tributario" element={<Navigate to="/dashboard/entender/score" replace />} />
+            <Route path="/calculadora/comparativo-regimes" element={<Navigate to="/dashboard/entender/comparativo" replace />} />
+            <Route path="/dashboard/analise-notas" element={<Navigate to="/dashboard/recuperar/radar" replace />} />
+            <Route path="/dashboard/importar-xml" element={<Navigate to="/dashboard/recuperar/radar" replace />} />
+            <Route path="/dashboard/radar-creditos" element={<Navigate to="/dashboard/recuperar/radar" replace />} />
+            <Route path="/dashboard/oportunidades" element={<Navigate to="/dashboard/recuperar/oportunidades" replace />} />
+            <Route path="/dashboard/margem-ativa" element={<Navigate to="/dashboard/precificacao/margem" replace />} />
+            <Route path="/calculadora/split-payment" element={<Navigate to="/dashboard/precificacao/split" replace />} />
+            <Route path="/dashboard/nexus" element={<Navigate to="/dashboard/comandar/nexus" replace />} />
+            
+            {/* Other protected routes (kept as-is) */}
             <Route 
               path="/dashboard/executivo" 
               element={
                 <ProtectedRoute>
                   <PainelExecutivo />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/dashboard/nexus" 
-              element={
-                <ProtectedRoute>
-                  <Nexus />
                 </ProtectedRoute>
               } 
             />
@@ -226,23 +375,7 @@ const App = () => (
               } 
             />
 
-            {/* Calculadoras */}
-            <Route 
-              path="/calculadora/split-payment" 
-              element={
-                <ProtectedRoute>
-                  <SplitPayment />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/calculadora/comparativo-regimes" 
-              element={
-                <ProtectedRoute>
-                  <ComparativoRegimes />
-                </ProtectedRoute>
-              } 
-            />
+            {/* Calculadoras (legacy paths kept for external links) */}
             <Route 
               path="/calculadora/rtc" 
               element={
@@ -260,45 +393,11 @@ const App = () => (
               } 
             />
             
-            {/* Análise de Notas Fiscais (unificado) */}
-            <Route 
-              path="/dashboard/analise-notas" 
-              element={
-                <ProtectedRoute>
-                  <AnaliseNotasFiscais />
-                </ProtectedRoute>
-              } 
-            />
-            {/* Rotas legadas - redirect para a nova */}
-            <Route 
-              path="/dashboard/importar-xml" 
-              element={
-                <ProtectedRoute>
-                  <AnaliseNotasFiscais />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/dashboard/radar-creditos" 
-              element={
-                <ProtectedRoute>
-                  <AnaliseNotasFiscais />
-                </ProtectedRoute>
-              } 
-            />
             <Route 
               path="/dashboard/xml-resultados" 
               element={
                 <ProtectedRoute>
                   <XMLResultados />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/dashboard/dre" 
-              element={
-                <ProtectedRoute>
-                  <DRE />
                 </ProtectedRoute>
               } 
             />
@@ -311,26 +410,10 @@ const App = () => (
               } 
             />
             <Route 
-              path="/dashboard/score-tributario" 
-              element={
-                <ProtectedRoute>
-                  <ScoreTributario />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
               path="/dashboard/perfil-empresa" 
               element={
                 <ProtectedRoute>
                   <PerfilEmpresa />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/dashboard/oportunidades" 
-              element={
-                <ProtectedRoute>
-                  <Oportunidades />
                 </ProtectedRoute>
               } 
             />
@@ -379,14 +462,6 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Consultorias />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/dashboard/margem-ativa" 
-              element={
-                <ProtectedRoute>
-                  <MargemAtiva />
                 </ProtectedRoute>
               } 
             />
