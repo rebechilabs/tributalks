@@ -1,150 +1,53 @@
 
-# Plano: Preencher DRE Automaticamente com Dados do Conta Azul
+# Plano: Reduzir Velocidade da Demo Interativa
 
-## Resumo
+## Objetivo
+Aumentar o tempo de exibição de cada fase da demo para que o usuário consiga absorver as informações antes do avanço automático.
 
-Você quer que os dados sincronizados do Conta Azul preencham automaticamente o formulário DRE Inteligente. Identifiquei que há dois problemas bloqueando a sincronização que precisam ser resolvidos primeiro, e depois implementaremos o preenchimento automático do DRE.
+## Alterações Propostas
 
-## Problemas Identificados na Sincronização
+### 1. Aumentar Durações dos Passos (InteractiveDemo.tsx)
 
-Analisando os logs de sincronização recentes, encontrei dois erros:
+| Passo | Atual | Novo | Motivo |
+|-------|-------|------|--------|
+| Upload XMLs | 3000ms | 5000ms | Usuário precisa ver a animação de progresso até 100% |
+| Score Tributário | 4000ms | 7000ms | Aguardar animação do gauge + ler o resultado |
+| Radar de Créditos | 4000ms | 7000ms | Esperar os 3 créditos aparecerem + total |
+| Clara AI | 4000ms | 8000ms | Resposta longa precisa de tempo para digitação |
+| Dashboard NEXUS | 0ms | 0ms | Mantém (botão manual) |
 
-1. **NF-e**: A API do Conta Azul exige período máximo de 15 dias entre datas (`data_competencia_de` e `data_competencia_ate`)
-   - Atualmente: 90 dias de busca (causa erro 400)
-   - Solução: Fazer múltiplas requisições em janelas de 15 dias
+**Novo tempo total**: ~27 segundos (antes: ~15 segundos)
 
-2. **Financeiro → DRE**: Erro de constraint no upsert do `company_dre`
-   - Causa: Falta de unique constraint na combinação `user_id, period_type, period_year, period_month`
-   - Solução: Adicionar constraint no banco
+### 2. Ajustar Animações Internas
 
-## Etapas de Implementação
+**DemoStepScore.tsx:**
+- Intervalo do contador: 40ms → 60ms (animação mais suave)
 
-### Etapa 1: Corrigir Sincronização da API Conta Azul
+**DemoStepRadar.tsx:**
+- Intervalo entre créditos: 800ms → 1200ms (mais tempo entre cada)
+- Contador total: 50ms → 80ms
 
-**1.1 - Corrigir busca de NF-e (período de 15 dias)**
+**DemoStepClara.tsx:**
+- Delay antes de mostrar resposta: 1000ms → 1500ms
+- Velocidade de digitação: 30ms → 45ms por caractere
 
-Modificar `syncNFe` no adapter ContaAzul para buscar em janelas de 15 dias:
+### 3. Adicionar Indicador de Progresso Visual
 
-- Dividir período de 90 dias em 6 requisições de 15 dias cada
-- Acumular resultados de todas as janelas
-- Respeitar rate limiting entre chamadas
-
-**1.2 - Corrigir busca Financeira**
-
-Verificar se o mesmo limite se aplica aos endpoints financeiros e ajustar se necessário.
-
-### Etapa 2: Corrigir Constraint do Banco de Dados
-
-Criar migration para adicionar unique constraint na tabela `company_dre`:
-
-```sql
-ALTER TABLE company_dre 
-ADD CONSTRAINT company_dre_user_period_unique 
-UNIQUE (user_id, period_type, period_year, period_month);
-```
-
-### Etapa 3: Melhorar Mapeamento Financeiro → DRE
-
-Atualmente os dados financeiros são mapeados de forma genérica (60% custos, 20% salários, 20% outras). Melhorar para:
-
-- Categorizar receitas: vendas produtos vs serviços (baseado em tipo de nota)
-- Categorizar despesas: usar categorias do Conta Azul quando disponíveis
-- Separar custos operacionais de custos de vendas
-
-### Etapa 4: Implementar Auto-Preenchimento no DRE Wizard
-
-**4.1 - Criar hook `useERPDREData`**
-
-Hook que busca dados sincronizados do ERP para o período selecionado:
-
-- Verifica se há conexão ERP ativa
-- Busca último DRE criado via sync para o mês/ano selecionado
-- Retorna dados formatados para o formulário
-
-**4.2 - Modificar `DREWizard.tsx`**
-
-Adicionar:
-- Detecção de conexão ERP ativa
-- Botão/banner para "Preencher com dados do Conta Azul"
-- Preview dos valores antes de aplicar
-- Mesclagem inteligente (mantém valores já editados manualmente)
-
-**4.3 - UX do Auto-Preenchimento**
-
-Quando o usuário acessa o DRE Wizard:
-
-```text
-┌──────────────────────────────────────────────────────────────┐
-│  🔗 Conta Azul Conectado                                     │
-│                                                              │
-│  Encontramos dados financeiros do seu ERP para Jan/2026:     │
-│  • Receitas: R$ 150.000                                     │
-│  • Despesas: R$ 80.000                                      │
-│                                                              │
-│  [Preencher Automaticamente]    [Continuar Manualmente]      │
-└──────────────────────────────────────────────────────────────┘
-```
+Adicionar uma barra de progresso sutil que mostra quanto tempo resta no passo atual, ajudando o usuário a entender que avança automaticamente.
 
 ## Arquivos a Modificar
 
 | Arquivo | Alteração |
 |---------|-----------|
-| `supabase/functions/erp-sync/index.ts` | Corrigir janelas de 15 dias, melhorar categorização |
-| `src/components/dre/DREWizard.tsx` | Adicionar detecção ERP e botão de auto-preenchimento |
-| `src/hooks/useERPDREData.ts` | Novo hook para buscar dados ERP para DRE |
-| Migration SQL | Adicionar unique constraint em company_dre |
-
-## Detalhes Técnicos
-
-### Lógica de Janelas de 15 Dias (NF-e)
-
-```typescript
-// Dividir 90 dias em janelas de 15 dias
-const windows: Array<{start: string, end: string}> = [];
-let currentStart = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-const finalEnd = new Date();
-
-while (currentStart < finalEnd) {
-  const windowEnd = new Date(Math.min(
-    currentStart.getTime() + 15 * 24 * 60 * 60 * 1000,
-    finalEnd.getTime()
-  ));
-  windows.push({
-    start: currentStart.toISOString().split('T')[0],
-    end: windowEnd.toISOString().split('T')[0]
-  });
-  currentStart = windowEnd;
-}
-```
-
-### Mapeamento Categorias Conta Azul → DRE
-
-| Conta Azul | Campo DRE |
-|------------|-----------|
-| `receita` / `contas_a_receber` | `vendas_produtos` ou `vendas_servicos` |
-| `despesa` / Aluguel | `aluguel` |
-| `despesa` / Folha | `salarios_encargos` |
-| `despesa` / Marketing | `marketing` |
-| `despesa` / Outras | `outras_despesas` |
+| `src/components/landing/InteractiveDemo.tsx` | Aumentar `duration` de cada passo + adicionar barra de progresso |
+| `src/components/landing/demo/DemoStepScore.tsx` | Aumentar intervalo da animação |
+| `src/components/landing/demo/DemoStepRadar.tsx` | Aumentar intervalos |
+| `src/components/landing/demo/DemoStepClara.tsx` | Aumentar delays |
+| `src/components/landing/demo/DemoStepUpload.tsx` | Ajustar velocidade do progresso |
 
 ## Resultado Esperado
 
-1. ✅ Sincronização do Conta Azul funcionando sem erros (janelas de 15 dias implementadas)
-2. ✅ Dados financeiros salvos corretamente no `company_dre` (unique constraint adicionado)
-3. ✅ DRE Wizard detecta dados disponíveis do ERP (hook useERPDREData criado)
-4. ✅ Usuário pode preencher automaticamente com 1 clique (banner implementado)
-5. ✅ Valores podem ser ajustados manualmente após auto-preenchimento
-
-## Status: IMPLEMENTADO ✅
-
-**Arquivos modificados:**
-- `supabase/functions/erp-sync/index.ts` - Janelas de 15 dias para NF-e + mapeamento inteligente de categorias
-- `src/components/dre/DREWizard.tsx` - Banner de ERP conectado com auto-preenchimento
-- `src/hooks/useERPDREData.ts` - Novo hook para buscar dados ERP sincronizados
-- Migration SQL - Unique index `company_dre_user_period_unique` adicionado
-
-## Observações
-
-- Os valores importados são estimativas baseadas nos lançamentos financeiros
-- Recomendamos que o usuário revise os valores antes de calcular
-- Dados como pró-labore e despesas específicas podem precisar de ajuste manual (ERP nem sempre categoriza)
+- Demo mais calma e compreensível
+- Usuário tem tempo de ler e entender cada fase
+- Animações completam antes do avanço automático
+- Experiência menos apressada, mais impactante
