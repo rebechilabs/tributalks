@@ -69,7 +69,7 @@ export default function SimprontoPage() {
   return (
     <DashboardLayout title="Simpronto">
       <div className="container mx-auto px-4 py-6">
-        <FeatureGate feature="comparativo_regimes">
+        <FeatureGate feature="simpronto">
           {/* Header */}
           <div className="mb-8 max-w-2xl mx-auto">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
