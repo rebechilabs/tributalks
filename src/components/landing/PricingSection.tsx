@@ -46,7 +46,7 @@ const plans: Plan[] = [
       { text: "Clara AI (Assistente)", included: "limited", limitText: "30 msgs/dia" },
       { text: "Módulo ENTENDER MEU NEGÓCIO", included: true, limitText: "Diagnóstico completo" },
       { text: "DRE Inteligente", included: true, isSubItem: true, limitText: "Impacto na margem" },
-      { text: "Score Tributário", included: true, isSubItem: true, limitText: "Nota 0-1000" },
+      { text: "Score Tributário", included: true, isSubItem: true, limitText: "Saúde tributária 0-1000" },
       { text: "Comparativo de Regimes", included: true, isSubItem: true, limitText: "Simples x LP x LR" },
       { text: "Simpronto 2027", included: true, isSubItem: true, limitText: "Simples: Por Dentro x Por Fora" },
       { text: "Timeline 2026-2033", included: true, limitText: "Prazos críticos" },
