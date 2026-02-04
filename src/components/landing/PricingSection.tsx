@@ -72,7 +72,7 @@ const plans: Plan[] = [
       { text: "Planejamento Tributário", included: true, isSubItem: true, limitText: "61+ oportunidades" },
       { text: "Calculadora NCM e NBS", included: true, limitText: "Produtos e Serviços" },
       { text: "Analisador de Documentos IA", included: true, limitText: "Contratos, notas, editais" },
-      { text: "Workflows Guiados", included: true, limitText: "Passo a passo inteligente" },
+      { text: "Workflows Guiados", included: true, limitText: "Diagnóstico completo automático" },
       { text: "Relatórios PDF Clara AI", included: true, limitText: "Diagnósticos prontos para enviar" },
       { text: "TribuTalks Connect", included: true, limitText: "Comunidade WhatsApp" },
     ],
