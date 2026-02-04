@@ -48,7 +48,7 @@ const plans: Plan[] = [
       { text: "DRE Inteligente", included: true, isSubItem: true, limitText: "Impacto na margem" },
       { text: "Score Tributário", included: true, isSubItem: true, limitText: "Nota 0-1000" },
       { text: "Comparativo de Regimes", included: true, isSubItem: true, limitText: "Simples x LP x LR" },
-      { text: "Simpronto 2027", included: true, isSubItem: true, limitText: "Simulação pós-Reforma" },
+      { text: "Simpronto 2027", included: true, isSubItem: true, limitText: "Simples: Por Dentro x Por Fora" },
       { text: "Timeline 2026-2033", included: true, limitText: "Prazos críticos" },
       { text: "Newsletter TribuTalks News", included: true, limitText: "Toda terça às 07h07" },
     ],
