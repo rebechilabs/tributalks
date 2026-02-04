@@ -3,29 +3,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   TrendingUp, 
   Building2, 
   ArrowUpRight, 
   AlertCircle,
   FileText,
-  Target
+  Target,
+  Calculator,
+  BarChart3,
+  DollarSign
 } from "lucide-react";
 import { Link } from "react-router-dom";
-
-export interface ValuationData {
-  valuationMin: number;
-  valuationMax: number;
-  multiploBase: number;
-  ajusteCompliance: number; // multiplier (e.g., 1.15 for +15%)
-  ajustePercentual: number; // percentage (e.g., 15 for +15%)
-  potencialMelhoria: number; // additional value if score improves to A
-  sectorName: string;
-  scoreGrade: string | null;
-  scoreTotal: number | null;
-  hasData: boolean;
-  missingData: ('ebitda' | 'score' | 'sector')[];
-}
+import { ValuationData, ValuationMethodResult } from "@/hooks/useExecutiveData";
 
 interface ExecutiveValuationCardProps {
   data: ValuationData | null;
@@ -69,7 +60,99 @@ function getComplianceLabel(percentual: number): { text: string; color: string }
   return { text: 'Severo', color: 'text-destructive' };
 }
 
+interface MethodCardProps {
+  result: ValuationMethodResult;
+  icon: React.ReactNode;
+  description: string;
+  multipleLabel: string;
+  compliancePercentual: number;
+  scoreGrade: string | null;
+  baseValue: number | null;
+  baseLabel: string;
+}
+
+function MethodCard({ 
+  result, 
+  icon, 
+  description, 
+  multipleLabel,
+  compliancePercentual,
+  scoreGrade,
+  baseValue,
+  baseLabel
+}: MethodCardProps) {
+  const complianceLabel = getComplianceLabel(compliancePercentual);
+  const gradeColor = getGradeColor(scoreGrade);
+  const hasValue = result.valuationMin > 0 && result.valuationMax > 0;
+
+  if (!hasValue) {
+    return (
+      <div className="p-4 rounded-lg bg-muted/30 border border-dashed border-muted-foreground/30">
+        <div className="flex items-center gap-2 mb-2">
+          {icon}
+          <span className="text-sm font-medium text-muted-foreground">{result.label}</span>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Dados insuficientes para este método
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Value Range */}
+      <div className="p-4 rounded-lg bg-background/50 border border-border">
+        <div className="flex items-center gap-2 mb-2">
+          {icon}
+          <span className="text-sm text-muted-foreground">Valuation Estimado</span>
+        </div>
+        <div className="text-2xl font-bold text-foreground">
+          {formatCurrency(result.valuationMin)} — {formatCurrency(result.valuationMax)}
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          {description}
+        </p>
+      </div>
+
+      {/* Details Grid */}
+      <div className="grid grid-cols-2 gap-3">
+        {/* Multiple/Rate */}
+        <div className="p-3 rounded-lg bg-muted/30">
+          <div className="text-xs text-muted-foreground mb-1">{multipleLabel}</div>
+          <div className="text-lg font-semibold text-foreground">
+            {result.multiple.toFixed(1)}x
+          </div>
+        </div>
+
+        {/* Base Value */}
+        {baseValue && baseValue > 0 && (
+          <div className="p-3 rounded-lg bg-muted/30">
+            <div className="text-xs text-muted-foreground mb-1">{baseLabel}</div>
+            <div className="text-lg font-semibold text-foreground">
+              {formatCurrency(baseValue)}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Compliance Adjustment */}
+      <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">Ajuste Compliance</span>
+          <span className={`text-sm font-medium ${complianceLabel.color}`}>
+            {compliancePercentual >= 0 ? '+' : ''}{compliancePercentual.toFixed(0)}%
+            <span className={`ml-1 ${gradeColor}`}>({scoreGrade || '—'})</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ExecutiveValuationCard({ data, loading }: ExecutiveValuationCardProps) {
+  const [activeTab, setActiveTab] = useState('ebitda');
+
   if (loading) {
     return (
       <Card className="border-primary/20 bg-gradient-to-br from-card to-primary/5">
@@ -136,12 +219,12 @@ export function ExecutiveValuationCard({ data, loading }: ExecutiveValuationCard
             <div className="flex flex-wrap justify-center gap-3">
               {missingItems.includes('ebitda') && (
                 <Button variant="outline" size="sm" asChild>
-                  <Link to="/dashboard/dre">Preencher DRE</Link>
+                  <Link to="/dashboard/entender/dre">Preencher DRE</Link>
                 </Button>
               )}
               {missingItems.includes('score') && (
                 <Button variant="outline" size="sm" asChild>
-                  <Link to="/dashboard/score">Fazer Score</Link>
+                  <Link to="/dashboard/entender/score">Fazer Score</Link>
                 </Button>
               )}
             </div>
@@ -166,42 +249,73 @@ export function ExecutiveValuationCard({ data, loading }: ExecutiveValuationCard
             Estimativa de Valuation da Empresa
           </CardTitle>
           <Badge variant="default" className="bg-primary/20 text-primary border-primary/30">
-            EXCLUSIVO
+            3 MÉTODOS
           </Badge>
         </div>
+        <p className="text-sm text-muted-foreground mt-1">
+          Setor: {data.sectorName}
+        </p>
       </CardHeader>
       <CardContent className="space-y-5">
-        {/* Main Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Valuation Range */}
-          <div className="p-4 rounded-lg bg-background/50 border border-border">
-            <div className="flex items-center gap-2 mb-2">
-              <Building2 className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Valuation Atual</span>
-            </div>
-            <div className="text-2xl font-bold text-foreground">
-              {formatCurrency(data.valuationMin)} — {formatCurrency(data.valuationMax)}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Setor: {data.sectorName}
-            </p>
-          </div>
+        {/* Tabs for Methods */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="ebitda" className="gap-1 text-xs sm:text-sm">
+              <Calculator className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">EBITDA</span>
+              <span className="sm:hidden">EBITDA</span>
+            </TabsTrigger>
+            <TabsTrigger value="dcf" className="gap-1 text-xs sm:text-sm">
+              <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">DCF</span>
+              <span className="sm:hidden">DCF</span>
+            </TabsTrigger>
+            <TabsTrigger value="revenue" className="gap-1 text-xs sm:text-sm">
+              <DollarSign className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Receita</span>
+              <span className="sm:hidden">Receita</span>
+            </TabsTrigger>
+          </TabsList>
 
-          {/* Multiplier Applied */}
-          <div className="p-4 rounded-lg bg-background/50 border border-border">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Múltiplo Aplicado</span>
-            </div>
-            <div className="text-2xl font-bold text-foreground">
-              {data.multiploBase.toFixed(1)}x <span className="text-lg font-normal text-muted-foreground">EBITDA</span>
-            </div>
-            <p className={`text-sm mt-1 ${complianceLabel.color}`}>
-              {data.ajustePercentual >= 0 ? '+' : ''}{data.ajustePercentual.toFixed(0)}% compliance 
-              <span className={`ml-1 ${gradeColor}`}>({data.scoreGrade || '—'})</span>
-            </p>
-          </div>
-        </div>
+          <TabsContent value="ebitda" className="mt-4">
+            <MethodCard
+              result={data.ebitda}
+              icon={<Calculator className="w-4 h-4 text-primary" />}
+              description="Baseado no múltiplo de EBITDA do setor ajustado por compliance"
+              multipleLabel="Múltiplo Aplicado"
+              compliancePercentual={data.ajustePercentual}
+              scoreGrade={data.scoreGrade}
+              baseValue={data.ebitdaAnual}
+              baseLabel="EBITDA Anual"
+            />
+          </TabsContent>
+
+          <TabsContent value="dcf" className="mt-4">
+            <MethodCard
+              result={data.dcf}
+              icon={<BarChart3 className="w-4 h-4 text-primary" />}
+              description="Valor presente dos fluxos de caixa projetados para 5 anos + perpetuidade"
+              multipleLabel="Taxa de Desconto"
+              compliancePercentual={data.ajustePercentual}
+              scoreGrade={data.scoreGrade}
+              baseValue={data.lucroLiquido}
+              baseLabel="Lucro Anual"
+            />
+          </TabsContent>
+
+          <TabsContent value="revenue" className="mt-4">
+            <MethodCard
+              result={data.revenue}
+              icon={<DollarSign className="w-4 h-4 text-primary" />}
+              description="Baseado no múltiplo de receita típico do setor"
+              multipleLabel="Múltiplo Aplicado"
+              compliancePercentual={data.ajustePercentual}
+              scoreGrade={data.scoreGrade}
+              baseValue={data.receitaAnual}
+              baseLabel="Receita Anual"
+            />
+          </TabsContent>
+        </Tabs>
 
         {/* Potential Improvement */}
         {targetGrade && data.potencialMelhoria > 0 && (
@@ -229,7 +343,7 @@ export function ExecutiveValuationCard({ data, loading }: ExecutiveValuationCard
         <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 text-xs text-muted-foreground">
           <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
           <p>
-            Estimativa indicativa baseada em múltiplos de mercado e compliance tributário. 
+            Estimativa indicativa baseada em múltiplos de mercado, fluxo de caixa descontado e compliance tributário. 
             Não constitui avaliação formal. Para transações de M&A, consulte especialistas certificados.
           </p>
         </div>
@@ -237,7 +351,7 @@ export function ExecutiveValuationCard({ data, loading }: ExecutiveValuationCard
         {/* CTAs */}
         <div className="flex flex-wrap gap-3">
           <Button variant="default" size="sm" asChild className="gap-2">
-            <Link to="/dashboard/score">
+            <Link to="/dashboard/entender/score">
               <Target className="w-4 h-4" />
               Melhorar meu Score
             </Link>
