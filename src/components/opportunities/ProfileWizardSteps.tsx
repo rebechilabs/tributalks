@@ -28,7 +28,8 @@ export const SETOR_OPTIONS = [
   { value: 'educacao', label: 'Educação', icon: GraduationCap, description: 'Escola, curso, treinamento' },
   { value: 'energia', label: 'Energia Solar', icon: Sun, description: 'Geração, instalação solar' },
   { value: 'ecommerce', label: 'E-commerce', icon: Store, description: 'Loja online, marketplace' },
-  { value: 'artesanato', label: 'Artesanato', icon: Palette, description: 'Artesão, produtos manuais, arte popular' },
+  { value: 'artesanato', label: 'Artesanato (Produção)', icon: Palette, description: 'Artesão, produção manual, arte popular' },
+  { value: 'comercio_artesanato', label: 'Comércio de Artesanato', icon: Store, description: 'Loja de artesanato, revenda de produtos artesanais' },
 ];
 
 // Step 2: Porte/Faturamento options
@@ -111,6 +112,15 @@ export const SECTOR_CHARACTERISTICS: Record<string, { field: string; label: stri
     { field: 'participa_feiras', label: 'Participo de feiras e exposições', description: 'Regime especial eventos' },
     { field: 'exporta_artesanato', label: 'Exporto produtos artesanais', description: 'Imunidade exportação' },
     { field: 'usa_insumos_naturais', label: 'Uso matérias-primas naturais/recicladas', description: 'Isenção IPI' },
+  ],
+  comercio_artesanato: [
+    { field: 'compra_artesao_local', label: 'Compro de artesãos locais', description: 'Apoio economia local' },
+    { field: 'compra_cooperativas', label: 'Compro de cooperativas de artesãos', description: 'Benefícios cooperativismo' },
+    { field: 'revende_artesanato_regional', label: 'Revendo artesanato regional/típico', description: 'Possível isenção ICMS' },
+    { field: 'loja_fisica_artesanato', label: 'Tenho loja física especializada', description: 'Pode ter regime especial' },
+    { field: 'vende_turistas', label: 'Vendo para turistas', description: 'Roteiros turísticos' },
+    { field: 'exporta_revenda_artesanato', label: 'Exporto artesanato que revendo', description: 'Imunidade exportação' },
+    { field: 'participa_feiras_revenda', label: 'Participo de feiras como expositor', description: 'Regime especial eventos' },
   ],
 };
 
@@ -236,7 +246,7 @@ export interface ProfileFormData {
   fins_lucrativos: boolean;
   investe_tecnologia_educacional: boolean;
   
-  // Artesanato
+  // Artesanato (Produção)
   tem_carteira_artesao: boolean;
   artesanato_regional: boolean;
   mei_artesao: boolean;
@@ -244,6 +254,15 @@ export interface ProfileFormData {
   participa_feiras: boolean;
   exporta_artesanato: boolean;
   usa_insumos_naturais: boolean;
+  
+  // Comércio de Artesanato
+  compra_artesao_local: boolean;
+  compra_cooperativas: boolean;
+  revende_artesanato_regional: boolean;
+  loja_fisica_artesanato: boolean;
+  vende_turistas: boolean;
+  exporta_revenda_artesanato: boolean;
+  participa_feiras_revenda: boolean;
 }
 
 export const INITIAL_PROFILE_DATA: ProfileFormData = {
@@ -320,7 +339,7 @@ export const INITIAL_PROFILE_DATA: ProfileFormData = {
   cursos_livres: false,
   fins_lucrativos: true, // Default true (most are for-profit)
   investe_tecnologia_educacional: false,
-  // Artesanato
+  // Artesanato (Produção)
   tem_carteira_artesao: false,
   artesanato_regional: false,
   mei_artesao: false,
@@ -328,4 +347,12 @@ export const INITIAL_PROFILE_DATA: ProfileFormData = {
   participa_feiras: false,
   exporta_artesanato: false,
   usa_insumos_naturais: false,
+  // Comércio de Artesanato
+  compra_artesao_local: false,
+  compra_cooperativas: false,
+  revende_artesanato_regional: false,
+  loja_fisica_artesanato: false,
+  vende_turistas: false,
+  exporta_revenda_artesanato: false,
+  participa_feiras_revenda: false,
 };
