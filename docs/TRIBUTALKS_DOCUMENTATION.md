@@ -1,6 +1,6 @@
 # TribuTalks — Documentação Completa para Empresário/Dev
 
-> **Última atualização:** Fevereiro 2026
+> **Última atualização:** 4 de Fevereiro de 2026
 
 ## Resumo Executivo
 
@@ -428,6 +428,13 @@ src/
 ├── components/
 │   ├── ui/                    # shadcn/ui (50+ componentes)
 │   ├── landing/               # Página de vendas (3 jornadas)
+│   │   ├── InteractiveDemo.tsx    # Demo interativa com 5 fases
+│   │   └── demo/                  # Componentes de cada fase
+│   │       ├── DemoStepUpload.tsx   # Fase 1: Upload XMLs (5s)
+│   │       ├── DemoStepScore.tsx    # Fase 2: Score Tributário (7s)
+│   │       ├── DemoStepRadar.tsx    # Fase 3: Radar de Créditos (7s)
+│   │       ├── DemoStepClara.tsx    # Fase 4: Clara AI (8s)
+│   │       └── DemoStepNexus.tsx    # Fase 5: Dashboard NEXUS (manual)
 │   ├── dashboard/             # Layout + cards do dashboard
 │   ├── clara/                 # Componentes AI-Native
 │   │   ├── ClaraAgentBadge.tsx
