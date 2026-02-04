@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Building2, Scale, Shield, FileCheck, Clock, Settings, Info, DollarSign, Bell, CreditCard, Target, FileSearch, AlertTriangle, TrendingUp, Lightbulb } from "lucide-react";
 import { HelpButton } from "@/components/common/HelpButton";
+import { ResetCalculationButton } from "@/components/common/ResetCalculationButton";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { ScoreGauge } from "@/components/score/ScoreGauge";
 import { ScoreCard } from "@/components/score/ScoreCard";
@@ -246,7 +247,17 @@ export default function ScoreTributario() {
               Diagnóstico completo da saúde fiscal da sua empresa
             </p>
           </div>
-          <HelpButton toolSlug="score-tributario" size="default" className="gap-2" />
+          <div className="flex items-center gap-2">
+            <ResetCalculationButton 
+              toolName="Score Tributário"
+              tables={['tax_score_history']}
+              onReset={() => {
+                setScoreData(null);
+                setActions([]);
+              }}
+            />
+            <HelpButton toolSlug="score-tributario" size="default" className="gap-2" />
+          </div>
         </div>
 
         {/* Clara AI Card */}

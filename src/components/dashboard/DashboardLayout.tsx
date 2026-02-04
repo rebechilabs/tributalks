@@ -15,6 +15,7 @@ import { FloatingAssistant } from "@/components/common/FloatingAssistant";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { CommandPalette } from "@/components/CommandPalette";
 import { PageBreadcrumb } from "@/components/common/PageBreadcrumb";
+import { CompanySelector } from "@/components/company/CompanySelector";
 import logoTributalks from "@/assets/logo-tributalks.png";
 
 interface DashboardLayoutProps {
@@ -87,6 +88,9 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
+
+        {/* Company Selector (Navigator+) */}
+        <CompanySelector />
 
         {/* Breadcrumb Navigation Bar */}
         <PageBreadcrumb />

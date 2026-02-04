@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/hooks/useAuth";
+import { CompanyProvider } from "@/contexts/CompanyContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PublicRoute } from "@/components/PublicRoute";
 // Páginas públicas
@@ -93,6 +94,7 @@ const App = () => (
       <TooltipProvider>
         <BrowserRouter>
         <AuthProvider>
+          <CompanyProvider>
           <PresenceTrackerWrapper />
           <Toaster />
           <Sonner />
@@ -558,6 +560,7 @@ const App = () => (
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </CompanyProvider>
         </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
