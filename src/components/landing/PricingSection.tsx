@@ -90,7 +90,7 @@ const plans: Plan[] = [
     popular: true,
     trialDays: 7,
     hasAnnual: true,
-    cnpjLimit: "6 CNPJs • 4 Usuários",
+    cnpjLimit: "4 CNPJs • 4 Usuários",
     roiBadges: [
       { icon: "piggy", text: "Economia média: R$ 180k/ano" },
       { icon: "trending", text: "ROI típico: 5x no 1º ano" },
