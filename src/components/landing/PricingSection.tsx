@@ -100,7 +100,7 @@ const plans: Plan[] = [
       { text: "Módulo PRECIFICAÇÃO", included: true, limitText: "Margem protegida" },
       { text: "Margem Ativa (NCM)", included: true, isSubItem: true, limitText: "Impacto por produto" },
       { text: "Split Payment 2026", included: true, isSubItem: true, limitText: "Simulação de caixa" },
-      { text: "PriceGuard", included: true, isSubItem: true, limitText: "Alerta de repasse" },
+      { text: "PriceGuard", included: true, isSubItem: true, limitText: "Quando reajustar preço" },
       { text: "OMC-AI (Fornecedores)", included: true, isSubItem: true, limitText: "Análise de risco" },
       { text: "Módulo COMANDAR", included: true, limitText: "Visão executiva" },
       { text: "NEXUS (Centro de Comando)", included: true, isSubItem: true, limitText: "Dashboard unificado" },
