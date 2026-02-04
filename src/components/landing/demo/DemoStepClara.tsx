@@ -11,7 +11,7 @@ export function DemoStepClara() {
     "Com base nos seus dados, a CBS e IBS vão substituir PIS/COFINS e ICMS. Sua carga tributária estimada aumenta 8,5%. Recomendo ajustar preços ou otimizar margens.";
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowAnswer(true), 1000);
+    const timer = setTimeout(() => setShowAnswer(true), 1500);
     return () => clearTimeout(timer);
   }, []);
 
@@ -26,7 +26,7 @@ export function DemoStepClara() {
       } else {
         clearInterval(interval);
       }
-    }, 30);
+    }, 45);
 
     return () => clearInterval(interval);
   }, [showAnswer]);

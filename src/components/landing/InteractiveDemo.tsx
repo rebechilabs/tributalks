@@ -12,10 +12,10 @@ import {
 } from "./demo";
 
 const STEPS = [
-  { id: 1, component: DemoStepUpload, duration: 3000, label: "Upload XMLs" },
-  { id: 2, component: DemoStepScore, duration: 4000, label: "Score Tributário" },
-  { id: 3, component: DemoStepRadar, duration: 4000, label: "Radar de Créditos" },
-  { id: 4, component: DemoStepClara, duration: 4000, label: "Clara AI" },
+  { id: 1, component: DemoStepUpload, duration: 5000, label: "Upload XMLs" },
+  { id: 2, component: DemoStepScore, duration: 7000, label: "Score Tributário" },
+  { id: 3, component: DemoStepRadar, duration: 7000, label: "Radar de Créditos" },
+  { id: 4, component: DemoStepClara, duration: 8000, label: "Clara AI" },
   { id: 5, component: DemoStepNexus, duration: 0, label: "Dashboard NEXUS" },
 ];
 
