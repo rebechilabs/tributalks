@@ -1,8 +1,8 @@
 export const CONFIG = {
   // Payment Links - Stripe (primary gateway)
   PAYMENT_LINKS: {
-    // Starter - R$397/mês ou R$3.970/ano (7 dias grátis)
-    STARTER_MENSAL: "https://buy.stripe.com/4gM3co9fs3vgfij9iSbo40b",
+    // Starter - R$297/mês (7 dias grátis)
+    STARTER_MENSAL: "https://buy.stripe.com/8x29AMcrE1n8b239iSbo40h",
     STARTER_ANUAL: "https://buy.stripe.com/00wbIU4Zc5Do1rt1Qqbo401",
     // Navigator - R$1.297/mês (7 dias grátis)
     NAVIGATOR_MENSAL: "https://buy.stripe.com/7sYdR20IW0j45HJdz8bo40e",
