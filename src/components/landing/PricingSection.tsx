@@ -71,7 +71,7 @@ const plans: Plan[] = [
       { text: "Radar de Créditos", included: true, isSubItem: true, limitText: "XML, SPED, DCTF, PGDAS" },
       { text: "Planejamento Tributário", included: true, isSubItem: true, limitText: "61+ oportunidades" },
       { text: "Calculadora NBS (Serviços)", included: true },
-      { text: "Analisador de Documentos IA", included: true },
+      { text: "Analisador de Documentos IA", included: true, limitText: "Contratos, notas, editais" },
       { text: "Workflows Guiados", included: true },
       { text: "Relatórios PDF Clara AI", included: true },
       { text: "TribuTalks Connect", included: true },
