@@ -69,7 +69,7 @@ const plans: Plan[] = [
       { text: "Tudo do Starter +", included: true },
       { text: "Módulo RECUPERAR CRÉDITOS", included: true },
       { text: "Radar de Créditos", included: true, isSubItem: true, limitText: "XML, SPED, DCTF, PGDAS" },
-      { text: "Oportunidades Fiscais (61+)", included: true, isSubItem: true },
+      { text: "Planejamento Tributário", included: true, isSubItem: true, limitText: "61+ oportunidades" },
       { text: "Calculadora NBS (Serviços)", included: true },
       { text: "Analisador de Documentos IA", included: true },
       { text: "Workflows Guiados", included: true },
