@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wallet, Info, TrendingDown, Calendar, RefreshCw, FileDown, Loader2, CheckCircle, Calculator, AlertTriangle } from "lucide-react";
+import { Wallet, Info, TrendingDown, Calendar, RefreshCw, FileDown, Loader2, CheckCircle, Calculator, AlertTriangle, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -15,6 +15,7 @@ import { FeatureGateLimit } from "@/components/FeatureGate";
 import { useSimulationLimit } from "@/hooks/useSimulationLimit";
 import { usePlanAccess } from "@/hooks/useFeatureAccess";
 import { TaxDisclaimer } from "@/components/common/TaxDisclaimer";
+import { HelpButton } from "@/components/common/HelpButton";
 
 interface SplitPaymentResult {
   mensal_min: number;
@@ -182,6 +183,13 @@ const SplitPayment = () => {
   };
 
   const handleReset = () => {
+    setFormData({
+      empresa: profile?.empresa || "",
+      faturamento_mensal: "",
+      regime: "",
+      setor: "",
+      percentual_vendas_pj: "0.80",
+    });
     setResult(null);
     setSaved(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -225,15 +233,31 @@ const SplitPayment = () => {
 
         {/* Title */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Wallet className="w-6 h-6 text-primary" />
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Wallet className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">Impacto do Split Payment</h1>
+                <p className="text-muted-foreground">
+                  Calcule a retenção de caixa com base nas alíquotas oficiais da LC 214/2025 e Manual RTC.
+                </p>
+              </div>
             </div>
-            <h1 className="text-2xl font-bold text-foreground">Impacto do Split Payment</h1>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleReset}
+                className="gap-1 text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+                Zerar Cálculo
+              </Button>
+              <HelpButton toolSlug="split-payment" size="default" />
+            </div>
           </div>
-          <p className="text-muted-foreground">
-            Calcule a retenção de caixa com base nas alíquotas oficiais da LC 214/2025 e Manual RTC.
-          </p>
         </div>
 
         {/* Cenário Selector */}
