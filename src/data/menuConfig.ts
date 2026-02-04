@@ -3,7 +3,7 @@ import {
   Clock, Settings, Lock, Sparkles, Newspaper,
   Calculator, Target, BarChart3, Trophy, Lightbulb, LayoutDashboard,
   MapPin, Briefcase, ClipboardCheck, Plug, Gift, Route, FileSearch,
-  ArrowUp, Command
+  ArrowUp, Command, Shield
 } from "lucide-react";
 
 export type PlanType = 'STARTER' | 'NAVIGATOR' | 'PROFESSIONAL' | 'ENTERPRISE';
@@ -25,6 +25,7 @@ export interface MenuGroup {
   title: string;
   items: MenuItem[];
   collapsible?: boolean;
+  moduleHref?: string; // New: link when clicking on module title
 }
 
 export interface MenuDivider {
@@ -160,58 +161,84 @@ export const MENU_NAVIGATOR: MenuElement[] = [
 ];
 
 /**
- * MENU PROFESSIONAL (R$ 2.997/mês)
- * Filosofia: Comando executivo
- * Clara ilimitada, NEXUS em destaque, foco em ação
+ * MENU PROFESSIONAL V2 (R$ 2.997/mês)
+ * Nova estrutura por módulos de objetivo de negócio
+ * Clara ilimitada, navegação por objetivos
  */
-export const MENU_PROFESSIONAL: MenuElement[] = [
+export const MENU_PROFESSIONAL_V2: MenuElement[] = [
+  // Clara AI no topo
   {
     title: '',
     items: [
       { ...CLARA_AI_ITEM, badge: '∞', badgeVariant: 'success', description: 'Copiloto tributário ilimitado' },
     ]
   },
-  {
-    title: 'Comando',
-    items: [
-      { label: 'NEXUS', href: '/dashboard/nexus', icon: LayoutDashboard, featured: true, badge: '8 KPIs', description: 'Centro de Comando' },
-      { label: 'Dashboard', href: '/dashboard', icon: Home },
-    ]
-  },
-  {
-    title: 'Diagnóstico Avançado',
-    collapsible: true,
-    items: [
-      { label: 'Radar de Créditos', href: '/dashboard/analise-notas', icon: FileText, description: 'Identifique créditos' },
-      { label: 'DRE Inteligente', href: '/dashboard/dre', icon: BarChart3, description: 'Impacto na margem' },
-      { label: 'Oportunidades Fiscais', href: '/dashboard/oportunidades', icon: Lightbulb, badge: '61+' },
-      { label: 'Suíte Margem Ativa', href: '/dashboard/margem-ativa', icon: Target },
-    ]
-  },
-  {
-    title: 'Simuladores',
-    collapsible: true,
-    items: [
-      { label: 'Calculadora RTC', href: '/calculadora/rtc', icon: Calculator },
-      { label: 'Calculadora NBS', href: '/calculadora/servicos', icon: Briefcase },
-      { label: 'Split Payment', href: '/calculadora/split-payment', icon: Wallet },
-      { label: 'Comparativo de Regimes', href: '/calculadora/comparativo-regimes', icon: Scale },
-    ]
-  },
-  {
-    title: 'Integrações',
-    items: [
-      { label: 'Conectar ERP', href: '/dashboard/integracoes', icon: Plug },
-    ]
-  },
-  { type: 'divider' as const },
+  // HOME
   {
     title: '',
     items: [
+      { label: 'Home', href: '/dashboard/home', icon: Home },
+    ]
+  },
+  // Módulo ENTENDER
+  {
+    title: 'ENTENDER MEU NEGÓCIO',
+    collapsible: true,
+    moduleHref: '/dashboard/entender',
+    items: [
+      { label: 'DRE Inteligente', href: '/dashboard/entender/dre', icon: BarChart3, description: 'Base para análises' },
+      { label: 'Score Tributário', href: '/dashboard/entender/score', icon: Trophy, description: 'Diagnóstico 0-1000' },
+      { label: 'Comparativo de Regimes', href: '/dashboard/entender/comparativo', icon: Scale, description: 'Simule regimes' },
+    ]
+  },
+  // Módulo RECUPERAR
+  {
+    title: 'RECUPERAR CRÉDITOS',
+    collapsible: true,
+    moduleHref: '/dashboard/recuperar',
+    items: [
+      { label: 'Radar de Créditos', href: '/dashboard/recuperar/radar', icon: FileText, description: 'Análise de XMLs' },
+      { label: 'Oportunidades Fiscais', href: '/dashboard/recuperar/oportunidades', icon: Lightbulb, badge: '61+' },
+    ]
+  },
+  // Módulo PRECIFICAÇÃO
+  {
+    title: 'PRECIFICAÇÃO',
+    collapsible: true,
+    moduleHref: '/dashboard/precificacao',
+    items: [
+      { label: 'Margem Ativa', href: '/dashboard/precificacao/margem', icon: Target, description: 'Análise por NCM' },
+      { label: 'Split Payment', href: '/dashboard/precificacao/split', icon: Wallet, description: 'Impacto 2026' },
+      { label: 'PriceGuard', href: '/dashboard/precificacao/priceguard', icon: Shield, badge: 'Novo' },
+    ]
+  },
+  // Módulo COMANDAR
+  {
+    title: 'COMANDAR',
+    collapsible: true,
+    moduleHref: '/dashboard/comandar',
+    items: [
+      { label: 'NEXUS', href: '/dashboard/comandar/nexus', icon: LayoutDashboard, featured: true, badge: '8 KPIs' },
+      { label: 'Relatórios PDF', href: '/dashboard/comandar/relatorios', icon: FileText },
+    ]
+  },
+  { type: 'divider' as const },
+  // Seções secundárias
+  {
+    title: '',
+    items: [
+      { label: 'Newsletter', href: '/noticias', icon: Newspaper, description: 'Toda terça às 07h07' },
+      { label: 'Comunidade', href: '/comunidade', icon: Users, description: 'Conexões e negócios' },
+      { label: 'Integrações', href: '/dashboard/integracoes', icon: Plug },
       { label: 'Configurações', href: '/configuracoes', icon: Settings },
     ]
   },
 ];
+
+/**
+ * MENU PROFESSIONAL (Legacy - mantido para compatibilidade)
+ */
+export const MENU_PROFESSIONAL: MenuElement[] = MENU_PROFESSIONAL_V2;
 
 // Mapeamento de planos legados para novos
 export const LEGACY_PLAN_MAP: Record<string, PlanType> = {
@@ -243,7 +270,7 @@ export function getMenuForPlan(plan: PlanType): MenuElement[] {
   switch (plan) {
     case 'PROFESSIONAL':
     case 'ENTERPRISE':
-      return MENU_PROFESSIONAL;
+      return MENU_PROFESSIONAL_V2;
     case 'NAVIGATOR':
       return MENU_NAVIGATOR;
     case 'STARTER':
@@ -256,7 +283,7 @@ export function getDefaultRouteForPlan(plan: PlanType): string {
   switch (plan) {
     case 'PROFESSIONAL':
     case 'ENTERPRISE':
-      return '/dashboard/nexus';
+      return '/dashboard/home';
     case 'NAVIGATOR':
       return '/dashboard';
     case 'STARTER':

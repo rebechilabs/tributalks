@@ -5,7 +5,7 @@ import {
   Clock, Settings, Newspaper, Calculator, Target, 
   BarChart3, Trophy, Lightbulb, LayoutDashboard,
   MapPin, Briefcase, ClipboardCheck, Plug, Gift, Route, 
-  FileSearch, HelpCircle, User, Bell, Sparkles, BookOpen
+  FileSearch, HelpCircle, User, Bell, Sparkles, BookOpen, Shield
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -39,7 +39,7 @@ interface RouteDefinition {
   icon?: LucideIcon;
 }
 
-// Complete route map with hierarchy
+// Complete route map with hierarchy - includes new module structure
 const ROUTE_MAP: Record<string, RouteDefinition> = {
   // Root
   '/dashboard': { 
@@ -49,7 +49,134 @@ const ROUTE_MAP: Record<string, RouteDefinition> = {
     icon: Home 
   },
   
-  // Diagnóstico
+  // NEW: Home Inteligente
+  '/dashboard/home': { 
+    label: 'Home', 
+    group: 'home',
+    groupLabel: 'Home',
+    parent: '/dashboard',
+    icon: Home 
+  },
+  
+  // NEW: Module pages
+  '/dashboard/entender': { 
+    label: 'Entender Meu Negócio', 
+    group: 'entender',
+    groupLabel: 'Entender',
+    parent: '/dashboard/home',
+    icon: BarChart3 
+  },
+  '/dashboard/recuperar': { 
+    label: 'Recuperar Créditos', 
+    group: 'recuperar',
+    groupLabel: 'Recuperar',
+    parent: '/dashboard/home',
+    icon: FileText 
+  },
+  '/dashboard/precificacao': { 
+    label: 'Precificação', 
+    group: 'precificacao',
+    groupLabel: 'Precificação',
+    parent: '/dashboard/home',
+    icon: Target 
+  },
+  '/dashboard/comandar': { 
+    label: 'Comandar', 
+    group: 'comandar',
+    groupLabel: 'Comandar',
+    parent: '/dashboard/home',
+    icon: LayoutDashboard 
+  },
+  
+  // NEW: Tools under ENTENDER module
+  '/dashboard/entender/dre': { 
+    label: 'DRE Inteligente', 
+    group: 'entender',
+    groupLabel: 'Entender Meu Negócio',
+    parent: '/dashboard/entender',
+    relatedPaths: ['/dashboard/entender/score', '/dashboard/entender/comparativo'],
+    icon: BarChart3
+  },
+  '/dashboard/entender/score': { 
+    label: 'Score Tributário', 
+    group: 'entender',
+    groupLabel: 'Entender Meu Negócio',
+    parent: '/dashboard/entender',
+    relatedPaths: ['/dashboard/entender/dre', '/dashboard/entender/comparativo'],
+    icon: Trophy
+  },
+  '/dashboard/entender/comparativo': { 
+    label: 'Comparativo de Regimes', 
+    group: 'entender',
+    groupLabel: 'Entender Meu Negócio',
+    parent: '/dashboard/entender',
+    relatedPaths: ['/dashboard/entender/dre', '/dashboard/entender/score'],
+    icon: Scale
+  },
+  
+  // NEW: Tools under RECUPERAR module
+  '/dashboard/recuperar/radar': { 
+    label: 'Radar de Créditos', 
+    group: 'recuperar',
+    groupLabel: 'Recuperar Créditos',
+    parent: '/dashboard/recuperar',
+    relatedPaths: ['/dashboard/recuperar/oportunidades'],
+    icon: FileText
+  },
+  '/dashboard/recuperar/oportunidades': { 
+    label: 'Oportunidades Fiscais', 
+    group: 'recuperar',
+    groupLabel: 'Recuperar Créditos',
+    parent: '/dashboard/recuperar',
+    relatedPaths: ['/dashboard/recuperar/radar'],
+    icon: Lightbulb
+  },
+  
+  // NEW: Tools under PRECIFICACAO module
+  '/dashboard/precificacao/margem': { 
+    label: 'Margem Ativa', 
+    group: 'precificacao',
+    groupLabel: 'Precificação',
+    parent: '/dashboard/precificacao',
+    relatedPaths: ['/dashboard/precificacao/split', '/dashboard/precificacao/priceguard'],
+    icon: Target
+  },
+  '/dashboard/precificacao/split': { 
+    label: 'Split Payment', 
+    group: 'precificacao',
+    groupLabel: 'Precificação',
+    parent: '/dashboard/precificacao',
+    relatedPaths: ['/dashboard/precificacao/margem', '/dashboard/precificacao/priceguard'],
+    icon: Wallet
+  },
+  '/dashboard/precificacao/priceguard': { 
+    label: 'PriceGuard', 
+    group: 'precificacao',
+    groupLabel: 'Precificação',
+    parent: '/dashboard/precificacao',
+    relatedPaths: ['/dashboard/precificacao/margem', '/dashboard/precificacao/split'],
+    icon: Shield
+  },
+  
+  // NEW: Tools under COMANDAR module
+  '/dashboard/comandar/nexus': { 
+    label: 'NEXUS', 
+    group: 'comandar',
+    groupLabel: 'Comandar',
+    parent: '/dashboard/comandar',
+    relatedPaths: ['/dashboard/comandar/relatorios'],
+    icon: LayoutDashboard
+  },
+  '/dashboard/comandar/relatorios': { 
+    label: 'Relatórios PDF', 
+    group: 'comandar',
+    groupLabel: 'Comandar',
+    parent: '/dashboard/comandar',
+    relatedPaths: ['/dashboard/comandar/nexus'],
+    icon: FileText
+  },
+  
+  // Legacy routes (kept for backwards compatibility)
   '/dashboard/score-tributario': { 
     label: 'Score Tributário', 
     group: 'diagnostico',
@@ -160,7 +287,7 @@ const ROUTE_MAP: Record<string, RouteDefinition> = {
     icon: Sparkles
   },
   
-  // Diagnóstico Avançado
+  // Diagnóstico Avançado (legacy)
   '/dashboard/analise-notas': { 
     label: 'Radar de Créditos', 
     group: 'avancado',
@@ -277,6 +404,11 @@ const ROUTE_MAP: Record<string, RouteDefinition> = {
 
 // Group to paths mapping for auto-expand
 export const GROUP_PATHS: Record<string, string[]> = {
+  home: ['/dashboard/home'],
+  entender: ['/dashboard/entender', '/dashboard/entender/dre', '/dashboard/entender/score', '/dashboard/entender/comparativo'],
+  recuperar: ['/dashboard/recuperar', '/dashboard/recuperar/radar', '/dashboard/recuperar/oportunidades'],
+  precificacao: ['/dashboard/precificacao', '/dashboard/precificacao/margem', '/dashboard/precificacao/split', '/dashboard/precificacao/priceguard'],
+  comandar: ['/dashboard/comandar', '/dashboard/comandar/nexus', '/dashboard/comandar/relatorios'],
   diagnostico: ['/dashboard', '/dashboard/score-tributario'],
   comando: ['/dashboard/nexus'],
   simuladores: ['/calculadora/rtc', '/calculadora/servicos', '/calculadora/split-payment', '/calculadora/comparativo-regimes'],
@@ -298,7 +430,7 @@ export function useRouteInfo(): RouteInfo {
       return {
         path: currentPath,
         label: 'Página',
-        breadcrumb: [{ path: '/dashboard', label: 'Dashboard' }],
+        breadcrumb: [{ path: '/dashboard/home', label: 'Home' }],
         relatedPages: [],
         isRoot: false,
       };
@@ -320,9 +452,9 @@ export function useRouteInfo(): RouteInfo {
       }
     }
     
-    // Add Dashboard if not already in chain
-    if (breadcrumb.length === 0 || breadcrumb[0].path !== '/dashboard') {
-      breadcrumb.unshift({ path: '/dashboard', label: 'Dashboard' });
+    // Add Home if not already in chain (for new module structure)
+    if (breadcrumb.length === 0 || (breadcrumb[0].path !== '/dashboard/home' && breadcrumb[0].path !== '/dashboard')) {
+      breadcrumb.unshift({ path: '/dashboard/home', label: 'Home' });
     }
     
     // Build related pages
@@ -346,7 +478,7 @@ export function useRouteInfo(): RouteInfo {
       groupLabel: routeDef.groupLabel,
       breadcrumb,
       relatedPages,
-      isRoot: currentPath === '/dashboard',
+      isRoot: currentPath === '/dashboard' || currentPath === '/dashboard/home',
     };
   }, [currentPath]);
 }

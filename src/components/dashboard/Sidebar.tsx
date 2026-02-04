@@ -28,7 +28,7 @@ function isMenuGroup(element: MenuElement): element is MenuGroup {
   return 'items' in element;
 }
 
-// Map group titles to group keys
+// Map group titles to group keys for v2 navigation
 const GROUP_TITLE_TO_KEY: Record<string, string> = {
   'Diagnóstico': 'diagnostico',
   'Comando': 'comando',
@@ -38,6 +38,11 @@ const GROUP_TITLE_TO_KEY: Record<string, string> = {
   'Diagnóstico Avançado': 'avancado',
   'Integrações': 'integracoes',
   'Ferramentas Pro': 'avancado',
+  // New V2 module groups
+  'ENTENDER MEU NEGÓCIO': 'entender',
+  'RECUPERAR CRÉDITOS': 'recuperar',
+  'PRECIFICAÇÃO': 'precificacao',
+  'COMANDAR': 'comandar',
 };
 
 export function Sidebar() {
@@ -92,7 +97,7 @@ export function Sidebar() {
   const getUnreadForRoute = (href: string): number => {
     if (href === '/noticias') return unreadCounts.reforma;
     if (href === '/indicar') return unreadCounts.indicacao;
-    if (href === '/dashboard/oportunidades') return unreadCounts.geral;
+    if (href === '/dashboard/oportunidades' || href === '/dashboard/recuperar/oportunidades') return unreadCounts.geral;
     return 0;
   };
 
@@ -253,7 +258,8 @@ export function Sidebar() {
   const renderMenuGroup = (group: MenuGroup, index: number) => {
     const groupKey = GROUP_TITLE_TO_KEY[group.title] || '';
     const hasActiveItem = group.items.some(item => location.pathname === item.href);
-    const isExpanded = expandedGroups[group.title] ?? (!group.collapsible || hasActiveItem);
+    const isModulePage = group.moduleHref && location.pathname === group.moduleHref;
+    const isExpanded = expandedGroups[group.title] ?? (!group.collapsible || hasActiveItem || isModulePage);
 
     // Grupo sem título (items no topo como Clara)
     if (!group.title) {
@@ -264,7 +270,7 @@ export function Sidebar() {
       );
     }
 
-    // Grupo colapsável
+    // Grupo colapsável (módulos V2)
     if (group.collapsible) {
       return (
         <Collapsible
@@ -272,34 +278,56 @@ export function Sidebar() {
           open={isExpanded}
           onOpenChange={() => toggleGroup(group.title)}
         >
-          <CollapsibleTrigger asChild>
-            <button className={cn(
-              "flex items-center gap-2 px-3 py-2 w-full text-left group hover:bg-muted/50 rounded-lg transition-colors",
-              hasActiveItem && "bg-muted/30"
-            )}>
+          <div className="flex items-center">
+            {/* Module title - clickable to go to module page */}
+            {group.moduleHref ? (
+              <Link
+                to={group.moduleHref}
+                className={cn(
+                  "flex-1 flex items-center gap-2 px-3 py-2 text-left hover:bg-muted/50 rounded-l-lg transition-colors",
+                  (hasActiveItem || isModulePage) && "bg-muted/30"
+                )}
+              >
+                <span className={cn(
+                  "text-xs font-semibold uppercase tracking-wider",
+                  (hasActiveItem || isModulePage) ? "text-primary" : "text-muted-foreground"
+                )}>
+                  {group.title}
+                </span>
+                {(hasActiveItem || isModulePage) && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                )}
+              </Link>
+            ) : (
               <span className={cn(
-                "text-xs font-semibold uppercase tracking-wider flex-1",
+                "flex-1 px-3 py-2 text-xs font-semibold uppercase tracking-wider",
                 hasActiveItem ? "text-primary" : "text-muted-foreground"
               )}>
                 {group.title}
               </span>
-              {hasActiveItem && (
-                <span className="w-1.5 h-1.5 rounded-full bg-primary mr-1" />
-              )}
-              <ChevronDown className={cn(
-                "w-4 h-4 text-muted-foreground transition-transform",
-                isExpanded && "rotate-180"
-              )} />
-            </button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-1">
-            {group.items.map(item => renderNavItem(item))}
+            )}
+            
+            {/* Collapse toggle */}
+            <CollapsibleTrigger asChild>
+              <button className={cn(
+                "p-2 hover:bg-muted/50 rounded-r-lg transition-colors",
+                (hasActiveItem || isModulePage) && "bg-muted/30"
+              )}>
+                <ChevronDown className={cn(
+                  "w-4 h-4 text-muted-foreground transition-transform",
+                  isExpanded && "rotate-180"
+                )} />
+              </button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent className="space-y-1 mt-1">
+            {group.items.map(item => renderNavItem(item, true))}
           </CollapsibleContent>
         </Collapsible>
       );
     }
 
-    // Grupo normal
+    // Grupo normal (não colapsável)
     return (
       <div key={group.title} className="space-y-1">
         <div className={cn(
@@ -325,7 +353,7 @@ export function Sidebar() {
     <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-card border-r border-border">
       {/* Logo */}
       <div className="h-20 flex items-center px-6 border-b border-border">
-        <Link to="/dashboard" className="flex items-center gap-2">
+        <Link to="/dashboard/home" className="flex items-center gap-2">
           <img src={logoTributalks} alt="TribuTalks" className="h-16 w-auto" />
         </Link>
       </div>
