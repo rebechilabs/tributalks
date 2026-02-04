@@ -7,7 +7,7 @@ export const CONFIG = {
     // Navigator - R$1.297/mês (7 dias grátis)
     NAVIGATOR_MENSAL: "https://buy.stripe.com/7sYdR20IW0j45HJdz8bo40e",
     NAVIGATOR_ANUAL: "https://buy.stripe.com/7sY28k8bofdY4DFdz8bo40f",
-    // Professional - R$2.997/mês (7 dias grátis)
+    // Professional - R$2.997/mês (7 dias grátis) ou R$21.967/ano
     PROFESSIONAL_MENSAL: "https://buy.stripe.com/3cIeV6ezM2rc2vx52Cbo40g",
     PROFESSIONAL_ANUAL: "https://buy.stripe.com/bJe5kwcrE7Lw6LNdz8bo40c",
     // Enterprise - Sob consulta (WhatsApp direto)
