@@ -1,11 +1,11 @@
 /**
  * Credit Report Dialog Component
  * Modal for generating PDF credit reports
- * Supports both Visual (with graphics) and Executive (text-only) formats
+ * Supports Visual, Executive, and Executive V2 (complete) formats
  */
 
 import { useState } from 'react';
-import { Download, FileText, Loader2, X, CheckCircle2, AlertCircle, FileBarChart, FileCheck } from 'lucide-react';
+import { Download, FileText, Loader2, X, CheckCircle2, AlertCircle, FileBarChart, FileCheck, BookOpen } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -21,8 +21,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useCreditReport } from '@/hooks/useCreditReport';
 import { generateTribuTalksCreditReport } from '@/lib/pdf/CreditReportGenerator';
 import { generateExecutiveCreditReport } from '@/lib/pdf/ExecutiveReportGenerator';
+import { generateExecutiveReportV2 } from '@/lib/pdf/ExecutiveReportV2Generator';
 import { formatCurrency, formatCNPJ } from '@/lib/pdf/TribuTalksPdfStyles';
 import logoImage from '@/assets/logo-rebechi-silva.png';
+import logoRsPdf from '@/assets/logo-rs-pdf.png';
 
 interface CreditReportDialogProps {
   open: boolean;
@@ -36,11 +38,28 @@ export function CreditReportDialog({ open, onOpenChange }: CreditReportDialogPro
   const [error, setError] = useState<string | null>(null);
   
   // Report options
-  const [formato, setFormato] = useState<'visual' | 'executivo'>('executivo');
+  const [formato, setFormato] = useState<'visual' | 'executivo' | 'executivo-v2'>('executivo-v2');
   const [tema, setTema] = useState<'escuro' | 'claro'>('escuro');
   const [incluirDetalhes, setIncluirDetalhes] = useState(true);
   const [incluirInconsistencias, setIncluirInconsistencias] = useState(true);
   const [incluirOportunidades, setIncluirOportunidades] = useState(true);
+
+  // Helper to load logo as base64
+  const loadLogoBase64 = async (logoSrc: string): Promise<string | null> => {
+    try {
+      const response = await fetch(logoSrc);
+      const blob = await response.blob();
+      return await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch {
+      console.warn('Could not load logo image');
+      return null;
+    }
+  };
 
   const handleGenerate = async () => {
     if (!data || !isReady) return;
@@ -56,25 +75,20 @@ export function CreditReportDialog({ open, onOpenChange }: CreditReportDialogPro
           maxCreditsPerTax: 15,
           includeOpportunities: incluirOportunidades,
         });
+      } else if (formato === 'executivo-v2') {
+        // Generate Executive V2 Report (complete with all 7 sections)
+        const logoBase64 = await loadLogoBase64(logoRsPdf);
+        await generateExecutiveReportV2(data, logoBase64, {
+          maxCreditsPerTax: 15,
+          includeOpportunities: incluirOportunidades,
+        });
       } else {
         // Generate Visual Report (with graphics and logo)
-        let logoBase64: string | null = null;
-        try {
-          const response = await fetch(logoImage);
-          const blob = await response.blob();
-          logoBase64 = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-          });
-        } catch {
-          console.warn('Could not load logo image');
-        }
+        const logoBase64 = await loadLogoBase64(logoImage);
 
         await generateTribuTalksCreditReport(data, logoBase64, {
           tema,
-          formato,
+          formato: formato as 'visual' | 'executivo',
           incluirDetalhes,
           incluirInconsistencias,
           incluirOportunidades,
@@ -157,31 +171,46 @@ export function CreditReportDialog({ open, onOpenChange }: CreditReportDialogPro
               <Label>Formato do Relatório</Label>
               <RadioGroup
                 value={formato}
-                onValueChange={(value) => setFormato(value as 'visual' | 'executivo')}
-                className="grid grid-cols-2 gap-3"
+                onValueChange={(value) => setFormato(value as 'visual' | 'executivo' | 'executivo-v2')}
+                className="grid grid-cols-1 gap-3"
               >
-                <div className={`flex items-start space-x-3 p-3 rounded-lg border cursor-pointer transition-colors ${formato === 'executivo' ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50'}`}>
-                  <RadioGroupItem value="executivo" id="executivo" className="mt-0.5" />
+                <div className={`flex items-start space-x-3 p-3 rounded-lg border cursor-pointer transition-colors ${formato === 'executivo-v2' ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50'}`}>
+                  <RadioGroupItem value="executivo-v2" id="executivo-v2" className="mt-0.5" />
                   <div className="flex-1">
-                    <Label htmlFor="executivo" className="cursor-pointer font-medium flex items-center gap-2">
-                      <FileCheck className="h-4 w-4" />
-                      Executivo
+                    <Label htmlFor="executivo-v2" className="cursor-pointer font-medium flex items-center gap-2">
+                      <BookOpen className="h-4 w-4" />
+                      Executivo Completo
+                      <Badge variant="outline" className="ml-1 text-xs">Recomendado</Badge>
                     </Label>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Texto limpo com rastreabilidade total. Ideal para CEO e contador.
+                      7 seções com tabelas, gráficos e anexos de rastreabilidade completos. Ideal para auditoria.
                     </p>
                   </div>
                 </div>
-                <div className={`flex items-start space-x-3 p-3 rounded-lg border cursor-pointer transition-colors ${formato === 'visual' ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50'}`}>
-                  <RadioGroupItem value="visual" id="visual" className="mt-0.5" />
-                  <div className="flex-1">
-                    <Label htmlFor="visual" className="cursor-pointer font-medium flex items-center gap-2">
-                      <FileBarChart className="h-4 w-4" />
-                      Visual
-                    </Label>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Com gráficos e cores. Ideal para apresentações.
-                    </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className={`flex items-start space-x-3 p-3 rounded-lg border cursor-pointer transition-colors ${formato === 'executivo' ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50'}`}>
+                    <RadioGroupItem value="executivo" id="executivo" className="mt-0.5" />
+                    <div className="flex-1">
+                      <Label htmlFor="executivo" className="cursor-pointer font-medium flex items-center gap-2">
+                        <FileCheck className="h-4 w-4" />
+                        Executivo
+                      </Label>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Texto limpo. Ideal para CEO.
+                      </p>
+                    </div>
+                  </div>
+                  <div className={`flex items-start space-x-3 p-3 rounded-lg border cursor-pointer transition-colors ${formato === 'visual' ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50'}`}>
+                    <RadioGroupItem value="visual" id="visual" className="mt-0.5" />
+                    <div className="flex-1">
+                      <Label htmlFor="visual" className="cursor-pointer font-medium flex items-center gap-2">
+                        <FileBarChart className="h-4 w-4" />
+                        Visual
+                      </Label>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Com gráficos e cores.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </RadioGroup>
