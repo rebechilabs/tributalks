@@ -102,3 +102,6 @@ verify_jwt = false
 
 [functions.process-pgdas]
 verify_jwt = false
+
+[functions.invite-to-circle]
+verify_jwt = false

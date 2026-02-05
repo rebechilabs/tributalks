@@ -152,6 +152,22 @@ serve(async (req) => {
                   tipo: 'assinatura',
                 }),
               }).catch(err => console.log('Admin notification sent (async):', err?.message || 'ok'))
+              
+              // Invite Professional users to Circle community automatically
+              if (plano === 'PROFESSIONAL') {
+                fetch(`${supabaseUrl}/functions/v1/invite-to-circle`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${anonKey}`,
+                  },
+                  body: JSON.stringify({
+                    email: session.customer_email,
+                    name: session.customer_details?.name || null,
+                    user_id: profiles[0].user_id,
+                  }),
+                }).catch(err => console.log('Circle invitation triggered (async):', err?.message || 'ok'))
+              }
             }
           }
         }
