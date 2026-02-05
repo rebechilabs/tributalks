@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useIdentifiedCredits, useIdentifiedCreditsSummary } from '@/hooks/useIdentifiedCredits';
-import { useXmlCreditsSummary } from '@/hooks/useXmlCredits';
+import { useXmlCreditsSummary, useXmlCreditItems } from '@/hooks/useXmlCredits';
 import type { 
   RelatorioCreditos, 
   EmpresaDados, 
@@ -36,8 +36,9 @@ export function useCreditReport(): UseCreditReportReturn {
   const { data: identifiedCredits, isLoading: loadingCredits } = useIdentifiedCredits(500);
   const { data: creditsSummary, isLoading: loadingSummary } = useIdentifiedCreditsSummary();
   const { data: xmlSummary, isLoading: loadingXml } = useXmlCreditsSummary();
+  const { data: xmlCreditItems, isLoading: loadingXmlItems } = useXmlCreditItems(100);
 
-  const isLoading = loadingCredits || loadingSummary || loadingXml;
+  const isLoading = loadingCredits || loadingSummary || loadingXml || loadingXmlItems;
 
   const data = useMemo<RelatorioCreditos | null>(() => {
     if (!user || isLoading) return null;
@@ -84,7 +85,11 @@ export function useCreditReport(): UseCreditReportReturn {
     const creditosPorTributo: TributoCreditoDetalhe[] = [];
     const creditsByTax = new Map<string, typeof identifiedCredits>();
 
-    if (identifiedCredits) {
+    // Check if we have identified_credits data
+    const hasIdentifiedCreditsData = identifiedCredits && identifiedCredits.length > 0;
+
+    if (hasIdentifiedCreditsData) {
+      // Use identified_credits data (original logic)
       identifiedCredits.forEach(credit => {
         const taxType = credit.rule?.tax_type || 'Outros';
         if (!creditsByTax.has(taxType)) {
@@ -145,6 +150,93 @@ export function useCreditReport(): UseCreditReportReturn {
           risco: 'baixo' as NivelRisco,
           notas,
           regras,
+        });
+      });
+    } else if (xmlCreditItems && xmlCreditItems.length > 0) {
+      // FALLBACK: Use xml_analysis data when identified_credits is empty
+      // Group XMLs by tax type and create synthetic credits
+      const xmlsByTax: Record<string, typeof xmlCreditItems> = {
+        'PIS/COFINS': [],
+        'ICMS': [],
+        'ICMS-ST': [],
+        'IPI': [],
+      };
+
+      xmlCreditItems.forEach(xml => {
+        if (xml.pis > 0 || xml.cofins > 0) xmlsByTax['PIS/COFINS'].push(xml);
+        if (xml.icms > 0) xmlsByTax['ICMS'].push(xml);
+        if (xml.icmsSt > 0) xmlsByTax['ICMS-ST'].push(xml);
+        if (xml.ipi > 0) xmlsByTax['IPI'].push(xml);
+      });
+
+      // Recovery factors (conservative estimates)
+      const recoveryFactors: Record<string, number> = {
+        'PIS/COFINS': 0.65,
+        'ICMS': 0.40,
+        'ICMS-ST': 0.30,
+        'IPI': 0.50,
+      };
+
+      const legalBases: Record<string, string> = {
+        'PIS/COFINS': 'Lei 10.637/02 e Lei 10.833/03',
+        'ICMS': 'LC 87/96 (Lei Kandir)',
+        'ICMS-ST': 'LC 87/96 art. 10',
+        'IPI': 'Decreto 7.212/10 (RIPI)',
+      };
+
+      const taxValueGetters: Record<string, (xml: typeof xmlCreditItems[0]) => number> = {
+        'PIS/COFINS': (xml) => xml.pis + xml.cofins,
+        'ICMS': (xml) => xml.icms,
+        'ICMS-ST': (xml) => xml.icmsSt,
+        'IPI': (xml) => xml.ipi,
+      };
+
+      Object.entries(xmlsByTax).forEach(([taxType, xmls]) => {
+        if (xmls.length === 0) return;
+
+        const getTaxValue = taxValueGetters[taxType];
+        const recoveryFactor = recoveryFactors[taxType] || 0.5;
+
+        const notas: NotaFiscalCredito[] = xmls.slice(0, 50).map(xml => {
+          const taxValue = getTaxValue(xml);
+          const creditValue = taxValue * recoveryFactor;
+          
+          return {
+            chaveAcesso: xml.id, // Using ID as placeholder since we don't have full NFe key
+            numeroNfe: xml.documentNumber,
+            cnpjEmitente: xml.issuerCnpj,
+            nomeEmitente: xml.issuerName,
+            dataEmissao: xml.issueDate || new Date().toISOString(),
+            valorNota: taxValue,
+            valorCredito: creditValue,
+            aliquota: taxType === 'PIS/COFINS' ? 9.25 : taxType === 'ICMS' ? 18 : taxType === 'IPI' ? 10 : 18,
+            ncm: '',
+            cfop: '',
+            cst: '',
+            confianca: 'media' as NivelConfianca,
+            baseLegal: legalBases[taxType],
+          };
+        });
+
+        const valorTotal = notas.reduce((sum, n) => sum + n.valorCredito, 0);
+
+        creditosPorTributo.push({
+          tributo: normalizeTaxType(taxType),
+          valorTotal,
+          baseLegal: legalBases[taxType],
+          descricaoBaseLegal: `Créditos estimados a partir de ${xmls.length} documentos fiscais analisados.`,
+          risco: 'medio' as NivelRisco,
+          notas,
+          regras: [{
+            codigo: `${taxType}-XML`,
+            nome: `Créditos de ${taxType} (análise preliminar)`,
+            tributo: taxType,
+            baseLegal: legalBases[taxType],
+            descricao: 'Créditos identificados através da análise dos XMLs importados.',
+            confianca: 'media' as NivelConfianca,
+            totalIdentificado: valorTotal,
+            quantidadeNotas: notas.length,
+          }],
         });
       });
     }
@@ -263,9 +355,9 @@ export function useCreditReport(): UseCreditReportReturn {
       oportunidades,
       estatisticas,
     };
-  }, [user, isLoading, currentCompany, identifiedCredits, creditsSummary, xmlSummary]);
+  }, [user, isLoading, currentCompany, identifiedCredits, creditsSummary, xmlSummary, xmlCreditItems]);
 
-  const isReady = !isLoading && data !== null && data.sumario.totalRecuperavel > 0;
+  const isReady = !isLoading && data !== null && (data.sumario.totalRecuperavel > 0 || data.creditosPorTributo.length > 0);
 
   return {
     data,

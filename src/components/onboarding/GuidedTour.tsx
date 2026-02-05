@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Joyride, { CallBackProps, STATUS, Step, ACTIONS, EVENTS } from "react-joyride";
 import { useOnboardingProgress } from "@/hooks/useOnboardingProgress";
-import { Sparkles, Calculator, Newspaper, Target, User } from "lucide-react";
+import { Sparkles, Calculator, Newspaper, Target, User, MessagesSquare } from "lucide-react";
 
 const tourSteps: Step[] = [
   {
@@ -67,6 +67,22 @@ const tourSteps: Step[] = [
         <p className="text-sm text-muted-foreground">
           Plataforma de Inteligência Tributária. Fique por dentro das notícias e prazos 
           importantes da reforma tributária. Receba alertas personalizados para o seu negócio.
+        </p>
+      </div>
+    ),
+    placement: "right",
+  },
+  {
+    target: '[data-tour="conexao-group"]',
+    content: (
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <MessagesSquare className="h-5 w-5 text-primary" />
+          <span className="font-semibold">Conexão & Comunicação</span>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Fique por dentro das últimas notícias tributárias, conecte-se com a 
+          comunidade e ganhe descontos indicando amigos.
         </p>
       </div>
     ),
