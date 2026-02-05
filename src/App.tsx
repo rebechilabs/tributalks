@@ -87,6 +87,7 @@ import AdminTrainingData from "./pages/admin/AdminTrainingData";
 import AdminRAGDashboard from "./pages/admin/AdminRAGDashboard";
 import AdminAIHealth from "./pages/admin/AdminAIHealth";
 import { PresenceTrackerWrapper } from "./components/PresenceTrackerWrapper";
+import { AppVersionChecker } from "./components/AppVersionChecker";
 
 const queryClient = new QueryClient();
 
@@ -97,6 +98,7 @@ const App = () => (
         <BrowserRouter>
         <AuthProvider>
           <CompanyProvider>
+          <AppVersionChecker />
           <PresenceTrackerWrapper />
           <Toaster />
           <Sonner />

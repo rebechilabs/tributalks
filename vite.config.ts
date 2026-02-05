@@ -1,8 +1,24 @@
-import { defineConfig } from "vite";
+import { defineConfig, Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import fs from "fs";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
+
+// Plugin to generate version.json on build
+function generateVersionPlugin(): Plugin {
+  return {
+    name: "generate-version",
+    writeBundle() {
+      const version = {
+        buildTime: Date.now(),
+        version: new Date().toISOString(),
+      };
+      fs.writeFileSync("dist/version.json", JSON.stringify(version, null, 2));
+      console.log("[generate-version] Created version.json:", version.version);
+    },
+  };
+}
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -16,6 +32,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === "development" && componentTagger(),
+    generateVersionPlugin(),
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "robots.txt"],
