@@ -1,223 +1,260 @@
 
-# Plano de Correção de Segurança - Blindagem RLS Completa
+# Plano: Relatório Executivo TribuTalks - Formato Profissional com Rastreabilidade Total
 
-## Resumo Executivo
+## Resumo
 
-A auditoria de segurança identificou **16 vulnerabilidades** nas políticas de RLS e configurações do banco de dados. Este plano corrige TODAS as falhas para garantir **zero vazamento de dados sensíveis**.
-
----
-
-## Vulnerabilidades Identificadas
-
-| Nível | Quantidade | Descrição |
-|-------|------------|-----------|
-| 🔴 CRÍTICO | 6 | Tabelas com dados sensíveis expostos |
-| 🟡 ALERTA | 7 | Políticas permissivas ou incompletas |
-| 🔵 INFO | 3 | Melhorias recomendadas |
+Criar um novo sistema de geração de PDF seguindo as especificações detalhadas do prompt: relatório limpo, sem gráficos, hierarquia tipográfica clara, e **rastreabilidade completa** de cada crédito até sua origem documental (NF-e, SPED, DCTF).
 
 ---
 
-## Correções Necessárias
+## Análise do Sistema Atual
 
-### 1. Tabela `contatos` - INSERT sem validação
-**Problema:** Policy `WITH CHECK (true)` permite inserção sem restrição
+O sistema existente possui:
+- `CreditReportGenerator.ts` - Gerador atual com tema escuro/claro, barras visuais
+- `TribuTalksPdfTemplate.ts` - Templates com cards coloridos e badges
+- `TribuTalksPdfStyles.ts` - Constantes de layout (A4, margens corretas)
+- `TribuTalksPdfColors.ts` - Paleta de cores (ouro, fundo escuro)
+- `useCreditReport.ts` - Hook que agrega dados de `identified_credits`
 
-**Solução:**
-```sql
--- Remover policy antiga
-DROP POLICY IF EXISTS "Anyone can submit contact form" ON public.contatos;
-
--- Criar policy com rate limiting via campos
-CREATE POLICY "Public can submit contact form"
-ON public.contatos FOR INSERT
-TO anon, authenticated
-WITH CHECK (
-  -- Valida que campos obrigatórios estão preenchidos
-  nome IS NOT NULL AND 
-  nome <> '' AND 
-  email IS NOT NULL AND 
-  email <> '' AND
-  assunto IS NOT NULL AND
-  mensagem IS NOT NULL
-);
-```
-
-### 2. Tabela `clara_embeddings_cache` - ALL com true
-**Problema:** Policy `USING (true) WITH CHECK (true)` para service_role expõe cache
-
-**Solução:**
-```sql
--- Já está configurado para service_role apenas, mas vamos garantir
-DROP POLICY IF EXISTS "Service role can manage embeddings cache" ON public.clara_embeddings_cache;
-
-CREATE POLICY "Service role can manage embeddings cache"
-ON public.clara_embeddings_cache FOR ALL
-TO service_role
-USING (auth.role() = 'service_role')
-WITH CHECK (auth.role() = 'service_role');
-```
-
-### 3. Validação de `profiles` - Dados PII expostos
-**Problema:** Tabela contém email, nome, empresa, stripe_customer_id
-
-**Status Atual:** ✅ RLS já correto
-- Users can view own profile: `auth.uid() = user_id`
-- Admins can view all profiles: `has_role(auth.uid(), 'admin')`
-
-**Ação:** Nenhuma alteração necessária - políticas já estão corretas.
-
-### 4. Tabela `referrals` - INSERT não validado corretamente
-**Problema:** Usuários podem criar referrals onde são o referrer (fraude)
-
-**Solução:**
-```sql
--- Atualizar policy de INSERT
-DROP POLICY IF EXISTS "Users can insert referrals for themselves as referred" ON public.referrals;
-
-CREATE POLICY "Users can only be inserted as referred party"
-ON public.referrals FOR INSERT
-TO authenticated
-WITH CHECK (
-  auth.uid() = referred_id AND
-  auth.uid() <> referrer_id  -- Impede auto-referral
-);
-```
-
-### 5. Tabelas de Referência Pública - Auditoria
-**Tabelas com USING(true) para SELECT:**
-- `calculators` - ✅ Catálogo público de calculadoras (OK)
-- `credit_rules` - ✅ Regras públicas de crédito (OK)
-- `sector_benchmarks` - ✅ Benchmarks de setor (OK)
-- `tax_opportunities` - ✅ Oportunidades fiscais gerais (OK)
-- `tax_knowledge_nodes` - ✅ Knowledge graph público (OK)
-- `tax_knowledge_edges` - ✅ Knowledge graph público (OK)
-- `rtc_rate_cache` - ✅ Cache de taxas RTC (OK)
-
-**Status:** Todas são tabelas de referência sem dados de usuários. Padrão intencional e seguro.
-
-### 6. Adicionar policy de DELETE para `referral_codes`
-**Problema:** Falta policy de DELETE na tabela
-
-**Solução:**
-```sql
-CREATE POLICY "Users can delete own referral code"
-ON public.referral_codes FOR DELETE
-TO authenticated
-USING (auth.uid() = user_id);
-```
-
-### 7. Tabela `erp_connections` - Credenciais em JSONB
-**Problema:** Credenciais ERP armazenadas em campo JSONB podem ser expostas
-
-**Status:** RLS já correto (auth.uid() = user_id), mas recomendação de segurança adicional.
-
-**Ação para Fase 2:** Implementar criptografia de campo `credentials` no edge function `erp-sync`.
-
-### 8. Tabela `organization_seats` - Validação de email
-**Problema:** Convites podem ser aceitos por spoofing de email
-
-**Status:** Policy atual valida email do usuário autenticado via auth.users. Seguro.
-
-**Ação:** Nenhuma alteração necessária.
+**Problema:** O formato atual usa gráficos, barras visuais, badges coloridos - não é o formato executivo limpo solicitado.
 
 ---
 
-## Migração SQL Consolidada
+## Novo Design: Formato Executivo Profissional
 
-```sql
--- =====================================================
--- MIGRAÇÃO DE SEGURANÇA - CORREÇÃO DE POLÍTICAS RLS
--- =====================================================
+### Princípios
+1. **Zero gráficos** - apenas texto estruturado e separadores
+2. **Hierarquia tipográfica** - H1/H2/H3 claros, valores em negrito
+3. **Rastreabilidade total** - chave de acesso 44 dígitos, referência SPED, ação recomendada
+4. **Formato ASCII** - boxes com caracteres `─`, `│`, `┌`, `└`, `├`, `┤`
+5. **Margens A4** - 25mm topo/base, 20mm laterais
 
--- 1. Corrigir policy de contatos (INSERT)
-DROP POLICY IF EXISTS "Anyone can submit contact form" ON public.contatos;
+---
 
-CREATE POLICY "Public can submit contact form with validation"
-ON public.contatos FOR INSERT
-TO anon, authenticated
-WITH CHECK (
-  nome IS NOT NULL AND 
-  nome <> '' AND 
-  email IS NOT NULL AND 
-  email <> '' AND
-  assunto IS NOT NULL AND
-  mensagem IS NOT NULL
-);
+## Estrutura do Relatório (8-15 páginas)
 
--- 2. Corrigir policy de clara_embeddings_cache
-DROP POLICY IF EXISTS "Service role can manage embeddings cache" ON public.clara_embeddings_cache;
+### Página 1 - Capa
+```text
+─────────────────────────────────────────────────────────────────
 
-CREATE POLICY "Service role only can manage embeddings cache"
-ON public.clara_embeddings_cache FOR ALL
-TO service_role
-USING (auth.role() = 'service_role')
-WITH CHECK (auth.role() = 'service_role');
+                TribuTalks — Inteligência Tributária
 
--- 3. Corrigir policy de referrals (prevenir auto-referral)
-DROP POLICY IF EXISTS "Users can insert referrals for themselves as referred" ON public.referrals;
+─────────────────────────────────────────────────────────────────
 
-CREATE POLICY "Users can only insert referrals as referred party"
-ON public.referrals FOR INSERT
-TO authenticated
-WITH CHECK (
-  auth.uid() = referred_id AND
-  auth.uid() <> referrer_id
-);
+                RELATÓRIO DE CRÉDITOS TRIBUTÁRIOS
+                       Sumário Executivo
 
--- 4. Adicionar policy de DELETE em referral_codes (se não existir)
-DROP POLICY IF EXISTS "Users can delete own referral code" ON public.referral_codes;
+EMPRESA:        [Razão Social]
+CNPJ:           [XX.XXX.XXX/XXXX-XX]
+REGIME:         [Lucro Real / Presumido / Simples]
 
-CREATE POLICY "Users can delete own referral code"
-ON public.referral_codes FOR DELETE
-TO authenticated
-USING (auth.uid() = user_id);
+Relatório nº:           TT-2026-XXXXX
+Data de emissão:        [DD/MM/AAAA]
+Período analisado:      [MM/AAAA] a [MM/AAAA]
+Documentos processados: [X.XXX] XMLs de NF-e
 
--- 5. Garantir que subscription_events só pode ser lido pelo próprio user ou admin
--- (já está correto, apenas documentando)
--- Policy: ((auth.uid() = user_id) OR has_role(auth.uid(), 'admin'))
+                                                    Página 1 de X
+```
+
+### Página 2 - Sumário Executivo
+- Total recuperável em destaque (**negrito**)
+- Distribuição por tributo (lista com valores)
+- Economia potencial anual (min-max)
+- Resumo das 3 principais oportunidades
+
+### Páginas 3+ - Detalhamento dos Créditos (RASTREABILIDADE TOTAL)
+
+Para cada crédito, box estruturado:
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│ CRÉDITO #1                                                      │
+├─────────────────────────────────────────────────────────────────┤
+│ Valor do crédito:     **R$ X.XXX,XX**                          │
+│ Tipo:                 PIS/COFINS Monofásico                     │
+│ Confiança:            Alta                                      │
+├─────────────────────────────────────────────────────────────────┤
+│ ORIGEM DOCUMENTAL:                                              │
+│                                                                 │
+│ NF-e nº:              000.123.456                               │
+│ Chave de acesso:      35260112345678000199550010001234561234567890│
+│ Emitente:             Fornecedor ABC Ltda                       │
+│ CNPJ emitente:        12.345.678/0001-99                        │
+│ Data de emissão:      15/03/2025                                │
+│ Valor da nota:        R$ 12.500,00                              │
+│                                                                 │
+│ Item:                 Produto XYZ                               │
+│ NCM:                  3303.00.20                                │
+│ CFOP:                 1.102                                     │
+│ CST PIS:              04 (tributação monofásica)                │
+│ Alíquota:             0,00%                                     │
+│                                                                 │
+│ REFERÊNCIA SPED:                                                │
+│ EFD Contribuições:    Período MM/AAAA                           │
+│ Registro:             C170 (itens do documento)                 │
+├─────────────────────────────────────────────────────────────────┤
+│ AÇÃO RECOMENDADA:                                               │
+│ Retificar EFD Contribuições de MM/AAAA. Gerar PER/DCOMP.       │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Página Final - Próximos Passos + Aviso Legal
+- Lista numerada de 5 passos para recuperação
+- Disclaimer legal obrigatório (natureza educativa)
+- Contatos TribuTalks
+
+---
+
+## Arquivos a Criar/Modificar
+
+### 1. CRIAR: `src/lib/pdf/ExecutiveReportGenerator.ts`
+Novo gerador de PDF seguindo o formato executivo:
+- Função `generateExecutiveCreditReport()`
+- Layout apenas texto, sem gráficos
+- Boxes ASCII simulados com linhas jsPDF
+- Fonte monoespaçada para chaves de acesso
+- Paginação automática
+
+### 2. CRIAR: `src/lib/pdf/ExecutiveReportStyles.ts`
+Constantes específicas para o formato executivo:
+- Tipografia: Helvetica Regular/Bold (não Poppins - jsPDF limitação)
+- Cores: apenas preto (#000), cinza (#666), negrito para destaques
+- Margens: 25mm topo/base, 20mm laterais
+- Espaçamentos entre seções
+
+### 3. MODIFICAR: `src/lib/pdf/types.ts`
+Expandir interface `NotaFiscalCredito` para incluir:
+- `cstDeclarado` / `cstCorreto` (para mostrar correção)
+- `aliquotaCobrada` / `aliquotaDevida`
+- `valorPago` / `valorDevido` / `diferenca`
+- `spedTipo` / `spedPeriodo` / `spedRegistro`
+- `acaoRecomendada`
+
+### 4. MODIFICAR: `src/hooks/useCreditReport.ts`
+Enriquecer dados para rastreabilidade:
+- Inferir período SPED baseado na data da NF-e
+- Mapear tipo de registro SPED baseado no tributo
+- Gerar ação recomendada automática por tipo de crédito
+
+### 5. MODIFICAR: `src/components/pdf/CreditReportDialog.tsx`
+Adicionar opção para escolher formato:
+- "Executivo (texto)" - novo formato limpo
+- "Visual (gráficos)" - formato atual
+
+---
+
+## Interface TypeScript Expandida
+
+```typescript
+interface CreditoRastreavel {
+  id: string;
+  valor: number;
+  tipo: string;
+  tributo: 'PIS' | 'COFINS' | 'PIS/COFINS' | 'ICMS' | 'ICMS-ST' | 'IPI';
+  confianca: 'alta' | 'media' | 'baixa';
+  baseLegal: string;
+  
+  // Documento fiscal
+  documentoFiscal: {
+    numeroNfe: string;
+    chaveAcesso: string;           // 44 dígitos
+    cnpjEmitente: string;
+    razaoSocialEmitente: string;
+    ufEmitente?: string;
+    dataEmissao: Date;
+    valorNota: number;
+  };
+  
+  // Detalhes do item
+  item: {
+    descricao: string;
+    ncm: string;
+    cfop: string;
+    cstDeclarado: string;
+    cstCorreto: string;
+    aliquotaCobrada: number;
+    aliquotaDevida: number;
+    baseCalculo: number;
+    valorPago: number;
+    valorDevido: number;
+    diferenca: number;
+  };
+  
+  // Referência SPED
+  sped: {
+    tipo: 'EFD Contribuições' | 'EFD ICMS/IPI';
+    periodo: string;              // MM/AAAA
+    registro: string;             // C100, C170, C190, etc.
+    bloco: string;
+  };
+  
+  // Ação recomendada
+  acaoRecomendada: string;
+}
 ```
 
 ---
 
-## Resumo das Ações
+## Detalhes Técnicos
 
-| Tabela | Ação | Impacto |
-|--------|------|---------|
-| `contatos` | Corrigir INSERT policy | Impede spam/abuso |
-| `clara_embeddings_cache` | Reforçar service_role only | Proteção de cache |
-| `referrals` | Impedir auto-referral | Previne fraude |
-| `referral_codes` | Adicionar DELETE policy | Completa CRUD |
-| `profiles` | ✅ Já seguro | N/A |
-| `company_dre` | ✅ Já seguro | N/A |
-| `erp_connections` | ✅ RLS correto | Criptografia fase 2 |
+### Tipografia (jsPDF)
+- **Títulos H1:** Helvetica Bold, 16pt
+- **Subtítulos H2:** Helvetica Bold, 14pt
+- **Corpo:** Helvetica Regular, 10pt
+- **Valores destaque:** Helvetica Bold, 10-11pt
+- **Chaves de acesso:** Courier (monoespaçada), 8pt
+
+### Cores (Preto e branco para impressão)
+- Texto principal: RGB(0,0,0)
+- Texto secundário: RGB(102,102,102) = #666
+- Linhas/bordas: RGB(46,46,46) = #2E2E2E
+- Background: RGB(255,255,255) branco
+
+### Boxes ASCII
+jsPDF não suporta caracteres Unicode box-drawing diretamente.
+Solução: desenhar retângulos com `doc.rect()` e linhas com `doc.line()`.
+
+### Paginação
+- Cada crédito ocupa ~50-60mm de altura
+- Verificar `needsNewPage()` antes de renderizar cada crédito
+- Footer com "Página X de Y" em todas as páginas
+
+---
+
+## Mapeamento SPED Automático
+
+| Tributo | Tipo SPED | Registros |
+|---------|-----------|-----------|
+| PIS/COFINS | EFD Contribuições | C170 (itens), M100/M500 (apuração) |
+| ICMS | EFD ICMS/IPI | C100 (doc), C170 (itens), C190 (total) |
+| ICMS-ST | EFD ICMS/IPI | C100, C113 (ST) |
+| IPI | EFD ICMS/IPI | C100, C170, E520 |
+
+---
+
+## Ações Recomendadas por Tipo
+
+| Tipo de Crédito | Ação Automática |
+|-----------------|-----------------|
+| PIS/COFINS Monofásico | Retificar EFD Contribuições do período. Corrigir CST de XX para 04. Transmitir PER/DCOMP. |
+| ICMS não aproveitado | Retificar EFD ICMS/IPI. Incluir registro C190 com apropriação do crédito. |
+| ICMS-ST indevido | Solicitar restituição via e-CAC ou sistema estadual. |
+| CST incorreto | Revisar classificação fiscal. Corrigir CSTs nas próximas operações. |
 
 ---
 
 ## Resultado Esperado
 
-Após implementação:
-- ✅ **Zero vazamento de dados PII** (email, nome, CNPJ)
-- ✅ **Dados financeiros protegidos** (DRE, faturamento)
-- ✅ **Fraude de referrals bloqueada**
-- ✅ **Formulário de contato validado**
-- ✅ **Cache de embeddings protegido**
+PDF de 8-15 páginas contendo:
+1. **Capa** - Dados da empresa, número do relatório
+2. **Sumário Executivo** - Total + breakdown (texto apenas)
+3. **Detalhamento PIS/COFINS** - Cada crédito com rastreabilidade
+4. **Detalhamento ICMS** - Cada crédito com rastreabilidade
+5. **Detalhamento ICMS-ST** - Se houver
+6. **Detalhamento IPI** - Se houver
+7. **Próximos Passos** - 5 itens numerados
+8. **Aviso Legal** - Disclaimer completo
 
----
-
-## Notas Técnicas
-
-### Tabelas Verificadas e Confirmadas como Seguras:
-- `profiles` - 5 policies (SELECT/INSERT/UPDATE/DELETE + Admin)
-- `company_profile` - 4 policies (auth.uid() = user_id)
-- `company_dre` - 4 policies (auth.uid() = user_id)
-- `xml_analysis` - 4 policies (auth.uid() = user_id)
-- `sped_contribuicoes` - 4 policies (auth.uid() = user_id)
-- `dctf_declaracoes` - 4 policies (auth.uid() = user_id)
-- `clara_conversations` - 3 policies (user + service_role)
-- `erp_connections` - 4 policies (auth.uid() = user_id)
-
-### Políticas USING(true) Justificadas:
-Tabelas de catálogo/referência pública sem dados de usuário:
-- calculators, credit_rules, sector_benchmarks
-- tax_opportunities, tax_knowledge_nodes/edges
-- rtc_rate_cache, pilulas_reforma, prazos_reforma
+Formato ideal para:
+- CEO ler em 5 minutos e entender oportunidades
+- Contador usar como guia para executar retificações
+- Advogado tributarista validar bases legais
