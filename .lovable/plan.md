@@ -1,128 +1,133 @@
 
 
-## Plano: Renomear Simpronto para "Comparativo de Regimes Tributários"
+## Plano: Adicionar Explicações Didáticas na Home Inteligente
 
 ### Resumo
-Eliminar o nome "Simpronto" da aplicação e consolidar tudo como **"Comparativo de Regimes Tributários"**, mantendo a mesma funcionalidade de cálculo dos 5 regimes:
-1. Simples Nacional (atual)
-2. Simples 2027 "Por Dentro"
-3. Simples 2027 "Por Fora"
-4. Lucro Presumido
-5. Lucro Real
+Enriquecer a página Home com explicações contextuais sobre o módulo atual e cada passo da jornada, tornando a experiência mais educativa e guiada para o usuário.
 
 ---
 
-### Mudanças Necessárias
+### Estrutura Proposta
 
-#### 1. Atualizar Menu em Todos os Planos
-**Arquivo:** `src/data/menuConfig.ts`
+Para cada estado da Home, adicionar:
+1. **Cabeçalho do Módulo** - Explicação sobre em qual módulo o usuário está e o objetivo
+2. **Descrição do Passo Atual** - O que a ferramenta faz e por que é importante
+3. **Descrições dos Próximos Passos** - Breve explicação de cada etapa futura
 
-Remover o item "Simpronto" duplicado e manter apenas "Comparativo de Regimes Tributários" com a descrição atualizada:
+---
 
-| Antes | Depois |
-|-------|--------|
-| `Comparativo de Regimes` → redireciona para Simpronto | Manter |
-| `Simpronto` → `/dashboard/entender/simpronto` | Remover |
+### Mudanças no Componente
 
-Novo item único:
-```typescript
-{ 
-  label: 'Comparativo de Regimes', 
-  href: '/dashboard/entender/comparativo', 
-  icon: Scale, 
-  description: '5 regimes tributários',
-  badge: '2027' 
-}
+**Arquivo:** `src/components/home/HomeStateCards.tsx`
+
+#### Estado: NO_DRE (Primeiro Acesso)
+
+**Antes:**
+```
+Bem-vindo ao TribuTalks!
+Para começar, precisamos entender seu negócio.
+
+PASSO 1: Preencha seu DRE
+O DRE é a base para todas as análises. Leva apenas 3 minutos.
+```
+
+**Depois:**
+```
+📊 Módulo: Entender Meu Negócio
+Aqui você terá a oportunidade de entender a saúde tributária 
+da sua empresa através de diagnósticos inteligentes.
+
+PASSO 1: Preencha seu DRE
+A Demonstração do Resultado do Exercício apresentará como resultado 
+final o lucro líquido ou prejuízo líquido do período da sua empresa.
+
+Próximos passos:
+✓ Score Tributário - Um panorama da situação tributária atual da empresa (0-1000 pontos)
+✓ Radar de Créditos - Identifica valores pagos indevidamente que podem ser recuperados
+✓ Oportunidades - Benefícios fiscais aplicáveis ao seu perfil de negócio
 ```
 
 ---
 
-#### 2. Atualizar Rotas
-**Arquivo:** `src/App.tsx`
+#### Estado: NO_SCORE (DRE Preenchido)
 
-| Rota Antes | Rota Depois |
-|------------|-------------|
-| `/dashboard/entender/simpronto` → SimprontoPage | `/dashboard/entender/comparativo` → SimprontoPage |
-| `/dashboard/entender/comparativo` → redirect simpronto | Remover redirect (rota principal agora) |
-| `/calculadora/comparativo-regimes` → redirect simpronto | Redirecionar para `/dashboard/entender/comparativo` |
+**Cabeçalho atualizado:**
+```
+📊 Módulo: Entender Meu Negócio
+Seu DRE está preenchido! Agora vamos descobrir sua nota tributária.
 
-Adicionar redirect de simpronto para compatibilidade:
-```typescript
-<Route path="/dashboard/entender/simpronto" element={<Navigate to="/dashboard/entender/comparativo" replace />} />
+PRÓXIMO PASSO: Calcule seu Score Tributário
+O Score Tributário apresenta um panorama completo da situação tributária 
+atual da sua empresa em uma escala de 0 a 1000 pontos, indicando riscos 
+e oportunidades de melhoria.
 ```
 
 ---
 
-#### 3. Atualizar useRouteInfo.ts
-**Arquivo:** `src/hooks/useRouteInfo.ts`
+#### Estado: NO_CREDITS (Score Calculado)
 
-Renomear label da rota:
-```typescript
-'/dashboard/entender/comparativo': { 
-  label: 'Comparativo de Regimes', 
-  group: 'entender',
-  groupLabel: 'Entender Meu Negócio',
-  icon: Scale
-}
+**Cabeçalho atualizado:**
 ```
+💰 Módulo: Recuperar Meu Dinheiro
+Hora de identificar valores que sua empresa pode ter pago a mais em tributos.
 
-Remover entrada de `/dashboard/entender/simpronto` (ou manter como alias).
-
----
-
-#### 4. Atualizar Título da Página SimprontoPage
-**Arquivo:** `src/pages/dashboard/SimprontoPage.tsx`
-
-```typescript
-// Antes
-<h1 className="text-2xl font-bold">Simpronto</h1>
-
-// Depois  
-<h1 className="text-2xl font-bold">Comparativo de Regimes Tributários</h1>
-```
-
-Atualizar DashboardLayout title:
-```typescript
-<DashboardLayout title="Comparativo de Regimes">
+PRÓXIMO PASSO: Identifique Créditos Tributários
+O Radar de Créditos analisa seus XMLs de notas fiscais para encontrar 
+tributos pagos indevidamente nos últimos 5 anos que podem ser recuperados.
 ```
 
 ---
 
-#### 5. Atualizar RecommendationCard
-**Arquivo:** `src/components/simpronto/RecommendationCard.tsx`
+#### Estado: COMPLETE (Tudo Preenchido)
 
-```typescript
-// Antes
-<CardTitle>Recomendação Simpronto</CardTitle>
-
-// Depois
-<CardTitle>Regime Recomendado</CardTitle>
+**Cabeçalho atualizado:**
+```
+🎯 Visão Geral do Seu Negócio
+Parabéns! Você completou a jornada inicial. Aqui está um resumo 
+da saúde tributária da sua empresa.
 ```
 
 ---
 
-#### 6. Atualizar HelpButton Slug
-**Arquivo:** `src/pages/dashboard/SimprontoPage.tsx`
+### Textos Definitivos para Cada Ferramenta
 
-```typescript
-// Antes
-<HelpButton toolSlug="simpronto" />
-
-// Depois
-<HelpButton toolSlug="comparativo-regimes" />
-```
+| Ferramenta | Descrição Didática |
+|------------|-------------------|
+| **DRE** | "A Demonstração do Resultado do Exercício apresenta como resultado final o lucro líquido ou prejuízo líquido do período." |
+| **Score Tributário** | "Um panorama da situação tributária atual da empresa em uma escala de 0 a 1000 pontos." |
+| **Radar de Créditos** | "Identifica tributos pagos indevidamente nos últimos 5 anos que podem ser recuperados." |
+| **Oportunidades** | "Benefícios fiscais e incentivos aplicáveis ao perfil do seu negócio." |
 
 ---
 
-#### 7. Atualizar GROUP_PATHS
-**Arquivo:** `src/hooks/useRouteInfo.ts`
+### Layout Visual Proposto
 
-```typescript
-// Antes
-entender: [..., '/dashboard/entender/simpronto'],
-
-// Depois
-entender: [..., '/dashboard/entender/comparativo'],
+```
+┌──────────────────────────────────────────────────────────────┐
+│  📊 MÓDULO: ENTENDER MEU NEGÓCIO                             │
+│  Aqui você terá a oportunidade de entender a saúde           │
+│  tributária da sua empresa através de diagnósticos.          │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│  [Icon] PASSO 1: Preencha seu DRE                           │
+│  A Demonstração do Resultado do Exercício apresenta          │
+│  como resultado final o lucro líquido ou prejuízo            │
+│  líquido do período da sua empresa.                          │
+│                                                              │
+│  [Conectar ERP]        [Preencher Manualmente]               │
+│                                                              │
+├──────────────────────────────────────────────────────────────┤
+│  Próximos passos após o DRE:                                 │
+│                                                              │
+│  2. Score Tributário                                         │
+│     Um panorama da situação tributária atual (0-1000)        │
+│                                                              │
+│  3. Radar de Créditos                                        │
+│     Identifica valores pagos a mais que podem ser recuperados│
+│                                                              │
+│  4. Oportunidades                                            │
+│     Benefícios fiscais aplicáveis ao seu negócio             │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -131,43 +136,14 @@ entender: [..., '/dashboard/entender/comparativo'],
 
 | Arquivo | Ação |
 |---------|------|
-| `src/data/menuConfig.ts` | Remover item Simpronto, atualizar href do Comparativo |
-| `src/App.tsx` | Trocar rota principal para `/comparativo`, adicionar redirect de `/simpronto` |
-| `src/hooks/useRouteInfo.ts` | Renomear rota e atualizar GROUP_PATHS |
-| `src/pages/dashboard/SimprontoPage.tsx` | Atualizar título e textos |
-| `src/components/simpronto/RecommendationCard.tsx` | Remover "Simpronto" do título |
+| `src/components/home/HomeStateCards.tsx` | Atualizar todos os 4 estados (NoDRECard, NoScoreCard, NoCreditsCard, CompleteCard) com explicações didáticas |
 
 ---
 
-### Arquivos que NÃO Precisam Mudar
+### Benefícios
 
-Os arquivos internos podem manter o nome técnico "simpronto" para evitar refatoração massiva:
-- `src/types/simpronto.ts` - tipos internos
-- `src/utils/simprontoCalculations.ts` - funções de cálculo
-- `src/components/simpronto/` - componentes internos
-- Tabela `simpronto_simulations` no banco - dados já salvos
-
-**Justificativa:** O nome interno não aparece para o usuário, apenas o label visual muda.
-
----
-
-### Resultado Final
-
-**Menu:**
-```
-ENTENDER MEU NEGÓCIO
-├─ DRE Inteligente
-├─ Score Tributário
-└─ Comparativo de Regimes [2027]  ← único item, sem duplicação
-```
-
-**Página:**
-```
-Comparativo de Regimes Tributários
-Compare 5 regimes tributários em minutos...
-
-[Wizard de 2 passos]
-
-[Resultado com "Regime Recomendado"]
-```
+1. **Educação** - Usuário entende o propósito de cada ferramenta
+2. **Orientação** - Fica claro em qual módulo está e o que virá a seguir
+3. **Confiança** - Usuário sabe exatamente o que vai acontecer em cada passo
+4. **Engajamento** - Descrições contextuais aumentam a motivação para continuar
 
