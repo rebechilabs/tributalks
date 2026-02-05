@@ -1,131 +1,98 @@
 
-# Plano: Upload de PGDAS em Lote
+# Plano: Corrigir Problemas no PgdasUploader
 
-## O que é PGDAS?
-O PGDAS-D (Programa Gerador do Documento de Arrecadação do Simples Nacional) é o documento onde empresas do Simples Nacional declaram sua receita bruta mensal e calculam os tributos devidos.
+## Problemas Identificados
 
----
+| Problema | Descrição |
+|----------|-----------|
+| Validação inconsistente | `handleFileSelect` não valida arquivos, diferente do `handleDrop` |
+| Filtro muito restritivo | Exige "pgdas", "das" ou "simples" no nome, mas isso pode rejeitar arquivos válidos |
+| Palavra "das" problemática | Aceita qualquer arquivo com "das" no nome (ex: "planilha**das**.txt") |
 
-## O que será criado
+## Solução Proposta
 
-### 1. Nova aba "PGDAS" na página de Análise de Créditos
-Adicionar uma 7ª aba entre "DCTF" e "Cruzamento" para upload em lote de arquivos PGDAS.
+### 1. Unificar Validação de Arquivos
+Fazer `handleFileSelect` usar a mesma validação que `handleDrop`.
 
-### 2. Tabela `pgdas_arquivos` no banco de dados
-Para armazenar os arquivos processados:
+### 2. Flexibilizar a Validação
+Aceitar qualquer arquivo `.pdf` ou `.txt` sem exigir palavras específicas no nome:
+- Arquivos PGDAS podem vir com nomes genéricos do portal da Receita Federal
+- O processamento real validará o conteúdo do arquivo
 
-| Coluna | Tipo | Descrição |
-|--------|------|-----------|
-| id | uuid | Identificador único |
-| user_id | uuid | Usuário proprietário |
-| cnpj | text | CNPJ da empresa |
-| razao_social | text | Nome da empresa |
-| periodo_apuracao | date | Mês/ano de referência |
-| receita_bruta | numeric | Receita bruta declarada |
-| valor_devido | numeric | Valor do DAS devido |
-| aliquota_efetiva | numeric | Alíquota calculada |
-| anexo_simples | text | Anexo (I, II, III, IV, V) |
-| arquivo_nome | text | Nome do arquivo original |
-| arquivo_storage_path | text | Caminho no storage |
-| status | text | pending, processing, completed, error |
-| erro_mensagem | text | Mensagem de erro se houver |
-| created_at | timestamptz | Data de criação |
-
-### 3. Bucket de storage `pgdas-files`
-Para armazenar os arquivos originais com RLS adequado.
-
-### 4. Componente `PgdasUploader`
-Seguindo o padrão do `SpedUploader`, com:
-- Área de drag-and-drop
-- Lista de arquivos com status
-- Botão "Processar Todos"
-- Indicador de progresso
-- Resumo após processamento
-
-### 5. Edge Function `process-pgdas`
-Para processar os arquivos PGDAS e extrair:
-- Período de apuração
-- Receita bruta
-- Valor do DAS
-- Anexo do Simples Nacional
-- Alíquota efetiva
+### 3. Adicionar Validação de Tipo MIME (opcional)
+Verificar que o arquivo é realmente PDF ou texto.
 
 ---
 
-## Arquivos a criar/modificar
+## Arquivos a Modificar
 
-| Arquivo | Ação |
-|---------|------|
-| `src/components/pgdas/PgdasUploader.tsx` | Criar componente de upload |
-| `src/components/pgdas/index.ts` | Criar exportação |
-| `src/pages/AnaliseNotasFiscais.tsx` | Adicionar nova aba PGDAS |
-| `supabase/functions/process-pgdas/index.ts` | Criar edge function |
-| Migração SQL | Criar tabela e bucket |
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/components/pgdas/PgdasUploader.tsx` | Corrigir validação de arquivos |
 
 ---
 
-## Detalhes Técnicos
+## Código Atual (Problema)
 
-### Estrutura da TabsList (7 abas)
+```typescript
+// Linha 40-46: Validação muito restritiva
+const isValidPgdasFile = (file: File): boolean => {
+  const name = file.name.toLowerCase();
+  return (
+    (name.endsWith(".pdf") || name.endsWith(".txt")) &&
+    (name.includes("pgdas") || name.includes("das") || name.includes("simples"))
+  );
+};
+
+// Linha 87-92: Não usa validação!
+const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  if (e.target.files) {
+    const selectedFiles = Array.from(e.target.files);
+    addFiles(selectedFiles);  // ← Não valida!
+  }
+};
 ```
-XMLs | SPED | DCTF | PGDAS | Cruzamento | Créditos | Exposição
+
+## Código Corrigido
+
+```typescript
+// Validação flexível - aceita .pdf e .txt sem exigir nome específico
+const isValidPgdasFile = (file: File): boolean => {
+  const name = file.name.toLowerCase();
+  return name.endsWith(".pdf") || name.endsWith(".txt");
+};
+
+// handleFileSelect agora usa validação
+const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  if (e.target.files) {
+    const selectedFiles = Array.from(e.target.files);
+    const validFiles = selectedFiles.filter(isValidPgdasFile);
+    const invalidCount = selectedFiles.length - validFiles.length;
+
+    if (invalidCount > 0) {
+      toast({
+        title: `${invalidCount} arquivo(s) ignorado(s)`,
+        description: "Apenas arquivos .pdf ou .txt são aceitos",
+        variant: "destructive",
+      });
+    }
+
+    if (validFiles.length > 0) {
+      addFiles(validFiles);
+    }
+  }
+};
 ```
 
-### Validação de arquivos PGDAS
-Aceitar arquivos que:
-- Terminam em `.pdf` ou `.txt`
-- Contêm "pgdas" ou "das" ou "simples" no nome
+---
 
-### Migração SQL
-```sql
--- Criar tabela pgdas_arquivos
-CREATE TABLE public.pgdas_arquivos (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  cnpj TEXT,
-  razao_social TEXT,
-  periodo_apuracao DATE,
-  receita_bruta NUMERIC(15,2) DEFAULT 0,
-  valor_devido NUMERIC(15,2) DEFAULT 0,
-  aliquota_efetiva NUMERIC(5,4) DEFAULT 0,
-  anexo_simples TEXT,
-  arquivo_nome TEXT NOT NULL,
-  arquivo_storage_path TEXT,
-  status TEXT DEFAULT 'pending',
-  erro_mensagem TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+## Atualizar Texto de Ajuda
 
--- RLS
-ALTER TABLE public.pgdas_arquivos ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can manage own pgdas files"
-ON public.pgdas_arquivos FOR ALL
-USING (auth.uid() = user_id)
-WITH CHECK (auth.uid() = user_id);
-
--- Bucket de storage
-INSERT INTO storage.buckets (id, name, public) 
-VALUES ('pgdas-files', 'pgdas-files', false);
-
--- Política de storage
-CREATE POLICY "Users can upload own pgdas files"
-ON storage.objects FOR INSERT
-WITH CHECK (
-  bucket_id = 'pgdas-files' 
-  AND auth.uid()::text = (storage.foldername(name))[1]
-);
-
-CREATE POLICY "Users can read own pgdas files"
-ON storage.objects FOR SELECT
-USING (
-  bucket_id = 'pgdas-files' 
-  AND auth.uid()::text = (storage.foldername(name))[1]
-);
-```
+Remover a instrução "Nome do arquivo deve conter: pgdas, das ou simples" já que não será mais necessário.
 
 ---
 
 ## Resultado Esperado
-Nova aba "PGDAS" na página de Análise de Créditos, permitindo upload em lote de declarações do Simples Nacional, com processamento automático e extração de dados para análise fiscal consolidada.
+- Usuário pode fazer upload de qualquer arquivo `.pdf` ou `.txt`
+- Validação consistente entre arrastar e clicar para selecionar
+- Mensagens de erro claras quando arquivos são rejeitados
