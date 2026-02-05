@@ -9,7 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { useXmlCreditsSummary } from '@/hooks/useXmlCredits';
 import { useIdentifiedCredits, useIdentifiedCreditsSummary } from '@/hooks/useIdentifiedCredits';
 import { useReanalyzeCredits } from '@/hooks/useReanalyzeCredits';
-import { CreditPdfReport } from './CreditPdfReport';
+import { CreditReportDialog } from '@/components/pdf/CreditReportDialog';
 import { MonophasicAlert } from './MonophasicAlert';
 import { IdentifiedCreditsTable } from './IdentifiedCreditsTable';
 import { CreditImplementationWorkflow } from './CreditImplementationWorkflow';
@@ -325,46 +325,10 @@ export function CreditRadar() {
       )}
 
       {/* PDF Modal */}
-      {showPdfModal && (
-        <CreditPdfReport 
-          credits={identifiedCredits?.map(c => ({
-            id: c.id,
-            nfe_key: c.nfe_key,
-            nfe_number: c.nfe_number,
-            nfe_date: c.nfe_date,
-            supplier_cnpj: c.supplier_cnpj,
-            supplier_name: c.supplier_name,
-            original_tax_value: c.original_tax_value,
-            potential_recovery: c.potential_recovery,
-            ncm_code: c.ncm_code,
-            product_description: c.product_description,
-            cfop: c.cfop,
-            cst: c.cst,
-            confidence_score: c.confidence_score,
-            confidence_level: c.confidence_level,
-            status: c.status,
-            created_at: c.created_at,
-            credit_rules: c.rule ? {
-              tax_type: c.rule.tax_type,
-              rule_name: c.rule.rule_name,
-              legal_basis: c.rule.legal_basis,
-            } : undefined,
-          })) || []} 
-          summary={{
-            total_potential: totalRecuperavel,
-            pis_cofins_potential: summaryData.pisCofins,
-            icms_potential: summaryData.icms,
-            icms_st_potential: summaryData.icmsSt,
-            ipi_potential: summaryData.ipi,
-            high_confidence_total: summaryData.highConfidence,
-            medium_confidence_total: summaryData.mediumConfidence,
-            low_confidence_total: summaryData.lowConfidence,
-            total_xmls_analyzed: xmlSummary?.totalXmls || 0,
-            credits_found_count: summaryData.totalCredits,
-          }}
-          onClose={() => setShowPdfModal(false)} 
-        />
-      )}
+      <CreditReportDialog 
+        open={showPdfModal} 
+        onOpenChange={setShowPdfModal}
+      />
     </div>
   );
 }
