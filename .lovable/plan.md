@@ -1,31 +1,35 @@
 
-
-## Plano: Descer a Imagem Até o Fim da Pista Encostar na Frase
+## Plano: Opção B - Mover a Imagem de Fundo para a ProblemSection
 
 ### Objetivo
-Fazer com que o **fim da pista/avenida** da imagem cinematográfica fique exatamente encostando na frase "A Reforma Tributária vai custar...".
+Fazer com que a **última parte amarela da pista** termine exatamente colada na frase "A Reforma Tributária vai custar..." movendo a imagem cinematográfica para a ProblemSection.
 
 ---
 
-### Solução
+### Abordagem
 
-Para descer ainda mais a imagem e fazer a pista encostar na frase, vou:
-
-1. **Aumentar a altura da seção Hero** - de `120vh` para `140vh` (mais espaço para a imagem descer)
-2. **Ajustar o `backgroundPosition`** - de `20%` para `10%` ou até `0%` (empurra a imagem mais para baixo)
-3. **Remover o bottom fade** - para não escurecer o fim da pista
+A imagem de fundo será movida para a `ProblemSection`, posicionada no **topo da seção** de forma que a pista amarela termine exatamente onde começa o texto. O Hero ficará com um fundo simples escuro.
 
 ---
 
 ### Mudanças Técnicas
 
-**Arquivo:** `src/components/landing/NewHeroSection.tsx`
+**Arquivo 1:** `src/components/landing/NewHeroSection.tsx`
 
-| Alteração | Antes | Depois |
-|-----------|-------|--------|
-| Altura da seção | `min-h-[120vh]` | `min-h-[140vh]` |
-| Posição da imagem | `center 20%` | `center 10%` |
-| Bottom fade | `h-24` com gradiente | Removido ou `h-8` (mínimo) |
+| Alteração | Descrição |
+|-----------|-----------|
+| Remover imagem de fundo | A seção terá apenas fundo sólido `bg-[#0A0A0A]` |
+| Altura da seção | Reduzir para `min-h-screen` (100vh) |
+| Remover bottom fade | Não é mais necessário |
+
+**Arquivo 2:** `src/components/landing/ProblemSection.tsx`
+
+| Alteração | Descrição |
+|-----------|-----------|
+| Adicionar imagem de fundo | Importar `heroBg` e usar como background no topo |
+| Estrutura da seção | Dividir em duas partes: área da imagem + área do conteúdo |
+| Posição da imagem | `background-position: center bottom` para que a pista termine no texto |
+| Altura da área da imagem | Aproximadamente `50vh` ou `60vh` para mostrar os prédios |
 
 ---
 
@@ -33,30 +37,54 @@ Para descer ainda mais a imagem e fazer a pista encostar na frase, vou:
 
 ```text
 ┌─────────────────────────────────────────────┐
-│  HERO SECTION (min-h-[140vh])               │
+│  HERO SECTION (fundo sólido #0A0A0A)        │
 │                                             │
-│  ┌─────────────────────────────────────┐   │
-│  │  "Domine a Reforma Tributária..."   │   │
-│  │  [Comece seus 7 dias grátis]        │   │
-│  └─────────────────────────────────────┘   │
+│  "Domine a Reforma Tributária..."           │
+│  [Comece seus 7 dias grátis]                │
 │                                             │
-│         (espaço extra)                     │
-│                                             │
-│  ┌─ PRÉDIOS E AVENIDA ─────────────────┐   │
-│  │                                     │   │
-│  │                                     │   │
-│  │         FIM DA PISTA ───────────────│───┼── ← Encostando na frase
-│  └─────────────────────────────────────┘   │
 └─────────────────────────────────────────────┘
 ┌─────────────────────────────────────────────┐
-│  "A Reforma Tributária vai custar..."      │ ← Frase começa exatamente aqui
+│  PROBLEM SECTION                            │
+│  ┌─────────────────────────────────────┐   │
+│  │  IMAGEM DE FUNDO (prédios)          │   │
+│  │         PISTA AMARELA               │   │
+│  │              ▼                      │   │
+│  │         FIM DA PISTA ═══════════════│   │
+│  └─────────────────────────────────────┘   │
+│  "A Reforma Tributária vai custar..."  ← COLADO
+│                                             │
+│  [Cards de benefícios]                     │
 └─────────────────────────────────────────────┘
+```
+
+---
+
+### Código Proposto
+
+**ProblemSection.tsx (estrutura):**
+```tsx
+<section className="bg-[#0A0A0A]">
+  {/* Área da imagem cinematográfica */}
+  <div 
+    className="h-[50vh] md:h-[60vh] bg-cover bg-no-repeat"
+    style={{ 
+      backgroundImage: `url(${heroBg})`, 
+      backgroundPosition: 'center bottom' 
+    }}
+  />
+  
+  {/* Conteúdo com a frase */}
+  <div className="container mx-auto px-4 md:px-8 py-20 md:py-32">
+    <h2>"A Reforma Tributária vai custar..."</h2>
+    {/* Cards */}
+  </div>
+</section>
 ```
 
 ---
 
 ### Resultado Esperado
 
-- O fim da pista ficará exatamente encostando na linha onde começa a frase "A Reforma Tributária vai custar..."
-- Transição visual perfeita entre a imagem e a seção Problema
-
+- A pista amarela terminará **exatamente colada** na frase "A Reforma Tributária vai custar..."
+- Transição visual perfeita: imagem → texto (sem espaços)
+- O Hero ficará mais limpo com fundo sólido
