@@ -1,5 +1,6 @@
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { ModuleToolCard, ToolStatus } from "@/components/home/ModuleToolCard";
+import { NewsletterForm } from "@/components/common/NewsletterForm";
 import { Newspaper, Users, Gift } from "lucide-react";
 
 const tools = [
@@ -58,6 +59,17 @@ export default function ConexaoPage() {
               badge={tool.badge}
             />
           ))}
+        </div>
+
+        {/* Newsletter Section */}
+        <div className="mt-12 w-full max-w-md">
+          <div className="bg-card border rounded-lg p-6 text-center">
+            <h3 className="text-lg font-semibold mb-2">📬 TribuTalks News</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Receba nossa newsletter toda terça-feira às 07h07 com as principais atualizações tributárias.
+            </p>
+            <NewsletterForm />
+          </div>
         </div>
       </div>
     </DashboardLayout>
