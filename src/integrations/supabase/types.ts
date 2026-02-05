@@ -2711,6 +2711,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          circle_invited_at: string | null
+          circle_member_id: string | null
           city: string | null
           cnae: string | null
           country_code: string | null
@@ -2747,6 +2749,8 @@ export type Database = {
           welcome_seen: boolean | null
         }
         Insert: {
+          circle_invited_at?: string | null
+          circle_member_id?: string | null
           city?: string | null
           cnae?: string | null
           country_code?: string | null
@@ -2783,6 +2787,8 @@ export type Database = {
           welcome_seen?: boolean | null
         }
         Update: {
+          circle_invited_at?: string | null
+          circle_member_id?: string | null
           city?: string | null
           cnae?: string | null
           country_code?: string | null
