@@ -1,107 +1,118 @@
 
 
-# Plano: Correção da Página "Configure seu ambiente"
+# Plano: Histórico de Cálculos por CNPJ
 
-## Problemas Identificados
+## Situação Atual
 
-### 1. Erro de forwardRef nos Componentes
-Os logs mostram que `Setup` e `CompanySetupCard` estão recebendo refs do React Router, mas não estão preparados para isso:
-```
-Warning: Function components cannot be given refs.
-Check the render method of `App`.
-    at Setup
-```
+Atualmente, as simulações e cálculos são salvos **apenas por usuário** (`user_id`), sem distinção de qual empresa (CNPJ) estava selecionada no momento do cálculo.
 
-### 2. Chamada Fantasma no useCnpjLookup
-O hook `useCnpjLookup` faz uma chamada inútil ao `supabase.functions.invoke` (linhas 78-86) que não usa o resultado, e depois faz a chamada correta via `fetch`. Isso causa comportamento inconsistente.
+### Tabelas afetadas:
+| Tabela | Tem company_id? | Problema |
+|--------|-----------------|----------|
+| `simulations` | ❌ Não | Todas as simulações aparecem misturadas |
+| `tax_calculations` | ❌ Não | Cálculos da Reforma sem vínculo com empresa |
+| `tax_score_history` | ❌ Não | Score não vinculado à empresa |
 
-### 3. Formulário de Empresa sem Auto-lookup
-O `CompanySetupForm` requer que o usuário clique no botão "Buscar" manualmente. O auto-preenchimento só ocorre após clicar.
+## Solução Proposta
 
-## Arquivos a Modificar
+Adicionar `company_id` nas tabelas de histórico e filtrar por empresa ativa.
 
-| Arquivo | Problema | Solução |
-|---------|----------|---------|
-| `src/hooks/useCnpjLookup.ts` | Chamada fantasma antes do fetch real | Remover linhas 78-86 (invoke desnecessário) |
-| `src/components/setup/CompanySetupCard.tsx` | Não suporta forwardRef | Adicionar forwardRef wrapper |
-| `src/components/setup/CompanySetupForm.tsx` | Sem auto-lookup quando 14 dígitos | Adicionar auto-lookup quando CNPJ completo |
+### 1. Alterações no Banco de Dados
 
-## Correções Detalhadas
+```sql
+-- Adicionar company_id às tabelas de histórico
+ALTER TABLE simulations ADD COLUMN company_id UUID REFERENCES company_profile(id) ON DELETE SET NULL;
+ALTER TABLE tax_calculations ADD COLUMN company_id UUID REFERENCES company_profile(id) ON DELETE SET NULL;
+ALTER TABLE tax_score_history ADD COLUMN company_id UUID REFERENCES company_profile(id) ON DELETE SET NULL;
 
-### 1. Corrigir useCnpjLookup.ts
-
-**Antes (problema):**
-```typescript
-try {
-  // Chamada inútil que não usa o resultado
-  const { data: response, error: fnError } = await supabase.functions.invoke(
-    'gov-data-api',
-    { body: null, headers: {...} }
-  );
-
-  // Depois faz fetch direto
-  const functionUrl = ...
-  const res = await fetch(functionUrl, {...});
+-- Índices para performance
+CREATE INDEX idx_simulations_company ON simulations(company_id);
+CREATE INDEX idx_tax_calculations_company ON tax_calculations(company_id);
+CREATE INDEX idx_tax_score_history_company ON tax_score_history(company_id);
 ```
 
-**Depois (corrigido):**
-```typescript
-try {
-  const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gov-data-api/cnpj/${cleanedCnpj}`;
-  
-  const res = await fetch(functionUrl, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-      'Content-Type': 'application/json',
-    },
-  });
-```
+### 2. Arquivos a Modificar
 
-### 2. Adicionar forwardRef ao CompanySetupCard
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/pages/calculadora/ComparativoRegimes.tsx` | Incluir `company_id` ao salvar simulação |
+| `src/pages/calculadora/SplitPayment.tsx` | Incluir `company_id` ao salvar simulação |
+| `src/pages/calculadora/CalculadoraRTC.tsx` | Incluir `company_id` ao salvar cálculo |
+| `src/pages/calculadora/CalculadoraNBS.tsx` | Incluir `company_id` ao salvar cálculo |
+| `src/pages/Historico.tsx` | Filtrar por `currentCompany.id` + mostrar empresa no card |
+| `src/components/score/ScoreHistoryChart.tsx` | Filtrar por `company_id` |
+| `src/hooks/useUserProgress.ts` | Filtrar queries por empresa |
+| `src/hooks/useDashboardData.ts` | Filtrar queries por empresa |
 
-```typescript
-import React, { forwardRef } from "react";
-
-export const CompanySetupCard = forwardRef<HTMLDivElement, CompanySetupCardProps>(
-  ({ company, isPrimary, onEdit, onRemove, onSetPrimary }, ref) => {
-    // ... resto do componente
-    return (
-      <Card ref={ref} className={...}>
-```
-
-### 3. Auto-lookup no CompanySetupForm
-
-Adicionar useEffect que dispara lookup automaticamente quando CNPJ atinge 14 dígitos:
-
-```typescript
-// Auto-lookup when CNPJ is complete
-useEffect(() => {
-  const cleanCnpj = cnpj.replace(/\D/g, '');
-  if (cleanCnpj.length === 14 && !cnpjData && !cnpjLoading && !isAutoFilled) {
-    handleLookup();
-  }
-}, [cnpj]);
-```
-
-## Fluxo Corrigido
+### 3. Fluxo Atualizado
 
 ```text
-1. Usuário digita CNPJ
-2. Quando completa 14 dígitos → auto-lookup dispara
-3. Dados da empresa preenchem automaticamente:
-   - Razão Social (bloqueado)
-   - Nome Fantasia (editável)
-   - Regime Tributário (sugerido, editável)
-4. Usuário clica "Adicionar Empresa"
-5. Empresa salva com sucesso
-6. Usuário pode continuar para "Boas-vindas"
+┌────────────────────────────────────────────────────────────────┐
+│  USUÁRIO SELECIONA EMPRESA "ACME LTDA" (CNPJ 12.345.678/0001-90)│
+│                            ↓                                   │
+│     ┌────────────────────────────────────────────────────────┐ │
+│     │  Faz uma simulação no Comparativo de Regimes          │ │
+│     │  Sistema salva com company_id = ID da ACME            │ │
+│     └────────────────────────────────────────────────────────┘ │
+│                            ↓                                   │
+│     ┌────────────────────────────────────────────────────────┐ │
+│     │  Troca para empresa "BETA S.A" no seletor             │ │
+│     │  Histórico automaticamente filtra para BETA           │ │
+│     └────────────────────────────────────────────────────────┘ │
+│                            ↓                                   │
+│     ┌────────────────────────────────────────────────────────┐ │
+│     │  Página /historico mostra só simulações da BETA       │ │
+│     │  Com badge indicando o CNPJ em cada registro          │ │
+│     └────────────────────────────────────────────────────────┘ │
+└────────────────────────────────────────────────────────────────┘
 ```
 
-## Resultado Esperado
+### 4. Exemplo de Código
 
-- Os campos serão preenchidos automaticamente ao digitar o CNPJ completo
-- O botão "Buscar" ainda funciona como alternativa manual
-- Sem erros de console sobre refs
-- Salvamento funciona corretamente
+**Salvando simulação com empresa:**
+```typescript
+// Em ComparativoRegimes.tsx
+import { useCompany } from "@/contexts/CompanyContext";
+
+const { currentCompany } = useCompany();
+
+await supabase.from('simulations').insert([{
+  user_id: user.id,
+  company_id: currentCompany?.id,  // ← NOVO
+  calculator_slug: 'comparativo-regimes',
+  inputs: { ... },
+  outputs: { ... },
+}]);
+```
+
+**Filtrando histórico por empresa:**
+```typescript
+// Em Historico.tsx
+const { currentCompany } = useCompany();
+
+let query = supabase
+  .from('simulations')
+  .select('*')
+  .eq('user_id', user.id);
+
+// Filtra pela empresa ativa (se houver)
+if (currentCompany?.id) {
+  query = query.eq('company_id', currentCompany.id);
+}
+```
+
+### 5. Experiência do Usuário
+
+- ✅ Ao trocar de empresa, o histórico muda automaticamente
+- ✅ Cada card de simulação mostra qual CNPJ foi usado
+- ✅ Score history chart mostra evolução específica de cada empresa
+- ✅ Registros antigos (sem company_id) continuam visíveis para todos
+
+### 6. Migração de Dados Existentes
+
+Registros existentes terão `company_id = NULL`. Opções:
+1. **Manter NULL** - registros antigos aparecem em todas as empresas
+2. **Atribuir à primeira empresa** - script preenche com a empresa mais antiga do usuário
+
+**Recomendação:** Opção 1 (manter NULL) é mais segura e não requer script de migração.
 
