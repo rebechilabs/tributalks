@@ -12,11 +12,11 @@
    };
  
    return (
-    <section className="relative min-h-[110vh] flex items-start justify-center overflow-hidden">
+     <section className="relative min-h-[120vh] flex items-start justify-center overflow-hidden">
        {/* Background Image */}
        <div 
         className="absolute inset-0 bg-cover bg-no-repeat"
-        style={{ backgroundImage: `url(${heroBg})`, backgroundPosition: 'center 30%' }}
+         style={{ backgroundImage: `url(${heroBg})`, backgroundPosition: 'center 20%' }}
        >
         {/* Gradient overlay - strong at top for text, transparent at bottom for buildings */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0A]/90 via-[#0A0A0A]/30 to-transparent" />
@@ -69,7 +69,7 @@
        </div>
  
        {/* Bottom fade */}
-    <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#0A0A0A] to-transparent" />
+     <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#0A0A0A] to-transparent" />
      </section>
    );
  }
