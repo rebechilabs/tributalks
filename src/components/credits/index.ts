@@ -10,3 +10,4 @@ export { CreditPdfReport } from './CreditPdfReport';
 export { CreditDisplay } from './CreditDisplay';
 export { CreditImplementationWorkflow } from './CreditImplementationWorkflow';
 export { IdentifiedCreditsTable } from './IdentifiedCreditsTable';
+export { CreditReportDialog } from '@/components/pdf/CreditReportDialog';
