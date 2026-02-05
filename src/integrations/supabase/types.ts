@@ -3189,6 +3189,7 @@ export type Database = {
       simulations: {
         Row: {
           calculator_slug: string
+          company_id: string | null
           created_at: string | null
           id: string
           inputs: Json
@@ -3197,6 +3198,7 @@ export type Database = {
         }
         Insert: {
           calculator_slug: string
+          company_id?: string | null
           created_at?: string | null
           id?: string
           inputs: Json
@@ -3205,13 +3207,22 @@ export type Database = {
         }
         Update: {
           calculator_slug?: string
+          company_id?: string | null
           created_at?: string | null
           id?: string
           inputs?: Json
           outputs?: Json
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "simulations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profile"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sped_contribuicoes: {
         Row: {
@@ -3516,6 +3527,7 @@ export type Database = {
       }
       tax_calculations: {
         Row: {
+          company_id: string | null
           created_at: string
           has_simulated_data: boolean | null
           id: string
@@ -3533,6 +3545,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          company_id?: string | null
           created_at?: string
           has_simulated_data?: boolean | null
           id?: string
@@ -3550,6 +3563,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          company_id?: string | null
           created_at?: string
           has_simulated_data?: boolean | null
           id?: string
@@ -3566,7 +3580,15 @@ export type Database = {
           uf?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tax_calculations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profile"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tax_knowledge_edges: {
         Row: {
@@ -3978,6 +4000,7 @@ export type Database = {
       tax_score_history: {
         Row: {
           calculated_at: string | null
+          company_id: string | null
           id: string
           score_conformidade: number | null
           score_documentacao: number | null
@@ -3990,6 +4013,7 @@ export type Database = {
         }
         Insert: {
           calculated_at?: string | null
+          company_id?: string | null
           id?: string
           score_conformidade?: number | null
           score_documentacao?: number | null
@@ -4002,6 +4026,7 @@ export type Database = {
         }
         Update: {
           calculated_at?: string | null
+          company_id?: string | null
           id?: string
           score_conformidade?: number | null
           score_documentacao?: number | null
@@ -4012,7 +4037,15 @@ export type Database = {
           score_total?: number
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tax_score_history_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profile"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tributbot_messages: {
         Row: {
