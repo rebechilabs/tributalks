@@ -35,13 +35,18 @@ export const EXEC_FONTS = {
   monoSmall: { size: 7, style: 'normal' as const },
 };
 
-// Colors (black and white for printing)
+// Colors (Nestlé professional standard)
 export const EXEC_COLORS = {
   black: { r: 0, g: 0, b: 0 },
   gray: { r: 102, g: 102, b: 102 },  // #666666
   lightGray: { r: 150, g: 150, b: 150 },
   border: { r: 46, g: 46, b: 46 },   // #2E2E2E
   white: { r: 255, g: 255, b: 255 },
+  // Nestlé standard colors
+  navyBlue: { r: 0, g: 51, b: 102 },       // #003366 - Títulos e cabeçalhos
+  gold: { r: 218, g: 165, b: 32 },         // #DAA520 - Destaques
+  green: { r: 0, g: 102, b: 51 },          // #006633 - Total de créditos
+  tableHeader: { r: 245, g: 245, b: 245 }, // #F5F5F5 - Cabeçalho tabelas
 };
 
 // Spacing (in mm)

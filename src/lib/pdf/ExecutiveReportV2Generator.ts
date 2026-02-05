@@ -1,13 +1,14 @@
 /**
  * Executive Report V2 Generator
- * Professional PDF with 7 mandatory sections:
+ * Professional PDF with 7 mandatory sections following Nestlé standard:
  * 1. Capa
- * 2. Sumário Executivo (with bar chart)
- * 3. Metodologia Aplicada
- * 4. Análise Detalhada dos Créditos
- * 5. Recomendações e Próximos Passos
- * 6. Premissas, Limitações e Aviso Legal
- * 7. Anexos de Rastreabilidade
+ * 2. Sumário Executivo (renumbered to 1)
+ * 3. Metodologia Aplicada (renumbered to 2)
+ * 4. Análise Detalhada dos Créditos (renumbered to 3)
+ * 5. Recomendações e Próximos Passos (renumbered to 4)
+ * 6. Premissas, Limitações e Aviso Legal (renumbered to 5)
+ * 7. Anexos de Rastreabilidade (renumbered to 6)
+ * + Seção de Contato
  */
 
 import { jsPDF } from 'jspdf';
@@ -57,8 +58,7 @@ export async function generateExecutiveReportV2(
 
   // Page tracking
   let currentPage = 1;
-  let totalPages = 1; // Will be calculated at the end
-  const pageContents: (() => void)[] = [];
+  let totalPages = 1;
 
   // Helper: add page with tracking
   const addPage = () => {
@@ -68,36 +68,35 @@ export async function generateExecutiveReportV2(
 
   // Helper: draw header on all pages (except cover)
   const drawHeader = (pageNum: number) => {
-    if (pageNum === 1) return; // Skip cover
+    if (pageNum === 1) return;
     
     // Logo
     if (logoBase64) {
       try {
         doc.addImage(logoBase64, 'PNG', EXEC_PAGE.marginLeft, 8, 35, 12);
       } catch {
-        // Fallback to text
         doc.setFont('helvetica', EXEC_FONTS.smallBold.style);
         doc.setFontSize(EXEC_FONTS.smallBold.size);
-        doc.setTextColor(EXEC_COLORS.gray.r, EXEC_COLORS.gray.g, EXEC_COLORS.gray.b);
+        doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
         doc.text('TribuTalks', EXEC_PAGE.marginLeft, 14);
       }
     }
     
     // Report ID on the right
-    doc.setFont('helvetica', EXEC_FONTS.mono.style);
+    doc.setFont('courier', EXEC_FONTS.mono.style);
     doc.setFontSize(EXEC_FONTS.mono.size);
     doc.setTextColor(EXEC_COLORS.gray.r, EXEC_COLORS.gray.g, EXEC_COLORS.gray.b);
     doc.text(data.id, EXEC_PAGE.width - EXEC_PAGE.marginRight, 14, { align: 'right' });
     
     // Line under header
-    doc.setDrawColor(EXEC_COLORS.lightGray.r, EXEC_COLORS.lightGray.g, EXEC_COLORS.lightGray.b);
+    doc.setDrawColor(EXEC_COLORS.gold.r, EXEC_COLORS.gold.g, EXEC_COLORS.gold.b);
     doc.setLineWidth(EXEC_LINES.separator);
     doc.line(EXEC_PAGE.marginLeft, 22, EXEC_PAGE.width - EXEC_PAGE.marginRight, 22);
   };
 
   // Helper: draw footer with pagination
   const drawFooter = (pageNum: number, total: number) => {
-    if (pageNum === 1) return; // Skip cover
+    if (pageNum === 1) return;
     
     const footerY = EXEC_PAGE.height - 10;
     
@@ -123,73 +122,85 @@ export async function generateExecutiveReportV2(
       } catch {
         doc.setFont('helvetica', EXEC_FONTS.h2.style);
         doc.setFontSize(EXEC_FONTS.h2.size);
+        doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
         doc.text('TribuTalks', EXEC_PAGE.marginLeft, EXEC_PAGE.marginTop + 10);
       }
     }
     
     // Main title
-    let y = 90;
+    let y = 85;
     doc.setFont('helvetica', EXEC_FONTS.h1.style);
-    doc.setFontSize(22);
-    doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
+    doc.setFontSize(24);
+    doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
     doc.text('RELATÓRIO DE CRÉDITOS', EXEC_PAGE.width / 2, y, { align: 'center' });
-    y += 10;
+    y += 12;
     doc.text('TRIBUTÁRIOS', EXEC_PAGE.width / 2, y, { align: 'center' });
     
-    // Company info box
-    y = 130;
-    const boxX = EXEC_PAGE.marginLeft + 20;
-    const boxWidth = EXEC_PAGE.contentWidth - 40;
-    const boxHeight = 55;
+    // Subtitle
+    y += 15;
+    doc.setFont('helvetica', EXEC_FONTS.h2.style);
+    doc.setFontSize(14);
+    doc.setTextColor(EXEC_COLORS.gold.r, EXEC_COLORS.gold.g, EXEC_COLORS.gold.b);
+    doc.text('Sumário Executivo', EXEC_PAGE.width / 2, y, { align: 'center' });
     
-    doc.setDrawColor(EXEC_COLORS.border.r, EXEC_COLORS.border.g, EXEC_COLORS.border.b);
-    doc.setLineWidth(EXEC_LINES.box);
+    // Company info box
+    y = 135;
+    const boxX = EXEC_PAGE.marginLeft + 15;
+    const boxWidth = EXEC_PAGE.contentWidth - 30;
+    const boxHeight = 60;
+    
+    doc.setDrawColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
+    doc.setLineWidth(0.5);
     doc.roundedRect(boxX, y, boxWidth, boxHeight, 3, 3, 'S');
     
-    y += 12;
+    y += 14;
     doc.setFont('helvetica', EXEC_FONTS.bodyBold.style);
     doc.setFontSize(EXEC_FONTS.bodyBold.size);
-    doc.text('EMPRESA', boxX + 10, y);
+    doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
+    doc.text('EMPRESA', boxX + 12, y);
     doc.setFont('helvetica', EXEC_FONTS.body.style);
-    doc.text(data.empresa.razaoSocial, boxX + 50, y);
+    doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
+    doc.text(data.empresa.razaoSocial, boxX + 55, y);
     
-    y += 8;
+    y += 10;
     doc.setFont('helvetica', EXEC_FONTS.bodyBold.style);
-    doc.text('CNPJ', boxX + 10, y);
+    doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
+    doc.text('CNPJ', boxX + 12, y);
     doc.setFont('helvetica', EXEC_FONTS.body.style);
-    doc.text(formatCnpjExec(data.empresa.cnpj), boxX + 50, y);
+    doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
+    doc.text(formatCnpjExec(data.empresa.cnpj), boxX + 55, y);
     
-    y += 8;
+    y += 10;
     doc.setFont('helvetica', EXEC_FONTS.bodyBold.style);
-    doc.text('REGIME', boxX + 10, y);
+    doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
+    doc.text('REGIME', boxX + 12, y);
     doc.setFont('helvetica', EXEC_FONTS.body.style);
-    doc.text(getRegimeFullName(data.empresa.regime), boxX + 50, y);
-    
-    y += 16;
-    doc.setDrawColor(EXEC_COLORS.lightGray.r, EXEC_COLORS.lightGray.g, EXEC_COLORS.lightGray.b);
-    doc.line(boxX + 10, y - 6, boxX + boxWidth - 10, y - 6);
+    doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
+    doc.text(getRegimeFullName(data.empresa.regime), boxX + 55, y);
     
     // Report info
-    y = 200;
+    y = 215;
     doc.setFont('helvetica', EXEC_FONTS.body.style);
     doc.setFontSize(EXEC_FONTS.body.size);
     doc.setTextColor(EXEC_COLORS.gray.r, EXEC_COLORS.gray.g, EXEC_COLORS.gray.b);
     
     doc.text(`Relatório nº: ${data.id}`, EXEC_PAGE.width / 2, y, { align: 'center' });
-    y += 7;
+    y += 8;
     doc.text(`Data de emissão: ${formatDateExec(data.dataGeracao)}`, EXEC_PAGE.width / 2, y, { align: 'center' });
-    y += 7;
+    y += 8;
     doc.text(`Período analisado: ${formatDateExec(data.periodoInicio)} a ${formatDateExec(data.periodoFim)}`, EXEC_PAGE.width / 2, y, { align: 'center' });
-    y += 7;
+    y += 8;
     doc.text(`Documentos processados: ${data.estatisticas.totalXmlsAnalisados} arquivos XML de NF-e`, EXEC_PAGE.width / 2, y, { align: 'center' });
     
     // Footer branding
+    doc.setFont('helvetica', EXEC_FONTS.smallBold.style);
     doc.setFontSize(EXEC_FONTS.small.size);
+    doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
     doc.text('TribuTalks Inteligência Tributária', EXEC_PAGE.width / 2, EXEC_PAGE.height - 20, { align: 'center' });
   };
 
   // ============================================
-  // SECTION 2: EXECUTIVE SUMMARY
+  // SECTION 2: EXECUTIVE SUMMARY (numbered as 1)
   // ============================================
   const drawExecutiveSummary = () => {
     addPage();
@@ -200,30 +211,48 @@ export async function generateExecutiveReportV2(
     // Section title
     doc.setFont('helvetica', EXEC_FONTS.h1.style);
     doc.setFontSize(EXEC_FONTS.h1.size);
-    doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
-    doc.text('2. SUMÁRIO EXECUTIVO', EXEC_PAGE.marginLeft, y);
+    doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
+    doc.text('1. SUMÁRIO EXECUTIVO', EXEC_PAGE.marginLeft, y);
     y += EXEC_SPACING.afterH1;
     
-    // Total highlight box
-    doc.setFillColor(245, 245, 245);
-    doc.roundedRect(EXEC_PAGE.marginLeft, y, EXEC_PAGE.contentWidth, 25, 2, 2, 'F');
+    // Introductory paragraph
+    doc.setFont('helvetica', EXEC_FONTS.body.style);
+    doc.setFontSize(EXEC_FONTS.body.size);
+    doc.setTextColor(EXEC_COLORS.gray.r, EXEC_COLORS.gray.g, EXEC_COLORS.gray.b);
+    const introParagraph = `Este relatório apresenta a análise dos créditos tributários identificados para ${data.empresa.razaoSocial}, com base nos documentos fiscais eletrônicos processados no período de ${formatDateExec(data.periodoInicio)} a ${formatDateExec(data.periodoFim)}.`;
+    const introLines = doc.splitTextToSize(introParagraph, EXEC_PAGE.contentWidth);
+    doc.text(introLines, EXEC_PAGE.marginLeft, y);
+    y += introLines.length * 5 + 8;
+    
+    // Total highlight box with GREEN color
+    doc.setFillColor(EXEC_COLORS.tableHeader.r, EXEC_COLORS.tableHeader.g, EXEC_COLORS.tableHeader.b);
+    doc.roundedRect(EXEC_PAGE.marginLeft, y, EXEC_PAGE.contentWidth, 28, 2, 2, 'F');
     
     doc.setFont('helvetica', EXEC_FONTS.body.style);
     doc.setFontSize(EXEC_FONTS.body.size);
     doc.setTextColor(EXEC_COLORS.gray.r, EXEC_COLORS.gray.g, EXEC_COLORS.gray.b);
     doc.text('Total de Créditos Identificados', EXEC_PAGE.marginLeft + 5, y + 8);
     
+    // GREEN total value
     doc.setFont('helvetica', EXEC_FONTS.h1.style);
-    doc.setFontSize(18);
-    doc.setTextColor(239, 162, 25); // Gold
-    doc.text(formatCurrencyExec(data.sumario.totalRecuperavel), EXEC_PAGE.marginLeft + 5, y + 20);
+    doc.setFontSize(20);
+    doc.setTextColor(EXEC_COLORS.green.r, EXEC_COLORS.green.g, EXEC_COLORS.green.b);
+    doc.text(formatCurrencyExec(data.sumario.totalRecuperavel), EXEC_PAGE.marginLeft + 5, y + 22);
     
-    y += 35;
+    // Economia anual estimada
+    doc.setFont('helvetica', EXEC_FONTS.small.style);
+    doc.setFontSize(EXEC_FONTS.small.size);
+    doc.setTextColor(EXEC_COLORS.gray.r, EXEC_COLORS.gray.g, EXEC_COLORS.gray.b);
+    const economiaMin = formatCurrencyExec(data.sumario.economiaAnualMin);
+    const economiaMax = formatCurrencyExec(data.sumario.economiaAnualMax);
+    doc.text(`Economia potencial anual estimada: ${economiaMin} a ${economiaMax}`, EXEC_PAGE.marginLeft + 100, y + 18);
+    
+    y += 38;
     
     // Tax distribution table
     doc.setFont('helvetica', EXEC_FONTS.h3.style);
     doc.setFontSize(EXEC_FONTS.h3.size);
-    doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
+    doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
     doc.text('Distribuição por Tributo', EXEC_PAGE.marginLeft, y);
     y += EXEC_SPACING.afterH3;
     
@@ -241,14 +270,14 @@ export async function generateExecutiveReportV2(
     const tableX = EXEC_PAGE.marginLeft;
     const colWidths = [60, 55, 55];
     
-    doc.setFillColor(240, 240, 240);
+    doc.setFillColor(EXEC_COLORS.tableHeader.r, EXEC_COLORS.tableHeader.g, EXEC_COLORS.tableHeader.b);
     doc.rect(tableX, y, EXEC_PAGE.contentWidth, 7, 'F');
     
     doc.setFont('helvetica', EXEC_FONTS.smallBold.style);
     doc.setFontSize(EXEC_FONTS.smallBold.size);
-    doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
+    doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
     doc.text('Tributo', tableX + 3, y + 5);
-    doc.text('Valor Identificado (R$)', tableX + colWidths[0] + 3, y + 5);
+    doc.text('Valor (R$)', tableX + colWidths[0] + 3, y + 5);
     doc.text('Representatividade (%)', tableX + colWidths[0] + colWidths[1] + 3, y + 5);
     
     y += 7;
@@ -271,10 +300,11 @@ export async function generateExecutiveReportV2(
       y += 6;
     });
     
-    // Total row
-    doc.setFillColor(235, 235, 235);
+    // Total row with gold highlight
+    doc.setFillColor(EXEC_COLORS.gold.r, EXEC_COLORS.gold.g, EXEC_COLORS.gold.b);
     doc.rect(tableX, y, EXEC_PAGE.contentWidth, 7, 'F');
     doc.setFont('helvetica', EXEC_FONTS.smallBold.style);
+    doc.setTextColor(EXEC_COLORS.white.r, EXEC_COLORS.white.g, EXEC_COLORS.white.b);
     doc.text('TOTAL', tableX + 3, y + 5);
     doc.text(formatCurrencyExec(total), tableX + colWidths[0] + 3, y + 5);
     doc.text('100%', tableX + colWidths[0] + colWidths[1] + 3, y + 5);
@@ -284,7 +314,7 @@ export async function generateExecutiveReportV2(
     // Bar chart
     doc.setFont('helvetica', EXEC_FONTS.h3.style);
     doc.setFontSize(EXEC_FONTS.h3.size);
-    doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
+    doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
     doc.text('Gráfico de Distribuição', EXEC_PAGE.marginLeft, y);
     y += EXEC_SPACING.afterH3;
     
@@ -319,27 +349,38 @@ export async function generateExecutiveReportV2(
     if (includeOpportunities && data.oportunidades.length > 0) {
       doc.setFont('helvetica', EXEC_FONTS.h3.style);
       doc.setFontSize(EXEC_FONTS.h3.size);
-      doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
-      doc.text('Principais Oportunidades', EXEC_PAGE.marginLeft, y);
+      doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
+      doc.text('Resumo das Oportunidades', EXEC_PAGE.marginLeft, y);
       y += EXEC_SPACING.afterH3;
       
-      doc.setFont('helvetica', EXEC_FONTS.body.style);
-      doc.setFontSize(EXEC_FONTS.body.size);
+      // Opportunities table header
+      doc.setFillColor(EXEC_COLORS.tableHeader.r, EXEC_COLORS.tableHeader.g, EXEC_COLORS.tableHeader.b);
+      doc.rect(tableX, y, EXEC_PAGE.contentWidth, 6, 'F');
+      doc.setFont('helvetica', EXEC_FONTS.smallBold.style);
+      doc.setFontSize(EXEC_FONTS.smallBold.size);
+      doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
+      doc.text('Oportunidade', tableX + 3, y + 4);
+      doc.text('Complexidade', tableX + 100, y + 4);
+      doc.text('Risco', tableX + 140, y + 4);
+      y += 6;
       
+      doc.setFont('helvetica', EXEC_FONTS.small.style);
       data.oportunidades.slice(0, 3).forEach((op, index) => {
+        if (index % 2 === 0) {
+          doc.setFillColor(250, 250, 250);
+          doc.rect(tableX, y, EXEC_PAGE.contentWidth, 5, 'F');
+        }
         doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
-        doc.text(`${index + 1}. ${op.titulo}`, EXEC_PAGE.marginLeft + 3, y);
+        doc.text(op.titulo.substring(0, 50), tableX + 3, y + 3.5);
+        doc.text(op.complexidade.charAt(0).toUpperCase() + op.complexidade.slice(1), tableX + 100, y + 3.5);
+        doc.text(op.risco.charAt(0).toUpperCase() + op.risco.slice(1), tableX + 140, y + 3.5);
         y += 5;
-        doc.setTextColor(EXEC_COLORS.gray.r, EXEC_COLORS.gray.g, EXEC_COLORS.gray.b);
-        const lines = doc.splitTextToSize(op.descricao, EXEC_PAGE.contentWidth - 10);
-        doc.text(lines.slice(0, 2), EXEC_PAGE.marginLeft + 6, y);
-        y += lines.slice(0, 2).length * 4 + 3;
       });
     }
   };
 
   // ============================================
-  // SECTION 3: METHODOLOGY
+  // SECTION 3: METHODOLOGY (numbered as 2)
   // ============================================
   const drawMethodology = () => {
     addPage();
@@ -349,14 +390,14 @@ export async function generateExecutiveReportV2(
     
     doc.setFont('helvetica', EXEC_FONTS.h1.style);
     doc.setFontSize(EXEC_FONTS.h1.size);
-    doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
-    doc.text('3. METODOLOGIA APLICADA', EXEC_PAGE.marginLeft, y);
+    doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
+    doc.text('2. METODOLOGIA APLICADA', EXEC_PAGE.marginLeft, y);
     y += EXEC_SPACING.afterH1;
     
     // Data sources
     doc.setFont('helvetica', EXEC_FONTS.h3.style);
     doc.setFontSize(EXEC_FONTS.h3.size);
-    doc.text('3.1 Fontes de Dados', EXEC_PAGE.marginLeft, y);
+    doc.text('2.1 Fontes de Dados', EXEC_PAGE.marginLeft, y);
     y += EXEC_SPACING.afterH3;
     
     doc.setFont('helvetica', EXEC_FONTS.body.style);
@@ -377,11 +418,11 @@ export async function generateExecutiveReportV2(
     
     y += 10;
     
-    // Analysis process
+    // Analysis process - 5 steps as per Nestlé model
     doc.setFont('helvetica', EXEC_FONTS.h3.style);
     doc.setFontSize(EXEC_FONTS.h3.size);
-    doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
-    doc.text('3.2 Processo de Análise', EXEC_PAGE.marginLeft, y);
+    doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
+    doc.text('2.2 Processo de Análise', EXEC_PAGE.marginLeft, y);
     y += EXEC_SPACING.afterH3;
     
     doc.setFont('helvetica', EXEC_FONTS.body.style);
@@ -389,16 +430,63 @@ export async function generateExecutiveReportV2(
     doc.setTextColor(EXEC_COLORS.gray.r, EXEC_COLORS.gray.g, EXEC_COLORS.gray.b);
     
     const steps = [
-      '1. Extração e validação dos dados dos arquivos XML e SPED.',
-      '2. Cruzamento de informações de NCM, CFOP e CST.',
-      '3. Aplicação da legislação tributária vigente para cada operação.',
-      '4. Cálculo e consolidação dos valores passíveis de crédito.',
+      {
+        step: '1. Coleta e Validação',
+        desc: 'Extração e validação dos dados dos arquivos XML de NF-e e SPED Contribuições.',
+      },
+      {
+        step: '2. Classificação Fiscal',
+        desc: 'Cruzamento de informações de NCM, CFOP e CST com a legislação vigente.',
+      },
+      {
+        step: '3. Aplicação Legal',
+        desc: 'Verificação das bases legais aplicáveis, incluindo Leis 10.637/02 e 10.833/03 para PIS/COFINS.',
+      },
+      {
+        step: '4. Cálculo de Créditos',
+        desc: 'Aplicação das alíquotas corretas e cálculo dos valores passíveis de recuperação.',
+      },
+      {
+        step: '5. Consolidação',
+        desc: 'Agrupamento por tributo e período, com classificação por nível de confiança.',
+      },
     ];
     
-    steps.forEach(step => {
-      const lines = doc.splitTextToSize(step, EXEC_PAGE.contentWidth - 10);
-      doc.text(lines, EXEC_PAGE.marginLeft + 5, y);
-      y += lines.length * 5 + 3;
+    steps.forEach(s => {
+      doc.setFont('helvetica', EXEC_FONTS.bodyBold.style);
+      doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
+      doc.text(s.step, EXEC_PAGE.marginLeft + 5, y);
+      y += 5;
+      doc.setFont('helvetica', EXEC_FONTS.body.style);
+      doc.setTextColor(EXEC_COLORS.gray.r, EXEC_COLORS.gray.g, EXEC_COLORS.gray.b);
+      const lines = doc.splitTextToSize(s.desc, EXEC_PAGE.contentWidth - 15);
+      doc.text(lines, EXEC_PAGE.marginLeft + 10, y);
+      y += lines.length * 5 + 5;
+    });
+    
+    y += 10;
+    
+    // Legal references
+    doc.setFont('helvetica', EXEC_FONTS.h3.style);
+    doc.setFontSize(EXEC_FONTS.h3.size);
+    doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
+    doc.text('2.3 Fundamentação Legal', EXEC_PAGE.marginLeft, y);
+    y += EXEC_SPACING.afterH3;
+    
+    doc.setFont('helvetica', EXEC_FONTS.body.style);
+    doc.setFontSize(EXEC_FONTS.body.size);
+    doc.setTextColor(EXEC_COLORS.gray.r, EXEC_COLORS.gray.g, EXEC_COLORS.gray.b);
+    
+    const legalBases = [
+      '• Lei 10.637/02 — Regime não-cumulativo do PIS',
+      '• Lei 10.833/03 — Regime não-cumulativo da COFINS',
+      '• Lei Complementar 87/96 — Lei Kandir (ICMS)',
+      '• Decreto 7.212/10 — Regulamento do IPI',
+    ];
+    
+    legalBases.forEach(basis => {
+      doc.text(basis, EXEC_PAGE.marginLeft + 5, y);
+      y += 6;
     });
     
     y += 10;
@@ -406,8 +494,8 @@ export async function generateExecutiveReportV2(
     // Validation criteria
     doc.setFont('helvetica', EXEC_FONTS.h3.style);
     doc.setFontSize(EXEC_FONTS.h3.size);
-    doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
-    doc.text('3.3 Critérios de Validação', EXEC_PAGE.marginLeft, y);
+    doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
+    doc.text('2.4 Critérios de Validação', EXEC_PAGE.marginLeft, y);
     y += EXEC_SPACING.afterH3;
     
     doc.setFont('helvetica', EXEC_FONTS.body.style);
@@ -428,7 +516,7 @@ export async function generateExecutiveReportV2(
   };
 
   // ============================================
-  // SECTION 4: DETAILED CREDIT ANALYSIS
+  // SECTION 4: DETAILED CREDIT ANALYSIS (numbered as 3)
   // ============================================
   const drawDetailedAnalysis = () => {
     addPage();
@@ -438,8 +526,8 @@ export async function generateExecutiveReportV2(
     
     doc.setFont('helvetica', EXEC_FONTS.h1.style);
     doc.setFontSize(EXEC_FONTS.h1.size);
-    doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
-    doc.text('4. ANÁLISE DETALHADA DOS CRÉDITOS', EXEC_PAGE.marginLeft, y);
+    doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
+    doc.text('3. ANÁLISE DETALHADA DOS CRÉDITOS', EXEC_PAGE.marginLeft, y);
     y += EXEC_SPACING.afterH1;
     
     data.creditosPorTributo.forEach((tributo, tribIndex) => {
@@ -453,15 +541,15 @@ export async function generateExecutiveReportV2(
       // Subsection title
       doc.setFont('helvetica', EXEC_FONTS.h2.style);
       doc.setFontSize(EXEC_FONTS.h2.size);
-      doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
-      doc.text(`4.${tribIndex + 1} ${tributo.tributo}`, EXEC_PAGE.marginLeft, y);
+      doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
+      doc.text(`3.${tribIndex + 1} Créditos de ${tributo.tributo}`, EXEC_PAGE.marginLeft, y);
       y += EXEC_SPACING.afterH2;
       
       // Summary info
       doc.setFont('helvetica', EXEC_FONTS.body.style);
       doc.setFontSize(EXEC_FONTS.body.size);
       doc.setTextColor(EXEC_COLORS.gray.r, EXEC_COLORS.gray.g, EXEC_COLORS.gray.b);
-      doc.text(`Total: ${formatCurrencyExec(tributo.valorTotal)} | Notas: ${tributo.notas.length}`, EXEC_PAGE.marginLeft + 3, y);
+      doc.text(`Total identificado: ${formatCurrencyExec(tributo.valorTotal)} | Documentos: ${tributo.notas.length}`, EXEC_PAGE.marginLeft + 3, y);
       y += 5;
       if (tributo.baseLegal) {
         doc.text(`Fundamentação: ${tributo.baseLegal}`, EXEC_PAGE.marginLeft + 3, y);
@@ -470,23 +558,23 @@ export async function generateExecutiveReportV2(
         y += 3;
       }
       
-      // Detail table
+      // Detail table with all columns
       const tableX = EXEC_PAGE.marginLeft;
-      const cols = [25, 35, 18, 25, 35, EXEC_PAGE.contentWidth - 138]; // Período, Base, Alíq, Valor, Fund, Docs
+      const cols = [25, 35, 18, 30, 35, EXEC_PAGE.contentWidth - 143];
       
       // Header
-      doc.setFillColor(240, 240, 240);
+      doc.setFillColor(EXEC_COLORS.tableHeader.r, EXEC_COLORS.tableHeader.g, EXEC_COLORS.tableHeader.b);
       doc.rect(tableX, y, EXEC_PAGE.contentWidth, 6, 'F');
       
-      doc.setFont('helvetica', EXEC_FONTS.monoSmall.style);
+      doc.setFont('courier', EXEC_FONTS.monoSmall.style);
       doc.setFontSize(EXEC_FONTS.monoSmall.size);
-      doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
+      doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
       
       let colX = tableX + 2;
       doc.text('Período', colX, y + 4); colX += cols[0];
       doc.text('Base Cálc.', colX, y + 4); colX += cols[1];
       doc.text('Alíq.', colX, y + 4); colX += cols[2];
-      doc.text('Crédito', colX, y + 4); colX += cols[3];
+      doc.text('Crédito (R$)', colX, y + 4); colX += cols[3];
       doc.text('Fund. Legal', colX, y + 4); colX += cols[4];
       doc.text('Documento', colX, y + 4);
       
@@ -495,7 +583,7 @@ export async function generateExecutiveReportV2(
       // Table rows (limited)
       const notasToShow = tributo.notas.slice(0, maxCreditsPerTax);
       
-      doc.setFont('helvetica', EXEC_FONTS.monoSmall.style);
+      doc.setFont('courier', EXEC_FONTS.monoSmall.style);
       notasToShow.forEach((nota, index) => {
         if (needsExecNewPage(y, 8)) {
           addPage();
@@ -520,7 +608,7 @@ export async function generateExecutiveReportV2(
         doc.text(formatCurrencyExec(nota.valorNota).substring(3, 15), colX, y + 3.5); colX += cols[1];
         doc.text(`${(nota.aliquota || 0).toFixed(2)}%`, colX, y + 3.5); colX += cols[2];
         doc.text(formatCurrencyExec(nota.valorCredito).substring(3, 15), colX, y + 3.5); colX += cols[3];
-        doc.text((nota.baseLegal || tributo.baseLegal || '').substring(0, 18), colX, y + 3.5); colX += cols[4];
+        doc.text((nota.baseLegal || tributo.baseLegal || '').substring(0, 15), colX, y + 3.5); colX += cols[4];
         
         // Truncated NFe key
         const truncatedKey = nota.chaveAcesso.length > 20 
@@ -530,6 +618,15 @@ export async function generateExecutiveReportV2(
         
         y += 5;
       });
+      
+      // TOTAL row
+      doc.setFillColor(EXEC_COLORS.gold.r, EXEC_COLORS.gold.g, EXEC_COLORS.gold.b);
+      doc.rect(tableX, y, EXEC_PAGE.contentWidth, 6, 'F');
+      doc.setFont('courier', EXEC_FONTS.monoSmall.style);
+      doc.setTextColor(EXEC_COLORS.white.r, EXEC_COLORS.white.g, EXEC_COLORS.white.b);
+      doc.text('TOTAL', tableX + 2, y + 4);
+      doc.text(formatCurrencyExec(tributo.valorTotal), tableX + cols[0] + cols[1] + cols[2] + 2, y + 4);
+      y += 6;
       
       if (tributo.notas.length > maxCreditsPerTax) {
         doc.setFont('helvetica', EXEC_FONTS.small.style);
@@ -543,7 +640,7 @@ export async function generateExecutiveReportV2(
   };
 
   // ============================================
-  // SECTION 5: RECOMMENDATIONS
+  // SECTION 5: RECOMMENDATIONS (numbered as 4)
   // ============================================
   const drawRecommendations = () => {
     addPage();
@@ -553,33 +650,37 @@ export async function generateExecutiveReportV2(
     
     doc.setFont('helvetica', EXEC_FONTS.h1.style);
     doc.setFontSize(EXEC_FONTS.h1.size);
-    doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
-    doc.text('5. RECOMENDAÇÕES E PRÓXIMOS PASSOS', EXEC_PAGE.marginLeft, y);
+    doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
+    doc.text('4. RECOMENDAÇÕES E PRÓXIMOS PASSOS', EXEC_PAGE.marginLeft, y);
     y += EXEC_SPACING.afterH1;
     
     const recommendations = [
       {
-        step: '1. Validação Contábil',
-        text: 'Encaminhe este documento ao seu contador ou advogado tributarista para validação dos valores e bases legais.',
+        step: '1. Validação Contábil e Jurídica',
+        text: 'Encaminhe este documento ao seu contador ou advogado tributarista para validação dos valores e bases legais antes de qualquer ação.',
       },
       {
         step: '2. Localização dos Documentos',
-        text: 'Localize os documentos originais (XMLs das NF-e) usando as chaves de acesso informadas nos Anexos de Rastreabilidade para cada crédito.',
+        text: 'Localize os documentos originais (XMLs das NF-e) usando as chaves de acesso de 44 dígitos informadas no Anexo A para cada crédito identificado.',
       },
       {
         step: '3. Retificação de Obrigações',
-        text: 'Retifique as obrigações acessórias (EFD Contribuições, EFD ICMS/IPI, DCTF) dos períodos indicados.',
+        text: 'Retifique as obrigações acessórias (EFD Contribuições, EFD ICMS/IPI, DCTF) dos períodos indicados, ajustando os CSTs e valores de crédito.',
       },
       {
-        step: '4. Pedido de Restituição',
-        text: 'Transmita os pedidos de restituição ou compensação via PER/DCOMP Web no e-CAC da Receita Federal.',
+        step: '4. Pedido de Restituição/Compensação',
+        text: 'Transmita os pedidos de restituição ou compensação via PER/DCOMP Web no e-CAC da Receita Federal para créditos federais.',
+      },
+      {
+        step: '5. Documentação e Arquivamento',
+        text: 'Mantenha toda a documentação comprobatória arquivada pelo prazo de 5 anos, incluindo XMLs, SPEDs retificados e comprovantes de transmissão.',
       },
     ];
     
     recommendations.forEach(rec => {
       doc.setFont('helvetica', EXEC_FONTS.h3.style);
       doc.setFontSize(EXEC_FONTS.h3.size);
-      doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
+      doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
       doc.text(rec.step, EXEC_PAGE.marginLeft, y);
       y += 6;
       
@@ -595,7 +696,7 @@ export async function generateExecutiveReportV2(
     y += 5;
     doc.setFont('helvetica', EXEC_FONTS.h3.style);
     doc.setFontSize(EXEC_FONTS.h3.size);
-    doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
+    doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
     doc.text('Prazo Estimado para Recuperação', EXEC_PAGE.marginLeft, y);
     y += EXEC_SPACING.afterH3;
     
@@ -609,7 +710,7 @@ export async function generateExecutiveReportV2(
   };
 
   // ============================================
-  // SECTION 6: DISCLAIMERS
+  // SECTION 6: DISCLAIMERS (numbered as 5)
   // ============================================
   const drawDisclaimers = () => {
     addPage();
@@ -619,14 +720,14 @@ export async function generateExecutiveReportV2(
     
     doc.setFont('helvetica', EXEC_FONTS.h1.style);
     doc.setFontSize(EXEC_FONTS.h1.size);
-    doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
-    doc.text('6. PREMISSAS, LIMITAÇÕES E AVISO LEGAL', EXEC_PAGE.marginLeft, y);
+    doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
+    doc.text('5. PREMISSAS, LIMITAÇÕES E AVISO LEGAL', EXEC_PAGE.marginLeft, y);
     y += EXEC_SPACING.afterH1;
     
     // Informative nature
     doc.setFont('helvetica', EXEC_FONTS.h3.style);
     doc.setFontSize(EXEC_FONTS.h3.size);
-    doc.text('6.1 Caráter Informativo', EXEC_PAGE.marginLeft, y);
+    doc.text('5.1 Caráter Informativo', EXEC_PAGE.marginLeft, y);
     y += EXEC_SPACING.afterH3;
     
     doc.setFont('helvetica', EXEC_FONTS.body.style);
@@ -641,8 +742,8 @@ export async function generateExecutiveReportV2(
     // Conditions
     doc.setFont('helvetica', EXEC_FONTS.h3.style);
     doc.setFontSize(EXEC_FONTS.h3.size);
-    doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
-    doc.text('6.2 Condições para Recuperação', EXEC_PAGE.marginLeft, y);
+    doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
+    doc.text('5.2 Condições para Recuperação', EXEC_PAGE.marginLeft, y);
     y += EXEC_SPACING.afterH3;
     
     doc.setFont('helvetica', EXEC_FONTS.body.style);
@@ -656,7 +757,7 @@ export async function generateExecutiveReportV2(
       '• Validação por profissional contábil ou jurídico habilitado;',
       '• Confirmação das bases legais aplicáveis ao caso concreto;',
       '• Análise de eventuais particularidades da empresa;',
-      '• Verificação de prazos decadenciais e prescricionais.',
+      '• Verificação de prazos decadenciais e prescricionais (5 anos).',
     ];
     
     conditions.forEach(cond => {
@@ -669,8 +770,8 @@ export async function generateExecutiveReportV2(
     // Responsibilities
     doc.setFont('helvetica', EXEC_FONTS.h3.style);
     doc.setFontSize(EXEC_FONTS.h3.size);
-    doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
-    doc.text('6.3 Responsabilidades', EXEC_PAGE.marginLeft, y);
+    doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
+    doc.text('5.3 Limitação de Responsabilidade', EXEC_PAGE.marginLeft, y);
     y += EXEC_SPACING.afterH3;
     
     doc.setFont('helvetica', EXEC_FONTS.body.style);
@@ -683,10 +784,9 @@ export async function generateExecutiveReportV2(
   };
 
   // ============================================
-  // SECTION 7: ANNEXES
+  // SECTION 7: ANNEXES (numbered as 6)
   // ============================================
   const drawAnnexes = () => {
-    // ANNEX A - NF-e Keys
     addPage();
     drawHeader(currentPage);
     
@@ -694,14 +794,23 @@ export async function generateExecutiveReportV2(
     
     doc.setFont('helvetica', EXEC_FONTS.h1.style);
     doc.setFontSize(EXEC_FONTS.h1.size);
-    doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
-    doc.text('7. ANEXOS DE RASTREABILIDADE', EXEC_PAGE.marginLeft, y);
+    doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
+    doc.text('6. ANEXOS DE RASTREABILIDADE', EXEC_PAGE.marginLeft, y);
     y += EXEC_SPACING.afterH1;
     
     doc.setFont('helvetica', EXEC_FONTS.h2.style);
     doc.setFontSize(EXEC_FONTS.h2.size);
-    doc.text('Anexo A - Detalhamento de NF-e', EXEC_PAGE.marginLeft, y);
+    doc.text('ANEXO A — RASTREABILIDADE DE NF-e', EXEC_PAGE.marginLeft, y);
     y += EXEC_SPACING.afterH2;
+    
+    // Introductory paragraph
+    doc.setFont('helvetica', EXEC_FONTS.body.style);
+    doc.setFontSize(EXEC_FONTS.body.size);
+    doc.setTextColor(EXEC_COLORS.gray.r, EXEC_COLORS.gray.g, EXEC_COLORS.gray.b);
+    const annexIntro = 'A tabela a seguir garante a auditoria completa dos créditos identificados, listando todas as chaves de acesso das NF-e que originaram os valores apresentados neste relatório.';
+    const annexLines = doc.splitTextToSize(annexIntro, EXEC_PAGE.contentWidth);
+    doc.text(annexLines, EXEC_PAGE.marginLeft, y);
+    y += annexLines.length * 5 + 8;
     
     // Collect all notes
     const allNotas: (NotaFiscalCredito & { tributo: string })[] = [];
@@ -714,83 +823,151 @@ export async function generateExecutiveReportV2(
     // Sort by value descending
     allNotas.sort((a, b) => b.valorCredito - a.valorCredito);
     
-    // Table header
+    // Table header with new columns (including Valor NF-e)
     const tableX = EXEC_PAGE.marginLeft;
-    const colsAnnex = [85, 25, 30, EXEC_PAGE.contentWidth - 140];
+    const colsAnnex = [8, 80, 28, 28, EXEC_PAGE.contentWidth - 144];
     
-    doc.setFillColor(240, 240, 240);
-    doc.rect(tableX, y, EXEC_PAGE.contentWidth, 6, 'F');
+    const drawAnnexTableHeader = () => {
+      doc.setFillColor(EXEC_COLORS.tableHeader.r, EXEC_COLORS.tableHeader.g, EXEC_COLORS.tableHeader.b);
+      doc.rect(tableX, y, EXEC_PAGE.contentWidth, 6, 'F');
+      
+      doc.setFont('courier', EXEC_FONTS.monoSmall.style);
+      doc.setFontSize(EXEC_FONTS.monoSmall.size);
+      doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
+      
+      let colX = tableX + 2;
+      doc.text('Nº', colX, y + 4); colX += colsAnnex[0];
+      doc.text('Chave de Acesso (44 dígitos)', colX, y + 4); colX += colsAnnex[1];
+      doc.text('Valor NF-e', colX, y + 4); colX += colsAnnex[2];
+      doc.text('Crédito Total', colX, y + 4); colX += colsAnnex[3];
+      doc.text('Fornecedor', colX, y + 4);
+      
+      y += 6;
+    };
     
-    doc.setFont('helvetica', EXEC_FONTS.monoSmall.style);
-    doc.setFontSize(EXEC_FONTS.monoSmall.size);
-    doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
+    drawAnnexTableHeader();
     
-    let colX = tableX + 2;
-    doc.text('Chave de Acesso (44 dígitos)', colX, y + 4); colX += colsAnnex[0];
-    doc.text('Tributo', colX, y + 4); colX += colsAnnex[1];
-    doc.text('Valor Crédito', colX, y + 4); colX += colsAnnex[2];
-    doc.text('Fornecedor', colX, y + 4);
-    
-    y += 6;
-    
-    // All notes
+    // All notes with COMPLETE 44-digit keys
     allNotas.forEach((nota, index) => {
-      if (needsExecNewPage(y, 10)) {
+      if (needsExecNewPage(y, 12)) {
         addPage();
         drawHeader(currentPage);
         y = getExecContentStart();
-        
-        // Re-draw header
-        doc.setFillColor(240, 240, 240);
-        doc.rect(tableX, y, EXEC_PAGE.contentWidth, 6, 'F');
-        doc.setFont('helvetica', EXEC_FONTS.monoSmall.style);
-        doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
-        
-        colX = tableX + 2;
-        doc.text('Chave de Acesso (44 dígitos)', colX, y + 4); colX += colsAnnex[0];
-        doc.text('Tributo', colX, y + 4); colX += colsAnnex[1];
-        doc.text('Valor Crédito', colX, y + 4); colX += colsAnnex[2];
-        doc.text('Fornecedor', colX, y + 4);
-        y += 6;
+        drawAnnexTableHeader();
       }
       
       if (index % 2 === 0) {
         doc.setFillColor(250, 250, 250);
-        doc.rect(tableX, y, EXEC_PAGE.contentWidth, 8, 'F');
+        doc.rect(tableX, y, EXEC_PAGE.contentWidth, 10, 'F');
       }
       
-      doc.setFont('helvetica', EXEC_FONTS.monoSmall.style);
+      // Use Courier for keys
+      doc.setFont('courier', 'normal');
+      doc.setFontSize(6);
       doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
       
-      // Format 44-digit key with spaces
-      const formattedKey = nota.chaveAcesso.replace(/(\d{4})/g, '$1 ').trim();
+      let colX = tableX + 2;
       
-      colX = tableX + 2;
+      // Nº
+      doc.text(`${index + 1}`, colX, y + 6); colX += colsAnnex[0];
       
-      // Key may need two lines
-      if (nota.chaveAcesso.length > 30) {
-        doc.setFontSize(6);
-        const keyLines = doc.splitTextToSize(formattedKey, colsAnnex[0] - 4);
-        doc.text(keyLines.slice(0, 2), colX, y + 3);
+      // Complete 44-digit key (formatted with spaces for readability)
+      const fullKey = nota.chaveAcesso || '';
+      if (fullKey.length === 44) {
+        // Format: XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX
+        const formattedKey = fullKey.replace(/(\d{4})/g, '$1 ').trim();
+        const keyLines = doc.splitTextToSize(formattedKey, colsAnnex[1] - 4);
+        doc.text(keyLines.slice(0, 2), colX, y + 4);
       } else {
-        doc.text(nota.chaveAcesso || nota.numeroNfe, colX, y + 5);
+        doc.text(fullKey || nota.numeroNfe, colX, y + 6);
       }
+      colX += colsAnnex[1];
       
+      // Valor NF-e
+      doc.setFont('helvetica', EXEC_FONTS.monoSmall.style);
       doc.setFontSize(EXEC_FONTS.monoSmall.size);
-      colX += colsAnnex[0];
-      doc.text(nota.tributo, colX, y + 5); colX += colsAnnex[1];
-      doc.text(formatCurrencyExec(nota.valorCredito).substring(0, 14), colX, y + 5); colX += colsAnnex[2];
-      doc.text((nota.nomeEmitente || '').substring(0, 25), colX, y + 5);
+      doc.text(formatCurrencyExec(nota.valorNota).substring(0, 14), colX, y + 6); colX += colsAnnex[2];
       
-      y += 8;
+      // Crédito Total
+      doc.text(formatCurrencyExec(nota.valorCredito).substring(0, 14), colX, y + 6); colX += colsAnnex[3];
+      
+      // Fornecedor
+      doc.text((nota.nomeEmitente || '').substring(0, 22), colX, y + 6);
+      
+      y += 10;
     });
     
-    // Summary
-    y += 5;
+    // Summary row
+    y += 3;
+    doc.setFillColor(EXEC_COLORS.gold.r, EXEC_COLORS.gold.g, EXEC_COLORS.gold.b);
+    doc.rect(tableX, y, EXEC_PAGE.contentWidth, 7, 'F');
     doc.setFont('helvetica', EXEC_FONTS.smallBold.style);
     doc.setFontSize(EXEC_FONTS.smallBold.size);
+    doc.setTextColor(EXEC_COLORS.white.r, EXEC_COLORS.white.g, EXEC_COLORS.white.b);
+    doc.text(`TOTAL: ${allNotas.length} documentos`, tableX + 3, y + 5);
+    doc.text(formatCurrencyExec(data.sumario.totalRecuperavel), tableX + colsAnnex[0] + colsAnnex[1] + colsAnnex[2], y + 5);
+    
+    y += 12;
+    
+    // Footnote about NF-e Portal
+    doc.setFont('helvetica', EXEC_FONTS.small.style);
+    doc.setFontSize(EXEC_FONTS.small.size);
+    doc.setTextColor(EXEC_COLORS.gray.r, EXEC_COLORS.gray.g, EXEC_COLORS.gray.b);
+    doc.text('* Consulte o Portal da Nota Fiscal Eletrônica (https://www.nfe.fazenda.gov.br) para validar as chaves de acesso.', EXEC_PAGE.marginLeft, y);
+  };
+
+  // ============================================
+  // CONTACT SECTION
+  // ============================================
+  const drawContactSection = () => {
+    addPage();
+    drawHeader(currentPage);
+    
+    let y = getExecContentStart() + 40;
+    
+    // Contact box
+    const boxX = EXEC_PAGE.marginLeft + 30;
+    const boxWidth = EXEC_PAGE.contentWidth - 60;
+    const boxHeight = 80;
+    
+    doc.setDrawColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(boxX, y, boxWidth, boxHeight, 3, 3, 'S');
+    
+    y += 15;
+    
+    doc.setFont('helvetica', EXEC_FONTS.h2.style);
+    doc.setFontSize(EXEC_FONTS.h2.size);
+    doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
+    doc.text('CONTATO', EXEC_PAGE.width / 2, y, { align: 'center' });
+    
+    y += 15;
+    
+    doc.setFont('helvetica', EXEC_FONTS.body.style);
+    doc.setFontSize(EXEC_FONTS.body.size);
     doc.setTextColor(EXEC_COLORS.black.r, EXEC_COLORS.black.g, EXEC_COLORS.black.b);
-    doc.text(`Total: ${allNotas.length} documentos | ${formatCurrencyExec(data.sumario.totalRecuperavel)}`, tableX + 3, y);
+    
+    doc.text('Email: suporte@tributalks.com.br', EXEC_PAGE.width / 2, y, { align: 'center' });
+    y += 8;
+    doc.text('WhatsApp: +55 11 91452-3971', EXEC_PAGE.width / 2, y, { align: 'center' });
+    y += 8;
+    doc.text('Site: tributalks.com.br', EXEC_PAGE.width / 2, y, { align: 'center' });
+    
+    y += 25;
+    
+    // Generation timestamp
+    doc.setFont('helvetica', EXEC_FONTS.small.style);
+    doc.setFontSize(EXEC_FONTS.small.size);
+    doc.setTextColor(EXEC_COLORS.gray.r, EXEC_COLORS.gray.g, EXEC_COLORS.gray.b);
+    doc.text(`Relatório gerado em ${formatDateTimeExec(data.dataGeracao)}`, EXEC_PAGE.width / 2, y, { align: 'center' });
+    
+    y += 30;
+    
+    // Branding
+    doc.setFont('helvetica', EXEC_FONTS.h3.style);
+    doc.setFontSize(EXEC_FONTS.h3.size);
+    doc.setTextColor(EXEC_COLORS.navyBlue.r, EXEC_COLORS.navyBlue.g, EXEC_COLORS.navyBlue.b);
+    doc.text('TribuTalks Inteligência Tributária', EXEC_PAGE.width / 2, y, { align: 'center' });
   };
 
   // ============================================
@@ -805,6 +982,7 @@ export async function generateExecutiveReportV2(
   drawRecommendations();
   drawDisclaimers();
   drawAnnexes();
+  drawContactSection();
   
   // Get total pages
   totalPages = doc.getNumberOfPages();
