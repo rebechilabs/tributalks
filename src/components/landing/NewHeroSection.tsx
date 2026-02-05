@@ -16,7 +16,7 @@
        {/* Background Image */}
        <div 
         className="absolute inset-0 bg-cover bg-no-repeat"
-        style={{ backgroundImage: `url(${heroBg})`, backgroundPosition: 'center 70%' }}
+        style={{ backgroundImage: `url(${heroBg})`, backgroundPosition: 'center 85%' }}
        >
          {/* Dark overlay */}
         <div className="absolute inset-0 bg-[#0A0A0A]/60" />
