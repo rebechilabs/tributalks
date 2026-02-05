@@ -271,31 +271,57 @@ export function MobileNav() {
           </Button>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 py-4 px-3 overflow-y-auto max-h-[calc(100vh-10rem)] space-y-2">
-          {menuElements.map((element, index) => {
-            if ('type' in element && element.type === 'divider') {
-              return <Separator key={`divider-${index}`} className="my-3" />;
+        {/* Helper to render referral card */}
+        {(() => {
+          // Find the index of the divider after COMANDAR
+          const findInsertionIndex = () => {
+            for (let i = 0; i < menuElements.length; i++) {
+              const element = menuElements[i];
+              if (isMenuGroup(element) && element.title === 'COMANDAR') {
+                return i + 1;
+              }
             }
-            if (isMenuGroup(element)) {
-              return renderMenuGroup(element, index);
-            }
-            return null;
-          })}
-        </nav>
+            return -1;
+          };
 
-        {/* Upgrade CTA & Referral */}
+          const referralInsertIndex = findInsertionIndex();
+
+          const renderReferralCard = () => (
+            <Link
+              to="/indicar"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 mx-0 my-2"
+            >
+              <Gift className="w-4 h-4 text-amber-500" />
+              <span className="text-xs font-medium text-foreground flex-1">Indique e Ganhe!</span>
+              <Badge className="bg-amber-500 text-white text-[10px]">Novo</Badge>
+            </Link>
+          );
+
+          return (
+            <nav className="flex-1 py-4 px-3 overflow-y-auto max-h-[calc(100vh-10rem)] space-y-2">
+              {menuElements.map((element, index) => {
+                const showReferralCard = index === referralInsertIndex;
+                
+                if ('type' in element && element.type === 'divider') {
+                  return (
+                    <div key={`divider-${index}`}>
+                      {showReferralCard && renderReferralCard()}
+                      <Separator className="my-3" />
+                    </div>
+                  );
+                }
+                if (isMenuGroup(element)) {
+                  return renderMenuGroup(element, index);
+                }
+                return null;
+              })}
+            </nav>
+          );
+        })()}
+
+        {/* Upgrade CTA */}
         <div className="p-4 border-t border-border space-y-3">
-          {/* Referral Mini Card */}
-          <Link
-            to="/indicar"
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30"
-          >
-            <Gift className="w-4 h-4 text-amber-500" />
-            <span className="text-xs font-medium text-foreground flex-1">Indique e Ganhe!</span>
-            <Badge className="bg-amber-500 text-white text-[10px]">Novo</Badge>
-          </Link>
 
           {/* Plan & Upgrade */}
           <div className="flex items-center justify-between">

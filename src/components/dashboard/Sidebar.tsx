@@ -349,6 +349,42 @@ export function Sidebar() {
     );
   };
 
+  // Helper to render the referral card
+  const renderReferralCard = () => (
+    <div className="mx-3 my-2 p-3 rounded-lg bg-gradient-to-br from-amber-500/20 via-primary/20 to-amber-500/10 border border-amber-500/30">
+      <Link to="/indicar" className="block group">
+        <div className="flex items-center gap-2 mb-1">
+          <Gift className="w-5 h-5 text-amber-500 animate-pulse" />
+          <span className="text-sm font-bold text-foreground">Indique e Ganhe!</span>
+          <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500 text-white font-medium">
+            Novo
+          </span>
+        </div>
+        <p className="text-xs text-muted-foreground mb-2">
+          Ganhe até 20% de desconto na sua mensalidade
+        </p>
+        <div className="flex items-center justify-center gap-2 py-1.5 px-3 rounded-md bg-amber-500 text-white text-xs font-semibold group-hover:bg-amber-600 transition-colors">
+          <Sparkles className="w-3 h-3" />
+          Indicar Agora
+        </div>
+      </Link>
+    </div>
+  );
+
+  // Find the index of the divider after COMANDAR (before Newsletter section)
+  const findInsertionIndex = () => {
+    for (let i = 0; i < menuElements.length; i++) {
+      const element = menuElements[i];
+      if (isMenuGroup(element) && element.title === 'COMANDAR') {
+        // Return the index after COMANDAR (which should be the divider)
+        return i + 1;
+      }
+    }
+    return -1;
+  };
+
+  const referralInsertIndex = findInsertionIndex();
+
   return (
     <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-card border-r border-border">
       {/* Logo */}
@@ -358,31 +394,19 @@ export function Sidebar() {
         </Link>
       </div>
 
-      {/* Referral Highlight Card */}
-      <div className="mx-3 mt-4 p-3 rounded-lg bg-gradient-to-br from-amber-500/20 via-primary/20 to-amber-500/10 border border-amber-500/30">
-        <Link to="/indicar" className="block group">
-          <div className="flex items-center gap-2 mb-1">
-            <Gift className="w-5 h-5 text-amber-500 animate-pulse" />
-            <span className="text-sm font-bold text-foreground">Indique e Ganhe!</span>
-            <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500 text-white font-medium">
-              Novo
-            </span>
-          </div>
-          <p className="text-xs text-muted-foreground mb-2">
-            Ganhe até 20% de desconto na sua mensalidade
-          </p>
-          <div className="flex items-center justify-center gap-2 py-1.5 px-3 rounded-md bg-amber-500 text-white text-xs font-semibold group-hover:bg-amber-600 transition-colors">
-            <Sparkles className="w-3 h-3" />
-            Indicar Agora
-          </div>
-        </Link>
-      </div>
-
       {/* Navigation */}
       <nav className="flex-1 py-4 px-3 space-y-2 overflow-y-auto">
         {menuElements.map((element, index) => {
+          // Render referral card after COMANDAR (at the divider position)
+          const showReferralCard = index === referralInsertIndex;
+          
           if ('type' in element && element.type === 'divider') {
-            return <Separator key={`divider-${index}`} className="my-3" />;
+            return (
+              <div key={`divider-${index}`}>
+                {showReferralCard && renderReferralCard()}
+                <Separator className="my-3" />
+              </div>
+            );
           }
           if (isMenuGroup(element)) {
             return renderMenuGroup(element, index);
