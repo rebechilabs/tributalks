@@ -21,7 +21,7 @@ const tools = [
     statusKey: 'score' as const,
   },
   {
-    title: "Comparativo de Regimes",
+    title: "Comparativo de Regimes Tributários",
     description: "Compare 5 regimes tributários incluindo Simples 2027.",
     href: "/dashboard/entender/simpronto",
     icon: Scale,
