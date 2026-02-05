@@ -1,45 +1,76 @@
 
+# Plano: Adicionar Conexão & Comunicação ao Tour + Corrigir Relatório
 
-# Plano: Melhorar Layout da Página Conexão & Comunicação
+## Parte 1: Adicionar "Conexão & Comunicação" ao Tour Guiado
 
-## Objetivo
-Ajustar o layout da `ConexaoPage` para que os 3 quadrados (Notícias, Comunidade, Indique e Ganhe) apareçam centralizados na tela com melhor destaque visual.
+### Alterações
 
-## Alterações
+**Arquivo: `src/components/dashboard/Sidebar.tsx`**
+Adicionar atributo `data-tour="conexao-group"` no grupo "CONEXÃO & COMUNICAÇÃO" (no `<Link>` ou `<Collapsible>` correspondente).
 
-### Arquivo: `src/pages/dashboard/ConexaoPage.tsx`
-
-| Aspecto | Atual | Proposto |
-|---------|-------|----------|
-| Alinhamento | Grid alinhado à esquerda | Grid centralizado na tela |
-| Espaçamento | `py-6` (padding pequeno) | `py-12` (mais espaço vertical) |
-| Centralização | Container normal | Flex center para centralizar vertical e horizontalmente |
-| Título | Alinhado à esquerda | Centralizado |
-| Cards | Tamanho padrão do grid | Grid com `max-w-4xl` para limitar largura e centralizar |
-
-## Código Proposto
+**Arquivo: `src/components/onboarding/GuidedTour.tsx`**
+Adicionar novo passo após "PIT" e antes de "Seu Perfil":
 
 ```tsx
-<DashboardLayout title="Conexão & Comunicação">
-  <div className="container mx-auto px-4 py-12 flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
-    <div className="text-center mb-10">
-      <h1 className="text-2xl font-bold mb-2">Conexão & Comunicação</h1>
-      <p className="text-muted-foreground">
-        Mantenha-se informado e conectado com a comunidade tributária
+{
+  target: '[data-tour="conexao-group"]',
+  content: (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <MessagesSquare className="h-5 w-5 text-primary" />
+        <span className="font-semibold">Conexão & Comunicação</span>
+      </div>
+      <p className="text-sm text-muted-foreground">
+        Fique por dentro das últimas notícias tributárias, conecte-se com a 
+        comunidade e ganhe descontos indicando amigos.
       </p>
     </div>
-
-    <div className="grid gap-6 grid-cols-1 md:grid-cols-3 max-w-4xl w-full">
-      {/* 3 cards centralizados */}
-    </div>
-  </div>
-</DashboardLayout>
+  ),
+  placement: "right",
+},
 ```
 
-## Resultado Visual
+---
 
-- Os 3 quadrados ficam **centralizados horizontalmente e verticalmente** na área de conteúdo
-- Título e descrição centralizados acima dos cards
-- Layout responsivo: 1 coluna no mobile, 3 colunas no desktop
-- Cards com espaçamento uniforme e alinhados
+## Parte 2: Corrigir Seção 3 do Relatório (Análise Detalhada)
 
+### Diagnóstico
+A tabela `identified_credits` está **vazia**. Isso significa que o processamento de créditos via Edge Function `process-xml-batch` ainda não foi executado para popular essa tabela.
+
+### Causa Raiz
+O fluxo atual requer que o usuário:
+1. Faça upload de XMLs de NF-e
+2. Clique em "Identificar Créditos" para disparar o `process-xml-batch`
+3. Aguarde o processamento popular a tabela `identified_credits`
+
+Sem dados em `identified_credits`, a seção 3 fica vazia porque `creditosPorTributo` é construído a partir desses registros.
+
+### Solução
+
+**Opção A (Recomendada): Fallback para XML Summary**
+Modificar o `useCreditReport.ts` para usar dados de `xml_analysis` ou `uploaded_files` como fallback quando `identified_credits` estiver vazio. Assim o relatório mostra os créditos identificados diretamente dos XMLs processados.
+
+**Opção B: Mensagem no Relatório**
+Se não houver dados de créditos identificados, exibir uma mensagem explicativa na seção 3 do PDF:
+> "Nenhum crédito identificado ainda. Execute a análise de créditos no módulo 'Radar de Créditos' para identificar oportunidades de recuperação."
+
+### Arquivos a Modificar
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/components/dashboard/Sidebar.tsx` | Adicionar `data-tour="conexao-group"` |
+| `src/components/onboarding/GuidedTour.tsx` | Adicionar passo do tour para Conexão |
+| `src/hooks/useCreditReport.ts` | Implementar fallback para quando `identified_credits` está vazio |
+| `src/lib/pdf/ExecutiveReportV2Generator.ts` | Adicionar mensagem de fallback na seção 3 |
+
+### Resultado Esperado
+
+1. **Tour Guiado**: Exibe passo destacando "Conexão & Comunicação" no sidebar
+2. **Relatório**: Seção 3 mostra dados dos XMLs importados OU mensagem orientando o usuário a executar a identificação de créditos
+
+### Observação Importante
+Para que a seção 3 tenha dados completos (período, base de cálculo, alíquota, crédito, fundamentação legal), é necessário que:
+- O usuário faça upload de XMLs
+- O sistema processe os XMLs e popule `identified_credits`
+
+Posso implementar o fallback que usa os dados disponíveis nos XMLs já importados para garantir que o relatório sempre tenha algum conteúdo na seção 3.
