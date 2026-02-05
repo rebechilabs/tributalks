@@ -16,23 +16,23 @@
        {/* Background Image */}
        <div 
         className="absolute inset-0 bg-cover bg-no-repeat"
-        style={{ backgroundImage: `url(${heroBg})`, backgroundPosition: 'center 85%' }}
+        style={{ backgroundImage: `url(${heroBg})`, backgroundPosition: 'center bottom' }}
        >
          {/* Dark overlay */}
-        <div className="absolute inset-0 bg-[#0A0A0A]/60" />
+        <div className="absolute inset-0 bg-[#0A0A0A]/50" />
          {/* Gradient overlay */}
-         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0A0A0A]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0A]/70 via-transparent to-[#0A0A0A]/80" />
        </div>
  
        {/* Content */}
-       <div className="relative z-10 container mx-auto px-4 md:px-8 pt-24 pb-16 md:pt-32 md:pb-24">
+      <div className="relative z-10 container mx-auto px-4 md:px-8 pt-20 pb-32 md:pt-24 md:pb-48">
          <div className="max-w-4xl mx-auto text-center">
            {/* Main Headline */}
            <motion.h1
              initial={{ opacity: 0, y: 30 }}
              animate={{ opacity: 1, y: 0 }}
              transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white mb-6 leading-[1.1] tracking-tight pt-8"
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white mb-6 leading-[1.1] tracking-tight"
            >
              Domine a <span className="text-primary">Reforma Tributária</span>
              <br />
@@ -57,7 +57,7 @@
              initial={{ opacity: 0, y: 30 }}
              animate={{ opacity: 1, y: 0 }}
              transition={{ duration: 0.6, delay: 0.3 }}
-             className="mb-8"
+            className="mb-16 md:mb-24"
            >
              <Button
                size="lg"
@@ -72,7 +72,7 @@
        </div>
  
        {/* Bottom fade */}
-       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#0A0A0A] to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#0A0A0A] to-transparent" />
      </section>
    );
  }
