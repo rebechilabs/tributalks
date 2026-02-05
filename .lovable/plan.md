@@ -1,19 +1,19 @@
 
 
-## Plano: Reposicionar a Imagem de Fundo do Hero
+## Plano: Centralizar a Imagem Cinematográfica na Área de Transição
 
-### Objetivo
-Fazer com que a imagem de fundo desça na seção Hero, tornando o "desenho" cinematográfico mais visível no espaço entre o botão CTA e a seção "Problema".
+### O Que Você Quer
+Posicionar o **centro focal da imagem** (os prédios com as linhas de dados douradas) exatamente na área entre o botão "Comece seus 7 dias grátis" e o título da próxima seção.
 
 ---
 
-### Solução Proposta
+### Solução
 
-Vou alterar a estratégia de posicionamento da imagem. Em vez de usar apenas `backgroundPosition`, vou:
+Vou fazer ajustes no posicionamento da imagem e no espaçamento do conteúdo para que:
 
-1. **Mover o conteúdo (texto e botão) para o topo** da seção Hero, liberando espaço abaixo para a imagem aparecer
-2. **Ajustar a posição vertical da imagem** para que a parte principal fique visível na área inferior da seção
-3. **Reduzir a intensidade do overlay** na parte inferior para deixar a imagem mais visível
+1. A imagem fique **centralizada verticalmente** na seção (não mais no fundo)
+2. O conteúdo (título, subtítulo e botão) fique **mais compacto no topo**
+3. O espaço abaixo do botão seja **maior e mais limpo** para exibir a imagem
 
 ---
 
@@ -23,15 +23,17 @@ Vou alterar a estratégia de posicionamento da imagem. Em vez de usar apenas `ba
 
 | Alteração | Antes | Depois |
 |-----------|-------|--------|
-| Alinhamento do conteúdo | Centro vertical | Topo da seção |
-| Posição da imagem | `center 85%` | `center bottom` ou `center 100%` |
-| Overlay inferior | Gradiente forte | Gradiente mais suave |
+| Posição da imagem | `center bottom` | `center center` |
+| Alinhamento vertical | Centro (`items-center`) | Topo (`items-start`) |
+| Padding inferior | `pb-32` / `pb-48` | Removido ou reduzido |
+| Altura mínima | `min-h-screen` | Mantido para garantir espaço |
+| Overlay inferior | 80% opacidade | 60% para melhor visibilidade |
 
 ---
 
 ### Resultado Esperado
 
-- O texto e botão ficarão na parte **superior** da seção Hero
-- A imagem cinematográfica ficará mais visível na parte **inferior** da seção
-- Transição suave para a seção "Problema" abaixo
+- O **centro da imagem** (prédios + linhas de dados) ficará visível exatamente na área que você indicou
+- O texto e botão ficarão na parte superior
+- Transição elegante para a seção "Problema"
 
