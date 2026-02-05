@@ -4,12 +4,12 @@ import { Newspaper, Users, Gift } from "lucide-react";
 
 const tools = [
   {
-    title: "Newsletter",
-    description: "Receba atualizações tributárias toda terça às 07h07.",
+    title: "Notícias",
+    description: "Atualizações tributárias toda terça às 07h07.",
     href: "/noticias",
     icon: Newspaper,
     stepNumber: 1,
-    statusKey: 'newsletter' as const,
+    statusKey: 'noticias' as const,
   },
   {
     title: "Comunidade",

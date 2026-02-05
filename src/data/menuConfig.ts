@@ -178,7 +178,7 @@ export const MENU_NAVIGATOR: MenuElement[] = [
     collapsible: true,
     moduleHref: '/dashboard/conexao',
     items: [
-      { label: 'Newsletter', href: '/noticias', icon: Newspaper, description: 'Toda terça às 07h07', featured: true },
+      { label: 'Notícias', href: '/noticias', icon: Newspaper, description: 'Toda terça às 07h07', featured: true },
       { label: 'Comunidade', href: '/comunidade', icon: Users, description: 'Conexões e negócios', featured: true },
       { label: 'Indique e Ganhe', href: '/indicar', icon: Gift, description: 'Ganhe até 20% de desconto', featured: true, badge: 'Novo' },
     ]
@@ -261,7 +261,7 @@ export const MENU_PROFESSIONAL_V2: MenuElement[] = [
     collapsible: true,
     moduleHref: '/dashboard/conexao',
     items: [
-      { label: 'Newsletter', href: '/noticias', icon: Newspaper, description: 'Toda terça às 07h07', featured: true },
+      { label: 'Notícias', href: '/noticias', icon: Newspaper, description: 'Toda terça às 07h07', featured: true },
       { label: 'Comunidade', href: '/comunidade', icon: Users, description: 'Conexões e negócios', featured: true },
       { label: 'Indique e Ganhe', href: '/indicar', icon: Gift, description: 'Ganhe até 20% de desconto', featured: true, badge: 'Novo' },
     ]
