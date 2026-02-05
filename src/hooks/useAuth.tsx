@@ -7,6 +7,7 @@ interface Profile {
   user_id: string;
   email: string | null;
   nome: string | null;
+  telefone?: string | null;
   empresa: string | null;
   regime: 'SIMPLES' | 'PRESUMIDO' | 'REAL' | null;
   setor: 'industria' | 'comercio' | 'servicos' | 'tecnologia' | 'outro' | null;
@@ -20,6 +21,8 @@ interface Profile {
   subscription_status: string | null;
   subscription_period_end: string | null;
   onboarding_complete: boolean | null;
+  setup_complete?: boolean | null;
+  welcome_seen?: boolean | null;
   notif_novidades: boolean | null;
   notif_legislacao: boolean | null;
   notif_consultorias: boolean | null;
