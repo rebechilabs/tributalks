@@ -1,40 +1,44 @@
 
-# Plano: Corrigir CTA da Seção RTC Calculator
+# Plano: Corrigir Erro de Adicionar Empresa no Setup
 
-## Objetivo
-Alterar o botão "Experimente Grátis" na seção da Calculadora RTC para direcionar ao checkout do **plano Professional** no Stripe, em vez de `/cadastro`.
+## Diagnóstico Definitivo
 
-## Alteração Necessária
-
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/components/landing/RTCCalculatorSection.tsx` | Substituir `onClick={() => navigate("/cadastro")}` por link direto para Stripe Professional |
-
-## Mudança Específica
-
-**Antes:**
-```tsx
-<Button
-  size="lg"
-  onClick={() => navigate("/cadastro")}
->
-  Experimente Grátis
-</Button>
+O erro no banco de dados é:
+```
+duplicate key value violates unique constraint "company_profile_user_id_key"
 ```
 
-**Depois:**
-```tsx
-<a href={CONFIG.PAYMENT_LINKS.PROFESSIONAL_MENSAL} target="_blank" rel="noopener noreferrer">
-  <Button size="lg">
-    Experimente Grátis
-  </Button>
-</a>
+### Causa Raiz
+A tabela `company_profile` possui uma constraint `UNIQUE` na coluna `user_id`:
+```sql
+UNIQUE (user_id)  -- ← ISTO IMPEDE MÚLTIPLAS EMPRESAS POR USUÁRIO!
 ```
 
-## Detalhes Técnicos
-- Importar `CONFIG` de `@/config/site`
-- Remover import do `useNavigate` (se não for mais necessário)
-- Link destino: `https://buy.stripe.com/3cIeV6ezM2rc2vx52Cbo40g` (Professional mensal com 7 dias grátis)
+Isso contradiz completamente o requisito de multi-CNPJ do sistema, onde usuários podem ter 1-4+ empresas dependendo do plano.
 
-## Alinhamento com Estratégia
-Conforme a memória `landing-page-cta-strategy`, o botão "Conhecer Suíte Margem Ativa" direciona especificamente para o plano Professional — esta alteração segue a mesma lógica para a seção da calculadora oficial.
+## Solução
+
+Remover a constraint UNIQUE da coluna `user_id` para permitir que um usuário tenha múltiplas empresas.
+
+### Migração SQL Necessária
+
+```sql
+-- Remove a constraint UNIQUE que impede múltiplas empresas por usuário
+ALTER TABLE public.company_profile 
+DROP CONSTRAINT company_profile_user_id_key;
+```
+
+## Resultado Esperado
+
+| Antes | Depois |
+|-------|--------|
+| 1 empresa por usuário (bloqueado por UNIQUE) | Múltiplas empresas por usuário (conforme plano) |
+| Erro ao adicionar 2ª empresa | Funciona corretamente |
+
+## Impacto
+- **Zero risco de perda de dados** - apenas remove a restrição
+- **Não afeta RLS** - políticas de segurança continuam funcionando
+- **Alinha com requisitos** - sistema multi-CNPJ funciona conforme esperado
+
+## Arquivos Afetados
+Nenhum arquivo de código precisa ser alterado. O código em `CompanyContext.tsx` e `CompanySetupForm.tsx` já está correto — o problema é apenas a constraint no banco de dados.
