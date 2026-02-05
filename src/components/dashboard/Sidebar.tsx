@@ -255,17 +255,30 @@ export function Sidebar() {
     );
   };
 
-  const renderMenuGroup = (group: MenuGroup, index: number) => {
+  const renderMenuGroup = (group: MenuGroup, index: number, showReferralCard = false) => {
     const groupKey = GROUP_TITLE_TO_KEY[group.title] || '';
     const hasActiveItem = group.items.some(item => location.pathname === item.href);
     const isModulePage = group.moduleHref && location.pathname === group.moduleHref;
     const isExpanded = expandedGroups[group.title] ?? (!group.collapsible || hasActiveItem || isModulePage);
 
+    // Helper to render items with referral card before Configurações
+    const renderItemsWithReferral = (items: MenuItem[], isNested = false) => {
+      return items.map((item, itemIndex) => {
+        const isConfigItem = item.href === '/configuracoes';
+        return (
+          <div key={item.href}>
+            {showReferralCard && isConfigItem && renderReferralCard()}
+            {renderNavItem(item, isNested)}
+          </div>
+        );
+      });
+    };
+
     // Grupo sem título (items no topo como Clara)
     if (!group.title) {
       return (
         <div key={`group-${index}`} className="space-y-1">
-          {group.items.map(item => renderNavItem(item))}
+          {renderItemsWithReferral(group.items)}
         </div>
       );
     }
@@ -321,7 +334,7 @@ export function Sidebar() {
             </CollapsibleTrigger>
           </div>
           <CollapsibleContent className="space-y-1 mt-1">
-            {group.items.map(item => renderNavItem(item, true))}
+            {renderItemsWithReferral(group.items, true)}
           </CollapsibleContent>
         </Collapsible>
       );
@@ -344,7 +357,7 @@ export function Sidebar() {
             <span className="w-1.5 h-1.5 rounded-full bg-primary" />
           )}
         </div>
-        {group.items.map(item => renderNavItem(item))}
+        {renderItemsWithReferral(group.items)}
       </div>
     );
   };
@@ -371,14 +384,13 @@ export function Sidebar() {
     </div>
   );
 
-  // Find the index where Newsletter is located (in the last group without title)
-  const findNewsletterGroupIndex = () => {
+  // Find the index of the group that contains Configurações
+  const findConfigGroupIndex = () => {
     for (let i = 0; i < menuElements.length; i++) {
       const element = menuElements[i];
-      if (isMenuGroup(element) && !element.title) {
-        // Check if this group contains Newsletter
-        const hasNewsletter = element.items.some(item => item.href === '/noticias');
-        if (hasNewsletter) {
+      if (isMenuGroup(element)) {
+        const hasConfig = element.items.some(item => item.href === '/configuracoes');
+        if (hasConfig) {
           return i;
         }
       }
@@ -386,7 +398,7 @@ export function Sidebar() {
     return -1;
   };
 
-  const newsletterGroupIndex = findNewsletterGroupIndex();
+  const configGroupIndex = findConfigGroupIndex();
 
   return (
     <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-card border-r border-border">
@@ -400,22 +412,13 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 py-4 px-3 space-y-2 overflow-y-auto">
         {menuElements.map((element, index) => {
-          // Check if we should show the referral card before this element
-          // Show it right before the Newsletter group (after the divider that precedes it)
-          const isBeforeNewsletterGroup = index === newsletterGroupIndex;
-          
           if ('type' in element && element.type === 'divider') {
-            // Check if next element is the newsletter group
-            const nextIsNewsletter = index + 1 === newsletterGroupIndex;
-            return (
-              <div key={`divider-${index}`}>
-                <Separator className="my-3" />
-                {nextIsNewsletter && renderReferralCard()}
-              </div>
-            );
+            return <Separator key={`divider-${index}`} className="my-3" />;
           }
           if (isMenuGroup(element)) {
-            return renderMenuGroup(element, index);
+            // Pass flag to show referral card in the group that contains Configurações
+            const showReferral = index === configGroupIndex;
+            return renderMenuGroup(element, index, showReferral);
           }
           return null;
         })}
