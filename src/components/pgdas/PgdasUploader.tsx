@@ -36,13 +36,10 @@ interface PgdasFile {
   };
 }
 
-// Valida se o arquivo é um PGDAS válido
+// Valida se o arquivo é um PGDAS válido (aceita .pdf ou .txt)
 const isValidPgdasFile = (file: File): boolean => {
   const name = file.name.toLowerCase();
-  return (
-    (name.endsWith(".pdf") || name.endsWith(".txt")) &&
-    (name.includes("pgdas") || name.includes("das") || name.includes("simples"))
-  );
+  return name.endsWith(".pdf") || name.endsWith(".txt");
 };
 
 export function PgdasUploader() {
@@ -74,7 +71,7 @@ export function PgdasUploader() {
     if (invalidCount > 0) {
       toast({
         title: `${invalidCount} arquivo(s) ignorado(s)`,
-        description: "Apenas arquivos .pdf ou .txt com 'pgdas', 'das' ou 'simples' no nome são aceitos",
+        description: "Apenas arquivos .pdf ou .txt são aceitos",
         variant: "destructive",
       });
     }
@@ -87,7 +84,20 @@ export function PgdasUploader() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const selectedFiles = Array.from(e.target.files);
-      addFiles(selectedFiles);
+      const validFiles = selectedFiles.filter(isValidPgdasFile);
+      const invalidCount = selectedFiles.length - validFiles.length;
+
+      if (invalidCount > 0) {
+        toast({
+          title: `${invalidCount} arquivo(s) ignorado(s)`,
+          description: "Apenas arquivos .pdf ou .txt são aceitos",
+          variant: "destructive",
+        });
+      }
+
+      if (validFiles.length > 0) {
+        addFiles(validFiles);
+      }
     }
   };
 
@@ -361,7 +371,7 @@ export function PgdasUploader() {
                   Arquivos .pdf ou .txt do Simples Nacional • <strong>Suporta múltiplos arquivos</strong>
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Nome do arquivo deve conter: pgdas, das ou simples
+                  Clique ou arraste para selecionar
                 </p>
               </div>
             </div>
