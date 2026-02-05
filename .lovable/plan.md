@@ -1,105 +1,99 @@
 
-## Plano: Correção de SEO e Meta Tags
+
+## Plano: Adicionar Link do WhatsApp ao Mencionar Plano Enterprise
 
 ### Resumo
-Atualizar as meta tags de SEO, robots.txt, criar sitemap.xml e gerar imagem OG para melhorar a indexação no Google e a aparência em redes sociais.
+Configurar a Clara AI para que sempre que mencionar o plano Enterprise em suas conversas, ela escreva:
+**"Para consultorias personalizadas assine o plano [Enterprise](link-whatsapp)."**
+
+A palavra "Enterprise" será um link para o WhatsApp oficial do escritório.
 
 ---
 
-### 1. Atualizar Meta Tags no index.html
+### Mudanças Necessárias
 
-**Arquivo:** `index.html`
+**Arquivo:** `supabase/functions/clara-assistant/index.ts`
 
-| Meta Tag | Valor Atual | Novo Valor |
-|----------|-------------|------------|
-| title | TribuTalks- Inteligência Tributária para Empresas | TribuTalks \| Software de Reforma Tributária com IA - A 1ª AI-First do Brasil |
-| description | Calculadoras, IA e especialistas... | Domine a Reforma Tributária com a 1ª plataforma AI-First do Brasil... |
-| keywords | tributário, impostos... | reforma tributária, software tributário, inteligência artificial tributária, AI-First, CBS, IBS... |
-| og:image | lovable.dev/opengraph-image... | tributalks.com.br/og-image.png |
-| author | TribuTalks | TribuTalks - Powered by Rebechi & Silva |
+#### 1. Adicionar Constante do WhatsApp no Topo
+Adicionar constante com o link do WhatsApp para uso no Edge Function:
 
-**Novas meta tags a adicionar:**
-- `<meta name="robots" content="index, follow">`
-- `<link rel="canonical" href="https://tributalks.com.br/">`
-- `<meta property="og:url" content="https://tributalks.com.br/">`
-- `<meta property="og:site_name" content="TribuTalks">`
+```typescript
+const WHATSAPP_ENTERPRISE = "https://wa.me/5511914523971";
+```
 
 ---
 
-### 2. Atualizar robots.txt
+#### 2. Adicionar Instrução no CLARA_CORE_FULL (Prompt Principal)
 
-**Arquivo:** `public/robots.txt`
+Na seção `## UPGRADE — Só quando útil` do prompt principal, adicionar instrução explícita:
 
 ```text
-User-agent: *
-Allow: /
+## UPGRADE — Só quando útil
 
-Sitemap: https://tributalks.com.br/sitemap.xml
+NUNCA: "Você deveria fazer upgrade"
+SEMPRE: "Isso está no [Plano]. Você teria [benefício]. Faz sentido?"
 
-Disallow: /api/
-Disallow: /admin/
-```
-
-**Mudanças:**
-- Simplificar para um único User-agent genérico
-- Adicionar referência ao sitemap
-- Bloquear rotas sensíveis (/api/, /admin/)
-
----
-
-### 3. Criar sitemap.xml
-
-**Arquivo:** `public/sitemap.xml` (novo)
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://tributalks.com.br/</loc>
-    <lastmod>2026-02-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-</urlset>
+REGRA ENTERPRISE (OBRIGATÓRIO):
+Sempre que mencionar o plano Enterprise, use EXATAMENTE este formato:
+"Para consultorias personalizadas assine o plano [Enterprise](https://wa.me/5511914523971)."
+- A palavra Enterprise DEVE ser um link markdown para o WhatsApp
+- Use essa frase quando: recomendar upgrade para Enterprise, falar sobre consultoria jurídica, ou mencionar benefícios exclusivos Enterprise
 ```
 
 ---
 
-### 4. Criar Imagem OG (Open Graph)
+#### 3. Adicionar Instrução no CLARA_CORE_SLIM (Versão Reduzida)
 
-**Arquivo:** `public/og-image.png` (novo)
+Adicionar a mesma instrução na versão slim para consistência:
 
-**Especificações:**
-- Dimensões: 1200 x 630 pixels
-- Fundo: Imagem cinematográfica de São Paulo (hero-bg-cinematic.jpg)
-- Overlay: Gradiente escuro para legibilidade
-
-**Conteúdo:**
-- Logo TribuTalks no topo (usar logo-tributalks-header.png)
-- Headline: "Domine a Reforma Tributária com a 1ª AI-First do Brasil"
-- Subheadline: "Identifique créditos ocultos - Proteja sua margem - Clara AI 24/7"
-- CTA: "Teste grátis 7 dias"
-- Cores: Dourado (#F5A623) para destaques, branco para texto principal
-
-A imagem será gerada usando a AI de geração de imagens disponível no projeto.
+```text
+REGRA ENTERPRISE: Ao mencionar Enterprise, use: "[Enterprise](https://wa.me/5511914523971)"
+```
 
 ---
 
-### Arquivos a Modificar/Criar
+#### 4. Atualizar a Função appendDisclaimer
 
-| Arquivo | Ação |
-|---------|------|
-| `index.html` | Atualizar meta tags |
-| `public/robots.txt` | Atualizar conteúdo |
-| `public/sitemap.xml` | Criar novo |
-| `public/og-image.png` | Gerar com AI |
+Modificar a função que adiciona disclaimer para Enterprise users para usar o link correto:
+
+```typescript
+function appendDisclaimer(response: string, userPlan: string): string {
+  // ... código existente ...
+  
+  if (userPlan === 'ENTERPRISE') {
+    return response + '\n\n✨ No Enterprise, suas consultorias com advogados tributaristas são incluídas e ilimitadas.';
+  }
+  
+  // Para outros planos, ao mencionar Enterprise
+  return response + '\n\n⚠️ Antes de implementar, converse com seu contador ou advogado tributarista. Para consultorias personalizadas assine o plano [Enterprise](https://wa.me/5511914523971).';
+}
+```
 
 ---
 
 ### Resultado Esperado
 
-- Melhor indexação no Google com meta tags otimizadas
-- URL canônica apontando para o domínio principal
-- Sitemap para facilitar crawling
-- Imagem OG profissional para compartilhamentos em redes sociais
-- robots.txt bloqueando rotas sensíveis
+Quando a Clara mencionar o plano Enterprise em qualquer contexto, ela formatará assim:
+
+- **Recomendação de upgrade:** "Essa ferramenta está no plano [Enterprise](https://wa.me/5511914523971). Quer saber mais?"
+- **Consultoria jurídica:** "Para consultorias personalizadas assine o plano [Enterprise](https://wa.me/5511914523971)."
+- **Benefícios exclusivos:** "No [Enterprise](https://wa.me/5511914523971) você tem consultoria ilimitada."
+
+O link em markdown será renderizado como hyperlink clicável no chat, levando diretamente ao WhatsApp do escritório.
+
+---
+
+### Arquivos a Modificar
+
+| Arquivo | Modificação |
+|---------|-------------|
+| `supabase/functions/clara-assistant/index.ts` | Adicionar constante WHATSAPP_ENTERPRISE, atualizar CLARA_CORE_FULL, CLARA_CORE_SLIM e appendDisclaimer |
+
+---
+
+### Seção Técnica
+
+A Clara AI usa markdown nas respostas, que é renderizado pelo componente `react-markdown` no frontend. Links no formato `[texto](url)` serão automaticamente convertidos em hyperlinks clicáveis.
+
+O Edge Function será redeployado automaticamente após as mudanças.
+
