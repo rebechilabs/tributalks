@@ -1,19 +1,21 @@
 
 
-## Plano: Posicionar os Prédios Logo Após o Botão CTA
+## Plano: Posicionar os Prédios Entre o Botão CTA e o Título da Seção Problema
 
 ### Objetivo
-Fazer com que os prédios da imagem cinematográfica comecem a aparecer **imediatamente abaixo** do botão "Comece seus 7 dias grátis".
+Fazer com que a parte focal da imagem cinematográfica (os prédios com linhas de dados douradas) apareça exatamente **no espaço entre**:
+- O botão "Comece seus 7 dias grátis" (final do Hero)
+- A frase "A Reforma Tributária vai custar..." (início da ProblemSection)
 
 ---
 
 ### Solução
 
-Vou ajustar o posicionamento da imagem de fundo para que a parte superior da imagem (onde ficam os prédios) comece logo após o conteúdo de texto. Isso requer:
+Para que a imagem apareça nessa área de transição, vou:
 
-1. **Mudar a posição da imagem para `center top`** - assim o topo da imagem (os prédios) ficará visível primeiro
-2. **Reduzir significativamente o overlay superior** - para que os prédios não fiquem escurecidos
-3. **Manter o conteúdo compacto no topo** - o texto e botão ficam na parte superior
+1. **Estender a imagem de fundo** do Hero para cobrir também a área de transição
+2. **Ajustar o posicionamento** para que os prédios fiquem na parte inferior do Hero
+3. **Reduzir o overlay inferior** para deixar os prédios mais visíveis nessa área
 
 ---
 
@@ -23,16 +25,40 @@ Vou ajustar o posicionamento da imagem de fundo para que a parte superior da ima
 
 | Alteração | Antes | Depois |
 |-----------|-------|--------|
-| Posição da imagem | `center center` | `center top` |
-| Gradiente superior | `from-[#0A0A0A]/80` | `from-[#0A0A0A]/90` (mais forte no topo para legibilidade do texto) |
-| Gradiente meio | `via-transparent` | `via-[#0A0A0A]/20` (leve escurecimento) |
-| Gradiente inferior | `to-[#0A0A0A]/60` | `to-[#0A0A0A]/40` (mais suave para mostrar os prédios) |
+| Posição da imagem | `center top` | `center 30%` (prédios na parte inferior do Hero) |
+| Overlay inferior | `to-[#0A0A0A]/40` | `to-transparent` (mais visibilidade) |
+| Bottom fade | `h-32` com gradiente | `h-16` gradiente suave |
+
+---
+
+### Visualização
+
+```text
+┌─────────────────────────────────────────────┐
+│  HERO SECTION                               │
+│                                             │
+│  ┌─────────────────────────────────────┐   │
+│  │  "Domine a Reforma Tributária..."   │   │ ← Overlay forte (texto legível)
+│  │                                     │   │
+│  │  [Comece seus 7 dias grátis]        │   │
+│  └─────────────────────────────────────┘   │
+│                                             │
+│  ┌─ PRÉDIOS APARECEM AQUI ─────────────┐   │ ← Overlay suave (imagem visível)
+│  │  🏢🏢🏢 linhas douradas 🏢🏢🏢      │   │
+│  └─────────────────────────────────────┘   │
+│                                             │
+└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│  PROBLEM SECTION (bg sólido)               │
+│  "A Reforma Tributária vai custar..."      │
+└─────────────────────────────────────────────┘
+```
 
 ---
 
 ### Resultado Esperado
 
-- O texto ficará legível no topo com overlay forte
-- Os prédios aparecerão logo após o botão CTA
-- Transição suave para a seção "Problema" abaixo
+- Os prédios cinematográficos ficarão visíveis na parte inferior da seção Hero
+- O texto do Hero continuará legível com overlay forte no topo
+- A transição para a ProblemSection será elegante
 
