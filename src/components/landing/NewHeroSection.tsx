@@ -16,12 +16,12 @@
        {/* Background Image */}
        <div 
         className="absolute inset-0 bg-cover bg-no-repeat"
-       style={{ backgroundImage: `url(${heroBg})`, backgroundPosition: 'center center' }}
+        style={{ backgroundImage: `url(${heroBg})`, backgroundPosition: 'center top' }}
        >
          {/* Dark overlay */}
        <div className="absolute inset-0 bg-[#0A0A0A]/40" />
          {/* Gradient overlay */}
-       <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0A]/80 via-transparent to-[#0A0A0A]/60" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0A]/90 via-[#0A0A0A]/20 to-[#0A0A0A]/40" />
        </div>
  
        {/* Content */}
