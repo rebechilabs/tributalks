@@ -79,6 +79,7 @@ export function SimprontoWizard({ onSubmit, isLoading }: SimprontoWizardProps) {
 
   // Formatar valor para exibição
   const formatarParaExibicao = (valor: string): string => {
+    if (!valor) return '';
     const numero = valor.replace(/\D/g, '');
     if (!numero) return '';
     return new Intl.NumberFormat('pt-BR').format(parseInt(numero));
