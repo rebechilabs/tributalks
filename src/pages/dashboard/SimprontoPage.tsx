@@ -67,7 +67,7 @@ export default function SimprontoPage() {
   };
 
   return (
-    <DashboardLayout title="Simpronto">
+    <DashboardLayout title="Comparativo de Regimes">
       <div className="container mx-auto px-4 py-6">
         <FeatureGate feature="simpronto">
           {/* Header */}
@@ -78,7 +78,7 @@ export default function SimprontoPage() {
                   <Calculator className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold">Simpronto</h1>
+                  <h1 className="text-2xl font-bold">Comparativo de Regimes Tributários</h1>
                   <p className="text-muted-foreground">
                     Compare 5 regimes tributários em minutos, incluindo as novas opções do Simples Nacional 2027.
                   </p>
@@ -94,7 +94,7 @@ export default function SimprontoPage() {
                   <Trash2 className="h-4 w-4" />
                   Zerar Cálculo
                 </Button>
-                <HelpButton toolSlug="simpronto" size="default" />
+                <HelpButton toolSlug="comparativo-regimes" size="default" />
               </div>
             </div>
           </div>

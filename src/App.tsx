@@ -219,15 +219,16 @@ const App = () => (
             />
             <Route 
               path="/dashboard/entender/comparativo" 
-              element={<Navigate to="/dashboard/entender/simpronto" replace />}
-            />
-            <Route 
-              path="/dashboard/entender/simpronto" 
               element={
                 <ProtectedRoute>
                   <SimprontoPage />
                 </ProtectedRoute>
               } 
+            />
+            {/* Redirect legacy simpronto route */}
+            <Route 
+              path="/dashboard/entender/simpronto" 
+              element={<Navigate to="/dashboard/entender/comparativo" replace />}
             />
             
             {/* NEW: Tools under RECUPERAR module */}
@@ -297,7 +298,7 @@ const App = () => (
             {/* LEGACY ROUTES - Redirects for backwards compatibility */}
             <Route path="/dashboard/dre" element={<Navigate to="/dashboard/entender/dre" replace />} />
             <Route path="/dashboard/score-tributario" element={<Navigate to="/dashboard/entender/score" replace />} />
-            <Route path="/calculadora/comparativo-regimes" element={<Navigate to="/dashboard/entender/simpronto" replace />} />
+            <Route path="/calculadora/comparativo-regimes" element={<Navigate to="/dashboard/entender/comparativo" replace />} />
             <Route path="/dashboard/analise-notas" element={<Navigate to="/dashboard/recuperar/radar" replace />} />
             <Route path="/dashboard/importar-xml" element={<Navigate to="/dashboard/recuperar/radar" replace />} />
             <Route path="/dashboard/radar-creditos" element={<Navigate to="/dashboard/recuperar/radar" replace />} />
