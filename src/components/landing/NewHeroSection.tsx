@@ -12,20 +12,20 @@
    };
  
    return (
-     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-screen flex items-start justify-center overflow-hidden">
        {/* Background Image */}
        <div 
         className="absolute inset-0 bg-cover bg-no-repeat"
-        style={{ backgroundImage: `url(${heroBg})`, backgroundPosition: 'center bottom' }}
+       style={{ backgroundImage: `url(${heroBg})`, backgroundPosition: 'center center' }}
        >
          {/* Dark overlay */}
-        <div className="absolute inset-0 bg-[#0A0A0A]/50" />
+       <div className="absolute inset-0 bg-[#0A0A0A]/40" />
          {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0A]/70 via-transparent to-[#0A0A0A]/80" />
+       <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0A]/80 via-transparent to-[#0A0A0A]/60" />
        </div>
  
        {/* Content */}
-      <div className="relative z-10 container mx-auto px-4 md:px-8 pt-20 pb-32 md:pt-24 md:pb-48">
+     <div className="relative z-10 container mx-auto px-4 md:px-8 pt-24 md:pt-32">
          <div className="max-w-4xl mx-auto text-center">
            {/* Main Headline */}
            <motion.h1
@@ -57,7 +57,6 @@
              initial={{ opacity: 0, y: 30 }}
              animate={{ opacity: 1, y: 0 }}
              transition={{ duration: 0.6, delay: 0.3 }}
-            className="mb-16 md:mb-24"
            >
              <Button
                size="lg"
@@ -72,7 +71,7 @@
        </div>
  
        {/* Bottom fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#0A0A0A] to-transparent" />
+     <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#0A0A0A] to-transparent" />
      </section>
    );
  }
