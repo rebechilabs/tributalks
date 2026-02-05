@@ -30,13 +30,13 @@ export function Header() {
         }`}
       >
         <div className="container mx-auto px-4 md:px-8">
-          <div className="flex items-center justify-between h-16 md:h-20">
+          <div className="flex items-center justify-between h-20 md:h-24">
             {/* Logo */}
             <Link to="/" className="flex items-center">
               <img 
                 src={logoTributalksHeader} 
                 alt="TribuTalks" 
-                className="h-8 md:h-10 w-auto"
+                className="h-12 md:h-16 w-auto drop-shadow-[0_0_30px_rgba(239,162,25,0.15)]"
               />
             </Link>
 
