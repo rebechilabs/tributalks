@@ -1,53 +1,64 @@
 
-# Plano: Adicionar Seção da Calculadora RTC na Landing Page
+# Plano: Corrigir Erro da Página "Configure seu Ambiente"
 
-## Por que é importante?
+## Diagnóstico
 
-A integração com a **API oficial do Governo (piloto-cbs.tributos.gov.br)** é um diferencial competitivo enorme que gera confiança instantânea. O logo Gov.br e a menção "Powered by Receita Federal" são elementos de prova social governamental que pouquíssimos concorrentes têm.
+O erro ocorre porque a página `/setup` tenta usar um campo `telefone` que **não existe** na tabela `profiles` do banco de dados.
 
-## O que já existe
+### Código com Problema
 
-O componente `RTCCalculatorSection.tsx` já está pronto com:
-- Badge verde "Integração Oficial" com animação pulse
-- Título "Calculadora Oficial da Reforma Tributária"
-- 4 benefícios: Cálculo Preciso, Tempo Real, Histórico, Exportação PDF
-- Logo Gov.br com link para página oficial da Receita Federal
-- "Powered by Receita Federal"
-- CTA "Experimente Grátis"
+```typescript
+// src/pages/Setup.tsx (linhas 26 e 41)
+const [userPhone, setUserPhone] = useState(profile?.telefone || "");  // ← Campo não existe
 
-## Alteração Necessária
+// src/pages/Setup.tsx (linha 56)
+.update({
+  nome: userName.trim(),
+  telefone: userPhone.trim() || null,  // ← Erro ao salvar: coluna não existe
+  setup_complete: true,
+})
+```
 
-Apenas **1 arquivo** precisa ser modificado:
+### Evidência
+Consultei a tabela `profiles` diretamente e confirmei que a coluna `telefone` não existe.
+
+## Solução
+
+### Opção Recomendada: Remover o campo telefone do Setup.tsx
+
+Como o telefone é marcado como "opcional" e não é essencial para o onboarding, a solução mais rápida é removê-lo do formulário.
+
+**Arquivos a modificar:**
 
 | Arquivo | Alteração |
 |---------|-----------|
-| `src/pages/Index.tsx` | Importar e adicionar `RTCCalculatorSection` |
+| `src/pages/Setup.tsx` | Remover campos relacionados a telefone |
+| `src/hooks/useAuth.tsx` | Remover `telefone` da interface Profile (limpeza) |
 
-## Posicionamento Sugerido
+### Mudanças Específicas
 
-```text
-Hero
-↓
-ProblemSection
-↓
-DemoSection
-↓
-RTCCalculatorSection  ← NOVA POSIÇÃO (após demo, antes da Clara)
-↓
-ClaraSection
-↓
-NewPricingSection
-↓
-TestimonialsSection
-↓
-SecuritySection
-```
+**1. src/pages/Setup.tsx**
+- Remover o estado `userPhone` (linha 26)
+- Remover o `useEffect` que preenche `userPhone` (linhas 40-41)
+- Remover `telefone` do update do Supabase (linha 56)
+- Remover o campo de input "Telefone (opcional)" (linhas 135-143)
 
-A seção ficará logo após o demo interativo, reforçando que a ferramenta usa **dados oficiais do governo** antes de apresentar a IA Clara e os planos.
+**2. src/hooks/useAuth.tsx**
+- Remover `telefone?: string | null` da interface `Profile` (linha 10)
 
-## Impacto Visual
+## Benefícios
 
-- O logo Gov.br aparecerá com destaque na LP
-- Badge verde "Integração Oficial" com pulse chama atenção
-- Reforça credibilidade antes da seção de preços
-- Não altera nenhuma outra seção existente
+1. **Resolve o erro imediatamente** - Sem necessidade de migração de banco
+2. **Simplifica o onboarding** - Menos campos = mais conversão
+3. **Código mais limpo** - Remove referência a campo inexistente
+4. **Zero downtime** - Mudança apenas no frontend
+
+## Alternativa Futura
+
+Se o campo telefone for necessário no futuro, podemos:
+1. Criar migração para adicionar coluna `telefone TEXT` na tabela `profiles`
+2. Restaurar os campos no Setup.tsx
+
+## Resumo
+
+O erro é causado por uma incompatibilidade entre o código (que espera um campo `telefone`) e o banco de dados (que não tem esse campo). A correção remove essa dependência do formulário de setup.
