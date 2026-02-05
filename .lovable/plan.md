@@ -1,99 +1,202 @@
 
-
-## Plano: Adicionar Link do WhatsApp ao Mencionar Plano Enterprise
+## Plano: Redirecionar Todos os Usuários para a Home com Notícias do Dia
 
 ### Resumo
-Configurar a Clara AI para que sempre que mencionar o plano Enterprise em suas conversas, ela escreva:
-**"Para consultorias personalizadas assine o plano [Enterprise](link-whatsapp)."**
-
-A palavra "Enterprise" será um link para o WhatsApp oficial do escritório.
+Modificar o fluxo de navegação para que todos os usuários logados sejam direcionados para a Home inteligente (`/dashboard/home`), que já contém a lógica de próximo passo. Adicionar uma seção de **5 notícias principais do dia** logo abaixo do card de próximo passo.
 
 ---
 
-### Mudanças Necessárias
+### 1. Alterar Redirecionamento no ProtectedRoute
 
-**Arquivo:** `supabase/functions/clara-assistant/index.ts`
+**Arquivo:** `src/components/ProtectedRoute.tsx`
 
-#### 1. Adicionar Constante do WhatsApp no Topo
-Adicionar constante com o link do WhatsApp para uso no Edge Function:
+| Antes | Depois |
+|-------|--------|
+| Professional → `/dashboard/nexus` | Professional → `/dashboard/home` |
+| Navigator → `/dashboard` | Navigator → `/dashboard/home` |
+| Starter → `/dashboard/score-tributario` | Starter → `/dashboard/home` |
+| Free → `/dashboard` | Free → `/dashboard/home` |
+
+Simplificar a função `getDefaultRoute()` para retornar sempre `/dashboard/home`:
 
 ```typescript
-const WHATSAPP_ENTERPRISE = "https://wa.me/5511914523971";
+const getDefaultRoute = (): string => {
+  return '/dashboard/home';
+};
 ```
 
 ---
 
-#### 2. Adicionar Instrução no CLARA_CORE_FULL (Prompt Principal)
+### 2. Atualizar App.tsx para Redirect Padrão
 
-Na seção `## UPGRADE — Só quando útil` do prompt principal, adicionar instrução explícita:
+**Arquivo:** `src/App.tsx`
 
-```text
-## UPGRADE — Só quando útil
+Modificar a rota `/dashboard` para redirecionar automaticamente para `/dashboard/home`:
 
-NUNCA: "Você deveria fazer upgrade"
-SEMPRE: "Isso está no [Plano]. Você teria [benefício]. Faz sentido?"
-
-REGRA ENTERPRISE (OBRIGATÓRIO):
-Sempre que mencionar o plano Enterprise, use EXATAMENTE este formato:
-"Para consultorias personalizadas assine o plano [Enterprise](https://wa.me/5511914523971)."
-- A palavra Enterprise DEVE ser um link markdown para o WhatsApp
-- Use essa frase quando: recomendar upgrade para Enterprise, falar sobre consultoria jurídica, ou mencionar benefícios exclusivos Enterprise
+```tsx
+<Route 
+  path="/dashboard" 
+  element={
+    <ProtectedRoute>
+      <Navigate to="/dashboard/home" replace />
+    </ProtectedRoute>
+  } 
+/>
 ```
 
 ---
 
-#### 3. Adicionar Instrução no CLARA_CORE_SLIM (Versão Reduzida)
+### 3. Criar Componente de Notícias do Dia
 
-Adicionar a mesma instrução na versão slim para consistência:
+**Arquivo:** `src/components/home/LatestNewsSection.tsx` (novo)
 
-```text
-REGRA ENTERPRISE: Ao mencionar Enterprise, use: "[Enterprise](https://wa.me/5511914523971)"
+Componente que busca e exibe as 5 notícias mais recentes:
+
+**Características:**
+- Busca as 5 últimas notícias publicadas da tabela `noticias_tributarias`
+- Exibe título, resumo executivo (truncado) e data de publicação
+- Badge de relevância (ALTA, MEDIA, BAIXA)
+- Skeleton loading durante carregamento
+- Link para a página completa de notícias (`/noticias`)
+- Mostra "Última atualização: DD/MM às HH:mm"
+
+**Layout:**
+```
+📰 Notícias do Dia
+Última atualização: 05/02 às 11:00
+
+┌─────────────────────────────────────────┐
+│ 🔴 ALTA  Receita Federal publica...     │
+│ Resumo executivo resumido aqui...       │
+│ há 2 horas                              │
+├─────────────────────────────────────────┤
+│ 🟡 MÉDIA Liminar no RJ suspende...      │
+│ Resumo executivo resumido aqui...       │
+│ ontem                                   │
+├─────────────────────────────────────────┤
+│ ... (mais 3 notícias)                   │
+└─────────────────────────────────────────┘
+
+[Ver todas as notícias →]
 ```
 
 ---
 
-#### 4. Atualizar a Função appendDisclaimer
+### 4. Integrar Notícias na HomePage
 
-Modificar a função que adiciona disclaimer para Enterprise users para usar o link correto:
+**Arquivo:** `src/pages/dashboard/HomePage.tsx`
 
-```typescript
-function appendDisclaimer(response: string, userPlan: string): string {
-  // ... código existente ...
-  
-  if (userPlan === 'ENTERPRISE') {
-    return response + '\n\n✨ No Enterprise, suas consultorias com advogados tributaristas são incluídas e ilimitadas.';
-  }
-  
-  // Para outros planos, ao mencionar Enterprise
-  return response + '\n\n⚠️ Antes de implementar, converse com seu contador ou advogado tributarista. Para consultorias personalizadas assine o plano [Enterprise](https://wa.me/5511914523971).';
+Adicionar a seção de notícias abaixo do `HomeStateCards`:
+
+```tsx
+import { LatestNewsSection } from "@/components/home/LatestNewsSection";
+
+export default function HomePage() {
+  return (
+    <DashboardLayout title="Home">
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        {/* Próximo passo baseado no estado */}
+        <HomeStateCards stateData={homeState} userName={...} />
+        
+        {/* Separador visual */}
+        <Separator className="my-8" />
+        
+        {/* Notícias do dia */}
+        <LatestNewsSection />
+      </div>
+    </DashboardLayout>
+  );
 }
 ```
 
 ---
 
-### Resultado Esperado
+### 5. Criar Hook para Buscar Notícias
 
-Quando a Clara mencionar o plano Enterprise em qualquer contexto, ela formatará assim:
+**Arquivo:** `src/hooks/useLatestNews.ts` (novo)
 
-- **Recomendação de upgrade:** "Essa ferramenta está no plano [Enterprise](https://wa.me/5511914523971). Quer saber mais?"
-- **Consultoria jurídica:** "Para consultorias personalizadas assine o plano [Enterprise](https://wa.me/5511914523971)."
-- **Benefícios exclusivos:** "No [Enterprise](https://wa.me/5511914523971) você tem consultoria ilimitada."
+Hook que encapsula a lógica de busca de notícias:
 
-O link em markdown será renderizado como hyperlink clicável no chat, levando diretamente ao WhatsApp do escritório.
+```typescript
+interface LatestNews {
+  id: string;
+  titulo_original: string;
+  resumo_executivo: string | null;
+  relevancia: string;
+  data_publicacao: string;
+  fonte: string;
+}
+
+export function useLatestNews(limit: number = 5) {
+  return useQuery({
+    queryKey: ['latest-news', limit],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('noticias_tributarias')
+        .select('id, titulo_original, resumo_executivo, relevancia, data_publicacao, fonte')
+        .eq('publicado', true)
+        .order('data_publicacao', { ascending: false })
+        .limit(limit);
+      return data || [];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutos
+  });
+}
+```
 
 ---
 
-### Arquivos a Modificar
+### Arquivos a Modificar/Criar
 
-| Arquivo | Modificação |
-|---------|-------------|
-| `supabase/functions/clara-assistant/index.ts` | Adicionar constante WHATSAPP_ENTERPRISE, atualizar CLARA_CORE_FULL, CLARA_CORE_SLIM e appendDisclaimer |
+| Arquivo | Ação |
+|---------|------|
+| `src/components/ProtectedRoute.tsx` | Modificar `getDefaultRoute()` para retornar `/dashboard/home` |
+| `src/App.tsx` | Redirecionar `/dashboard` para `/dashboard/home` |
+| `src/hooks/useLatestNews.ts` | Criar hook para buscar notícias |
+| `src/components/home/LatestNewsSection.tsx` | Criar componente de notícias |
+| `src/components/home/index.ts` | Exportar novo componente |
+| `src/pages/dashboard/HomePage.tsx` | Integrar seção de notícias |
+
+---
+
+### Fluxo Final do Usuário
+
+```text
+Login 
+  ↓
+/dashboard (redireciona) 
+  ↓
+/dashboard/home
+  ↓
+┌──────────────────────────────────────────┐
+│  HomeStateCards (próximo passo)          │
+│  - NO_DRE → "Preencha seu DRE"           │
+│  - NO_SCORE → "Calcule seu Score"        │
+│  - NO_CREDITS → "Importe seus XMLs"      │
+│  - COMPLETE → Resumo com KPIs            │
+├──────────────────────────────────────────┤
+│  LatestNewsSection                       │
+│  - 5 notícias mais recentes              │
+│  - Link para todas as notícias           │
+└──────────────────────────────────────────┘
+```
 
 ---
 
 ### Seção Técnica
 
-A Clara AI usa markdown nas respostas, que é renderizado pelo componente `react-markdown` no frontend. Links no formato `[texto](url)` serão automaticamente convertidos em hyperlinks clicáveis.
+**Consulta ao banco de dados:**
+```sql
+SELECT id, titulo_original, resumo_executivo, relevancia, data_publicacao, fonte 
+FROM noticias_tributarias 
+WHERE publicado = true 
+ORDER BY data_publicacao DESC 
+LIMIT 5;
+```
 
-O Edge Function será redeployado automaticamente após as mudanças.
+**Dados atuais no banco:** Existem notícias publicadas recentes (05/02/2026), então a seção já terá conteúdo para exibir.
 
+**Considerações de UX:**
+- A seção de notícias será visível para todos os planos, mas o link "Ver todas" levará para `/noticias` que requer plano Navigator+
+- Usuários FREE verão as 5 notícias resumidas, incentivando upgrade
+- Notícias com relevância "ALTA" terão destaque visual (badge vermelho)
