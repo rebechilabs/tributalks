@@ -23,7 +23,6 @@ export default function Setup() {
   const { currentPlan } = usePlanAccess();
   
   const [userName, setUserName] = useState(profile?.nome || "");
-  const [userPhone, setUserPhone] = useState(profile?.telefone || "");
   const [isAddingCompany, setIsAddingCompany] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -38,7 +37,6 @@ export default function Setup() {
   useEffect(() => {
     if (profile) {
       setUserName(profile.nome || "");
-      setUserPhone(profile.telefone || "");
     }
   }, [profile]);
 
@@ -53,7 +51,6 @@ export default function Setup() {
         .from('profiles')
         .update({
           nome: userName.trim(),
-          telefone: userPhone.trim() || null,
           setup_complete: true,
         })
         .eq('user_id', user.id);
@@ -122,25 +119,14 @@ export default function Setup() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="userName">Nome completo *</Label>
-                <Input
-                  id="userName"
-                  value={userName}
-                  onChange={(e) => setUserName(e.target.value)}
-                  placeholder="Seu nome completo"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="userPhone">Telefone (opcional)</Label>
-                <Input
-                  id="userPhone"
-                  value={userPhone}
-                  onChange={(e) => setUserPhone(e.target.value)}
-                  placeholder="(00) 00000-0000"
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="userName">Nome completo *</Label>
+              <Input
+                id="userName"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                placeholder="Seu nome completo"
+              />
             </div>
           </CardContent>
         </Card>
