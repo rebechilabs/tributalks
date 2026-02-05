@@ -84,8 +84,6 @@ verify_jwt = false
 [functions.cross-analyze-fiscal]
 verify_jwt = false
 
-[functions.mercadopago-webhook]
-verify_jwt = false
 
 [functions.notify-new-subscriber]
 verify_jwt = false
