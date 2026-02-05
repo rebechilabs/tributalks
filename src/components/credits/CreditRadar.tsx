@@ -1,12 +1,14 @@
-import { useState, useMemo } from 'react';
-import { Target, AlertTriangle, FileText, Download, TrendingUp, Sparkles, ListChecks, Scale } from 'lucide-react';
+import { useState } from 'react';
+import { Target, AlertTriangle, FileText, Download, TrendingUp, Sparkles, ListChecks, Scale, RefreshCw, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
 import { useXmlCreditsSummary } from '@/hooks/useXmlCredits';
 import { useIdentifiedCredits, useIdentifiedCreditsSummary } from '@/hooks/useIdentifiedCredits';
+import { useReanalyzeCredits } from '@/hooks/useReanalyzeCredits';
 import { CreditPdfReport } from './CreditPdfReport';
 import { MonophasicAlert } from './MonophasicAlert';
 import { IdentifiedCreditsTable } from './IdentifiedCreditsTable';
@@ -16,6 +18,7 @@ export function CreditRadar() {
   const { data: xmlSummary, isLoading: loadingXmlSummary } = useXmlCreditsSummary();
   const { data: identifiedCredits, isLoading: loadingCredits } = useIdentifiedCredits(100);
   const { data: creditsSummary, isLoading: loadingSummary } = useIdentifiedCreditsSummary();
+  const { reanalyze, isAnalyzing, progress } = useReanalyzeCredits();
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [activeTab, setActiveTab] = useState('credits');
 
@@ -112,11 +115,40 @@ export function CreditRadar() {
             </Badge>
           )}
         </div>
-        <Button onClick={() => setShowPdfModal(true)} disabled={!hasData}>
-          <Download className="h-4 w-4 mr-2" />
-          Exportar Relatório
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={reanalyze} 
+            disabled={isAnalyzing || !xmlSummary?.totalXmls}
+          >
+            {isAnalyzing ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4 mr-2" />
+            )}
+            {isAnalyzing ? 'Analisando...' : 'Identificar Créditos'}
+          </Button>
+          <Button onClick={() => setShowPdfModal(true)} disabled={!hasData}>
+            <Download className="h-4 w-4 mr-2" />
+            Exportar Relatório
+          </Button>
+        </div>
       </div>
+
+      {/* Analysis Progress */}
+      {isAnalyzing && (
+        <Card>
+          <CardContent className="py-4">
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Analisando XMLs com motor de regras...</span>
+                <span>{progress.current} de {progress.total}</span>
+              </div>
+              <Progress value={progress.total > 0 ? (progress.current / progress.total) * 100 : 0} />
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Disclaimer */}
       <Alert>
