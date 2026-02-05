@@ -1,5 +1,5 @@
  import { Button } from "@/components/ui/button";
- import { ArrowRight, Linkedin, Instagram, Youtube, Scale } from "lucide-react";
+import { ArrowRight, Linkedin, Instagram, Youtube, Scale, Shield, Cloud } from "lucide-react";
  import { Link } from "react-router-dom";
  import { CONFIG } from "@/config/site";
  import logoTributalks from "@/assets/logo-tributalks.png";
@@ -86,6 +86,18 @@
                  <span className="text-sm text-white/40">Powered by</span>
                  <img src={logoRebechiSilva} alt="Rebechi & Silva" className="h-8 w-auto opacity-70" />
                </div>
+
+                {/* Security Badges */}
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
+                    <Shield className="w-4 h-4 text-primary" />
+                    <span className="text-xs text-white/60 font-medium">LGPD Compliant</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
+                    <Cloud className="w-4 h-4 text-primary" />
+                    <span className="text-xs text-white/60 font-medium">Infraestrutura AWS</span>
+                  </div>
+                </div>
  
                {/* Copyright */}
                <div className="text-center">
