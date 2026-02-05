@@ -55,6 +55,7 @@ import Integracoes from "./pages/Integracoes";
 import Consultorias from "./pages/Consultorias";
 import Indicar from "./pages/Indicar";
 import Ajuda from "./pages/Ajuda";
+import NewsletterPage from "./pages/NewsletterPage";
 
 // Calculadoras
 import SplitPayment from "./pages/calculadora/SplitPayment";
@@ -384,6 +385,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Comunidade />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/newsletter" 
+              element={
+                <ProtectedRoute>
+                  <NewsletterPage />
                 </ProtectedRoute>
               } 
             />

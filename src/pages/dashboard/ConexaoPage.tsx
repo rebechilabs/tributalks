@@ -1,7 +1,6 @@
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { ModuleToolCard, ToolStatus } from "@/components/home/ModuleToolCard";
-import { NewsletterForm } from "@/components/common/NewsletterForm";
-import { Newspaper, Users, Gift } from "lucide-react";
+import { Newspaper, Users, Gift, Mail } from "lucide-react";
 
 const tools = [
   {
@@ -13,11 +12,19 @@ const tools = [
     statusKey: 'noticias' as const,
   },
   {
+    title: "TribuTalks News",
+    description: "Newsletter semanal com as principais novidades.",
+    href: "/newsletter",
+    icon: Mail,
+    stepNumber: 2,
+    statusKey: 'newsletter' as const,
+  },
+  {
     title: "Comunidade",
     description: "Conexões e networking com outros empresários.",
     href: "/comunidade",
     icon: Users,
-    stepNumber: 2,
+    stepNumber: 3,
     statusKey: 'comunidade' as const,
   },
   {
@@ -25,7 +32,7 @@ const tools = [
     description: "Ganhe até 20% de desconto indicando amigos.",
     href: "/indicar",
     icon: Gift,
-    stepNumber: 3,
+    stepNumber: 4,
     statusKey: 'indicar' as const,
     badge: "Novo",
   },
@@ -46,7 +53,7 @@ export default function ConexaoPage() {
           </p>
         </div>
 
-        <div className="grid gap-6 grid-cols-1 md:grid-cols-3 max-w-4xl w-full">
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 max-w-5xl w-full">
           {tools.map((tool) => (
             <ModuleToolCard
               key={tool.href}
@@ -59,17 +66,6 @@ export default function ConexaoPage() {
               badge={tool.badge}
             />
           ))}
-        </div>
-
-        {/* Newsletter Section */}
-        <div className="mt-12 w-full max-w-md">
-          <div className="bg-card border rounded-lg p-6 text-center">
-            <h3 className="text-lg font-semibold mb-2">📬 TribuTalks News</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Receba nossa newsletter toda terça-feira às 07h07 com as principais atualizações tributárias.
-            </p>
-            <NewsletterForm />
-          </div>
         </div>
       </div>
     </DashboardLayout>
