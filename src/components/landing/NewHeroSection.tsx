@@ -1,7 +1,6 @@
  import { Button } from "@/components/ui/button";
  import { ArrowRight } from "lucide-react";
  import { motion } from "framer-motion";
- import heroBg from "@/assets/hero-bg-cinematic.jpg";
  
  export function NewHeroSection() {
    const scrollToPlans = () => {
@@ -12,18 +11,8 @@
    };
  
    return (
-      <section className="relative min-h-[140vh] flex items-start justify-center overflow-hidden">
-       {/* Background Image */}
-       <div 
-        className="absolute inset-0 bg-cover bg-no-repeat"
-          style={{ backgroundImage: `url(${heroBg})`, backgroundPosition: 'center 10%' }}
-       >
-        {/* Gradient overlay - strong at top for text, transparent at bottom for buildings */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0A]/90 via-[#0A0A0A]/30 to-transparent" />
-       </div>
- 
-       {/* Content */}
-     <div className="relative z-10 container mx-auto px-4 md:px-8 pt-24 md:pt-32">
+    <section className="relative min-h-screen flex items-center justify-center bg-[#0A0A0A]">
+      <div className="container mx-auto px-4 md:px-8">
          <div className="max-w-4xl mx-auto text-center">
            {/* Main Headline */}
            <motion.h1
@@ -67,9 +56,6 @@
            </motion.div>
          </div>
        </div>
- 
-       {/* Bottom fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#0A0A0A] to-transparent" />
      </section>
    );
  }
