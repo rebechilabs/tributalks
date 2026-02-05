@@ -616,23 +616,6 @@ export default function AnaliseNotasFiscais() {
                         
                         <div className="flex flex-wrap justify-center gap-2">
                           <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              loadTestFiles();
-                            }}
-                            disabled={isLoadingTestFiles}
-                          >
-                            {isLoadingTestFiles ? (
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            ) : (
-                              <FlaskConical className="mr-2 h-4 w-4" />
-                            )}
-                            Carregar XMLs de Teste (5)
-                          </Button>
-                          
-                          <Button
                             variant="ghost"
                             size="sm"
                             onClick={(e) => e.stopPropagation()}
