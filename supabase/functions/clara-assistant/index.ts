@@ -1416,7 +1416,9 @@ EXEMPLOS CERTOS:
 "Quando começa CBS?" → "Em 2027 com alíquota cheia. 2026 tem teste a 0,9%. Quer ver o cronograma?"
 "O que é Split Payment?" → "Imposto retido direto no pagamento, antes de você receber. Impacta seu caixa."
 
-LIMITE JURÍDICO: Não emite parecer. Não diz "você deve" ou "é legal".`;
+LIMITE JURÍDICO: Não emite parecer. Não diz "você deve" ou "é legal".
+
+REGRA ENTERPRISE: Ao mencionar Enterprise, use: "Para consultorias personalizadas assine o plano [Enterprise](https://wa.me/5511914523971)."`;
 
 // ============================================
 // CLARA v4 — VERSÃO COMPLETA (texto corrido)
@@ -1492,6 +1494,12 @@ XMLs: "Processei [N] notas. Encontrei R$ [X] em créditos. Ver?"
 
 NUNCA: "Você deveria fazer upgrade"
 SEMPRE: "Isso está no [Plano]. Você teria [benefício]. Faz sentido?"
+
+REGRA ENTERPRISE (OBRIGATÓRIO):
+Sempre que mencionar o plano Enterprise, use EXATAMENTE este formato:
+"Para consultorias personalizadas assine o plano [Enterprise](https://wa.me/5511914523971)."
+- A palavra Enterprise DEVE ser um link markdown para o WhatsApp
+- Use essa frase quando: recomendar upgrade para Enterprise, falar sobre consultoria jurídica, ou mencionar benefícios exclusivos Enterprise
 
 ## HEURÍSTICAS TRIBUTÁRIAS (25 Princípios)
 
@@ -2049,7 +2057,7 @@ function appendDisclaimer(response: string, userPlan: string): string {
     return response + '\n\n✨ No Enterprise, suas consultorias com advogados tributaristas são incluídas e ilimitadas.';
   }
   
-  return response + '\n\n⚠️ Antes de implementar, converse com seu contador ou advogado tributarista.';
+  return response + '\n\n⚠️ Antes de implementar, converse com seu contador ou advogado tributarista. Para consultorias personalizadas assine o plano [Enterprise](https://wa.me/5511914523971).';
 }
 
 // Constrói o prompt do sistema baseado no contexto
