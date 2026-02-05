@@ -3,6 +3,7 @@ import { Header } from "@/components/landing/Header";
 import { NewHeroSection } from "@/components/landing/NewHeroSection";
 import { ProblemSection } from "@/components/landing/ProblemSection";
 import { DemoSection } from "@/components/landing/DemoSection";
+import { RTCCalculatorSection } from "@/components/landing/RTCCalculatorSection";
 import { ClaraSection } from "@/components/landing/ClaraSection";
 import { NewPricingSection } from "@/components/landing/NewPricingSection";
 import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
@@ -27,6 +28,7 @@ const Index = () => {
         <NewHeroSection />
         <ProblemSection />
         <DemoSection onOpenDemo={() => setShowDemo(true)} />
+        <RTCCalculatorSection />
         <ClaraSection />
         <NewPricingSection />
         <TestimonialsSection />
