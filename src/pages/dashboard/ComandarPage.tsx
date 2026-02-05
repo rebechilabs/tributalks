@@ -1,6 +1,6 @@
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { ModuleToolCard, ToolStatus } from "@/components/home/ModuleToolCard";
-import { LayoutDashboard, FileText } from "lucide-react";
+import { LayoutDashboard, FileText, TrendingUp } from "lucide-react";
 
 const tools = [
   {
@@ -12,11 +12,20 @@ const tools = [
     statusKey: 'nexus' as const,
   },
   {
+    title: "Valuation",
+    description: "Estimativa de valor da empresa com 3 metodologias.",
+    href: "/dashboard/comandar/valuation",
+    icon: TrendingUp,
+    stepNumber: 2,
+    statusKey: 'valuation' as const,
+    badge: "3 métodos",
+  },
+  {
     title: "Relatórios PDF",
     description: "Exporte relatórios executivos por empresa.",
     href: "/dashboard/comandar/relatorios",
     icon: FileText,
-    stepNumber: 2,
+    stepNumber: 3,
     statusKey: 'relatorios' as const,
     badge: "Em breve",
   },
