@@ -1,148 +1,107 @@
 
-# Plano: Auto-Refresh em Tempo Real para Todos os Usuários
 
-## Objetivo
-Quando você publicar uma atualização no Lovable, todos os usuários conectados terão suas páginas atualizadas automaticamente em tempo real.
+# Plano: Correção da Página "Configure seu ambiente"
 
-## Como Funciona
+## Problemas Identificados
+
+### 1. Erro de forwardRef nos Componentes
+Os logs mostram que `Setup` e `CompanySetupCard` estão recebendo refs do React Router, mas não estão preparados para isso:
+```
+Warning: Function components cannot be given refs.
+Check the render method of `App`.
+    at Setup
+```
+
+### 2. Chamada Fantasma no useCnpjLookup
+O hook `useCnpjLookup` faz uma chamada inútil ao `supabase.functions.invoke` (linhas 78-86) que não usa o resultado, e depois faz a chamada correta via `fetch`. Isso causa comportamento inconsistente.
+
+### 3. Formulário de Empresa sem Auto-lookup
+O `CompanySetupForm` requer que o usuário clique no botão "Buscar" manualmente. O auto-preenchimento só ocorre após clicar.
+
+## Arquivos a Modificar
+
+| Arquivo | Problema | Solução |
+|---------|----------|---------|
+| `src/hooks/useCnpjLookup.ts` | Chamada fantasma antes do fetch real | Remover linhas 78-86 (invoke desnecessário) |
+| `src/components/setup/CompanySetupCard.tsx` | Não suporta forwardRef | Adicionar forwardRef wrapper |
+| `src/components/setup/CompanySetupForm.tsx` | Sem auto-lookup quando 14 dígitos | Adicionar auto-lookup quando CNPJ completo |
+
+## Correções Detalhadas
+
+### 1. Corrigir useCnpjLookup.ts
+
+**Antes (problema):**
+```typescript
+try {
+  // Chamada inútil que não usa o resultado
+  const { data: response, error: fnError } = await supabase.functions.invoke(
+    'gov-data-api',
+    { body: null, headers: {...} }
+  );
+
+  // Depois faz fetch direto
+  const functionUrl = ...
+  const res = await fetch(functionUrl, {...});
+```
+
+**Depois (corrigido):**
+```typescript
+try {
+  const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gov-data-api/cnpj/${cleanedCnpj}`;
+  
+  const res = await fetch(functionUrl, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      'Content-Type': 'application/json',
+    },
+  });
+```
+
+### 2. Adicionar forwardRef ao CompanySetupCard
+
+```typescript
+import React, { forwardRef } from "react";
+
+export const CompanySetupCard = forwardRef<HTMLDivElement, CompanySetupCardProps>(
+  ({ company, isPrimary, onEdit, onRemove, onSetPrimary }, ref) => {
+    // ... resto do componente
+    return (
+      <Card ref={ref} className={...}>
+```
+
+### 3. Auto-lookup no CompanySetupForm
+
+Adicionar useEffect que dispara lookup automaticamente quando CNPJ atinge 14 dígitos:
+
+```typescript
+// Auto-lookup when CNPJ is complete
+useEffect(() => {
+  const cleanCnpj = cnpj.replace(/\D/g, '');
+  if (cleanCnpj.length === 14 && !cnpjData && !cnpjLoading && !isAutoFilled) {
+    handleLookup();
+  }
+}, [cnpj]);
+```
+
+## Fluxo Corrigido
 
 ```text
-┌──────────────────────────────────────────────────────────────┐
-│                    VOCÊ PUBLICA NO LOVABLE                   │
-│                            ↓                                 │
-│     ┌────────────────────────────────────────────────────┐   │
-│     │  Nova versão do app é deployada                   │   │
-│     │  Novo BUILD_ID é gerado automaticamente           │   │
-│     └────────────────────────────────────────────────────┘   │
-│                            ↓                                 │
-│     ┌────────────────────────────────────────────────────┐   │
-│     │  Cada usuário verifica versão a cada 30 segundos  │   │
-│     │  (ou via canal realtime do Supabase)              │   │
-│     └────────────────────────────────────────────────────┘   │
-│                            ↓                                 │
-│     ┌────────────────────────────────────────────────────┐   │
-│     │  Versão diferente detectada?                      │   │
-│     │  → Toast: "Nova versão disponível"                │   │
-│     │  → Reload automático após 3 segundos              │   │
-│     └────────────────────────────────────────────────────┘   │
-└──────────────────────────────────────────────────────────────┘
+1. Usuário digita CNPJ
+2. Quando completa 14 dígitos → auto-lookup dispara
+3. Dados da empresa preenchem automaticamente:
+   - Razão Social (bloqueado)
+   - Nome Fantasia (editável)
+   - Regime Tributário (sugerido, editável)
+4. Usuário clica "Adicionar Empresa"
+5. Empresa salva com sucesso
+6. Usuário pode continuar para "Boas-vindas"
 ```
 
-## Abordagem Técnica
+## Resultado Esperado
 
-Usaremos **duas estratégias combinadas** para máxima confiabilidade:
+- Os campos serão preenchidos automaticamente ao digitar o CNPJ completo
+- O botão "Buscar" ainda funciona como alternativa manual
+- Sem erros de console sobre refs
+- Salvamento funciona corretamente
 
-### 1. Verificação de Versão via Fetch (Polling)
-- A cada 30 segundos, busca `/version.json`
-- Compara com versão carregada na inicialização
-- Se diferente → notifica e recarrega
-
-### 2. Canal Realtime do Supabase (Opcional - mais instantâneo)
-- Tabela `app_versions` no banco
-- Quando você publica, insere novo registro
-- Todos os clientes recebem evento e recarregam
-
-## Arquivos a Criar/Modificar
-
-| Arquivo | Ação | Descrição |
-|---------|------|-----------|
-| `public/version.json` | CRIAR | Arquivo com versão atual (atualizado no build) |
-| `src/hooks/useAppVersion.ts` | CRIAR | Hook que verifica versão periodicamente |
-| `src/components/AppVersionChecker.tsx` | CRIAR | Componente que exibe toast e recarrega |
-| `src/App.tsx` | MODIFICAR | Adicionar o checker na raiz |
-| `vite.config.ts` | MODIFICAR | Gerar version.json no build |
-
-## Detalhes de Implementação
-
-### 1. Gerar Versão no Build (vite.config.ts)
-
-```typescript
-// Plugin para gerar version.json com timestamp do build
-{
-  name: 'generate-version',
-  writeBundle() {
-    const version = { 
-      buildTime: Date.now(),
-      version: new Date().toISOString()
-    };
-    fs.writeFileSync('dist/version.json', JSON.stringify(version));
-  }
-}
-```
-
-### 2. Hook de Verificação (useAppVersion.ts)
-
-```typescript
-export function useAppVersion() {
-  const [updateAvailable, setUpdateAvailable] = useState(false);
-  const initialVersion = useRef<string | null>(null);
-
-  useEffect(() => {
-    const checkVersion = async () => {
-      const res = await fetch('/version.json?t=' + Date.now());
-      const data = await res.json();
-      
-      if (!initialVersion.current) {
-        initialVersion.current = data.version;
-      } else if (data.version !== initialVersion.current) {
-        setUpdateAvailable(true);
-      }
-    };
-
-    checkVersion();
-    const interval = setInterval(checkVersion, 30000); // 30s
-    
-    return () => clearInterval(interval);
-  }, []);
-
-  return { updateAvailable };
-}
-```
-
-### 3. Componente de Notificação (AppVersionChecker.tsx)
-
-```typescript
-export function AppVersionChecker() {
-  const { updateAvailable } = useAppVersion();
-
-  useEffect(() => {
-    if (updateAvailable) {
-      toast.info("Nova versão disponível! Atualizando...", {
-        duration: 3000,
-      });
-      
-      setTimeout(() => {
-        window.location.reload();
-      }, 3000);
-    }
-  }, [updateAvailable]);
-
-  return null;
-}
-```
-
-## Experiência do Usuário
-
-1. **Usuário está usando o app normalmente**
-2. **Você publica uma atualização no Lovable**
-3. **Após alguns segundos**, aparece um toast:
-   > "🔄 Nova versão disponível! Atualizando..."
-4. **3 segundos depois**, a página recarrega automaticamente
-5. **Usuário vê a versão atualizada** sem precisar fazer nada
-
-## Considerações
-
-| Aspecto | Decisão |
-|---------|---------|
-| Intervalo de verificação | 30 segundos (balanceado) |
-| Delay antes do reload | 3 segundos (permite ler o toast) |
-| Reload forçado | Sim, para garantir cache limpo |
-| PWA cache | Service worker já tem `autoUpdate` |
-
-## Resultado Final
-
-Ao publicar no Lovable:
-- ✅ **Todos os usuários** recebem a atualização automaticamente
-- ✅ **Sem ação manual** do usuário
-- ✅ **Notificação visual** antes do reload
-- ✅ **Tempo real** (máximo 30 segundos de delay)
