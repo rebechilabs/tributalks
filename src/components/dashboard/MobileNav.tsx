@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { getGroupForPath } from "@/hooks/useRouteInfo";
 import logoTributalks from "@/assets/logo-tributalks.png";
 import { cn } from "@/lib/utils";
+import { NewsletterForm } from "@/components/common/NewsletterForm";
 import {
   MenuElement,
   MenuGroup,
@@ -287,6 +288,13 @@ export function MobileNav() {
             }
             return null;
           })}
+
+          {/* Newsletter Section */}
+          <div className="mt-4 px-1">
+            <div className="p-3 rounded-lg bg-muted/50 border border-border/50">
+              <NewsletterForm variant="compact" />
+            </div>
+          </div>
         </nav>
 
         {/* Upgrade CTA */}

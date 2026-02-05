@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { NewsletterForm } from "@/components/common/NewsletterForm";
 import {
   MenuElement,
   MenuGroup,
@@ -373,6 +374,12 @@ export function Sidebar() {
           }
           return null;
         })}
+        {/* Newsletter Section */}
+        <div className="mt-4 px-1">
+          <div className="p-3 rounded-lg bg-muted/50 border border-border/50">
+            <NewsletterForm variant="compact" />
+          </div>
+        </div>
       </nav>
 
       {/* Plan Badge & Upgrade CTA */}
