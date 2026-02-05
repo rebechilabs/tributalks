@@ -8,3 +8,5 @@ export { CreditRadarMetrics } from './CreditRadarMetrics';
 export { MonophasicAlert } from './MonophasicAlert';
 export { CreditPdfReport } from './CreditPdfReport';
 export { CreditDisplay } from './CreditDisplay';
+export { CreditImplementationWorkflow } from './CreditImplementationWorkflow';
+export { IdentifiedCreditsTable } from './IdentifiedCreditsTable';

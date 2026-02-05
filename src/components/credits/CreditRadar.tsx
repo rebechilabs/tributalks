@@ -1,20 +1,23 @@
 import { useState, useMemo } from 'react';
-import { Target, CheckCircle, AlertTriangle, AlertCircle, FileText, Download, TrendingUp, Info } from 'lucide-react';
+import { Target, AlertTriangle, FileText, Download, TrendingUp, Sparkles, ListChecks, Scale } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useXmlCreditsSummary, useXmlCreditItems } from '@/hooks/useXmlCredits';
+import { useXmlCreditsSummary } from '@/hooks/useXmlCredits';
+import { useIdentifiedCredits, useIdentifiedCreditsSummary } from '@/hooks/useIdentifiedCredits';
 import { CreditPdfReport } from './CreditPdfReport';
-import { MonophasicAlert, extractMonophasicProducts } from './MonophasicAlert';
+import { MonophasicAlert } from './MonophasicAlert';
+import { IdentifiedCreditsTable } from './IdentifiedCreditsTable';
+import { CreditImplementationWorkflow } from './CreditImplementationWorkflow';
 
 export function CreditRadar() {
-  const { data: summary, isLoading: loadingSummary } = useXmlCreditsSummary();
-  const { data: creditItems, isLoading: loadingItems } = useXmlCreditItems(100);
-  const [filterTax, setFilterTax] = useState<string>('all');
+  const { data: xmlSummary, isLoading: loadingXmlSummary } = useXmlCreditsSummary();
+  const { data: identifiedCredits, isLoading: loadingCredits } = useIdentifiedCredits(100);
+  const { data: creditsSummary, isLoading: loadingSummary } = useIdentifiedCreditsSummary();
   const [showPdfModal, setShowPdfModal] = useState(false);
+  const [activeTab, setActiveTab] = useState('credits');
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -23,60 +26,59 @@ export function CreditRadar() {
     }).format(value);
   };
 
-  const formatCNPJ = (cnpj: string) => {
-    if (!cnpj) return '-';
-    return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+  // Use identified credits summary if available, otherwise fall back to XML estimates
+  const hasIdentifiedCredits = creditsSummary && creditsSummary.total_credits_count > 0;
+  const totalRecuperavel = hasIdentifiedCredits 
+    ? creditsSummary.total_potential 
+    : (xmlSummary?.totalRecuperavel || 0);
+  
+  const summaryData = hasIdentifiedCredits ? {
+    pisCofins: creditsSummary.pis_cofins_potential,
+    icms: creditsSummary.icms_potential,
+    icmsSt: creditsSummary.icms_st_potential,
+    ipi: creditsSummary.ipi_potential,
+    highConfidence: creditsSummary.high_confidence_total,
+    mediumConfidence: creditsSummary.medium_confidence_total,
+    lowConfidence: creditsSummary.low_confidence_total,
+    totalCredits: creditsSummary.total_credits_count,
+  } : {
+    pisCofins: xmlSummary?.pisCofinsRecuperavel || 0,
+    icms: xmlSummary?.icmsRecuperavel || 0,
+    icmsSt: xmlSummary?.icmsStRecuperavel || 0,
+    ipi: xmlSummary?.ipiRecuperavel || 0,
+    highConfidence: (xmlSummary?.totalRecuperavel || 0) * 0.4,
+    mediumConfidence: (xmlSummary?.totalRecuperavel || 0) * 0.4,
+    lowConfidence: (xmlSummary?.totalRecuperavel || 0) * 0.2,
+    totalCredits: xmlSummary?.totalXmls || 0,
   };
 
-  // Filtra itens pelo tipo de tributo
-  const filteredItems = useMemo(() => {
-    if (!creditItems) return [];
-    
-    return creditItems.filter(item => {
-      if (filterTax === 'all') return true;
-      if (filterTax === 'pis') return item.pis > 0 || item.cofins > 0;
-      if (filterTax === 'icms') return item.icms > 0;
-      if (filterTax === 'ipi') return item.ipi > 0;
-      return true;
-    });
-  }, [creditItems, filterTax]);
-
-  // Extrai produtos monofásicos (simulado - baseado em NCMs conhecidos)
-  const monophasicProducts = useMemo(() => {
-    // Por enquanto retorna array vazio - futuramente será implementado
-    return [];
-  }, []);
+  const isLoading = loadingXmlSummary || loadingCredits || loadingSummary;
+  const hasData = (xmlSummary && xmlSummary.totalXmls > 0) || hasIdentifiedCredits;
 
   const taxBreakdown = [
-    { 
-      name: 'PIS/COFINS', 
-      original: summary?.totalPisCofins || 0,
-      recoverable: summary?.pisCofinsRecuperavel || 0,
-      color: 'bg-blue-500'
-    },
-    { 
-      name: 'ICMS', 
-      original: summary?.totalIcms || 0,
-      recoverable: summary?.icmsRecuperavel || 0,
-      color: 'bg-emerald-500'
-    },
-    { 
-      name: 'ICMS-ST', 
-      original: summary?.totalIcmsSt || 0,
-      recoverable: summary?.icmsStRecuperavel || 0,
-      color: 'bg-amber-500'
-    },
-    { 
-      name: 'IPI', 
-      original: summary?.totalIpi || 0,
-      recoverable: summary?.ipiRecuperavel || 0,
-      color: 'bg-purple-500'
-    },
+    { name: 'PIS/COFINS', value: summaryData.pisCofins, color: 'bg-chart-1' },
+    { name: 'ICMS', value: summaryData.icms, color: 'bg-chart-2' },
+    { name: 'ICMS-ST', value: summaryData.icmsSt, color: 'bg-chart-3' },
+    { name: 'IPI', value: summaryData.ipi, color: 'bg-chart-4' },
   ];
 
-  const totalRecuperavel = summary?.totalRecuperavel || 0;
+  const confidenceBreakdown = [
+    { label: 'Alta Confiança', value: summaryData.highConfidence, variant: 'default' as const },
+    { label: 'Média Confiança', value: summaryData.mediumConfidence, variant: 'secondary' as const },
+    { label: 'Baixa Confiança', value: summaryData.lowConfidence, variant: 'outline' as const },
+  ];
 
-  if (loadingSummary || loadingItems) {
+  const handleAskClara = () => {
+    // Trigger Clara with credit recovery context
+    const event = new CustomEvent('open-clara', { 
+      detail: { 
+        message: 'Como faço para recuperar os créditos tributários identificados no Radar?' 
+      } 
+    });
+    window.dispatchEvent(event);
+  };
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -84,12 +86,10 @@ export function CreditRadar() {
     );
   }
 
-  const hasData = summary && summary.totalXmls > 0;
-
   return (
     <div className="space-y-6">
-      {/* Monophasic Alert - destaque no topo */}
-      <MonophasicAlert products={monophasicProducts} totalRecovery={0} />
+      {/* Monophasic Alert */}
+      <MonophasicAlert products={[]} totalRecovery={0} />
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -100,12 +100,15 @@ export function CreditRadar() {
           <div>
             <h2 className="text-2xl font-bold text-foreground">Radar de Créditos</h2>
             <p className="text-sm text-muted-foreground">
-              Créditos tributários potencialmente recuperáveis
+              {hasIdentifiedCredits 
+                ? 'Créditos identificados pelo motor de regras' 
+                : 'Estimativas de créditos recuperáveis'}
             </p>
           </div>
-          {hasData && (
-            <Badge variant="secondary" className="ml-2">
-              {summary.totalXmls} XMLs analisados
+          {hasIdentifiedCredits && (
+            <Badge variant="default" className="ml-2">
+              <Scale className="h-3 w-3 mr-1" />
+              {summaryData.totalCredits} créditos com base legal
             </Badge>
           )}
         </div>
@@ -115,14 +118,13 @@ export function CreditRadar() {
         </Button>
       </div>
 
-      {/* Disclaimer Legal */}
-      <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
-        <AlertTriangle className="h-4 w-4 text-amber-600" />
-        <AlertTitle className="text-amber-800 dark:text-amber-200">Importante</AlertTitle>
-        <AlertDescription className="text-amber-700 dark:text-amber-300">
+      {/* Disclaimer */}
+      <Alert>
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Importante</AlertTitle>
+        <AlertDescription>
           Os créditos identificados são <strong>estimativas</strong> baseadas na análise automatizada dos seus documentos fiscais. 
-          A recuperação efetiva deve ser validada e executada por um contador ou advogado tributarista de sua confiança. 
-          O TribuTalks não se responsabiliza por decisões tomadas sem a devida assessoria profissional.
+          A recuperação efetiva deve ser validada e executada por um contador ou advogado tributarista de sua confiança.
         </AlertDescription>
       </Alert>
 
@@ -143,71 +145,44 @@ export function CreditRadar() {
         <>
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="border-l-4 border-l-emerald-500">
+            <Card className="border-l-4 border-l-primary">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Potencial Recuperável
+                  Total Recuperável
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-emerald-500" />
-                  <span className="text-2xl font-bold text-emerald-600">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                  <span className="text-2xl font-bold text-primary">
                     {formatCurrency(totalRecuperavel)}
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Estimativa conservadora
+                  {hasIdentifiedCredits ? 'Baseado em regras fiscais' : 'Estimativa conservadora'}
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-l-4 border-l-blue-500">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  PIS/COFINS
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <span className="text-2xl font-bold">
-                  {formatCurrency(summary.pisCofinsRecuperavel)}
-                </span>
-                <p className="text-xs text-muted-foreground mt-1">
-                  de {formatCurrency(summary.totalPisCofins)} identificados
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-l-4 border-l-emerald-500">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  ICMS
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <span className="text-2xl font-bold">
-                  {formatCurrency(summary.icmsRecuperavel)}
-                </span>
-                <p className="text-xs text-muted-foreground mt-1">
-                  de {formatCurrency(summary.totalIcms)} identificados
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-l-4 border-l-purple-500">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-purple-500" />
-                  XMLs Analisados
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <span className="text-2xl font-bold">
-                  {summary.totalXmls.toLocaleString('pt-BR')}
-                </span>
-                <span className="text-sm text-muted-foreground ml-2">documentos</span>
-              </CardContent>
-            </Card>
+            {confidenceBreakdown.map((conf) => (
+              <Card key={conf.label}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    {conf.label}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <span className="text-2xl font-bold">
+                    {formatCurrency(conf.value)}
+                  </span>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {totalRecuperavel > 0 
+                      ? `${Math.round((conf.value / totalRecuperavel) * 100)}% do total`
+                      : '0% do total'}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
 
           {/* Tax Breakdown */}
@@ -215,9 +190,11 @@ export function CreditRadar() {
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 Breakdown por Tributo
-                <Badge variant="outline" className="text-xs font-normal">
-                  Estimativas de Crédito
-                </Badge>
+                {hasIdentifiedCredits && (
+                  <Badge variant="outline" className="text-xs font-normal">
+                    Identificados por regra
+                  </Badge>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -225,20 +202,15 @@ export function CreditRadar() {
                 <div key={tax.name} className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-medium">{tax.name}</span>
-                    <div className="text-right">
-                      <span className="text-emerald-600 font-medium">
-                        {formatCurrency(tax.recoverable)}
-                      </span>
-                      <span className="text-muted-foreground ml-2">
-                        (de {formatCurrency(tax.original)})
-                      </span>
-                    </div>
+                    <span className="text-primary font-medium">
+                      {formatCurrency(tax.value)}
+                    </span>
                   </div>
                   <div className="h-3 bg-muted rounded-full overflow-hidden">
                     <div 
                       className={`h-full ${tax.color} transition-all duration-500`}
                       style={{ 
-                        width: `${totalRecuperavel > 0 ? (tax.recoverable / totalRecuperavel) * 100 : 0}%` 
+                        width: `${totalRecuperavel > 0 ? (tax.value / totalRecuperavel) * 100 : 0}%` 
                       }}
                     />
                   </div>
@@ -247,109 +219,72 @@ export function CreditRadar() {
             </CardContent>
           </Card>
 
-          {/* Credits Table */}
-          <Card>
-            <CardHeader>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <CardTitle className="text-lg">Notas Fiscais Analisadas</CardTitle>
-                <div className="flex gap-2">
-                  <Select value={filterTax} onValueChange={setFilterTax}>
-                    <SelectTrigger className="w-[140px]">
-                      <SelectValue placeholder="Tributo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="pis">PIS/COFINS</SelectItem>
-                      <SelectItem value="icms">ICMS</SelectItem>
-                      <SelectItem value="ipi">IPI</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {filteredItems.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Target className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Nenhuma nota fiscal encontrada com esse filtro.</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>NF-e</TableHead>
-                        <TableHead>Emitente</TableHead>
-                        <TableHead className="text-right">Valor NF</TableHead>
-                        <TableHead className="text-right">PIS/COFINS</TableHead>
-                        <TableHead className="text-right">ICMS</TableHead>
-                        <TableHead className="text-right">IPI</TableHead>
-                        <TableHead className="text-right">Total Tributos</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredItems.slice(0, 50).map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell>
-                            <div>
-                              <span className="font-medium">{item.documentNumber || '-'}</span>
-                              <p className="text-xs text-muted-foreground">
-                                {item.issueDate ? new Date(item.issueDate).toLocaleDateString('pt-BR') : '-'}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <span className="font-medium text-sm truncate max-w-[200px] block">
-                                {item.issuerName || '-'}
-                              </span>
-                              <p className="text-xs text-muted-foreground">
-                                {formatCNPJ(item.issuerCnpj)}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right font-mono">
-                            {formatCurrency(item.documentTotal)}
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-blue-600">
-                            {formatCurrency(item.pis + item.cofins)}
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-emerald-600">
-                            {formatCurrency(item.icms)}
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-purple-600">
-                            {formatCurrency(item.ipi)}
-                          </TableCell>
-                          <TableCell className="text-right font-mono font-semibold">
-                            {formatCurrency(item.totalTax)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                  {filteredItems.length > 50 && (
-                    <p className="text-center text-sm text-muted-foreground mt-4">
-                      Mostrando 50 de {filteredItems.length} notas fiscais
-                    </p>
+          {/* Main Content Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="credits" className="gap-2">
+                <FileText className="h-4 w-4" />
+                Créditos Identificados
+              </TabsTrigger>
+              <TabsTrigger value="workflow" className="gap-2">
+                <ListChecks className="h-4 w-4" />
+                Como Recuperar
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="credits">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">
+                    {hasIdentifiedCredits 
+                      ? 'Créditos Identificados pelo Motor de Regras'
+                      : 'Notas Fiscais Analisadas'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {hasIdentifiedCredits && identifiedCredits ? (
+                    <IdentifiedCreditsTable credits={identifiedCredits} maxItems={50} />
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Scale className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>Os créditos serão detalhados após processamento pelo motor de regras.</p>
+                      <p className="text-sm mt-2">
+                        Por enquanto, você pode ver as estimativas nos cards acima.
+                      </p>
+                    </div>
                   )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="workflow">
+              <CreditImplementationWorkflow
+                totalRecoverable={totalRecuperavel}
+                creditsCount={summaryData.totalCredits}
+                onAskClara={handleAskClara}
+                onGenerateReport={() => setShowPdfModal(true)}
+              />
+            </TabsContent>
+          </Tabs>
 
           {/* CTA Section */}
           <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
             <CardContent className="py-6">
               <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-lg font-semibold">Quer recuperar esses créditos?</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Gere um relatório detalhado para enviar ao seu contador e iniciar o processo de recuperação.
-                  </p>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/20 rounded-full">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold">Dúvidas sobre recuperação?</h3>
+                    <p className="text-sm text-muted-foreground">
+                      A Clara pode explicar cada crédito e o processo de recuperação.
+                    </p>
+                  </div>
                 </div>
-                <Button size="lg" onClick={() => setShowPdfModal(true)}>
-                  <FileText className="h-4 w-4 mr-2" />
-                  Gerar Relatório para Contador
+                <Button onClick={handleAskClara}>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Perguntar à Clara
                 </Button>
               </div>
             </CardContent>
@@ -357,21 +292,43 @@ export function CreditRadar() {
         </>
       )}
 
-      {/* PDF Modal - converte para o formato esperado */}
-      {showPdfModal && summary && (
+      {/* PDF Modal */}
+      {showPdfModal && (
         <CreditPdfReport 
-          credits={[]} 
+          credits={identifiedCredits?.map(c => ({
+            id: c.id,
+            nfe_key: c.nfe_key,
+            nfe_number: c.nfe_number,
+            nfe_date: c.nfe_date,
+            supplier_cnpj: c.supplier_cnpj,
+            supplier_name: c.supplier_name,
+            original_tax_value: c.original_tax_value,
+            potential_recovery: c.potential_recovery,
+            ncm_code: c.ncm_code,
+            product_description: c.product_description,
+            cfop: c.cfop,
+            cst: c.cst,
+            confidence_score: c.confidence_score,
+            confidence_level: c.confidence_level,
+            status: c.status,
+            created_at: c.created_at,
+            credit_rules: c.rule ? {
+              tax_type: c.rule.tax_type,
+              rule_name: c.rule.rule_name,
+              legal_basis: c.rule.legal_basis,
+            } : undefined,
+          })) || []} 
           summary={{
-            total_potential: summary.totalRecuperavel,
-            pis_cofins_potential: summary.pisCofinsRecuperavel,
-            icms_potential: summary.icmsRecuperavel,
-            icms_st_potential: summary.icmsStRecuperavel,
-            ipi_potential: summary.ipiRecuperavel,
-            high_confidence_total: summary.totalRecuperavel * 0.4,
-            medium_confidence_total: summary.totalRecuperavel * 0.4,
-            low_confidence_total: summary.totalRecuperavel * 0.2,
-            total_xmls_analyzed: summary.totalXmls,
-            credits_found_count: summary.totalXmls,
+            total_potential: totalRecuperavel,
+            pis_cofins_potential: summaryData.pisCofins,
+            icms_potential: summaryData.icms,
+            icms_st_potential: summaryData.icmsSt,
+            ipi_potential: summaryData.ipi,
+            high_confidence_total: summaryData.highConfidence,
+            medium_confidence_total: summaryData.mediumConfidence,
+            low_confidence_total: summaryData.lowConfidence,
+            total_xmls_analyzed: xmlSummary?.totalXmls || 0,
+            credits_found_count: summaryData.totalCredits,
           }}
           onClose={() => setShowPdfModal(false)} 
         />
