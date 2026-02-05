@@ -71,6 +71,15 @@ export function CompanySetupForm({ onSuccess, onCancel }: CompanySetupFormProps)
     await lookup(cleanCnpj);
   };
 
+  // Auto-lookup when CNPJ is complete (14 digits)
+  useEffect(() => {
+    const cleanCnpj = cnpj.replace(/\D/g, '');
+    if (cleanCnpj.length === 14 && !cnpjData && !cnpjLoading && !isAutoFilled) {
+      handleLookup();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cnpj]);
+
   const handleSubmit = async () => {
     if (!cnpj || !razaoSocial) {
       toast.error("CNPJ e Razão Social são obrigatórios");

@@ -75,17 +75,6 @@ export function useCnpjLookup(): UseCnpjLookupResult {
     setError(null);
 
     try {
-      const { data: response, error: fnError } = await supabase.functions.invoke(
-        'gov-data-api',
-        {
-          body: null,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      // Use fetch directly for more control over the path
       const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gov-data-api/cnpj/${cleanedCnpj}`;
       
       const res = await fetch(functionUrl, {
