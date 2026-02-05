@@ -32,11 +32,13 @@
            className="text-center mb-16"
          >
            <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white mb-6 leading-tight max-w-4xl mx-auto">
-             A Reforma Tributária vai custar{" "}
-             <span className="text-primary">R$100 bilhões por ano</span> em erros de compliance.
-             <br className="hidden md:block" />
-             O TribuTalks transforma esse risco em oportunidade.
+             <span className="text-primary">97% das empresas</span> enfrentam despreparo para a Reforma Tributária 2026, sendo a emissão incorreta de NF-e o principal risco de perda financeira.
+             <br className="hidden md:block" /><br className="hidden md:block" />
+             O TribuTalks transforma essa vulnerabilidade em conformidade blindada e vantagem competitiva.
            </h2>
+           <p className="text-white/40 text-xs mt-4">
+             Pesquisa GestãoClick, fev/2026, com 234 empresas
+           </p>
          </motion.div>
  
          {/* Benefits Cards */}
