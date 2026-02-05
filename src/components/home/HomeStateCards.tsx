@@ -1,11 +1,10 @@
 import { Link } from "react-router-dom";
 import { 
   BarChart3, Trophy, FileText, Plug, CheckCircle2, ArrowRight,
-  Sparkles, TrendingUp, AlertCircle
+  Sparkles, TrendingUp, AlertCircle, Target, Coins, Gift
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { HomeStateData } from "@/hooks/useHomeState";
@@ -28,16 +27,66 @@ function formatPercentage(value: number): string {
   return `${(value * 100).toFixed(1)}%`;
 }
 
+// Module Header Component
+function ModuleHeader({ 
+  icon: Icon, 
+  title, 
+  description 
+}: { 
+  icon: React.ElementType; 
+  title: string; 
+  description: string;
+}) {
+  return (
+    <div className="text-center space-y-3 mb-6">
+      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary">
+        <Icon className="w-5 h-5" />
+        <span className="font-semibold text-sm">{title}</span>
+      </div>
+      <p className="text-muted-foreground max-w-md mx-auto">
+        {description}
+      </p>
+    </div>
+  );
+}
+
+// Upcoming Step Card
+function UpcomingStepCard({ 
+  step, 
+  icon: Icon, 
+  title, 
+  description 
+}: { 
+  step: number;
+  icon: React.ElementType; 
+  title: string; 
+  description: string;
+}) {
+  return (
+    <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
+      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+        <span className="text-xs font-bold text-muted-foreground">{step}</span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <Icon className="w-4 h-4 text-muted-foreground" />
+          <p className="text-sm font-medium">{title}</p>
+        </div>
+        <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+      </div>
+    </div>
+  );
+}
+
 // State: NO_DRE - User needs to fill DRE first
 export function NoDRECard({ hasERP }: { hasERP: boolean }) {
   return (
     <div className="space-y-6">
-      <div className="text-center space-y-2">
-        <h1 className="text-2xl font-bold">Bem-vindo ao TribuTalks!</h1>
-        <p className="text-muted-foreground">
-          Para começar, precisamos entender seu negócio.
-        </p>
-      </div>
+      <ModuleHeader 
+        icon={BarChart3}
+        title="MÓDULO: ENTENDER MEU NEGÓCIO"
+        description="Aqui você terá a oportunidade de entender a saúde tributária da sua empresa através de diagnósticos inteligentes."
+      />
 
       <Card className="border-primary/50 bg-gradient-to-br from-primary/5 to-transparent">
         <CardHeader>
@@ -46,14 +95,18 @@ export function NoDRECard({ hasERP }: { hasERP: boolean }) {
               <BarChart3 className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <CardTitle>PASSO 1: Preencha seu DRE</CardTitle>
-              <CardDescription>
-                O DRE é a base para todas as análises. Leva apenas 3 minutos.
-              </CardDescription>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">PASSO 1</Badge>
+              </div>
+              <CardTitle className="mt-1">Preencha seu DRE</CardTitle>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            A <strong>Demonstração do Resultado do Exercício</strong> apresentará como resultado final 
+            o lucro líquido ou prejuízo líquido do período da sua empresa.
+          </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <Button asChild className="flex-1">
               <Link to="/dashboard/integracoes" className="flex items-center gap-2">
@@ -71,21 +124,27 @@ export function NoDRECard({ hasERP }: { hasERP: boolean }) {
         </CardContent>
       </Card>
 
-      <div className="space-y-2">
-        <p className="text-sm text-muted-foreground font-medium">Próximos passos após o DRE:</p>
+      <div className="space-y-3">
+        <p className="text-sm font-medium text-muted-foreground">Próximos passos após o DRE:</p>
         <div className="grid gap-2">
-          {[
-            { icon: Trophy, label: 'Calcular seu Score Tributário' },
-            { icon: FileText, label: 'Identificar créditos no Radar' },
-            { icon: Sparkles, label: 'Ver oportunidades de economia' },
-          ].map((step, i) => (
-            <div key={i} className="flex items-center gap-3 text-sm text-muted-foreground">
-              <div className="w-6 h-6 rounded-full border flex items-center justify-center">
-                <step.icon className="w-3 h-3" />
-              </div>
-              {step.label}
-            </div>
-          ))}
+          <UpcomingStepCard 
+            step={2}
+            icon={Trophy}
+            title="Score Tributário"
+            description="Um panorama da situação tributária atual da empresa em uma escala de 0 a 1000 pontos."
+          />
+          <UpcomingStepCard 
+            step={3}
+            icon={Coins}
+            title="Radar de Créditos"
+            description="Identifica tributos pagos indevidamente nos últimos 5 anos que podem ser recuperados."
+          />
+          <UpcomingStepCard 
+            step={4}
+            icon={Gift}
+            title="Oportunidades"
+            description="Benefícios fiscais e incentivos aplicáveis ao perfil do seu negócio."
+          />
         </div>
       </div>
     </div>
@@ -96,12 +155,15 @@ export function NoDRECard({ hasERP }: { hasERP: boolean }) {
 export function NoScoreCard({ dreData }: { dreData: NonNullable<HomeStateData['dreData']> }) {
   return (
     <div className="space-y-6">
-      <div className="text-center space-y-2">
-        <h1 className="text-2xl font-bold">Ótimo progresso!</h1>
-        <div className="flex items-center justify-center gap-2 text-green-500">
-          <CheckCircle2 className="w-5 h-5" />
-          <span>DRE preenchido</span>
-        </div>
+      <ModuleHeader 
+        icon={BarChart3}
+        title="MÓDULO: ENTENDER MEU NEGÓCIO"
+        description="Seu DRE está preenchido! Agora vamos descobrir sua nota tributária."
+      />
+
+      <div className="flex items-center justify-center gap-2 text-green-500">
+        <CheckCircle2 className="w-5 h-5" />
+        <span className="text-sm font-medium">DRE preenchido com sucesso</span>
       </div>
 
       <Card className="border-primary/50 bg-gradient-to-br from-primary/5 to-transparent">
@@ -111,14 +173,19 @@ export function NoScoreCard({ dreData }: { dreData: NonNullable<HomeStateData['d
               <Trophy className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <CardTitle>PRÓXIMO PASSO: Calcule seu Score Tributário</CardTitle>
-              <CardDescription>
-                Descubra a saúde tributária da sua empresa em uma escala de 0 a 1000.
-              </CardDescription>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">PRÓXIMO PASSO</Badge>
+              </div>
+              <CardTitle className="mt-1">Calcule seu Score Tributário</CardTitle>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            O <strong>Score Tributário</strong> apresenta um panorama completo da situação tributária 
+            atual da sua empresa em uma escala de <strong>0 a 1000 pontos</strong>, indicando riscos 
+            e oportunidades de melhoria.
+          </p>
           <Button asChild className="w-full sm:w-auto">
             <Link to="/dashboard/entender/score" className="flex items-center gap-2">
               <Trophy className="w-4 h-4" />
@@ -129,23 +196,21 @@ export function NoScoreCard({ dreData }: { dreData: NonNullable<HomeStateData['d
         </CardContent>
       </Card>
 
-      <div className="space-y-2">
-        <p className="text-sm text-muted-foreground font-medium">Enquanto isso, você também pode:</p>
+      <div className="space-y-3">
+        <p className="text-sm font-medium text-muted-foreground">Próximos passos:</p>
         <div className="grid gap-2">
-          <Link 
-            to="/dashboard/recuperar/radar" 
-            className="flex items-center gap-3 text-sm text-primary hover:underline"
-          >
-            <ArrowRight className="w-4 h-4" />
-            Fazer upload de XMLs no Radar de Créditos
-          </Link>
-          <Link 
-            to="/dashboard/recuperar/oportunidades" 
-            className="flex items-center gap-3 text-sm text-primary hover:underline"
-          >
-            <ArrowRight className="w-4 h-4" />
-            Explorar as 61+ oportunidades fiscais
-          </Link>
+          <UpcomingStepCard 
+            step={3}
+            icon={Coins}
+            title="Radar de Créditos"
+            description="Identifica tributos pagos indevidamente nos últimos 5 anos que podem ser recuperados."
+          />
+          <UpcomingStepCard 
+            step={4}
+            icon={Gift}
+            title="Oportunidades"
+            description="Benefícios fiscais e incentivos aplicáveis ao perfil do seu negócio."
+          />
         </div>
       </div>
     </div>
@@ -162,17 +227,20 @@ export function NoCreditsCard({
 }) {
   return (
     <div className="space-y-6">
-      <div className="text-center space-y-2">
-        <h1 className="text-2xl font-bold">Sua base está pronta!</h1>
-        <div className="flex items-center justify-center gap-4 flex-wrap">
-          <div className="flex items-center gap-2 text-green-500">
-            <CheckCircle2 className="w-4 h-4" />
-            <span className="text-sm">DRE preenchido</span>
-          </div>
-          <div className="flex items-center gap-2 text-green-500">
-            <CheckCircle2 className="w-4 h-4" />
-            <span className="text-sm">Score: {scoreData.score} pontos</span>
-          </div>
+      <ModuleHeader 
+        icon={Coins}
+        title="MÓDULO: RECUPERAR MEU DINHEIRO"
+        description="Hora de identificar valores que sua empresa pode ter pago a mais em tributos."
+      />
+
+      <div className="flex items-center justify-center gap-4 flex-wrap">
+        <div className="flex items-center gap-2 text-green-500">
+          <CheckCircle2 className="w-4 h-4" />
+          <span className="text-sm">DRE preenchido</span>
+        </div>
+        <div className="flex items-center gap-2 text-green-500">
+          <CheckCircle2 className="w-4 h-4" />
+          <span className="text-sm">Score: {scoreData.score} pontos</span>
         </div>
       </div>
 
@@ -183,14 +251,18 @@ export function NoCreditsCard({
               <FileText className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <CardTitle>PRÓXIMO PASSO: Identifique créditos tributários</CardTitle>
-              <CardDescription>
-                Faça upload dos seus XMLs e descubra quanto você pode recuperar.
-              </CardDescription>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">PRÓXIMO PASSO</Badge>
+              </div>
+              <CardTitle className="mt-1">Identifique Créditos Tributários</CardTitle>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            O <strong>Radar de Créditos</strong> analisa seus XMLs de notas fiscais para encontrar 
+            tributos pagos indevidamente <strong>nos últimos 5 anos</strong> que podem ser recuperados.
+          </p>
           <Button asChild className="w-full sm:w-auto">
             <Link to="/dashboard/recuperar/radar" className="flex items-center gap-2">
               <FileText className="w-4 h-4" />
@@ -204,7 +276,7 @@ export function NoCreditsCard({
       {/* Quick Summary */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">Resumo rápido</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground">Resumo do seu negócio</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-3 gap-4 text-center">
@@ -250,11 +322,11 @@ export function CompleteCard({
 
   return (
     <div className="space-y-6">
-      <div className="text-center space-y-2">
-        <h1 className="text-2xl font-bold">
-          Olá{userName ? `, ${userName}` : ''}! Aqui está seu resumo.
-        </h1>
-      </div>
+      <ModuleHeader 
+        icon={Target}
+        title="VISÃO GERAL DO SEU NEGÓCIO"
+        description={`Parabéns${userName ? `, ${userName}` : ''}! Você completou a jornada inicial. Aqui está um resumo da saúde tributária da sua empresa.`}
+      />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
