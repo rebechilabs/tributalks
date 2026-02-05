@@ -1,7 +1,7 @@
 import { Calculator, Zap, History, FileText, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useNavigate } from "react-router-dom";
+import { CONFIG } from "@/config/site";
 
 const benefits = [
   {
@@ -27,8 +27,6 @@ const benefits = [
 ];
 
 export function RTCCalculatorSection() {
-  const navigate = useNavigate();
-
   return (
     <section className="py-16 md:py-24 bg-gradient-to-b from-background to-card/50 relative overflow-hidden">
       {/* Background decoration */}
@@ -80,13 +78,14 @@ export function RTCCalculatorSection() {
         {/* CTA */}
         <div className="text-center">
           <div className="inline-flex flex-col items-center gap-3 md:gap-4">
-            <Button
-              size="lg"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 md:px-8 py-5 md:py-6 text-sm md:text-base"
-              onClick={() => navigate("/cadastro")}
-            >
-              Experimente Grátis
-            </Button>
+            <a href={CONFIG.PAYMENT_LINKS.PROFESSIONAL_MENSAL} target="_blank" rel="noopener noreferrer">
+              <Button
+                size="lg"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 md:px-8 py-5 md:py-6 text-sm md:text-base"
+              >
+                Experimente Grátis
+              </Button>
+            </a>
             <a
               href="https://www.gov.br/receitafederal/pt-br/assuntos/reforma-tributaria-regulamentacao"
               target="_blank"
