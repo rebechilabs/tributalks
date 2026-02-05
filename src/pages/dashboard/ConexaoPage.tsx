@@ -37,15 +37,15 @@ export default function ConexaoPage() {
 
   return (
     <DashboardLayout title="Conexão & Comunicação">
-      <div className="container mx-auto px-4 py-6">
-        <div className="mb-8">
+      <div className="container mx-auto px-4 py-12 flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
+        <div className="text-center mb-10">
           <h1 className="text-2xl font-bold mb-2">Conexão & Comunicação</h1>
           <p className="text-muted-foreground">
             Mantenha-se informado e conectado com a comunidade tributária
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-3 max-w-4xl w-full">
           {tools.map((tool) => (
             <ModuleToolCard
               key={tool.href}
