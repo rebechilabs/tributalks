@@ -273,18 +273,21 @@ export function MobileNav() {
 
         {/* Helper to render referral card */}
         {(() => {
-          // Find the index of the divider after COMANDAR
-          const findInsertionIndex = () => {
+          // Find the index where Newsletter is located
+          const findNewsletterGroupIndex = () => {
             for (let i = 0; i < menuElements.length; i++) {
               const element = menuElements[i];
-              if (isMenuGroup(element) && element.title === 'COMANDAR') {
-                return i + 1;
+              if (isMenuGroup(element) && !element.title) {
+                const hasNewsletter = element.items.some(item => item.href === '/noticias');
+                if (hasNewsletter) {
+                  return i;
+                }
               }
             }
             return -1;
           };
 
-          const referralInsertIndex = findInsertionIndex();
+          const newsletterGroupIndex = findNewsletterGroupIndex();
 
           const renderReferralCard = () => (
             <Link
@@ -301,13 +304,12 @@ export function MobileNav() {
           return (
             <nav className="flex-1 py-4 px-3 overflow-y-auto max-h-[calc(100vh-10rem)] space-y-2">
               {menuElements.map((element, index) => {
-                const showReferralCard = index === referralInsertIndex;
-                
                 if ('type' in element && element.type === 'divider') {
+                  const nextIsNewsletter = index + 1 === newsletterGroupIndex;
                   return (
                     <div key={`divider-${index}`}>
-                      {showReferralCard && renderReferralCard()}
                       <Separator className="my-3" />
+                      {nextIsNewsletter && renderReferralCard()}
                     </div>
                   );
                 }

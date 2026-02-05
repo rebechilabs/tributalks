@@ -371,19 +371,22 @@ export function Sidebar() {
     </div>
   );
 
-  // Find the index of the divider after COMANDAR (before Newsletter section)
-  const findInsertionIndex = () => {
+  // Find the index where Newsletter is located (in the last group without title)
+  const findNewsletterGroupIndex = () => {
     for (let i = 0; i < menuElements.length; i++) {
       const element = menuElements[i];
-      if (isMenuGroup(element) && element.title === 'COMANDAR') {
-        // Return the index after COMANDAR (which should be the divider)
-        return i + 1;
+      if (isMenuGroup(element) && !element.title) {
+        // Check if this group contains Newsletter
+        const hasNewsletter = element.items.some(item => item.href === '/noticias');
+        if (hasNewsletter) {
+          return i;
+        }
       }
     }
     return -1;
   };
 
-  const referralInsertIndex = findInsertionIndex();
+  const newsletterGroupIndex = findNewsletterGroupIndex();
 
   return (
     <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-card border-r border-border">
@@ -397,14 +400,17 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 py-4 px-3 space-y-2 overflow-y-auto">
         {menuElements.map((element, index) => {
-          // Render referral card after COMANDAR (at the divider position)
-          const showReferralCard = index === referralInsertIndex;
+          // Check if we should show the referral card before this element
+          // Show it right before the Newsletter group (after the divider that precedes it)
+          const isBeforeNewsletterGroup = index === newsletterGroupIndex;
           
           if ('type' in element && element.type === 'divider') {
+            // Check if next element is the newsletter group
+            const nextIsNewsletter = index + 1 === newsletterGroupIndex;
             return (
               <div key={`divider-${index}`}>
-                {showReferralCard && renderReferralCard()}
                 <Separator className="my-3" />
+                {nextIsNewsletter && renderReferralCard()}
               </div>
             );
           }
