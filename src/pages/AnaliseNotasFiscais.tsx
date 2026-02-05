@@ -616,6 +616,15 @@ export default function AnaliseNotasFiscais() {
                         
                         <div className="flex flex-wrap justify-center gap-2">
                           <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Upload className="mr-2 h-4 w-4" />
+                            Carregar XML
+                          </Button>
+                          
+                          <Button
                             variant="ghost"
                             size="sm"
                             onClick={(e) => e.stopPropagation()}
