@@ -28,6 +28,7 @@ import OAuthCallback from "./pages/OAuthCallback";
 // Páginas protegidas
 import Onboarding from "./pages/Onboarding";
 import OnboardingAI from "./pages/OnboardingAI";
+import Setup from "./pages/Setup";
 import WelcomeAI from "./pages/WelcomeAI";
 import Dashboard from "./pages/Dashboard";
 import Upgrade from "./pages/Upgrade";
@@ -136,11 +137,20 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
+            {/* NEW: Setup page for company registration */}
+            <Route 
+              path="/setup" 
+              element={
+                <ProtectedRoute requireOnboarding={false}>
+                  <Setup />
+                </ProtectedRoute>
+              } 
+            />
             {/* Welcome AI-First - 1 pergunta */}
             <Route 
               path="/welcome" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireOnboarding={false}>
                   <WelcomeAI />
                 </ProtectedRoute>
               } 

@@ -1117,6 +1117,7 @@ export type Database = {
           investe_maquinas_agricolas: boolean | null
           investe_pd_saude: boolean | null
           investe_tecnologia_educacional: boolean | null
+          is_active: boolean | null
           laboratorio: boolean | null
           municipio_sede: string | null
           nome_fantasia: string | null
@@ -1240,6 +1241,7 @@ export type Database = {
           investe_maquinas_agricolas?: boolean | null
           investe_pd_saude?: boolean | null
           investe_tecnologia_educacional?: boolean | null
+          is_active?: boolean | null
           laboratorio?: boolean | null
           municipio_sede?: string | null
           nome_fantasia?: string | null
@@ -1363,6 +1365,7 @@ export type Database = {
           investe_maquinas_agricolas?: boolean | null
           investe_pd_saude?: boolean | null
           investe_tecnologia_educacional?: boolean | null
+          is_active?: boolean | null
           laboratorio?: boolean | null
           municipio_sede?: string | null
           nome_fantasia?: string | null
@@ -2734,12 +2737,14 @@ export type Database = {
           plano_expires_at: string | null
           regime: string | null
           setor: string | null
+          setup_complete: boolean | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           subscription_period_end: string | null
           subscription_status: string | null
           updated_at: string | null
           user_id: string
+          welcome_seen: boolean | null
         }
         Insert: {
           city?: string | null
@@ -2768,12 +2773,14 @@ export type Database = {
           plano_expires_at?: string | null
           regime?: string | null
           setor?: string | null
+          setup_complete?: boolean | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_period_end?: string | null
           subscription_status?: string | null
           updated_at?: string | null
           user_id: string
+          welcome_seen?: boolean | null
         }
         Update: {
           city?: string | null
@@ -2802,12 +2809,14 @@ export type Database = {
           plano_expires_at?: string | null
           regime?: string | null
           setor?: string | null
+          setup_complete?: boolean | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_period_end?: string | null
           subscription_status?: string | null
           updated_at?: string | null
           user_id?: string
+          welcome_seen?: boolean | null
         }
         Relationships: []
       }

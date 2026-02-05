@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Loader2, Save, User, Building, FileText, Lock, CreditCard, Crown, AlertTriangle, ExternalLink, Trophy } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, Save, User, Building, Building2, FileText, Lock, CreditCard, Crown, AlertTriangle, ExternalLink, Trophy, Plus, Info } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -14,6 +15,10 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { AchievementList, StreakDisplay } from "@/components/achievements";
 import { useProfilePageData } from "@/hooks/useProfilePageData";
 import { CONFIG } from "@/config/site";
+import { useCompany } from "@/contexts/CompanyContext";
+import { usePlanAccess, PLAN_LABELS } from "@/hooks/useFeatureAccess";
+import { CompanySetupCard, CompanySetupForm, EditCompanyModal } from "@/components/setup";
+import type { Company } from "@/contexts/CompanyContext";
 
 const ESTADOS = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 
@@ -51,10 +56,14 @@ const PLANO_INFO: Record<string, { label: string; preco: string; cor: string }> 
 const Perfil = () => {
   const { user, profile, refreshProfile, signOut } = useAuth();
   const { data: pageData, isLoading: pageLoading } = useProfilePageData();
+  const { companies, currentCompany, setCurrentCompany, maxCompanies, canAddMore, removeCompany, isLoading: companiesLoading } = useCompany();
+  const { currentPlan } = usePlanAccess();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isAddingCompany, setIsAddingCompany] = useState(false);
+  const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   
   const [formData, setFormData] = useState({
     nome: profile?.nome || "",
@@ -359,6 +368,102 @@ const Perfil = () => {
             </Button>
           </div>
         </form>
+
+        {/* My Companies Section */}
+        <Card className="mt-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-primary" />
+                  Minhas Empresas
+                </CardTitle>
+                <CardDescription>
+                  Gerencie os CNPJs do seu grupo empresarial
+                </CardDescription>
+              </div>
+              <div className="text-right">
+                <span className="text-sm font-medium text-primary">
+                  {companies.length} de {maxCompanies === 999 ? "∞" : maxCompanies}
+                </span>
+                <p className="text-xs text-muted-foreground">
+                  Plano {PLAN_LABELS[currentPlan]}
+                </p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {companiesLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <>
+                {companies.length > 0 && (
+                  <div className="space-y-3">
+                    {companies.map((company) => (
+                      <CompanySetupCard
+                        key={company.id}
+                        company={company}
+                        isPrimary={company.id === currentCompany?.id}
+                        onEdit={() => setEditingCompany(company)}
+                        onRemove={companies.length > 1 ? async () => {
+                          const success = await removeCompany(company.id);
+                          if (success) {
+                            toast({ title: "Empresa removida" });
+                          }
+                        } : undefined}
+                        onSetPrimary={() => setCurrentCompany(company)}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Add company form or button */}
+                {isAddingCompany ? (
+                  <CompanySetupForm
+                    onSuccess={() => setIsAddingCompany(false)}
+                    onCancel={() => setIsAddingCompany(false)}
+                  />
+                ) : (
+                  canAddMore && (
+                    <Button
+                      variant="outline"
+                      className="w-full border-dashed border-2 h-12"
+                      onClick={() => setIsAddingCompany(true)}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar nova empresa
+                    </Button>
+                  )
+                )}
+
+                {/* Limit reached */}
+                {!canAddMore && (
+                  <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertDescription>
+                      Limite de {maxCompanies} empresa{maxCompanies > 1 ? 's' : ''} atingido.{' '}
+                      <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/upgrade')}>
+                        Faça upgrade
+                      </Button>{' '}
+                      para adicionar mais.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Edit Company Modal */}
+        {editingCompany && (
+          <EditCompanyModal
+            open={!!editingCompany}
+            onOpenChange={(open) => !open && setEditingCompany(null)}
+            company={editingCompany}
+          />
+        )}
 
         {/* Subscription Info */}
         <Card className="mt-6">
