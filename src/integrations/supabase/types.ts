@@ -2454,6 +2454,60 @@ export type Database = {
         }
         Relationships: []
       }
+      pgdas_arquivos: {
+        Row: {
+          aliquota_efetiva: number | null
+          anexo_simples: string | null
+          arquivo_nome: string
+          arquivo_storage_path: string | null
+          cnpj: string | null
+          created_at: string | null
+          erro_mensagem: string | null
+          id: string
+          periodo_apuracao: string | null
+          razao_social: string | null
+          receita_bruta: number | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+          valor_devido: number | null
+        }
+        Insert: {
+          aliquota_efetiva?: number | null
+          anexo_simples?: string | null
+          arquivo_nome: string
+          arquivo_storage_path?: string | null
+          cnpj?: string | null
+          created_at?: string | null
+          erro_mensagem?: string | null
+          id?: string
+          periodo_apuracao?: string | null
+          razao_social?: string | null
+          receita_bruta?: number | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+          valor_devido?: number | null
+        }
+        Update: {
+          aliquota_efetiva?: number | null
+          anexo_simples?: string | null
+          arquivo_nome?: string
+          arquivo_storage_path?: string | null
+          cnpj?: string | null
+          created_at?: string | null
+          erro_mensagem?: string | null
+          id?: string
+          periodo_apuracao?: string | null
+          razao_social?: string | null
+          receita_bruta?: number | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+          valor_devido?: number | null
+        }
+        Relationships: []
+      }
       pilulas_reforma: {
         Row: {
           ativo: boolean | null

@@ -39,6 +39,7 @@ import { ExposureProjection } from "@/components/credits/ExposureProjection";
 import { SavingsSummaryCard } from "@/components/credits/SavingsSummaryCard";
 import { SpedUploader } from "@/components/sped";
 import { DctfUploader } from "@/components/dctf";
+import { PgdasUploader } from "@/components/pgdas";
 import { FiscalGapsDashboard } from "@/components/fiscal";
 import { GitCompare } from "lucide-react";
 import xmlCompra from "../../test-xml/ciclo-comercial/01-compra-mercadoria.xml?raw";
@@ -122,7 +123,7 @@ export default function AnaliseNotasFiscais() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const initialTab = searchParams.get('tab') as 'importar' | 'sped' | 'dctf' | 'cruzamento' | 'creditos' | 'exposicao' | null;
+  const initialTab = searchParams.get('tab') as 'importar' | 'sped' | 'dctf' | 'pgdas' | 'cruzamento' | 'creditos' | 'exposicao' | null;
   
   const [activeTab, setActiveTab] = useState(initialTab || 'importar');
   const [files, setFiles] = useState<FileItem[]>([]);
@@ -533,7 +534,7 @@ export default function AnaliseNotasFiscais() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="space-y-6">
-          <TabsList className="grid w-full max-w-4xl grid-cols-6">
+          <TabsList className="grid w-full max-w-5xl grid-cols-7">
             <TabsTrigger value="importar" className="gap-2">
               <Upload className="h-4 w-4" />
               XMLs
@@ -545,6 +546,10 @@ export default function AnaliseNotasFiscais() {
             <TabsTrigger value="dctf" className="gap-2">
               <FileText className="h-4 w-4" />
               DCTF
+            </TabsTrigger>
+            <TabsTrigger value="pgdas" className="gap-2">
+              <FileUp className="h-4 w-4" />
+              PGDAS
             </TabsTrigger>
             <TabsTrigger value="cruzamento" className="gap-2">
               <GitCompare className="h-4 w-4" />
@@ -841,6 +846,11 @@ export default function AnaliseNotasFiscais() {
           {/* Tab: DCTF */}
           <TabsContent value="dctf">
             <DctfUploader />
+          </TabsContent>
+
+          {/* Tab: PGDAS (Simples Nacional) */}
+          <TabsContent value="pgdas">
+            <PgdasUploader />
           </TabsContent>
 
           {/* Tab: Cruzamento SPED x DCTF */}
