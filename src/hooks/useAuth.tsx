@@ -7,7 +7,6 @@ interface Profile {
   user_id: string;
   email: string | null;
   nome: string | null;
-  telefone?: string | null;
   empresa: string | null;
   regime: 'SIMPLES' | 'PRESUMIDO' | 'REAL' | null;
   setor: 'industria' | 'comercio' | 'servicos' | 'tecnologia' | 'outro' | null;
