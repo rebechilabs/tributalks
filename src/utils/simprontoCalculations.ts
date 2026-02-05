@@ -129,9 +129,10 @@ function calcularLucroPresumido(input: SimprontoInput): RegimeCalculation {
 
 // Calcula Lucro Real
 function calcularLucroReal(input: SimprontoInput): RegimeCalculation {
-  // Lucro = Faturamento - Custos - Folha
+  // Lucro = Faturamento - Custos - Folha - Despesas
   const custosMercadorias = input.compras_insumos;
-  const lucroOperacional = input.faturamento_anual - custosMercadorias - input.folha_pagamento;
+  const despesasOperacionais = input.despesas_operacionais || 0;
+  const lucroOperacional = input.faturamento_anual - custosMercadorias - input.folha_pagamento - despesasOperacionais;
   const lucroAjustado = Math.max(0, lucroOperacional);
   
   // IRPJ: 15% + adicional de 10% sobre excedente de R$ 240k/ano
@@ -149,8 +150,16 @@ function calcularLucroReal(input: SimprontoInput): RegimeCalculation {
   // Créditos de PIS/COFINS: 9,25% sobre insumos
   const pisCofinsCredito = input.compras_insumos * 0.0925;
   
+  // Créditos de PIS/COFINS sobre despesas operacionais
+  // Fator de 50% (conservador) refletindo a subjetividade da essencialidade
+  const FATOR_ESSENCIALIDADE = 0.50;
+  const pisCofinsCredDespesas = despesasOperacionais * 0.0925 * FATOR_ESSENCIALIDADE;
+  
+  // Total de créditos
+  const totalCreditos = pisCofinsCredito + pisCofinsCredDespesas;
+  
   // PIS/COFINS líquido
-  const pisCofinsLiquido = Math.max(0, pisCofinsDebito - pisCofinsCredito);
+  const pisCofinsLiquido = Math.max(0, pisCofinsDebito - totalCreditos);
   
   const impostoTotal = irpj + csll + pisCofinsLiquido;
   const aliquotaEfetiva = input.faturamento_anual > 0 
@@ -162,8 +171,10 @@ function calcularLucroReal(input: SimprontoInput): RegimeCalculation {
     nome: 'Lucro Real',
     imposto_anual: impostoTotal,
     aliquota_efetiva: aliquotaEfetiva,
-    creditos_gerados: pisCofinsCredito,
-    vantagem: 'Dedução de despesas e créditos',
+    creditos_gerados: totalCreditos,
+    vantagem: despesasOperacionais > 0 
+      ? 'Dedução de despesas e créditos (inclui despesas operacionais c/ fator 50%)' 
+      : 'Dedução de despesas e créditos',
     is_elegivel: true,
   };
 }

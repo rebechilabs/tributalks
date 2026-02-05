@@ -3077,6 +3077,7 @@ export type Database = {
           cnae_principal: string | null
           compras_insumos: number
           created_at: string | null
+          despesas_operacionais: number | null
           economia_estimada: number | null
           faturamento_anual: number
           folha_pagamento: number
@@ -3092,6 +3093,7 @@ export type Database = {
           cnae_principal?: string | null
           compras_insumos?: number
           created_at?: string | null
+          despesas_operacionais?: number | null
           economia_estimada?: number | null
           faturamento_anual: number
           folha_pagamento?: number
@@ -3107,6 +3109,7 @@ export type Database = {
           cnae_principal?: string | null
           compras_insumos?: number
           created_at?: string | null
+          despesas_operacionais?: number | null
           economia_estimada?: number | null
           faturamento_anual?: number
           folha_pagamento?: number

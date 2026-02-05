@@ -30,6 +30,7 @@ export default function SimprontoPage() {
           folha_pagamento: input.folha_pagamento,
           cnae_principal: input.cnae_principal || null,
           compras_insumos: input.compras_insumos,
+          despesas_operacionais: input.despesas_operacionais || 0,
           margem_lucro: input.margem_lucro,
           perfil_clientes: input.perfil_clientes,
           resultados: result as any,

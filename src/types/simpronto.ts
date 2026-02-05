@@ -15,6 +15,7 @@ export interface SimprontoFormData {
   
   // Passo 2
   compras_insumos: string;
+  despesas_operacionais: string;
   margem_lucro: string;
   perfil_clientes: PerfilClientes | '';
 }
@@ -43,6 +44,7 @@ export interface SimprontoInput {
   folha_pagamento: number;
   cnae_principal: string;
   compras_insumos: number;
+  despesas_operacionais: number;
   margem_lucro: number;
   perfil_clientes: PerfilClientes;
 }
