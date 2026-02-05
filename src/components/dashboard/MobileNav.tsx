@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
-  Menu, X, Lock, Sparkles, ChevronDown, ArrowUpRight, Gift, Command
+  Menu, X, Lock, Sparkles, ChevronDown, ArrowUpRight, Command
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -37,6 +37,11 @@ const GROUP_TITLE_TO_KEY: Record<string, string> = {
   'Diagnóstico Avançado': 'avancado',
   'Integrações': 'integracoes',
   'Ferramentas Pro': 'avancado',
+  'ENTENDER MEU NEGÓCIO': 'entender',
+  'RECUPERAR CRÉDITOS': 'recuperar',
+  'PRECIFICAÇÃO': 'precificacao',
+  'COMANDAR': 'comandar',
+  'CONEXÃO & COMUNICAÇÃO': 'conexao',
 };
 
 export function MobileNav() {
@@ -190,40 +195,14 @@ export function MobileNav() {
     );
   };
 
-  // Helper to render referral card
-  const renderReferralCard = () => (
-    <Link
-      to="/indicar"
-      onClick={() => setOpen(false)}
-      className="flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 mx-0 my-2"
-    >
-      <Gift className="w-4 h-4 text-amber-500" />
-      <span className="text-xs font-medium text-foreground flex-1">Indique e Ganhe!</span>
-      <Badge className="bg-amber-500 text-white text-[10px]">Novo</Badge>
-    </Link>
-  );
-
-  const renderMenuGroup = (group: MenuGroup, index: number, showReferralCard = false) => {
+  const renderMenuGroup = (group: MenuGroup, index: number) => {
     const hasActiveItem = group.items.some(item => location.pathname === item.href);
     const isExpanded = expandedGroups[group.title] ?? (!group.collapsible || hasActiveItem);
-
-    // Helper to render items with referral card before Configurações
-    const renderItemsWithReferral = (items: MenuItem[]) => {
-      return items.map((item) => {
-        const isConfigItem = item.href === '/configuracoes';
-        return (
-          <div key={item.href}>
-            {showReferralCard && isConfigItem && renderReferralCard()}
-            {renderNavItem(item)}
-          </div>
-        );
-      });
-    };
 
     if (!group.title) {
       return (
         <div key={`group-${index}`} className="space-y-1">
-          {renderItemsWithReferral(group.items)}
+          {group.items.map(item => renderNavItem(item))}
         </div>
       );
     }
@@ -256,7 +235,7 @@ export function MobileNav() {
             </button>
           </CollapsibleTrigger>
           <CollapsibleContent className="space-y-1">
-            {renderItemsWithReferral(group.items)}
+            {group.items.map(item => renderNavItem(item))}
           </CollapsibleContent>
         </Collapsible>
       );
@@ -275,7 +254,7 @@ export function MobileNav() {
             {group.title}
           </span>
         </div>
-        {renderItemsWithReferral(group.items)}
+        {group.items.map(item => renderNavItem(item))}
       </div>
     );
   };
@@ -298,38 +277,17 @@ export function MobileNav() {
         </div>
 
         {/* Navigation */}
-        {(() => {
-          // Find the index of the group that contains Configurações
-          const findConfigGroupIndex = () => {
-            for (let i = 0; i < menuElements.length; i++) {
-              const element = menuElements[i];
-              if (isMenuGroup(element)) {
-                const hasConfig = element.items.some(item => item.href === '/configuracoes');
-                if (hasConfig) {
-                  return i;
-                }
-              }
+        <nav className="flex-1 py-4 px-3 overflow-y-auto max-h-[calc(100vh-10rem)] space-y-2">
+          {menuElements.map((element, index) => {
+            if ('type' in element && element.type === 'divider') {
+              return <Separator key={`divider-${index}`} className="my-3" />;
             }
-            return -1;
-          };
-
-          const configGroupIndex = findConfigGroupIndex();
-
-          return (
-            <nav className="flex-1 py-4 px-3 overflow-y-auto max-h-[calc(100vh-10rem)] space-y-2">
-              {menuElements.map((element, index) => {
-                if ('type' in element && element.type === 'divider') {
-                  return <Separator key={`divider-${index}`} className="my-3" />;
-                }
-                if (isMenuGroup(element)) {
-                  const showReferral = index === configGroupIndex;
-                  return renderMenuGroup(element, index, showReferral);
-                }
-                return null;
-              })}
-            </nav>
-          );
-        })()}
+            if (isMenuGroup(element)) {
+              return renderMenuGroup(element, index);
+            }
+            return null;
+          })}
+        </nav>
 
         {/* Upgrade CTA */}
         <div className="p-4 border-t border-border space-y-3">

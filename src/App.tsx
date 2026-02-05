@@ -76,6 +76,7 @@ import EntenderPage from "./pages/dashboard/EntenderPage";
 import RecuperarPage from "./pages/dashboard/RecuperarPage";
 import PrecificacaoPage from "./pages/dashboard/PrecificacaoPage";
 import ComandarPage from "./pages/dashboard/ComandarPage";
+import ConexaoPage from "./pages/dashboard/ConexaoPage";
 
 // Admin
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -208,6 +209,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <ComandarPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/conexao" 
+              element={
+                <ProtectedRoute>
+                  <ConexaoPage />
                 </ProtectedRoute>
               } 
             />

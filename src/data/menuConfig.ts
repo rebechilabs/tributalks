@@ -172,13 +172,22 @@ export const MENU_NAVIGATOR: MenuElement[] = [
       { label: 'PriceGuard', href: '/upgrade?feature=priceguard', icon: Shield, locked: true, description: 'Proteção de preços' },
     ]
   },
+  // Módulo CONEXÃO & COMUNICAÇÃO
+  {
+    title: 'CONEXÃO & COMUNICAÇÃO',
+    collapsible: true,
+    moduleHref: '/dashboard/conexao',
+    items: [
+      { label: 'Newsletter', href: '/noticias', icon: Newspaper, description: 'Toda terça às 07h07', featured: true },
+      { label: 'Comunidade', href: '/comunidade', icon: Users, description: 'Conexões e negócios', featured: true },
+      { label: 'Indique e Ganhe', href: '/indicar', icon: Gift, description: 'Ganhe até 20% de desconto', featured: true, badge: 'Novo' },
+    ]
+  },
   { type: 'divider' as const },
   // Seções secundárias
   {
     title: '',
     items: [
-      { label: 'Newsletter', href: '/noticias', icon: Newspaper, description: 'Toda terça às 07h07' },
-      { label: 'Comunidade', href: '/comunidade', icon: Users, description: 'Conexões e negócios' },
       { label: 'Configurações', href: '/configuracoes', icon: Settings },
     ]
   },
@@ -246,13 +255,22 @@ export const MENU_PROFESSIONAL_V2: MenuElement[] = [
       { label: 'Relatórios PDF', href: '/dashboard/comandar/relatorios', icon: FileText },
     ]
   },
+  // Módulo CONEXÃO & COMUNICAÇÃO
+  {
+    title: 'CONEXÃO & COMUNICAÇÃO',
+    collapsible: true,
+    moduleHref: '/dashboard/conexao',
+    items: [
+      { label: 'Newsletter', href: '/noticias', icon: Newspaper, description: 'Toda terça às 07h07', featured: true },
+      { label: 'Comunidade', href: '/comunidade', icon: Users, description: 'Conexões e negócios', featured: true },
+      { label: 'Indique e Ganhe', href: '/indicar', icon: Gift, description: 'Ganhe até 20% de desconto', featured: true, badge: 'Novo' },
+    ]
+  },
   { type: 'divider' as const },
   // Seções secundárias
   {
     title: '',
     items: [
-      { label: 'Newsletter', href: '/noticias', icon: Newspaper, description: 'Toda terça às 07h07' },
-      { label: 'Comunidade', href: '/comunidade', icon: Users, description: 'Conexões e negócios' },
       { label: 'Integrações', href: '/dashboard/integracoes', icon: Plug },
       { label: 'Configurações', href: '/configuracoes', icon: Settings },
     ]

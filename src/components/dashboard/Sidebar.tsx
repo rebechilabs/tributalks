@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
-  Lock, Sparkles, ChevronDown, ChevronRight, ArrowUpRight, Gift, Command
+  Lock, Sparkles, ChevronDown, ChevronRight, ArrowUpRight, Command
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUnreadNotificationsByCategory } from "@/hooks/useUnreadNotificationsByCategory";
@@ -43,6 +43,7 @@ const GROUP_TITLE_TO_KEY: Record<string, string> = {
   'RECUPERAR CRÉDITOS': 'recuperar',
   'PRECIFICAÇÃO': 'precificacao',
   'COMANDAR': 'comandar',
+  'CONEXÃO & COMUNICAÇÃO': 'conexao',
 };
 
 export function Sidebar() {
@@ -255,30 +256,17 @@ export function Sidebar() {
     );
   };
 
-  const renderMenuGroup = (group: MenuGroup, index: number, showReferralCard = false) => {
+  const renderMenuGroup = (group: MenuGroup, index: number) => {
     const groupKey = GROUP_TITLE_TO_KEY[group.title] || '';
     const hasActiveItem = group.items.some(item => location.pathname === item.href);
     const isModulePage = group.moduleHref && location.pathname === group.moduleHref;
     const isExpanded = expandedGroups[group.title] ?? (!group.collapsible || hasActiveItem || isModulePage);
 
-    // Helper to render items with referral card before Configurações
-    const renderItemsWithReferral = (items: MenuItem[], isNested = false) => {
-      return items.map((item, itemIndex) => {
-        const isConfigItem = item.href === '/configuracoes';
-        return (
-          <div key={item.href}>
-            {showReferralCard && isConfigItem && renderReferralCard()}
-            {renderNavItem(item, isNested)}
-          </div>
-        );
-      });
-    };
-
     // Grupo sem título (items no topo como Clara)
     if (!group.title) {
       return (
         <div key={`group-${index}`} className="space-y-1">
-          {renderItemsWithReferral(group.items)}
+          {group.items.map(item => renderNavItem(item))}
         </div>
       );
     }
@@ -334,7 +322,7 @@ export function Sidebar() {
             </CollapsibleTrigger>
           </div>
           <CollapsibleContent className="space-y-1 mt-1">
-            {renderItemsWithReferral(group.items, true)}
+            {group.items.map(item => renderNavItem(item, true))}
           </CollapsibleContent>
         </Collapsible>
       );
@@ -357,48 +345,10 @@ export function Sidebar() {
             <span className="w-1.5 h-1.5 rounded-full bg-primary" />
           )}
         </div>
-        {renderItemsWithReferral(group.items)}
+        {group.items.map(item => renderNavItem(item))}
       </div>
     );
   };
-
-  // Helper to render the referral card
-  const renderReferralCard = () => (
-    <div className="mx-3 my-2 p-3 rounded-lg bg-gradient-to-br from-amber-500/20 via-primary/20 to-amber-500/10 border border-amber-500/30">
-      <Link to="/indicar" className="block group">
-        <div className="flex items-center gap-2 mb-1">
-          <Gift className="w-5 h-5 text-amber-500 animate-pulse" />
-          <span className="text-sm font-bold text-foreground">Indique e Ganhe!</span>
-          <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500 text-white font-medium">
-            Novo
-          </span>
-        </div>
-        <p className="text-xs text-muted-foreground mb-2">
-          Ganhe até 20% de desconto na sua mensalidade
-        </p>
-        <div className="flex items-center justify-center gap-2 py-1.5 px-3 rounded-md bg-amber-500 text-white text-xs font-semibold group-hover:bg-amber-600 transition-colors">
-          <Sparkles className="w-3 h-3" />
-          Indicar Agora
-        </div>
-      </Link>
-    </div>
-  );
-
-  // Find the index of the group that contains Configurações
-  const findConfigGroupIndex = () => {
-    for (let i = 0; i < menuElements.length; i++) {
-      const element = menuElements[i];
-      if (isMenuGroup(element)) {
-        const hasConfig = element.items.some(item => item.href === '/configuracoes');
-        if (hasConfig) {
-          return i;
-        }
-      }
-    }
-    return -1;
-  };
-
-  const configGroupIndex = findConfigGroupIndex();
 
   return (
     <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-card border-r border-border">
@@ -416,9 +366,7 @@ export function Sidebar() {
             return <Separator key={`divider-${index}`} className="my-3" />;
           }
           if (isMenuGroup(element)) {
-            // Pass flag to show referral card in the group that contains Configurações
-            const showReferral = index === configGroupIndex;
-            return renderMenuGroup(element, index, showReferral);
+            return renderMenuGroup(element, index);
           }
           return null;
         })}
