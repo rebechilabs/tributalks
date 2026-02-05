@@ -80,7 +80,7 @@ export default function SimprontoPage() {
                 <div>
                   <h1 className="text-2xl font-bold">Comparativo de Regimes Tributários</h1>
                   <p className="text-muted-foreground">
-                    Compare Simples Nacional, Lucro Presumido, Lucro Real e as novas opções do Simples 2027 (Por Dentro e Por Fora).
+                    Compare Simples Nacional, Lucro Presumido, Lucro Real e as novas opções de IBS/CBS 2027 (Por Dentro e Por Fora).
                   </p>
                 </div>
               </div>
