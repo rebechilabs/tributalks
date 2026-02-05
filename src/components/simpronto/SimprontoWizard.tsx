@@ -20,6 +20,7 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { SimprontoFormData, PerfilClientes, SimprontoInput } from "@/types/simpronto";
+import { DespesasOperacionaisSelector } from "./DespesasOperacionaisSelector";
 
 interface SimprontoWizardProps {
   onSubmit: (data: SimprontoInput) => void;
@@ -32,6 +33,7 @@ const initialFormData: SimprontoFormData = {
   cnae_principal: '',
   compras_insumos: '',
   despesas_operacionais: '',
+  despesas_detalhadas: {},
   margem_lucro: '15',
   perfil_clientes: '',
 };
@@ -268,35 +270,18 @@ export function SimprontoWizard({ onSubmit, isLoading }: SimprontoWizardProps) {
               </p>
             </div>
 
-            {/* Despesas Operacionais */}
-            <div className="space-y-2">
-              <Label htmlFor="despesas_operacionais">
-                Despesas Operacionais (energia, marketing, combustível)
-              </Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
-                <Input
-                  id="despesas_operacionais"
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="0"
-                  value={formatarParaExibicao(formData.despesas_operacionais)}
-                  onChange={(e) => handleCurrencyChange('despesas_operacionais', e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Despesas essenciais à atividade podem gerar crédito de PIS/COFINS no Lucro Real
-              </p>
-              
-              {/* Alerta de subjetividade */}
-              <Alert className="border-yellow-500/50 bg-yellow-500/10 mt-3">
-                <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                <AlertDescription className="text-yellow-700 dark:text-yellow-400 text-sm">
-                  <strong>Atenção:</strong> A creditação de despesas para PIS/COFINS é subjetiva e depende da comprovação de que são essenciais e relevantes à atividade da empresa. Esta análise requer parecer de um advogado tributarista habilitado.
-                </AlertDescription>
-              </Alert>
-            </div>
+            {/* Despesas Operacionais - Seletor Categorizado */}
+            <DespesasOperacionaisSelector
+              valores={formData.despesas_detalhadas || {}}
+              onChange={(novosValores) => {
+                const total = Object.values(novosValores).reduce((sum, val) => sum + (val || 0), 0);
+                setFormData(prev => ({
+                  ...prev,
+                  despesas_detalhadas: novosValores,
+                  despesas_operacionais: total.toString(),
+                }));
+              }}
+            />
 
             {/* Margem de Lucro */}
             <div className="space-y-4">

@@ -16,6 +16,7 @@ export interface SimprontoFormData {
   // Passo 2
   compras_insumos: string;
   despesas_operacionais: string;
+  despesas_detalhadas?: Record<string, number>; // { id_despesa: valor_anual }
   margem_lucro: string;
   perfil_clientes: PerfilClientes | '';
 }
