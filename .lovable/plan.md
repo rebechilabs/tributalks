@@ -1,92 +1,106 @@
 
 
-# Plano: Destaque para "Indique e Ganhe"
+# Plano: Lista de Despesas Operacionais Categorizada (Valores Anuais)
 
 ## Objetivo
-Reorganizar o layout da página Conexão para dar destaque ao card "Indique e Ganhe", colocando-o em uma linha separada abaixo, ocupando toda a largura.
+Substituir o campo único de "Despesas Operacionais (energia, marketing, combustível)" por uma lista categorizada onde o usuário seleciona despesas específicas e informa o **valor anual** de cada uma.
 
-## Layout Atual
+## Interface Proposta
+
 ```text
-┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐
-│ Notícias │ │TribuTalks│ │Comunidade│ │ Indique  │
-│          │ │  News    │ │          │ │ e Ganhe  │
-└──────────┘ └──────────┘ └──────────┘ └──────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ Despesas Operacionais (valores anuais)          Total: R$ X/ano│
+├─────────────────────────────────────────────────────────────────┤
+│ ▼ I. Produção e Prestação de Serviços                           │
+│   ☑ Energia elétrica ........................ R$ [______] /ano  │
+│   ☑ Combustíveis e lubrificantes ............ R$ [______] /ano  │
+│   ☐ Matéria-prima                                               │
+│   ☐ Água (processo produtivo)                                   │
+│                                                                 │
+│ ▶ II. Logística e Transporte                                    │
+│ ▶ III. Manutenção e Reparos                                     │
+│ ... (outras categorias)                                         │
+├─────────────────────────────────────────────────────────────────┤
+│ ⚠ A creditação depende de prova de essencialidade...           │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-## Layout Proposto
-```text
-┌───────────────┐ ┌───────────────┐ ┌───────────────┐
-│    Notícias   │ │ TribuTalks    │ │  Comunidade   │
-│               │ │    News       │ │               │
-└───────────────┘ └───────────────┘ └───────────────┘
-┌─────────────────────────────────────────────────────┐
-│                 INDIQUE E GANHE                     │
-│     Ganhe até 20% de desconto indicando amigos      │
-│                    [Acessar →]                      │
-└─────────────────────────────────────────────────────┘
-```
+## Categorias (50 itens em 8 grupos)
+
+| Categoria | Itens |
+|-----------|-------|
+| I. Produção e Prestação de Serviços | Matéria-prima, Produto intermediário, Embalagem primária/secundária, Energia elétrica, Energia térmica, Combustíveis, Água, Ferramentas, Industrialização |
+| II. Logística e Transporte | Frete compra, Frete venda, Armazenagem, Paletes/contêineres, Seguro transporte |
+| III. Manutenção e Reparos | Peças reposição, Manutenção preventiva/corretiva, Calibração, Software controle |
+| IV. Qualidade e Conformidade | Testes qualidade, Certificações, Efluentes, Pragas, Licenciamento |
+| V. Segurança e Saúde | EPIs, Uniformes, Exames médicos, Treinamentos NRs, Medicina trabalho |
+| VI. Despesas com Pessoal | Vale-transporte, Vale-refeição, Seguro vida, Plano saúde |
+| VII. Aluguéis e Arrendamento | Aluguel prédios/máquinas PJ, Leasing veículos, SaaS |
+| VIII. Outras Despesas | Marketing, Comissões PJ, Limpeza, Vigilância, Royalties, Contabilidade, Depreciação, Taxas cartão, Telecom, Viagens |
 
 ## Mudanças Técnicas
 
-### Arquivo: `src/pages/dashboard/ConexaoPage.tsx`
+### 1. Criar: `src/types/despesasOperacionais.ts`
+```typescript
+export interface DespesaItem {
+  id: string;
+  nome: string;
+}
 
-1. **Separar as ferramentas em dois grupos**:
-   - `topTools`: Notícias, TribuTalks News, Comunidade
-   - `featuredTool`: Indique e Ganhe (card destacado)
+export interface CategoriaDespesa {
+  id: string;
+  nome: string;
+  items: DespesaItem[];
+}
 
-2. **Ajustar estrutura do grid**:
-   - Grid superior: `grid-cols-1 md:grid-cols-3` para os 3 cards
-   - Card inferior: layout horizontal com largura total
-
-3. **Criar card especial para destaque**:
-   - Layout horizontal: ícone à esquerda, texto no centro, botão à direita
-   - Background com gradiente sutil para destaque visual
-   - Badge "Novo" em evidência
-   - Efeito hover mais pronunciado
-
-## Estrutura do Código
-
-```tsx
-<div className="max-w-5xl w-full space-y-6">
-  {/* Linha 1: 3 cards menores */}
-  <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
-    {topTools.map((tool) => (
-      <ModuleToolCard key={tool.href} {...tool} />
-    ))}
-  </div>
-  
-  {/* Linha 2: Card grande em destaque */}
-  <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
-    <div className="flex items-center gap-6 p-6">
-      <div className="w-14 h-14 rounded-xl bg-primary/20 flex items-center justify-center">
-        <Gift className="w-7 h-7 text-primary" />
-      </div>
-      <div className="flex-1">
-        <div className="flex items-center gap-2 mb-1">
-          <h3 className="text-lg font-semibold">Indique e Ganhe</h3>
-          <Badge>Novo</Badge>
-        </div>
-        <p className="text-muted-foreground">
-          Ganhe até 20% de desconto indicando amigos
-        </p>
-      </div>
-      <Button asChild>
-        <Link to="/indicar">Acessar <ArrowRight /></Link>
-      </Button>
-    </div>
-  </Card>
-</div>
+export const CATEGORIAS_DESPESAS: CategoriaDespesa[] = [
+  {
+    id: 'producao',
+    nome: 'I. Produção e Prestação de Serviços',
+    items: [
+      { id: 'materia_prima', nome: 'Matéria-prima' },
+      { id: 'produto_intermediario', nome: 'Produto intermediário' },
+      // ... demais 8 itens
+    ]
+  },
+  // ... outras 7 categorias
+];
 ```
 
-## Resumo
+### 2. Criar: `src/components/simpronto/DespesasOperacionaisSelector.tsx`
+- Accordion por categoria (expansível/colapsível)
+- Checkbox para ativar despesa
+- Input de valor (R$/ano) aparece ao marcar
+- Label "/ano" ao lado de cada campo
+- Soma total em tempo real no header
+- Alerta de essencialidade (50%) mantido
 
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/pages/dashboard/ConexaoPage.tsx` | Reorganizar layout: 3 cards em cima + 1 card largo embaixo com destaque visual |
+### 3. Atualizar: `src/types/simpronto.ts`
+```typescript
+interface SimprontoFormData {
+  // ... campos existentes
+  despesas_operacionais: string;           // soma total (mantido)
+  despesas_detalhadas?: Record<string, number>; // { id: valor_anual }
+}
+```
+
+### 4. Atualizar: `src/components/simpronto/SimprontoWizard.tsx`
+- Remover label "(energia, marketing, combustível)"
+- Integrar `DespesasOperacionaisSelector`
+- Calcular soma dos valores selecionados → `despesas_operacionais`
+
+## Arquivos
+
+| Arquivo | Ação |
+|---------|------|
+| `src/types/despesasOperacionais.ts` | Criar |
+| `src/components/simpronto/DespesasOperacionaisSelector.tsx` | Criar |
+| `src/types/simpronto.ts` | Modificar |
+| `src/components/simpronto/SimprontoWizard.tsx` | Modificar |
 
 ## Resultado
-- "Indique e Ganhe" ganha destaque visual significativo
-- Layout hierárquico que direciona atenção para o programa de indicação
-- Card maior com gradiente e ícone ampliado
-- Mantém consistência visual com o restante da plataforma
+- Usuário visualiza todas as despesas potencialmente creditáveis
+- Valores informados por ano (consistente com demais campos)
+- Soma automática alimenta o cálculo existente de PIS/COFINS
+- Organização por categoria facilita preenchimento
 
