@@ -224,11 +224,18 @@ export default function Setup() {
               </>
             )}
 
-            {/* Help text */}
-            {companies.length > 0 && canAddMore && (
-              <p className="text-xs text-muted-foreground text-center">
-                💡 Você poderá adicionar mais empresas depois em Perfil → Minhas Empresas
-              </p>
+            {/* Help text - More visible alert */}
+            {companies.length > 0 && (
+              <Alert className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+                <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <AlertDescription className="text-blue-800 dark:text-blue-200">
+                  <strong>Quer adicionar mais empresas depois?</strong>
+                  <br />
+                  Você pode fazer isso a qualquer momento pelo{' '}
+                  <strong>seletor no topo da tela</strong> ou em{' '}
+                  <strong>Perfil → Minhas Empresas</strong>.
+                </AlertDescription>
+              </Alert>
             )}
           </CardContent>
         </Card>
