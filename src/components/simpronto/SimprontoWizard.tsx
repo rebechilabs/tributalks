@@ -16,7 +16,8 @@ import {
   Building2, 
   TrendingUp, 
   AlertCircle,
-  Sparkles
+  Sparkles,
+  AlertTriangle
 } from "lucide-react";
 import { SimprontoFormData, PerfilClientes, SimprontoInput } from "@/types/simpronto";
 
@@ -30,6 +31,7 @@ const initialFormData: SimprontoFormData = {
   folha_pagamento: '',
   cnae_principal: '',
   compras_insumos: '',
+  despesas_operacionais: '',
   margem_lucro: '15',
   perfil_clientes: '',
 };
@@ -108,6 +110,7 @@ export function SimprontoWizard({ onSubmit, isLoading }: SimprontoWizardProps) {
       folha_pagamento: parseInt(formData.folha_pagamento) || 0,
       cnae_principal: formData.cnae_principal,
       compras_insumos: parseInt(formData.compras_insumos) || 0,
+      despesas_operacionais: parseInt(formData.despesas_operacionais) || 0,
       margem_lucro: parseInt(formData.margem_lucro) / 100,
       perfil_clientes: formData.perfil_clientes as PerfilClientes,
     };
@@ -262,6 +265,36 @@ export function SimprontoWizard({ onSubmit, isLoading }: SimprontoWizardProps) {
               <p className="text-xs text-muted-foreground">
                 Total de compras de mercadorias, matérias-primas e serviços que geram crédito de IBS/CBS
               </p>
+            </div>
+
+            {/* Despesas Operacionais */}
+            <div className="space-y-2">
+              <Label htmlFor="despesas_operacionais">
+                Despesas Operacionais (energia, marketing, combustível)
+              </Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
+                <Input
+                  id="despesas_operacionais"
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={formatarParaExibicao(formData.despesas_operacionais)}
+                  onChange={(e) => handleCurrencyChange('despesas_operacionais', e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Despesas essenciais à atividade podem gerar crédito de PIS/COFINS no Lucro Real
+              </p>
+              
+              {/* Alerta de subjetividade */}
+              <Alert className="border-yellow-500/50 bg-yellow-500/10 mt-3">
+                <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                <AlertDescription className="text-yellow-700 dark:text-yellow-400 text-sm">
+                  <strong>Atenção:</strong> A creditação de despesas para PIS/COFINS é subjetiva e depende da comprovação de que são essenciais e relevantes à atividade da empresa. Esta análise requer parecer de um advogado tributarista habilitado.
+                </AlertDescription>
+              </Alert>
             </div>
 
             {/* Margem de Lucro */}
