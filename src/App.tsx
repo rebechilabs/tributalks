@@ -66,6 +66,7 @@ import CalculadoraNBS from "./pages/calculadora/CalculadoraNBS";
 
 // Painel Executivo
 import PainelExecutivo from "./pages/PainelExecutivo";
+import ValuationPage from "./pages/ValuationPage";
 import Nexus from "./pages/Nexus";
 
 // Margem Ativa
@@ -304,6 +305,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Nexus />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/comandar/valuation" 
+              element={
+                <ProtectedRoute>
+                  <ValuationPage />
                 </ProtectedRoute>
               } 
             />

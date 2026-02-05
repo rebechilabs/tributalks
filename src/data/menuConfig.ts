@@ -3,7 +3,7 @@ import {
   Clock, Settings, Lock, Sparkles, Newspaper, Mail,
   Calculator, Target, BarChart3, Trophy, Lightbulb, LayoutDashboard,
   MapPin, Briefcase, ClipboardCheck, Plug, Gift, Route, FileSearch,
-  ArrowUp, Command, Shield
+  ArrowUp, Command, Shield, TrendingUp
 } from "lucide-react";
 
 export type PlanType = 'STARTER' | 'NAVIGATOR' | 'PROFESSIONAL' | 'ENTERPRISE';
@@ -253,6 +253,7 @@ export const MENU_PROFESSIONAL_V2: MenuElement[] = [
     moduleHref: '/dashboard/comandar',
     items: [
       { label: 'NEXUS', href: '/dashboard/comandar/nexus', icon: LayoutDashboard, featured: true, badge: '8 KPIs' },
+      { label: 'Valuation', href: '/dashboard/comandar/valuation', icon: TrendingUp, description: 'Estimativa de valor', badge: '3 métodos' },
       { label: 'Relatórios PDF', href: '/dashboard/comandar/relatorios', icon: FileText },
     ]
   },
