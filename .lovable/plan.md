@@ -1,64 +1,40 @@
 
-# Plano: Corrigir Erro da Página "Configure seu Ambiente"
+# Plano: Corrigir CTA da Seção RTC Calculator
 
-## Diagnóstico
+## Objetivo
+Alterar o botão "Experimente Grátis" na seção da Calculadora RTC para direcionar ao checkout do **plano Professional** no Stripe, em vez de `/cadastro`.
 
-O erro ocorre porque a página `/setup` tenta usar um campo `telefone` que **não existe** na tabela `profiles` do banco de dados.
-
-### Código com Problema
-
-```typescript
-// src/pages/Setup.tsx (linhas 26 e 41)
-const [userPhone, setUserPhone] = useState(profile?.telefone || "");  // ← Campo não existe
-
-// src/pages/Setup.tsx (linha 56)
-.update({
-  nome: userName.trim(),
-  telefone: userPhone.trim() || null,  // ← Erro ao salvar: coluna não existe
-  setup_complete: true,
-})
-```
-
-### Evidência
-Consultei a tabela `profiles` diretamente e confirmei que a coluna `telefone` não existe.
-
-## Solução
-
-### Opção Recomendada: Remover o campo telefone do Setup.tsx
-
-Como o telefone é marcado como "opcional" e não é essencial para o onboarding, a solução mais rápida é removê-lo do formulário.
-
-**Arquivos a modificar:**
+## Alteração Necessária
 
 | Arquivo | Alteração |
 |---------|-----------|
-| `src/pages/Setup.tsx` | Remover campos relacionados a telefone |
-| `src/hooks/useAuth.tsx` | Remover `telefone` da interface Profile (limpeza) |
+| `src/components/landing/RTCCalculatorSection.tsx` | Substituir `onClick={() => navigate("/cadastro")}` por link direto para Stripe Professional |
 
-### Mudanças Específicas
+## Mudança Específica
 
-**1. src/pages/Setup.tsx**
-- Remover o estado `userPhone` (linha 26)
-- Remover o `useEffect` que preenche `userPhone` (linhas 40-41)
-- Remover `telefone` do update do Supabase (linha 56)
-- Remover o campo de input "Telefone (opcional)" (linhas 135-143)
+**Antes:**
+```tsx
+<Button
+  size="lg"
+  onClick={() => navigate("/cadastro")}
+>
+  Experimente Grátis
+</Button>
+```
 
-**2. src/hooks/useAuth.tsx**
-- Remover `telefone?: string | null` da interface `Profile` (linha 10)
+**Depois:**
+```tsx
+<a href={CONFIG.PAYMENT_LINKS.PROFESSIONAL_MENSAL} target="_blank" rel="noopener noreferrer">
+  <Button size="lg">
+    Experimente Grátis
+  </Button>
+</a>
+```
 
-## Benefícios
+## Detalhes Técnicos
+- Importar `CONFIG` de `@/config/site`
+- Remover import do `useNavigate` (se não for mais necessário)
+- Link destino: `https://buy.stripe.com/3cIeV6ezM2rc2vx52Cbo40g` (Professional mensal com 7 dias grátis)
 
-1. **Resolve o erro imediatamente** - Sem necessidade de migração de banco
-2. **Simplifica o onboarding** - Menos campos = mais conversão
-3. **Código mais limpo** - Remove referência a campo inexistente
-4. **Zero downtime** - Mudança apenas no frontend
-
-## Alternativa Futura
-
-Se o campo telefone for necessário no futuro, podemos:
-1. Criar migração para adicionar coluna `telefone TEXT` na tabela `profiles`
-2. Restaurar os campos no Setup.tsx
-
-## Resumo
-
-O erro é causado por uma incompatibilidade entre o código (que espera um campo `telefone`) e o banco de dados (que não tem esse campo). A correção remove essa dependência do formulário de setup.
+## Alinhamento com Estratégia
+Conforme a memória `landing-page-cta-strategy`, o botão "Conhecer Suíte Margem Ativa" direciona especificamente para o plano Professional — esta alteração segue a mesma lógica para a seção da calculadora oficial.
