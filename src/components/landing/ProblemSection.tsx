@@ -1,5 +1,6 @@
  import { TrendingUp, ShieldCheck, Bot } from "lucide-react";
  import { motion } from "framer-motion";
+import heroBg from "@/assets/hero-bg-cinematic.jpg";
  
  const benefits = [
    {
@@ -21,8 +22,18 @@
  
  export function ProblemSection() {
    return (
-     <section className="py-20 md:py-32 bg-[#0A0A0A]">
-       <div className="container mx-auto px-4 md:px-8">
+    <section className="bg-[#0A0A0A]">
+      {/* Cinematic background image - track ends at bottom */}
+      <div 
+        className="h-[50vh] md:h-[60vh] bg-cover bg-no-repeat"
+        style={{ 
+          backgroundImage: `url(${heroBg})`, 
+          backgroundPosition: 'center bottom' 
+        }}
+      />
+      
+      {/* Content - starts immediately after image */}
+      <div className="container mx-auto px-4 md:px-8 pb-20 md:pb-32">
          {/* Section Header */}
          <motion.div
            initial={{ opacity: 0, y: 20 }}
