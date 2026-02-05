@@ -1,35 +1,35 @@
 
-## Plano: Opção B - Mover a Imagem de Fundo para a ProblemSection
+
+## Plano: Equalizar o Espaçamento da Imagem com a Frase
 
 ### Objetivo
-Fazer com que a **última parte amarela da pista** termine exatamente colada na frase "A Reforma Tributária vai custar..." movendo a imagem cinematográfica para a ProblemSection.
+Manter a mesma distância entre a **imagem cinematográfica** e a frase "A Reforma Tributária vai custar..." que existe entre essa frase e o botão "Comece seus 7 dias grátis".
 
 ---
 
-### Abordagem
+### Análise Atual
 
-A imagem de fundo será movida para a `ProblemSection`, posicionada no **topo da seção** de forma que a pista amarela termine exatamente onde começa o texto. O Hero ficará com um fundo simples escuro.
+**No Hero (botão):**
+- A subheadline tem `mb-10` (2.5rem = 40px) antes do botão
+
+**Na ProblemSection (frase):**
+- A imagem termina sem nenhum espaçamento (`pt-0`) antes da frase
+
+---
+
+### Solução
+
+Adicionar um padding-top de `pt-10` (40px) no container da ProblemSection para criar o mesmo espaçamento de 40px entre a imagem e a frase.
 
 ---
 
 ### Mudanças Técnicas
 
-**Arquivo 1:** `src/components/landing/NewHeroSection.tsx`
+**Arquivo:** `src/components/landing/ProblemSection.tsx`
 
-| Alteração | Descrição |
-|-----------|-----------|
-| Remover imagem de fundo | A seção terá apenas fundo sólido `bg-[#0A0A0A]` |
-| Altura da seção | Reduzir para `min-h-screen` (100vh) |
-| Remover bottom fade | Não é mais necessário |
-
-**Arquivo 2:** `src/components/landing/ProblemSection.tsx`
-
-| Alteração | Descrição |
-|-----------|-----------|
-| Adicionar imagem de fundo | Importar `heroBg` e usar como background no topo |
-| Estrutura da seção | Dividir em duas partes: área da imagem + área do conteúdo |
-| Posição da imagem | `background-position: center bottom` para que a pista termine no texto |
-| Altura da área da imagem | Aproximadamente `50vh` ou `60vh` para mostrar os prédios |
+| Alteração | Antes | Depois |
+|-----------|-------|--------|
+| Padding do container | `pb-20 md:pb-32` | `pt-10 pb-20 md:pb-32` |
 
 ---
 
@@ -37,54 +37,26 @@ A imagem de fundo será movida para a `ProblemSection`, posicionada no **topo da
 
 ```text
 ┌─────────────────────────────────────────────┐
-│  HERO SECTION (fundo sólido #0A0A0A)        │
-│                                             │
+│  HERO                                       │
 │  "Domine a Reforma Tributária..."           │
+│  (subheadline)                              │
+│           ↓ mb-10 (40px)                    │
 │  [Comece seus 7 dias grátis]                │
-│                                             │
 └─────────────────────────────────────────────┘
+
 ┌─────────────────────────────────────────────┐
 │  PROBLEM SECTION                            │
-│  ┌─────────────────────────────────────┐   │
-│  │  IMAGEM DE FUNDO (prédios)          │   │
-│  │         PISTA AMARELA               │   │
-│  │              ▼                      │   │
-│  │         FIM DA PISTA ═══════════════│   │
-│  └─────────────────────────────────────┘   │
-│  "A Reforma Tributária vai custar..."  ← COLADO
-│                                             │
-│  [Cards de benefícios]                     │
+│  [IMAGEM - fim da pista]                    │
+│           ↓ pt-10 (40px) ← NOVO             │
+│  "A Reforma Tributária vai custar..."       │
 └─────────────────────────────────────────────┘
-```
-
----
-
-### Código Proposto
-
-**ProblemSection.tsx (estrutura):**
-```tsx
-<section className="bg-[#0A0A0A]">
-  {/* Área da imagem cinematográfica */}
-  <div 
-    className="h-[50vh] md:h-[60vh] bg-cover bg-no-repeat"
-    style={{ 
-      backgroundImage: `url(${heroBg})`, 
-      backgroundPosition: 'center bottom' 
-    }}
-  />
-  
-  {/* Conteúdo com a frase */}
-  <div className="container mx-auto px-4 md:px-8 py-20 md:py-32">
-    <h2>"A Reforma Tributária vai custar..."</h2>
-    {/* Cards */}
-  </div>
-</section>
 ```
 
 ---
 
 ### Resultado Esperado
 
-- A pista amarela terminará **exatamente colada** na frase "A Reforma Tributária vai custar..."
-- Transição visual perfeita: imagem → texto (sem espaços)
-- O Hero ficará mais limpo com fundo sólido
+- Espaçamento de **40px** entre a imagem e a frase
+- Mesmo espaçamento visual que existe entre a subheadline e o botão no Hero
+- Consistência visual entre as seções
+
