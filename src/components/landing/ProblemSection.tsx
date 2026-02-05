@@ -32,7 +32,7 @@
            className="text-center mb-16"
          >
            <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white mb-6 leading-tight max-w-4xl mx-auto">
-             <span className="text-primary">97% das empresas</span> enfrentam despreparo para a Reforma Tributária 2026, sendo a emissão incorreta de NF-e o principal risco de perda financeira.
+             <span className="text-primary">97% das empresas</span> enfrentam despreparo para a Reforma Tributária, sendo a emissão incorreta de NF-e o principal risco de perda financeira.
              <br className="hidden md:block" /><br className="hidden md:block" />
              O TribuTalks transforma essa vulnerabilidade em conformidade blindada e vantagem competitiva.
            </h2>
