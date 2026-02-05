@@ -8,28 +8,11 @@ interface ProtectedRouteProps {
 }
 
 /**
- * Determina a rota padrão baseada no plano do usuário
- * Professional/Premium → NEXUS (valor executivo imediato)
- * Navigator/Básico → Dashboard (jornada educacional)
- * Starter → Score (diagnóstico rápido)
- * Free → Dashboard (upsell)
+ * Determina a rota padrão - todos vão para Home inteligente
+ * A Home detecta o estado do usuário e direciona para o próximo passo
  */
-const getDefaultRoute = (plano: string | null | undefined): string => {
-  switch (plano?.toUpperCase()) {
-    case 'PROFISSIONAL':
-    case 'PROFESSIONAL':
-    case 'PREMIUM':
-    case 'ENTERPRISE':
-      return '/dashboard/nexus';
-    case 'NAVIGATOR':
-    case 'BASICO':
-      return '/dashboard';
-    case 'STARTER':
-      return '/dashboard/score-tributario';
-    case 'FREE':
-    default:
-      return '/dashboard';
-  }
+const getDefaultRoute = (): string => {
+  return '/dashboard/home';
 };
 
 /**
@@ -78,18 +61,15 @@ export const ProtectedRoute = ({ children, requireOnboarding = true }: Protected
     return <Navigate to="/onboarding" replace />;
   }
 
-  // Redirect por plano na primeira visita ao dashboard genérico
-  // Apenas se estiver acessando /dashboard diretamente (não subrotas)
+  // Redirect para Home na primeira visita ao dashboard genérico
   if (
     profile?.onboarding_complete &&
     location.pathname === '/dashboard' &&
     !location.state?.skipPlanRedirect
   ) {
-    const defaultRoute = getDefaultRoute(profile.plano);
-    if (defaultRoute !== '/dashboard') {
-      console.log('[ProtectedRoute] Redirecting to plan default route:', defaultRoute);
-      return <Navigate to={defaultRoute} state={{ skipPlanRedirect: true }} replace />;
-    }
+    const defaultRoute = getDefaultRoute();
+    console.log('[ProtectedRoute] Redirecting to home:', defaultRoute);
+    return <Navigate to={defaultRoute} state={{ skipPlanRedirect: true }} replace />;
   }
 
   return <>{children}</>;
