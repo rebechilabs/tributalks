@@ -11,6 +11,13 @@ export interface Company {
   razao_social: string | null;
   nome_fantasia: string | null;
   regime_tributario: string | null;
+  uf_sede: string | null;
+  municipio_sede: string | null;
+  setor: string | null;
+  segmento: string | null;
+  porte: string | null;
+  num_funcionarios: number | null;
+  faturamento_anual: number | null;
   created_at?: string;
 }
 
@@ -47,7 +54,7 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
       
       const { data, error } = await supabase
         .from('company_profile')
-        .select('id, user_id, cnpj_principal, razao_social, nome_fantasia, regime_tributario, created_at')
+        .select('id, user_id, cnpj_principal, razao_social, nome_fantasia, regime_tributario, uf_sede, municipio_sede, setor, segmento, porte, num_funcionarios, faturamento_anual, created_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: true });
 
