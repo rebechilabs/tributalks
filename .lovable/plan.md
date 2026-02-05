@@ -1,64 +1,82 @@
 
-# Plano: Adicionar Newsletter TribuTalksNews à Conexão & Comunicação
+# Plano: Adicionar Valuation como Item Separado no Sidebar
 
 ## Objetivo
-Incluir o formulário de inscrição na newsletter diretamente na página `/dashboard/conexao`, abaixo dos 3 cards existentes.
+Expor o **Valuation (3 metodologias)** como uma ferramenta independente no sidebar, dentro do módulo **COMANDAR**, permitindo acesso direto sem precisar entrar no NEXUS.
 
-## Componente Existente
-Já existe o `NewsletterForm` em `src/components/common/NewsletterForm.tsx` que:
-- Valida o e-mail com Zod
-- Chama a Edge Function `subscribe-newsletter`
-- Integra diretamente com Beehiiv
-- Tem variante "default" (formulário maior, ideal para a página)
+---
 
-## Alteração
+## Mudanças Propostas
 
-### Arquivo: `src/pages/dashboard/ConexaoPage.tsx`
+### 1. Criar Página Dedicada para Valuation
 
-| Mudança |
-|---------|
-| Importar `NewsletterForm` |
-| Adicionar seção abaixo do grid de cards com o formulário de newsletter |
+**Novo arquivo:** `src/pages/ValuationPage.tsx`
 
-### Código Proposto
+Página focada exclusivamente na estimativa de valuation, contendo:
+- O componente `ExecutiveValuationCard` expandido como hero principal
+- Explicação das 3 metodologias (EBITDA, DCF, Receita)
+- Informações sobre como o Score Tributário impacta o valor
+- CTAs para melhorar dados (DRE, Score)
 
-```tsx
-import { NewsletterForm } from "@/components/common/NewsletterForm";
+---
 
-// ... dentro do return, após o grid de cards:
+### 2. Atualizar Configuração do Menu
 
-<div className="grid gap-6 grid-cols-1 md:grid-cols-3 max-w-4xl w-full">
-  {/* cards existentes */}
-</div>
+**Arquivo:** `src/data/menuConfig.ts`
 
-{/* Nova seção: Newsletter */}
-<div className="mt-12 w-full max-w-md">
-  <div className="bg-card border rounded-lg p-6 text-center">
-    <h3 className="text-lg font-semibold mb-2">📬 TribuTalks News</h3>
-    <p className="text-sm text-muted-foreground mb-4">
-      Receba nossa newsletter toda terça-feira às 07h07 com as principais atualizações tributárias.
-    </p>
-    <NewsletterForm />
-  </div>
-</div>
+Adicionar item "Valuation" no módulo COMANDAR para os planos Professional e Enterprise:
+
+```
+COMANDAR
+├── NEXUS (8 KPIs)
+├── Valuation ← NOVO
+└── Relatórios PDF
 ```
 
-## Resultado Visual
+Características do item:
+- Ícone: `TrendingUp`
+- Rota: `/dashboard/comandar/valuation`
+- Badge: "3 métodos"
+- Descrição: "Estimativa de valor da empresa"
 
-A página terá:
-1. **Título e descrição** (centralizado)
-2. **3 cards**: Notícias, Comunidade, Indique e Ganhe
-3. **Seção Newsletter**: Card com título, descrição e campo de e-mail para inscrição direta no Beehiiv
+---
 
-## Fluxo do Usuário
-1. Usuário digita e-mail
-2. Clica em "Inscrever-se"
-3. Edge Function `subscribe-newsletter` envia para Beehiiv
-4. Usuário recebe confirmação de sucesso
-5. Newsletter enviada toda terça às 07h07
+### 3. Configurar Rota
 
-## Arquivo a Modificar
+**Arquivo:** `src/App.tsx`
 
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/pages/dashboard/ConexaoPage.tsx` | Adicionar import e seção de newsletter |
+Adicionar rota protegida `/dashboard/comandar/valuation` apontando para a nova página.
+
+---
+
+### 4. Atualizar Página do Módulo COMANDAR
+
+**Arquivo:** `src/pages/dashboard/ComandarPage.tsx`
+
+Adicionar card para Valuation na grid de ferramentas do módulo, entre NEXUS e Relatórios PDF.
+
+---
+
+## Arquivos a Modificar
+
+| Arquivo | Ação |
+|---------|------|
+| `src/pages/ValuationPage.tsx` | Criar (nova página dedicada) |
+| `src/data/menuConfig.ts` | Adicionar item "Valuation" no COMANDAR |
+| `src/App.tsx` | Adicionar rota `/dashboard/comandar/valuation` |
+| `src/pages/dashboard/ComandarPage.tsx` | Adicionar card na grid |
+
+---
+
+## Resultado Final
+
+O usuário Professional/Enterprise verá no sidebar:
+
+```
+COMANDAR
+├── NEXUS                    (8 KPIs)
+├── Valuation               (3 métodos) ← NOVO ITEM
+└── Relatórios PDF
+```
+
+Clicar em "Valuation" levará diretamente à calculadora de valuation com as 3 metodologias (EBITDA, DCF, Receita Múltipla).
