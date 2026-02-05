@@ -15,7 +15,9 @@ import {
   Trash2,
   Play,
   FileSpreadsheet,
+  AlertCircle,
 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface SpedFile {
   id: string;
@@ -33,12 +35,20 @@ interface SpedFile {
   };
 }
 
+// Valida se o arquivo é um SPED válido (flexibilizado)
+const isValidSpedFile = (file: File): boolean => {
+  const name = file.name.toLowerCase();
+  // Aceita: .txt, arquivos com "sped" ou "efd" no nome
+  return name.endsWith(".txt") || name.includes("sped") || name.includes("efd");
+};
+
 export function SpedUploader() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [files, setFiles] = useState<SpedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [lastError, setLastError] = useState<string | null>(null);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -54,12 +64,22 @@ export function SpedUploader() {
     e.preventDefault();
     setIsDragging(false);
 
-    const droppedFiles = Array.from(e.dataTransfer.files).filter(
-      (file) => file.name.endsWith(".txt") || file.name.toLowerCase().includes("sped")
-    );
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    const validFiles = droppedFiles.filter(isValidSpedFile);
+    const invalidCount = droppedFiles.length - validFiles.length;
 
-    addFiles(droppedFiles);
-  }, []);
+    if (invalidCount > 0) {
+      toast({
+        title: `${invalidCount} arquivo(s) ignorado(s)`,
+        description: "Apenas arquivos .txt ou com 'sped'/'efd' no nome são aceitos",
+        variant: "destructive",
+      });
+    }
+
+    if (validFiles.length > 0) {
+      addFiles(validFiles);
+    }
+  }, [toast]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -69,6 +89,8 @@ export function SpedUploader() {
   };
 
   const addFiles = (newFiles: File[]) => {
+    console.log("[SpedUploader] Adicionando arquivos:", newFiles.map(f => f.name));
+    
     const fileItems: SpedFile[] = newFiles.map((file) => ({
       id: crypto.randomUUID(),
       file,
@@ -77,6 +99,7 @@ export function SpedUploader() {
     }));
 
     setFiles((prev) => [...prev, ...fileItems]);
+    setLastError(null);
   };
 
   const removeFile = (id: string) => {
@@ -85,13 +108,21 @@ export function SpedUploader() {
 
   const clearQueue = () => {
     setFiles([]);
+    setLastError(null);
   };
 
   const processFile = async (fileItem: SpedFile) => {
-    if (!user) return;
+    if (!user) {
+      console.error("[SpedUploader] Usuário não autenticado");
+      setLastError("Usuário não autenticado. Faça login novamente.");
+      return;
+    }
+
+    console.log("[SpedUploader] Iniciando processamento:", fileItem.file.name);
 
     try {
       // 1. Upload para storage
+      console.log("[SpedUploader] Etapa 1: Iniciando upload para storage...");
       setFiles((prev) =>
         prev.map((f) =>
           f.id === fileItem.id ? { ...f, status: "uploading", progress: 20 } : f
@@ -99,12 +130,18 @@ export function SpedUploader() {
       );
 
       const storagePath = `${user.id}/${Date.now()}_${fileItem.file.name}`;
+      console.log("[SpedUploader] Storage path:", storagePath);
 
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError, data: uploadData } = await supabase.storage
         .from("sped-files")
         .upload(storagePath, fileItem.file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("[SpedUploader] Erro no upload:", uploadError);
+        throw new Error(`Erro no upload: ${uploadError.message}`);
+      }
+
+      console.log("[SpedUploader] Upload concluído com sucesso:", uploadData);
 
       setFiles((prev) =>
         prev.map((f) =>
@@ -113,6 +150,7 @@ export function SpedUploader() {
       );
 
       // 2. Criar registro no banco
+      console.log("[SpedUploader] Etapa 2: Criando registro no banco...");
       const { data: spedRecord, error: insertError } = await supabase
         .from("sped_contribuicoes")
         .insert({
@@ -127,7 +165,12 @@ export function SpedUploader() {
         .select()
         .single();
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error("[SpedUploader] Erro ao criar registro:", insertError);
+        throw new Error(`Erro ao criar registro: ${insertError.message}`);
+      }
+
+      console.log("[SpedUploader] Registro criado:", spedRecord.id);
 
       setFiles((prev) =>
         prev.map((f) =>
@@ -138,6 +181,7 @@ export function SpedUploader() {
       );
 
       // 3. Chamar Edge Function para processar
+      console.log("[SpedUploader] Etapa 3: Chamando edge function process-sped-contribuicoes...");
       const { data: result, error: fnError } = await supabase.functions.invoke(
         "process-sped-contribuicoes",
         {
@@ -145,7 +189,12 @@ export function SpedUploader() {
         }
       );
 
-      if (fnError) throw fnError;
+      if (fnError) {
+        console.error("[SpedUploader] Erro na edge function:", fnError);
+        throw new Error(`Erro no processamento: ${fnError.message}`);
+      }
+
+      console.log("[SpedUploader] Edge function retornou:", result);
 
       setFiles((prev) =>
         prev.map((f) =>
@@ -155,11 +204,11 @@ export function SpedUploader() {
                 status: "completed",
                 progress: 100,
                 result: {
-                  cnpj: result.cnpj,
-                  periodo: result.periodo,
-                  creditosPIS: result.creditosPIS,
-                  creditosCOFINS: result.creditosCOFINS,
-                  potencialRecuperacao: result.potencialRecuperacao,
+                  cnpj: result.cnpj || "N/A",
+                  periodo: result.periodo || "N/A",
+                  creditosPIS: result.creditosPIS || 0,
+                  creditosCOFINS: result.creditosCOFINS || 0,
+                  potencialRecuperacao: result.potencialRecuperacao || 0,
                 },
               }
             : f
@@ -167,37 +216,61 @@ export function SpedUploader() {
       );
 
       toast({
-        title: "SPED processado",
-        description: `${result.creditosPIS + result.creditosCOFINS} créditos identificados`,
+        title: "SPED processado com sucesso",
+        description: `${(result.creditosPIS || 0) + (result.creditosCOFINS || 0)} créditos identificados`,
       });
+
+      console.log("[SpedUploader] Processamento concluído com sucesso!");
     } catch (error) {
-      console.error("Erro ao processar SPED:", error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error("[SpedUploader] Erro no processamento:", errorMessage);
+      
+      setLastError(errorMessage);
+      
       setFiles((prev) =>
         prev.map((f) =>
           f.id === fileItem.id
-            ? { ...f, status: "error", error: String(error) }
+            ? { ...f, status: "error", error: errorMessage }
             : f
         )
       );
 
       toast({
         title: "Erro no processamento",
-        description: "Verifique se o arquivo é um SPED Contribuições válido",
+        description: errorMessage,
         variant: "destructive",
       });
     }
   };
 
   const processAll = async () => {
+    console.log("[SpedUploader] Iniciando processamento de todos os arquivos...");
     setIsProcessing(true);
+    setLastError(null);
 
     const waitingFiles = files.filter((f) => f.status === "waiting");
+    console.log("[SpedUploader] Arquivos aguardando:", waitingFiles.length);
 
     for (const file of waitingFiles) {
       await processFile(file);
     }
 
     setIsProcessing(false);
+    console.log("[SpedUploader] Processamento finalizado");
+  };
+
+  const retryFailed = async () => {
+    const failedFiles = files.filter((f) => f.status === "error");
+    
+    // Reset status to waiting
+    setFiles((prev) =>
+      prev.map((f) =>
+        f.status === "error" ? { ...f, status: "waiting", error: undefined, progress: 0 } : f
+      )
+    );
+
+    // Then process all
+    setTimeout(() => processAll(), 100);
   };
 
   const formatCurrency = (value: number) =>
@@ -214,12 +287,25 @@ export function SpedUploader() {
 
   const waitingCount = files.filter((f) => f.status === "waiting").length;
   const completedCount = files.filter((f) => f.status === "completed").length;
+  const errorCount = files.filter((f) => f.status === "error").length;
   const totalPotencial = files
     .filter((f) => f.result)
     .reduce((acc, f) => acc + (f.result?.potencialRecuperacao || 0), 0);
 
   return (
     <div className="space-y-6">
+      {/* Error Alert */}
+      {lastError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Último erro:</strong> {lastError}
+            <br />
+            <span className="text-xs">Verifique o console do navegador (F12) para mais detalhes.</span>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Upload Area */}
       <Card>
         <CardHeader>
@@ -294,6 +380,17 @@ export function SpedUploader() {
                 )}
               </div>
               <div className="flex gap-2">
+                {errorCount > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={retryFailed}
+                    disabled={isProcessing}
+                  >
+                    <XCircle className="mr-2 h-4 w-4" />
+                    Retry ({errorCount})
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
@@ -324,7 +421,11 @@ export function SpedUploader() {
               {files.map((fileItem) => (
                 <div
                   key={fileItem.id}
-                  className="p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                  className={`p-4 rounded-lg transition-colors ${
+                    fileItem.status === "error" 
+                      ? "bg-destructive/10 border border-destructive/30" 
+                      : "bg-muted/50 hover:bg-muted"
+                  }`}
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -353,9 +454,11 @@ export function SpedUploader() {
                         )}
 
                         {fileItem.error && (
-                          <p className="text-sm text-destructive mt-1">
-                            {fileItem.error}
-                          </p>
+                          <div className="mt-2 p-2 rounded bg-destructive/10 border border-destructive/20">
+                            <p className="text-sm text-destructive font-medium">
+                              Erro: {fileItem.error}
+                            </p>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -375,7 +478,7 @@ export function SpedUploader() {
                         <XCircle className="h-4 w-4 text-destructive" />
                       )}
 
-                      {fileItem.status === "waiting" && (
+                      {(fileItem.status === "waiting" || fileItem.status === "error") && (
                         <Button
                           variant="ghost"
                           size="icon"
