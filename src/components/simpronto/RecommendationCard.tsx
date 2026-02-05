@@ -18,7 +18,7 @@ export function RecommendationCard({ result }: RecommendationCardProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Trophy className="h-5 w-5 text-yellow-500" />
-            Recomendação Simpronto
+            Regime Recomendado
           </CardTitle>
           {is2027 && (
             <Badge variant="outline" className="border-primary text-primary">
