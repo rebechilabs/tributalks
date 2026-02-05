@@ -43,7 +43,7 @@ import { ArrowRight, Linkedin, Instagram, Youtube, Scale, Shield, Cloud } from "
                <p className="text-sm text-white/50 mb-4">
                  Plataforma de Inteligência Tributária
                  <br />
-                 <span className="text-primary font-semibold">A 1ª AI-First do Brasil</span>
+                  <span className="text-primary font-semibold">A 1ª AI-First do Brasil</span>
                </p>
              </div>
  
