@@ -34,9 +34,13 @@ import {
   type ImportSummaryData,
   type ImportErrorItem
 } from "@/components/xml";
-import { CreditRadar } from "@/components/credits/CreditRadar";
-import { ExposureProjection } from "@/components/credits/ExposureProjection";
-import { SavingsSummaryCard } from "@/components/credits/SavingsSummaryCard";
+import { 
+  CreditRadar, 
+  ExposureProjection, 
+  SavingsSummaryCard,
+  CreditRadarExpectations,
+  CreditRadarActions
+} from "@/components/credits";
 import { SpedUploader } from "@/components/sped";
 import { DctfUploader } from "@/components/dctf";
 import { PgdasUploader } from "@/components/pgdas";
@@ -567,12 +571,15 @@ export default function AnaliseNotasFiscais() {
 
           {/* Tab: Importar XMLs */}
           <TabsContent value="importar" className="space-y-6">
+            {/* Expectations Section */}
+            {!showSummary && files.length === 0 && (
+              <CreditRadarExpectations />
+            )}
+
             {/* Summary Card (shown after processing) */}
             {showSummary && summaryData && (
               <ImportSummaryCard data={summaryData} />
             )}
-
-            {/* Errors List */}
             {importErrors.length > 0 && (
               <ImportErrorsList errors={importErrors} />
             )}
@@ -859,8 +866,9 @@ export default function AnaliseNotasFiscais() {
           </TabsContent>
 
           {/* Tab: Créditos Recuperáveis */}
-          <TabsContent value="creditos">
+          <TabsContent value="creditos" className="space-y-6">
             <CreditRadar />
+            <CreditRadarActions hasCredits={summaryData?.totalCreditsValue ? summaryData.totalCreditsValue > 0 : false} totalCredits={summaryData?.totalCreditsValue || 0} />
           </TabsContent>
 
           {/* Tab: Exposição Projetada */}
