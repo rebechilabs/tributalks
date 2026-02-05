@@ -33,7 +33,7 @@ import heroBg from "@/assets/hero-bg-cinematic.jpg";
       />
       
       {/* Content - starts immediately after image */}
-      <div className="container mx-auto px-4 md:px-8 pt-10 pb-20 md:pb-32">
+      <div className="container mx-auto px-4 md:px-8 pt-6 pb-20 md:pb-32">
          {/* Section Header */}
          <motion.div
            initial={{ opacity: 0, y: 20 }}
