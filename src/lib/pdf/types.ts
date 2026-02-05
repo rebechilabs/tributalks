@@ -142,6 +142,7 @@ export interface Estatisticas {
 // Report generation options
 export interface ReportOptions {
   tema: 'escuro' | 'claro';
+  formato: 'visual' | 'executivo';
   incluirDetalhes: boolean;
   incluirInconsistencias: boolean;
   incluirOportunidades: boolean;
@@ -151,11 +152,59 @@ export interface ReportOptions {
 // Default options
 export const DEFAULT_REPORT_OPTIONS: ReportOptions = {
   tema: 'escuro',
+  formato: 'visual',
   incluirDetalhes: true,
   incluirInconsistencias: true,
   incluirOportunidades: true,
   maxNotasPorTributo: 20,
 };
+
+// Extended invoice credit with full traceability (for Executive Report)
+export interface CreditoRastreavel {
+  id: string;
+  valor: number;
+  tipo: string;
+  tributo: TipoTributo;
+  confianca: NivelConfianca;
+  baseLegal: string;
+  
+  // Fiscal document
+  documentoFiscal: {
+    numeroNfe: string;
+    chaveAcesso: string;           // 44 digits
+    cnpjEmitente: string;
+    razaoSocialEmitente: string;
+    ufEmitente?: string;
+    dataEmissao: Date | string;
+    valorNota: number;
+  };
+  
+  // Item details
+  item: {
+    descricao: string;
+    ncm: string;
+    cfop: string;
+    cstDeclarado: string;
+    cstCorreto: string;
+    aliquotaCobrada: number;
+    aliquotaDevida: number;
+    baseCalculo: number;
+    valorPago: number;
+    valorDevido: number;
+    diferenca: number;
+  };
+  
+  // SPED reference
+  sped: {
+    tipo: 'EFD Contribuições' | 'EFD ICMS/IPI';
+    periodo: string;              // MM/AAAA
+    registro: string;             // C100, C170, C190, etc.
+    bloco: string;
+  };
+  
+  // Recommended action
+  acaoRecomendada: string;
+}
 
 // Helper to generate report ID
 export function generateReportId(): string {
