@@ -273,13 +273,16 @@ export function Sidebar() {
 
     // Grupo colapsável (módulos V2)
     if (group.collapsible) {
+      // Add data-tour attribute for Conexão & Comunicação group
+      const tourAttribute = groupKey === 'conexao' ? { 'data-tour': 'conexao-group' } : {};
+      
       return (
         <Collapsible
           key={group.title}
           open={isExpanded}
           onOpenChange={() => toggleGroup(group.title)}
         >
-          <div className="flex items-center">
+          <div className="flex items-center" {...tourAttribute}>
             {/* Module title - clickable to go to module page */}
             {group.moduleHref ? (
               <Link
