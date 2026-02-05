@@ -12,6 +12,7 @@ import { subDays } from "date-fns";
 import { formatBrasilia, formatDistanceBrasilia } from "@/lib/dateUtils";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { toast } from "@/hooks/use-toast";
+import { useCompany } from "@/contexts/CompanyContext";
 
 interface Simulation {
   id: string;
@@ -25,6 +26,7 @@ const PLAN_CAN_PDF = ['PROFISSIONAL', 'PREMIUM'];
 
 const Historico = () => {
   const { user, profile } = useAuth();
+  const { currentCompany } = useCompany();
   const [simulations, setSimulations] = useState<Simulation[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -45,6 +47,12 @@ const Historico = () => {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
+      // Filter by company if one is selected
+      if (currentCompany?.id) {
+        // Show simulations for current company OR legacy ones (null company_id)
+        query = query.or(`company_id.eq.${currentCompany.id},company_id.is.null`);
+      }
+
       // Apply period filter
       if (filterPeriod !== 'all') {
         const days = { '7d': 7, '30d': 30, '90d': 90 }[filterPeriod] || 30;
@@ -64,7 +72,7 @@ const Historico = () => {
     };
 
     fetchSimulations();
-  }, [user, filterPeriod]);
+  }, [user, filterPeriod, currentCompany?.id]);
 
   const handleDelete = async (id: string) => {
     const { error } = await supabase

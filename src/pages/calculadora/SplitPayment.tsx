@@ -16,6 +16,7 @@ import { useSimulationLimit } from "@/hooks/useSimulationLimit";
 import { usePlanAccess } from "@/hooks/useFeatureAccess";
 import { TaxDisclaimer } from "@/components/common/TaxDisclaimer";
 import { HelpButton } from "@/components/common/HelpButton";
+import { useCompany } from "@/contexts/CompanyContext";
 
 interface SplitPaymentResult {
   mensal_min: number;
@@ -57,6 +58,7 @@ const PERCENTUAIS_PJ = [
 
 const SplitPayment = () => {
   const { user, profile } = useAuth();
+  const { currentCompany } = useCompany();
   const navigate = useNavigate();
   const { isNavigator } = usePlanAccess();
   const { count: simulationCount, refetch: refetchCount } = useSimulationLimit('split-payment');
@@ -155,6 +157,7 @@ const SplitPayment = () => {
       try {
         await supabase.from('simulations').insert([{
           user_id: user.id,
+          company_id: currentCompany?.id || null,
           calculator_slug: 'split-payment',
           inputs: {
             empresa: formData.empresa,

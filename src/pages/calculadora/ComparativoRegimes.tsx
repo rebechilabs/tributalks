@@ -9,6 +9,7 @@ import { Scale, Info, Star, AlertTriangle, RefreshCw, FileDown, Loader2, CheckCi
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useCompany } from "@/contexts/CompanyContext";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
@@ -103,6 +104,7 @@ const INSUMOS_CREDITAVEIS: InsumoCreditable[] = [
 
 const ComparativoRegimes = () => {
   const { user, profile } = useAuth();
+  const { currentCompany } = useCompany();
   const [isCalculating, setIsCalculating] = useState(false);
   const [result, setResult] = useState<RegimeResult | null>(null);
   const [saved, setSaved] = useState(false);
@@ -314,6 +316,7 @@ const ComparativoRegimes = () => {
 
         await supabase.from('simulations').insert([{
           user_id: user.id,
+          company_id: currentCompany?.id || null,
           calculator_slug: 'comparativo-regimes',
           inputs: {
             faturamento_mensal: faturamento,

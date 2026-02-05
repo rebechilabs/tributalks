@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useCompany } from "@/contexts/CompanyContext";
 
 export interface UserProgressData {
   // Completion flags
@@ -42,6 +43,7 @@ export interface UserProgressData {
 
 export function useUserProgress(): UserProgressData {
   const { user } = useAuth();
+  const { currentCompany } = useCompany();
   const [data, setData] = useState<UserProgressData>({
     hasScore: false,
     hasXmls: false,
@@ -72,6 +74,9 @@ export function useUserProgress(): UserProgressData {
 
     const fetchProgress = async () => {
       try {
+        // Build company filter for queries that support it
+        const companyId = currentCompany?.id;
+
         // Fetch all data in parallel
         const [
           companyResult,
@@ -84,20 +89,35 @@ export function useUserProgress(): UserProgressData {
           simulationResult,
         ] = await Promise.all([
           // Company profile
-          supabase
-            .from('company_profile')
-            .select('razao_social, nome_fantasia, cnpj_principal')
-            .eq('user_id', user.id)
-            .maybeSingle(),
+          companyId 
+            ? supabase
+                .from('company_profile')
+                .select('razao_social, nome_fantasia, cnpj_principal')
+                .eq('id', companyId)
+                .maybeSingle()
+            : supabase
+                .from('company_profile')
+                .select('razao_social, nome_fantasia, cnpj_principal')
+                .eq('user_id', user.id)
+                .maybeSingle(),
           
-          // Latest tax score
-          supabase
-            .from('tax_score_history')
-            .select('score_grade, score_total, calculated_at')
-            .eq('user_id', user.id)
-            .order('calculated_at', { ascending: false })
-            .limit(1)
-            .maybeSingle(),
+          // Latest tax score - filter by company if available
+          companyId
+            ? supabase
+                .from('tax_score_history')
+                .select('score_grade, score_total, calculated_at')
+                .eq('user_id', user.id)
+                .eq('company_id', companyId)
+                .order('calculated_at', { ascending: false })
+                .limit(1)
+                .maybeSingle()
+            : supabase
+                .from('tax_score_history')
+                .select('score_grade, score_total, calculated_at')
+                .eq('user_id', user.id)
+                .order('calculated_at', { ascending: false })
+                .limit(1)
+                .maybeSingle(),
           
           // XML imports count
           supabase
@@ -139,14 +159,23 @@ export function useUserProgress(): UserProgressData {
             .eq('user_id', user.id)
             .eq('status', 'identified'),
           
-          // Last simulation
-          supabase
-            .from('simulations')
-            .select('calculator_slug, created_at')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle(),
+          // Last simulation - filter by company if available
+          companyId
+            ? supabase
+                .from('simulations')
+                .select('calculator_slug, created_at')
+                .eq('user_id', user.id)
+                .or(`company_id.eq.${companyId},company_id.is.null`)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle()
+            : supabase
+                .from('simulations')
+                .select('calculator_slug, created_at')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle(),
         ]);
 
         // Process score
@@ -232,7 +261,7 @@ export function useUserProgress(): UserProgressData {
     };
 
     fetchProgress();
-  }, [user?.id]);
+  }, [user?.id, currentCompany?.id]);
 
   return data;
 }
