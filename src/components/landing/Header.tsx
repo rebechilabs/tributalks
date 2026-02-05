@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import logoTributalksHeader from "@/assets/logo-tributalks-header.png";
 import { useAuth } from "@/hooks/useAuth";
 import { LoginModal } from "./LoginModal";
+import { CONFIG } from "@/config/site";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -73,11 +74,11 @@ export function Header() {
                   >
                     Entrar
                   </Button>
-                  <Link to="/cadastro">
+                  <a href={CONFIG.PAYMENT_LINKS.STARTER_MENSAL} target="_blank" rel="noopener noreferrer">
                     <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold">
-                      Começar grátis
+                      Testar 7 dias grátis
                     </Button>
-                  </Link>
+                  </a>
                 </>
               )}
             </div>
@@ -132,11 +133,16 @@ export function Header() {
                     >
                       Entrar
                     </Button>
-                    <Link to="/cadastro" onClick={() => setMobileMenuOpen(false)}>
+                    <a 
+                      href={CONFIG.PAYMENT_LINKS.STARTER_MENSAL} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
                       <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-bold">
-                        Começar grátis
+                        Testar 7 dias grátis
                       </Button>
-                    </Link>
+                    </a>
                   </>
                 )}
                 </div>
