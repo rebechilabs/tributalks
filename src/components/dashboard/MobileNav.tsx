@@ -190,14 +190,40 @@ export function MobileNav() {
     );
   };
 
-  const renderMenuGroup = (group: MenuGroup, index: number) => {
+  // Helper to render referral card
+  const renderReferralCard = () => (
+    <Link
+      to="/indicar"
+      onClick={() => setOpen(false)}
+      className="flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 mx-0 my-2"
+    >
+      <Gift className="w-4 h-4 text-amber-500" />
+      <span className="text-xs font-medium text-foreground flex-1">Indique e Ganhe!</span>
+      <Badge className="bg-amber-500 text-white text-[10px]">Novo</Badge>
+    </Link>
+  );
+
+  const renderMenuGroup = (group: MenuGroup, index: number, showReferralCard = false) => {
     const hasActiveItem = group.items.some(item => location.pathname === item.href);
     const isExpanded = expandedGroups[group.title] ?? (!group.collapsible || hasActiveItem);
+
+    // Helper to render items with referral card before Configurações
+    const renderItemsWithReferral = (items: MenuItem[]) => {
+      return items.map((item) => {
+        const isConfigItem = item.href === '/configuracoes';
+        return (
+          <div key={item.href}>
+            {showReferralCard && isConfigItem && renderReferralCard()}
+            {renderNavItem(item)}
+          </div>
+        );
+      });
+    };
 
     if (!group.title) {
       return (
         <div key={`group-${index}`} className="space-y-1">
-          {group.items.map(renderNavItem)}
+          {renderItemsWithReferral(group.items)}
         </div>
       );
     }
@@ -230,7 +256,7 @@ export function MobileNav() {
             </button>
           </CollapsibleTrigger>
           <CollapsibleContent className="space-y-1">
-            {group.items.map(renderNavItem)}
+            {renderItemsWithReferral(group.items)}
           </CollapsibleContent>
         </Collapsible>
       );
@@ -249,7 +275,7 @@ export function MobileNav() {
             {group.title}
           </span>
         </div>
-        {group.items.map(renderNavItem)}
+        {renderItemsWithReferral(group.items)}
       </div>
     );
   };
@@ -271,15 +297,15 @@ export function MobileNav() {
           </Button>
         </div>
 
-        {/* Helper to render referral card */}
+        {/* Navigation */}
         {(() => {
-          // Find the index where Newsletter is located
-          const findNewsletterGroupIndex = () => {
+          // Find the index of the group that contains Configurações
+          const findConfigGroupIndex = () => {
             for (let i = 0; i < menuElements.length; i++) {
               const element = menuElements[i];
-              if (isMenuGroup(element) && !element.title) {
-                const hasNewsletter = element.items.some(item => item.href === '/noticias');
-                if (hasNewsletter) {
+              if (isMenuGroup(element)) {
+                const hasConfig = element.items.some(item => item.href === '/configuracoes');
+                if (hasConfig) {
                   return i;
                 }
               }
@@ -287,34 +313,17 @@ export function MobileNav() {
             return -1;
           };
 
-          const newsletterGroupIndex = findNewsletterGroupIndex();
-
-          const renderReferralCard = () => (
-            <Link
-              to="/indicar"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 mx-0 my-2"
-            >
-              <Gift className="w-4 h-4 text-amber-500" />
-              <span className="text-xs font-medium text-foreground flex-1">Indique e Ganhe!</span>
-              <Badge className="bg-amber-500 text-white text-[10px]">Novo</Badge>
-            </Link>
-          );
+          const configGroupIndex = findConfigGroupIndex();
 
           return (
             <nav className="flex-1 py-4 px-3 overflow-y-auto max-h-[calc(100vh-10rem)] space-y-2">
               {menuElements.map((element, index) => {
                 if ('type' in element && element.type === 'divider') {
-                  const nextIsNewsletter = index + 1 === newsletterGroupIndex;
-                  return (
-                    <div key={`divider-${index}`}>
-                      <Separator className="my-3" />
-                      {nextIsNewsletter && renderReferralCard()}
-                    </div>
-                  );
+                  return <Separator key={`divider-${index}`} className="my-3" />;
                 }
                 if (isMenuGroup(element)) {
-                  return renderMenuGroup(element, index);
+                  const showReferral = index === configGroupIndex;
+                  return renderMenuGroup(element, index, showReferral);
                 }
                 return null;
               })}
