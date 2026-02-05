@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Upload,
   FileText,
@@ -35,16 +36,16 @@ interface SpedFile {
   };
 }
 
-// Valida se o arquivo é um SPED válido (flexibilizado)
+// Valida se o arquivo é um SPED válido - aceita qualquer .txt
 const isValidSpedFile = (file: File): boolean => {
   const name = file.name.toLowerCase();
-  // Aceita: .txt, arquivos com "sped" ou "efd" no nome
-  return name.endsWith(".txt") || name.includes("sped") || name.includes("efd");
+  return name.endsWith(".txt");
 };
 
 export function SpedUploader() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [files, setFiles] = useState<SpedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -71,7 +72,7 @@ export function SpedUploader() {
     if (invalidCount > 0) {
       toast({
         title: `${invalidCount} arquivo(s) ignorado(s)`,
-        description: "Apenas arquivos .txt ou com 'sped'/'efd' no nome são aceitos",
+        description: "Apenas arquivos .txt são aceitos",
         variant: "destructive",
       });
     }
@@ -84,7 +85,20 @@ export function SpedUploader() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const selectedFiles = Array.from(e.target.files);
-      addFiles(selectedFiles);
+      const validFiles = selectedFiles.filter(isValidSpedFile);
+      const invalidCount = selectedFiles.length - validFiles.length;
+
+      if (invalidCount > 0) {
+        toast({
+          title: `${invalidCount} arquivo(s) ignorado(s)`,
+          description: "Apenas arquivos .txt são aceitos",
+          variant: "destructive",
+        });
+      }
+
+      if (validFiles.length > 0) {
+        addFiles(validFiles);
+      }
     }
   };
 
@@ -219,6 +233,10 @@ export function SpedUploader() {
         title: "SPED processado com sucesso",
         description: `${(result.creditosPIS || 0) + (result.creditosCOFINS || 0)} créditos identificados`,
       });
+
+      // Invalidar cache para atualizar lista
+      queryClient.invalidateQueries({ queryKey: ["sped-contribuicoes"] });
+      queryClient.invalidateQueries({ queryKey: ["sped-items"] });
 
       console.log("[SpedUploader] Processamento concluído com sucesso!");
     } catch (error) {
