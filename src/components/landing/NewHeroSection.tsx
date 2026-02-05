@@ -1,6 +1,7 @@
  import { Button } from "@/components/ui/button";
  import { ArrowRight } from "lucide-react";
  import { motion } from "framer-motion";
+import heroBg from "@/assets/hero-bg-cinematic.jpg";
  
  export function NewHeroSection() {
    const scrollToPlans = () => {
@@ -11,8 +12,8 @@
    };
  
    return (
-    <section className="relative min-h-screen flex items-center justify-center bg-[#0A0A0A]">
-      <div className="container mx-auto px-4 md:px-8">
+    <section className="relative bg-[#0A0A0A]">
+      <div className="container mx-auto px-4 md:px-8 pt-32 md:pt-40">
          <div className="max-w-4xl mx-auto text-center">
            {/* Main Headline */}
            <motion.h1
@@ -56,6 +57,15 @@
            </motion.div>
          </div>
        </div>
+      
+      {/* Cinematic background image - directly after button */}
+      <div 
+        className="h-[50vh] md:h-[60vh] mt-10 bg-cover bg-no-repeat"
+        style={{ 
+          backgroundImage: `url(${heroBg})`, 
+          backgroundPosition: 'center bottom' 
+        }}
+      />
      </section>
    );
  }
