@@ -1,38 +1,45 @@
 
-# Plano: Renomear Newsletter para Notícias e Ajustar ConexaoPage
 
-## Alterações Necessárias
+# Plano: Melhorar Layout da Página Conexão & Comunicação
 
-### 1. Renomear "Newsletter" para "Notícias" no Menu
-Arquivo: `src/data/menuConfig.ts`
+## Objetivo
+Ajustar o layout da `ConexaoPage` para que os 3 quadrados (Notícias, Comunidade, Indique e Ganhe) apareçam centralizados na tela com melhor destaque visual.
 
-| Localização | Alteração |
-|-------------|-----------|
-| Linha 109 | Mudar `'Notícias da Reforma'` → `'Notícias'` |
-| Linha 181 | Mudar `label: 'Newsletter'` → `label: 'Notícias'` |
-| Linha 264 | Mudar `label: 'Newsletter'` → `label: 'Notícias'` |
+## Alterações
 
-### 2. Atualizar ConexaoPage
-Arquivo: `src/pages/dashboard/ConexaoPage.tsx`
+### Arquivo: `src/pages/dashboard/ConexaoPage.tsx`
 
-| Alteração |
-|-----------|
-| Mudar título "Newsletter" → "Notícias" |
-| Mudar descrição para refletir a mudança |
-| Cards já estão exibidos em grid de 3 colunas (`lg:grid-cols-3`) |
+| Aspecto | Atual | Proposto |
+|---------|-------|----------|
+| Alinhamento | Grid alinhado à esquerda | Grid centralizado na tela |
+| Espaçamento | `py-6` (padding pequeno) | `py-12` (mais espaço vertical) |
+| Centralização | Container normal | Flex center para centralizar vertical e horizontalmente |
+| Título | Alinhado à esquerda | Centralizado |
+| Cards | Tamanho padrão do grid | Grid com `max-w-4xl` para limitar largura e centralizar |
+
+## Código Proposto
+
+```tsx
+<DashboardLayout title="Conexão & Comunicação">
+  <div className="container mx-auto px-4 py-12 flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
+    <div className="text-center mb-10">
+      <h1 className="text-2xl font-bold mb-2">Conexão & Comunicação</h1>
+      <p className="text-muted-foreground">
+        Mantenha-se informado e conectado com a comunidade tributária
+      </p>
+    </div>
+
+    <div className="grid gap-6 grid-cols-1 md:grid-cols-3 max-w-4xl w-full">
+      {/* 3 cards centralizados */}
+    </div>
+  </div>
+</DashboardLayout>
+```
 
 ## Resultado Visual
 
-Quando o usuário clicar em "Conexão & Comunicação":
-- Vai para `/dashboard/conexao`
-- Exibe 3 quadrados centralizados:
-  1. **Notícias** - Atualizações tributárias
-  2. **Comunidade** - Conexões e networking
-  3. **Indique e Ganhe** - Descontos por indicação
+- Os 3 quadrados ficam **centralizados horizontalmente e verticalmente** na área de conteúdo
+- Título e descrição centralizados acima dos cards
+- Layout responsivo: 1 coluna no mobile, 3 colunas no desktop
+- Cards com espaçamento uniforme e alinhados
 
-## Arquivos a Modificar
-
-| Arquivo | Mudança |
-|---------|---------|
-| `src/data/menuConfig.ts` | `'Newsletter'` → `'Notícias'` (3 ocorrências) |
-| `src/pages/dashboard/ConexaoPage.tsx` | Título do card de Newsletter → Notícias |
