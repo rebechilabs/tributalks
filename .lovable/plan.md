@@ -1,21 +1,18 @@
 
 
-## Plano: Posicionar os Prédios Entre o Botão CTA e o Título da Seção Problema
+## Plano: Ajustar a Imagem para que a Avenida Termine na Frase "A Reforma Tributária..."
 
 ### Objetivo
-Fazer com que a parte focal da imagem cinematográfica (os prédios com linhas de dados douradas) apareça exatamente **no espaço entre**:
-- O botão "Comece seus 7 dias grátis" (final do Hero)
-- A frase "A Reforma Tributária vai custar..." (início da ProblemSection)
+Posicionar o **fim da avenida** da imagem cinematográfica exatamente onde começa a frase "A Reforma Tributária vai custar..." (início da ProblemSection).
 
 ---
 
 ### Solução
 
-Para que a imagem apareça nessa área de transição, vou:
+Para baixar mais a imagem, vou:
 
-1. **Estender a imagem de fundo** do Hero para cobrir também a área de transição
-2. **Ajustar o posicionamento** para que os prédios fiquem na parte inferior do Hero
-3. **Reduzir o overlay inferior** para deixar os prédios mais visíveis nessa área
+1. **Aumentar a altura da seção Hero** - de `110vh` para `120vh` ou mais
+2. **Ajustar o `backgroundPosition`** - de `30%` para algo menor (ex: `20%` ou `15%`) para empurrar a imagem mais para baixo
 
 ---
 
@@ -25,9 +22,9 @@ Para que a imagem apareça nessa área de transição, vou:
 
 | Alteração | Antes | Depois |
 |-----------|-------|--------|
-| Posição da imagem | `center top` | `center 30%` (prédios na parte inferior do Hero) |
-| Overlay inferior | `to-[#0A0A0A]/40` | `to-transparent` (mais visibilidade) |
-| Bottom fade | `h-32` com gradiente | `h-16` gradiente suave |
+| Altura da seção | `min-h-[110vh]` | `min-h-[120vh]` |
+| Posição da imagem | `center 30%` | `center 20%` |
+| Bottom fade | `h-16` | `h-24` (transição mais suave) |
 
 ---
 
@@ -35,22 +32,23 @@ Para que a imagem apareça nessa área de transição, vou:
 
 ```text
 ┌─────────────────────────────────────────────┐
-│  HERO SECTION                               │
+│  HERO SECTION (min-h-[120vh])               │
 │                                             │
 │  ┌─────────────────────────────────────┐   │
-│  │  "Domine a Reforma Tributária..."   │   │ ← Overlay forte (texto legível)
-│  │                                     │   │
+│  │  "Domine a Reforma Tributária..."   │   │
 │  │  [Comece seus 7 dias grátis]        │   │
 │  └─────────────────────────────────────┘   │
 │                                             │
-│  ┌─ PRÉDIOS APARECEM AQUI ─────────────┐   │ ← Overlay suave (imagem visível)
-│  │  🏢🏢🏢 linhas douradas 🏢🏢🏢      │   │
+│         (mais espaço aqui)                 │
+│                                             │
+│  ┌─ PRÉDIOS E AVENIDA ─────────────────┐   │
+│  │                                     │   │
+│  │         FIM DA AVENIDA              │   │ ← Alinhado com início da próxima seção
 │  └─────────────────────────────────────┘   │
 │                                             │
 └─────────────────────────────────────────────┘
 ┌─────────────────────────────────────────────┐
-│  PROBLEM SECTION (bg sólido)               │
-│  "A Reforma Tributária vai custar..."      │
+│  "A Reforma Tributária vai custar..."      │ ← A frase começa aqui
 └─────────────────────────────────────────────┘
 ```
 
@@ -58,7 +56,6 @@ Para que a imagem apareça nessa área de transição, vou:
 
 ### Resultado Esperado
 
-- Os prédios cinematográficos ficarão visíveis na parte inferior da seção Hero
-- O texto do Hero continuará legível com overlay forte no topo
-- A transição para a ProblemSection será elegante
+- O fim da avenida ficará exatamente na linha onde começa a frase "A Reforma Tributária vai custar..."
+- A transição entre Hero e ProblemSection será visualmente alinhada com a imagem
 
