@@ -1,202 +1,173 @@
 
-## Plano: Redirecionar Todos os Usuários para a Home com Notícias do Dia
+
+## Plano: Renomear Simpronto para "Comparativo de Regimes Tributários"
 
 ### Resumo
-Modificar o fluxo de navegação para que todos os usuários logados sejam direcionados para a Home inteligente (`/dashboard/home`), que já contém a lógica de próximo passo. Adicionar uma seção de **5 notícias principais do dia** logo abaixo do card de próximo passo.
+Eliminar o nome "Simpronto" da aplicação e consolidar tudo como **"Comparativo de Regimes Tributários"**, mantendo a mesma funcionalidade de cálculo dos 5 regimes:
+1. Simples Nacional (atual)
+2. Simples 2027 "Por Dentro"
+3. Simples 2027 "Por Fora"
+4. Lucro Presumido
+5. Lucro Real
 
 ---
 
-### 1. Alterar Redirecionamento no ProtectedRoute
+### Mudanças Necessárias
 
-**Arquivo:** `src/components/ProtectedRoute.tsx`
+#### 1. Atualizar Menu em Todos os Planos
+**Arquivo:** `src/data/menuConfig.ts`
+
+Remover o item "Simpronto" duplicado e manter apenas "Comparativo de Regimes Tributários" com a descrição atualizada:
 
 | Antes | Depois |
 |-------|--------|
-| Professional → `/dashboard/nexus` | Professional → `/dashboard/home` |
-| Navigator → `/dashboard` | Navigator → `/dashboard/home` |
-| Starter → `/dashboard/score-tributario` | Starter → `/dashboard/home` |
-| Free → `/dashboard` | Free → `/dashboard/home` |
+| `Comparativo de Regimes` → redireciona para Simpronto | Manter |
+| `Simpronto` → `/dashboard/entender/simpronto` | Remover |
 
-Simplificar a função `getDefaultRoute()` para retornar sempre `/dashboard/home`:
-
+Novo item único:
 ```typescript
-const getDefaultRoute = (): string => {
-  return '/dashboard/home';
-};
+{ 
+  label: 'Comparativo de Regimes', 
+  href: '/dashboard/entender/comparativo', 
+  icon: Scale, 
+  description: '5 regimes tributários',
+  badge: '2027' 
+}
 ```
 
 ---
 
-### 2. Atualizar App.tsx para Redirect Padrão
-
+#### 2. Atualizar Rotas
 **Arquivo:** `src/App.tsx`
 
-Modificar a rota `/dashboard` para redirecionar automaticamente para `/dashboard/home`:
+| Rota Antes | Rota Depois |
+|------------|-------------|
+| `/dashboard/entender/simpronto` → SimprontoPage | `/dashboard/entender/comparativo` → SimprontoPage |
+| `/dashboard/entender/comparativo` → redirect simpronto | Remover redirect (rota principal agora) |
+| `/calculadora/comparativo-regimes` → redirect simpronto | Redirecionar para `/dashboard/entender/comparativo` |
 
-```tsx
-<Route 
-  path="/dashboard" 
-  element={
-    <ProtectedRoute>
-      <Navigate to="/dashboard/home" replace />
-    </ProtectedRoute>
-  } 
-/>
+Adicionar redirect de simpronto para compatibilidade:
+```typescript
+<Route path="/dashboard/entender/simpronto" element={<Navigate to="/dashboard/entender/comparativo" replace />} />
 ```
 
 ---
 
-### 3. Criar Componente de Notícias do Dia
+#### 3. Atualizar useRouteInfo.ts
+**Arquivo:** `src/hooks/useRouteInfo.ts`
 
-**Arquivo:** `src/components/home/LatestNewsSection.tsx` (novo)
-
-Componente que busca e exibe as 5 notícias mais recentes:
-
-**Características:**
-- Busca as 5 últimas notícias publicadas da tabela `noticias_tributarias`
-- Exibe título, resumo executivo (truncado) e data de publicação
-- Badge de relevância (ALTA, MEDIA, BAIXA)
-- Skeleton loading durante carregamento
-- Link para a página completa de notícias (`/noticias`)
-- Mostra "Última atualização: DD/MM às HH:mm"
-
-**Layout:**
-```
-📰 Notícias do Dia
-Última atualização: 05/02 às 11:00
-
-┌─────────────────────────────────────────┐
-│ 🔴 ALTA  Receita Federal publica...     │
-│ Resumo executivo resumido aqui...       │
-│ há 2 horas                              │
-├─────────────────────────────────────────┤
-│ 🟡 MÉDIA Liminar no RJ suspende...      │
-│ Resumo executivo resumido aqui...       │
-│ ontem                                   │
-├─────────────────────────────────────────┤
-│ ... (mais 3 notícias)                   │
-└─────────────────────────────────────────┘
-
-[Ver todas as notícias →]
-```
-
----
-
-### 4. Integrar Notícias na HomePage
-
-**Arquivo:** `src/pages/dashboard/HomePage.tsx`
-
-Adicionar a seção de notícias abaixo do `HomeStateCards`:
-
-```tsx
-import { LatestNewsSection } from "@/components/home/LatestNewsSection";
-
-export default function HomePage() {
-  return (
-    <DashboardLayout title="Home">
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        {/* Próximo passo baseado no estado */}
-        <HomeStateCards stateData={homeState} userName={...} />
-        
-        {/* Separador visual */}
-        <Separator className="my-8" />
-        
-        {/* Notícias do dia */}
-        <LatestNewsSection />
-      </div>
-    </DashboardLayout>
-  );
+Renomear label da rota:
+```typescript
+'/dashboard/entender/comparativo': { 
+  label: 'Comparativo de Regimes', 
+  group: 'entender',
+  groupLabel: 'Entender Meu Negócio',
+  icon: Scale
 }
 ```
 
+Remover entrada de `/dashboard/entender/simpronto` (ou manter como alias).
+
 ---
 
-### 5. Criar Hook para Buscar Notícias
-
-**Arquivo:** `src/hooks/useLatestNews.ts` (novo)
-
-Hook que encapsula a lógica de busca de notícias:
+#### 4. Atualizar Título da Página SimprontoPage
+**Arquivo:** `src/pages/dashboard/SimprontoPage.tsx`
 
 ```typescript
-interface LatestNews {
-  id: string;
-  titulo_original: string;
-  resumo_executivo: string | null;
-  relevancia: string;
-  data_publicacao: string;
-  fonte: string;
-}
+// Antes
+<h1 className="text-2xl font-bold">Simpronto</h1>
 
-export function useLatestNews(limit: number = 5) {
-  return useQuery({
-    queryKey: ['latest-news', limit],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('noticias_tributarias')
-        .select('id, titulo_original, resumo_executivo, relevancia, data_publicacao, fonte')
-        .eq('publicado', true)
-        .order('data_publicacao', { ascending: false })
-        .limit(limit);
-      return data || [];
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutos
-  });
-}
+// Depois  
+<h1 className="text-2xl font-bold">Comparativo de Regimes Tributários</h1>
+```
+
+Atualizar DashboardLayout title:
+```typescript
+<DashboardLayout title="Comparativo de Regimes">
 ```
 
 ---
 
-### Arquivos a Modificar/Criar
+#### 5. Atualizar RecommendationCard
+**Arquivo:** `src/components/simpronto/RecommendationCard.tsx`
+
+```typescript
+// Antes
+<CardTitle>Recomendação Simpronto</CardTitle>
+
+// Depois
+<CardTitle>Regime Recomendado</CardTitle>
+```
+
+---
+
+#### 6. Atualizar HelpButton Slug
+**Arquivo:** `src/pages/dashboard/SimprontoPage.tsx`
+
+```typescript
+// Antes
+<HelpButton toolSlug="simpronto" />
+
+// Depois
+<HelpButton toolSlug="comparativo-regimes" />
+```
+
+---
+
+#### 7. Atualizar GROUP_PATHS
+**Arquivo:** `src/hooks/useRouteInfo.ts`
+
+```typescript
+// Antes
+entender: [..., '/dashboard/entender/simpronto'],
+
+// Depois
+entender: [..., '/dashboard/entender/comparativo'],
+```
+
+---
+
+### Arquivos a Modificar
 
 | Arquivo | Ação |
 |---------|------|
-| `src/components/ProtectedRoute.tsx` | Modificar `getDefaultRoute()` para retornar `/dashboard/home` |
-| `src/App.tsx` | Redirecionar `/dashboard` para `/dashboard/home` |
-| `src/hooks/useLatestNews.ts` | Criar hook para buscar notícias |
-| `src/components/home/LatestNewsSection.tsx` | Criar componente de notícias |
-| `src/components/home/index.ts` | Exportar novo componente |
-| `src/pages/dashboard/HomePage.tsx` | Integrar seção de notícias |
+| `src/data/menuConfig.ts` | Remover item Simpronto, atualizar href do Comparativo |
+| `src/App.tsx` | Trocar rota principal para `/comparativo`, adicionar redirect de `/simpronto` |
+| `src/hooks/useRouteInfo.ts` | Renomear rota e atualizar GROUP_PATHS |
+| `src/pages/dashboard/SimprontoPage.tsx` | Atualizar título e textos |
+| `src/components/simpronto/RecommendationCard.tsx` | Remover "Simpronto" do título |
 
 ---
 
-### Fluxo Final do Usuário
+### Arquivos que NÃO Precisam Mudar
 
-```text
-Login 
-  ↓
-/dashboard (redireciona) 
-  ↓
-/dashboard/home
-  ↓
-┌──────────────────────────────────────────┐
-│  HomeStateCards (próximo passo)          │
-│  - NO_DRE → "Preencha seu DRE"           │
-│  - NO_SCORE → "Calcule seu Score"        │
-│  - NO_CREDITS → "Importe seus XMLs"      │
-│  - COMPLETE → Resumo com KPIs            │
-├──────────────────────────────────────────┤
-│  LatestNewsSection                       │
-│  - 5 notícias mais recentes              │
-│  - Link para todas as notícias           │
-└──────────────────────────────────────────┘
-```
+Os arquivos internos podem manter o nome técnico "simpronto" para evitar refatoração massiva:
+- `src/types/simpronto.ts` - tipos internos
+- `src/utils/simprontoCalculations.ts` - funções de cálculo
+- `src/components/simpronto/` - componentes internos
+- Tabela `simpronto_simulations` no banco - dados já salvos
+
+**Justificativa:** O nome interno não aparece para o usuário, apenas o label visual muda.
 
 ---
 
-### Seção Técnica
+### Resultado Final
 
-**Consulta ao banco de dados:**
-```sql
-SELECT id, titulo_original, resumo_executivo, relevancia, data_publicacao, fonte 
-FROM noticias_tributarias 
-WHERE publicado = true 
-ORDER BY data_publicacao DESC 
-LIMIT 5;
+**Menu:**
+```
+ENTENDER MEU NEGÓCIO
+├─ DRE Inteligente
+├─ Score Tributário
+└─ Comparativo de Regimes [2027]  ← único item, sem duplicação
 ```
 
-**Dados atuais no banco:** Existem notícias publicadas recentes (05/02/2026), então a seção já terá conteúdo para exibir.
+**Página:**
+```
+Comparativo de Regimes Tributários
+Compare 5 regimes tributários em minutos...
 
-**Considerações de UX:**
-- A seção de notícias será visível para todos os planos, mas o link "Ver todas" levará para `/noticias` que requer plano Navigator+
-- Usuários FREE verão as 5 notícias resumidas, incentivando upgrade
-- Notícias com relevância "ALTA" terão destaque visual (badge vermelho)
+[Wizard de 2 passos]
+
+[Resultado com "Regime Recomendado"]
+```
+
