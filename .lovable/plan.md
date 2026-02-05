@@ -1,85 +1,131 @@
 
+# Plano: Upload de PGDAS em Lote
 
-# Plano: Corrigir Problema de Upload e Processamento SPED
-
-## Problema Identificado
-
-Após análise detalhada, identifiquei que o arquivo SPED **nunca foi processado com sucesso**:
-
-| Evidência | Status |
-|-----------|--------|
-| Bucket `sped-files` | Vazio (0 arquivos) |
-| Tabela `sped_contribuicoes` | Vazia (0 registros) |
-| Logs da edge function | Nenhuma chamada registrada |
-
-**Possíveis causas:**
-1. O upload para o storage falhou silenciosamente
-2. O usuário adicionou o arquivo mas não clicou em "Processar"
-3. Erro de permissão no storage bucket
-4. Erro silencioso de validação (arquivo não termina em .txt ou não contém "sped" no nome)
+## O que é PGDAS?
+O PGDAS-D (Programa Gerador do Documento de Arrecadação do Simples Nacional) é o documento onde empresas do Simples Nacional declaram sua receita bruta mensal e calculam os tributos devidos.
 
 ---
 
-## Solução Proposta
+## O que será criado
 
-### 1. Melhorar Tratamento de Erros no SpedUploader
-Adicionar logs e mensagens de erro mais claras em cada etapa do processo:
-- Log no console antes e depois de cada operação
-- Toast com erro específico se upload falhar
-- Indicação visual clara do status
+### 1. Nova aba "PGDAS" na página de Análise de Créditos
+Adicionar uma 7ª aba entre "DCTF" e "Cruzamento" para upload em lote de arquivos PGDAS.
 
-### 2. Validar Permissões do Storage Bucket
-Verificar se o bucket `sped-files` tem políticas corretas para upload
+### 2. Tabela `pgdas_arquivos` no banco de dados
+Para armazenar os arquivos processados:
 
-### 3. Remover Restrição de Nome de Arquivo
-Atualmente o código só aceita arquivos que:
-- Terminam com `.txt` OU
-- Contêm "sped" no nome (case insensitive)
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| id | uuid | Identificador único |
+| user_id | uuid | Usuário proprietário |
+| cnpj | text | CNPJ da empresa |
+| razao_social | text | Nome da empresa |
+| periodo_apuracao | date | Mês/ano de referência |
+| receita_bruta | numeric | Receita bruta declarada |
+| valor_devido | numeric | Valor do DAS devido |
+| aliquota_efetiva | numeric | Alíquota calculada |
+| anexo_simples | text | Anexo (I, II, III, IV, V) |
+| arquivo_nome | text | Nome do arquivo original |
+| arquivo_storage_path | text | Caminho no storage |
+| status | text | pending, processing, completed, error |
+| erro_mensagem | text | Mensagem de erro se houver |
+| created_at | timestamptz | Data de criação |
 
-Vou **flexibilizar** para aceitar mais formatos.
+### 3. Bucket de storage `pgdas-files`
+Para armazenar os arquivos originais com RLS adequado.
 
-### 4. Adicionar Botão de Diagnóstico
-Incluir opção para reprocessar arquivos com erro e mostrar logs detalhados
+### 4. Componente `PgdasUploader`
+Seguindo o padrão do `SpedUploader`, com:
+- Área de drag-and-drop
+- Lista de arquivos com status
+- Botão "Processar Todos"
+- Indicador de progresso
+- Resumo após processamento
+
+### 5. Edge Function `process-pgdas`
+Para processar os arquivos PGDAS e extrair:
+- Período de apuração
+- Receita bruta
+- Valor do DAS
+- Anexo do Simples Nacional
+- Alíquota efetiva
 
 ---
 
-## Arquivos a Modificar
+## Arquivos a criar/modificar
 
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/components/sped/SpedUploader.tsx` | Melhorar logs, flexibilizar validação de arquivos, mostrar erros detalhados |
-
----
-
-## Sugestão Imediata
-
-Enquanto aplico as correções, **tente fazer o upload novamente** do arquivo SPED e observe se aparece algum erro no console do navegador (F12 → Console).
+| Arquivo | Ação |
+|---------|------|
+| `src/components/pgdas/PgdasUploader.tsx` | Criar componente de upload |
+| `src/components/pgdas/index.ts` | Criar exportação |
+| `src/pages/AnaliseNotasFiscais.tsx` | Adicionar nova aba PGDAS |
+| `supabase/functions/process-pgdas/index.ts` | Criar edge function |
+| Migração SQL | Criar tabela e bucket |
 
 ---
 
 ## Detalhes Técnicos
 
-### Código Atual (Problema)
-```typescript
-// Linha 57-59: Filtro muito restritivo
-const droppedFiles = Array.from(e.dataTransfer.files).filter(
-  (file) => file.name.endsWith(".txt") || file.name.toLowerCase().includes("sped")
+### Estrutura da TabsList (7 abas)
+```
+XMLs | SPED | DCTF | PGDAS | Cruzamento | Créditos | Exposição
+```
+
+### Validação de arquivos PGDAS
+Aceitar arquivos que:
+- Terminam em `.pdf` ou `.txt`
+- Contêm "pgdas" ou "das" ou "simples" no nome
+
+### Migração SQL
+```sql
+-- Criar tabela pgdas_arquivos
+CREATE TABLE public.pgdas_arquivos (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  cnpj TEXT,
+  razao_social TEXT,
+  periodo_apuracao DATE,
+  receita_bruta NUMERIC(15,2) DEFAULT 0,
+  valor_devido NUMERIC(15,2) DEFAULT 0,
+  aliquota_efetiva NUMERIC(5,4) DEFAULT 0,
+  anexo_simples TEXT,
+  arquivo_nome TEXT NOT NULL,
+  arquivo_storage_path TEXT,
+  status TEXT DEFAULT 'pending',
+  erro_mensagem TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- RLS
+ALTER TABLE public.pgdas_arquivos ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can manage own pgdas files"
+ON public.pgdas_arquivos FOR ALL
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+
+-- Bucket de storage
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('pgdas-files', 'pgdas-files', false);
+
+-- Política de storage
+CREATE POLICY "Users can upload own pgdas files"
+ON storage.objects FOR INSERT
+WITH CHECK (
+  bucket_id = 'pgdas-files' 
+  AND auth.uid()::text = (storage.foldername(name))[1]
+);
+
+CREATE POLICY "Users can read own pgdas files"
+ON storage.objects FOR SELECT
+USING (
+  bucket_id = 'pgdas-files' 
+  AND auth.uid()::text = (storage.foldername(name))[1]
 );
 ```
 
-### Código Corrigido
-```typescript
-// Aceitar .txt, .TXT, e arquivos com "sped" ou "efd" no nome
-const droppedFiles = Array.from(e.dataTransfer.files).filter((file) => {
-  const name = file.name.toLowerCase();
-  return name.endsWith(".txt") || name.includes("sped") || name.includes("efd");
-});
-```
+---
 
-### Logs Adicionais
-```typescript
-console.log("[SpedUploader] Iniciando upload para storage...");
-console.log("[SpedUploader] Upload concluído, criando registro no banco...");
-console.log("[SpedUploader] Registro criado, chamando edge function...");
-```
-
+## Resultado Esperado
+Nova aba "PGDAS" na página de Análise de Créditos, permitindo upload em lote de declarações do Simples Nacional, com processamento automático e extração de dados para análise fiscal consolidada.
