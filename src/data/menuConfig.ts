@@ -1,6 +1,6 @@
 import { 
   Home, Scale, Wallet, FileText, Users, Calendar, 
-  Clock, Settings, Lock, Sparkles, Newspaper,
+  Clock, Settings, Lock, Sparkles, Newspaper, Mail,
   Calculator, Target, BarChart3, Trophy, Lightbulb, LayoutDashboard,
   MapPin, Briefcase, ClipboardCheck, Plug, Gift, Route, FileSearch,
   ArrowUp, Command, Shield
@@ -179,6 +179,7 @@ export const MENU_NAVIGATOR: MenuElement[] = [
     moduleHref: '/dashboard/conexao',
     items: [
       { label: 'Notícias', href: '/noticias', icon: Newspaper, description: 'Toda terça às 07h07', featured: true },
+      { label: 'TribuTalks News', href: '/newsletter', icon: Mail, description: 'Newsletter semanal', featured: true },
       { label: 'Comunidade', href: '/comunidade', icon: Users, description: 'Conexões e negócios', featured: true },
       { label: 'Indique e Ganhe', href: '/indicar', icon: Gift, description: 'Ganhe até 20% de desconto', featured: true, badge: 'Novo' },
     ]
@@ -262,6 +263,7 @@ export const MENU_PROFESSIONAL_V2: MenuElement[] = [
     moduleHref: '/dashboard/conexao',
     items: [
       { label: 'Notícias', href: '/noticias', icon: Newspaper, description: 'Toda terça às 07h07', featured: true },
+      { label: 'TribuTalks News', href: '/newsletter', icon: Mail, description: 'Newsletter semanal', featured: true },
       { label: 'Comunidade', href: '/comunidade', icon: Users, description: 'Conexões e negócios', featured: true },
       { label: 'Indique e Ganhe', href: '/indicar', icon: Gift, description: 'Ganhe até 20% de desconto', featured: true, badge: 'Novo' },
     ]
