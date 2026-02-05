@@ -1,47 +1,38 @@
 import { useState } from "react";
 import { Header } from "@/components/landing/Header";
-import { HeroSection } from "@/components/landing/HeroSection";
-import { VideoDemoSection } from "@/components/landing/VideoDemoSection";
-import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
-import { PricingSection } from "@/components/landing/PricingSection";
-import { IntegrationsSection } from "@/components/landing/IntegrationsSection";
-import { MarginProtectionSection } from "@/components/landing/MarginProtectionSection";
-import { ROICalculatorSection } from "@/components/landing/ROICalculatorSection";
-import { SocialProofSection } from "@/components/landing/SocialProofSection";
-import { CredibilitySection } from "@/components/landing/CredibilitySection";
-import { FAQSection } from "@/components/landing/FAQSection";
-import { CTASection } from "@/components/landing/CTASection";
-import { Footer } from "@/components/landing/Footer";
+import { NewHeroSection } from "@/components/landing/NewHeroSection";
+import { ProblemSection } from "@/components/landing/ProblemSection";
+import { DemoSection } from "@/components/landing/DemoSection";
+import { ClaraSection } from "@/components/landing/ClaraSection";
+import { NewPricingSection } from "@/components/landing/NewPricingSection";
+import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
+import { SecuritySection } from "@/components/landing/SecuritySection";
+import { NewFooter } from "@/components/landing/NewFooter";
 import { InteractiveDemo } from "@/components/landing/InteractiveDemo";
 
 const Index = () => {
   const [showDemo, setShowDemo] = useState(false);
 
   const handleDemoComplete = () => {
-    // Scrolla para a seção de pricing
-    const pricingSection = document.getElementById("pricing");
+    const pricingSection = document.getElementById("planos");
     if (pricingSection) {
       pricingSection.scrollIntoView({ behavior: "smooth" });
     }
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#0A0A0A]">
       <Header />
       <main>
-        <HeroSection />
-        <VideoDemoSection onOpenDemo={() => setShowDemo(true)} />
-        <HowItWorksSection />
-        <PricingSection />
-        <IntegrationsSection />
-        <MarginProtectionSection />
-        <ROICalculatorSection />
-        <SocialProofSection />
-        <CredibilitySection />
-        <FAQSection />
-        <CTASection />
+        <NewHeroSection />
+        <ProblemSection />
+        <DemoSection onOpenDemo={() => setShowDemo(true)} />
+        <ClaraSection />
+        <NewPricingSection />
+        <TestimonialsSection />
+        <SecuritySection />
       </main>
-      <Footer />
+      <NewFooter />
       
       <InteractiveDemo
         open={showDemo}
