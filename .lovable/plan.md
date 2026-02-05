@@ -1,82 +1,63 @@
 
-# Plano: Adicionar Valuation como Item Separado no Sidebar
+# Plano: Remover Botão "Começar grátis" do Header
 
-## Objetivo
-Expor o **Valuation (3 metodologias)** como uma ferramenta independente no sidebar, dentro do módulo **COMANDAR**, permitindo acesso direto sem precisar entrar no NEXUS.
+## Problema
+O Header da Landing Page possui um botão **"Começar grátis"** que direciona para `/cadastro`, permitindo que usuários se cadastrem sem passar pelo Stripe. Isso contradiz a regra de negócio onde todos os usuários devem iniciar pelo checkout com trial de 7 dias.
 
----
+## Situação Atual
 
-## Mudanças Propostas
+**Usuário não logado vê:**
+- Botão "Entrar" (abre modal de login)
+- Botão "Começar grátis" (vai para /cadastro) ← **REMOVER**
 
-### 1. Criar Página Dedicada para Valuation
+**Usuário logado vê:**
+- Botão "Acessar Dashboard" ← **OK**
 
-**Novo arquivo:** `src/pages/ValuationPage.tsx`
+## Solução Proposta
 
-Página focada exclusivamente na estimativa de valuation, contendo:
-- O componente `ExecutiveValuationCard` expandido como hero principal
-- Explicação das 3 metodologias (EBITDA, DCF, Receita)
-- Informações sobre como o Score Tributário impacta o valor
-- CTAs para melhorar dados (DRE, Score)
+Remover o botão "Começar grátis" e manter apenas:
+- **"Entrar"** - para usuários existentes fazerem login
+- **"Testar Grátis"** - redirecionar para seção de planos (#planos) onde escolhem o plano e vão para o Stripe
 
----
+Alternativamente, podemos apontar direto para o checkout do Starter:
+- **"Testar 7 dias grátis"** - link direto para `CONFIG.PAYMENT_LINKS.STARTER_MENSAL`
 
-### 2. Atualizar Configuração do Menu
+## Mudanças
 
-**Arquivo:** `src/data/menuConfig.ts`
+### Arquivo: `src/components/landing/Header.tsx`
 
-Adicionar item "Valuation" no módulo COMANDAR para os planos Professional e Enterprise:
+**Desktop (linhas 68-81):**
+```tsx
+// ANTES
+<>
+  <Button variant="ghost" onClick={() => setLoginModalOpen(true)}>
+    Entrar
+  </Button>
+  <Link to="/cadastro">
+    <Button>Começar grátis</Button>  // ← REMOVER
+  </Link>
+</>
 
-```
-COMANDAR
-├── NEXUS (8 KPIs)
-├── Valuation ← NOVO
-└── Relatórios PDF
-```
-
-Características do item:
-- Ícone: `TrendingUp`
-- Rota: `/dashboard/comandar/valuation`
-- Badge: "3 métodos"
-- Descrição: "Estimativa de valor da empresa"
-
----
-
-### 3. Configurar Rota
-
-**Arquivo:** `src/App.tsx`
-
-Adicionar rota protegida `/dashboard/comandar/valuation` apontando para a nova página.
-
----
-
-### 4. Atualizar Página do Módulo COMANDAR
-
-**Arquivo:** `src/pages/dashboard/ComandarPage.tsx`
-
-Adicionar card para Valuation na grid de ferramentas do módulo, entre NEXUS e Relatórios PDF.
-
----
-
-## Arquivos a Modificar
-
-| Arquivo | Ação |
-|---------|------|
-| `src/pages/ValuationPage.tsx` | Criar (nova página dedicada) |
-| `src/data/menuConfig.ts` | Adicionar item "Valuation" no COMANDAR |
-| `src/App.tsx` | Adicionar rota `/dashboard/comandar/valuation` |
-| `src/pages/dashboard/ComandarPage.tsx` | Adicionar card na grid |
-
----
-
-## Resultado Final
-
-O usuário Professional/Enterprise verá no sidebar:
-
-```
-COMANDAR
-├── NEXUS                    (8 KPIs)
-├── Valuation               (3 métodos) ← NOVO ITEM
-└── Relatórios PDF
+// DEPOIS
+<>
+  <Button variant="ghost" onClick={() => setLoginModalOpen(true)}>
+    Entrar
+  </Button>
+  <a href={CONFIG.PAYMENT_LINKS.STARTER_MENSAL} target="_blank">
+    <Button>Testar 7 dias grátis</Button>  // ← STRIPE
+  </a>
+</>
 ```
 
-Clicar em "Valuation" levará diretamente à calculadora de valuation com as 3 metodologias (EBITDA, DCF, Receita Múltipla).
+**Mobile (linhas 123-140):** Mesma alteração para o menu mobile.
+
+## Resumo das Alterações
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/components/landing/Header.tsx` | Substituir link `/cadastro` por link do Stripe |
+
+## Resultado
+- Usuários não conseguem mais criar conta sem passar pelo Stripe
+- CTA alinhado com a estratégia de conversão da landing page
+- Texto "Testar 7 dias grátis" consistente com outros CTAs da página
