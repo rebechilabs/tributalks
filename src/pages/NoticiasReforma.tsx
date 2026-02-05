@@ -35,7 +35,6 @@ import {
   Bell,
   Filter,
   RefreshCw,
-  Lightbulb,
   Calendar,
   ArrowRight,
   Globe
@@ -60,12 +59,6 @@ interface Noticia {
   data_publicacao: string;
 }
 
-interface Pilula {
-  id: string;
-  titulo: string;
-  conteudo: string;
-  tipo: string;
-}
 
 interface Prazo {
   id: string;
@@ -111,13 +104,6 @@ const getRelevanciaConfig = (relevancia: string) => {
   return relevanciaConfig[relevancia as RelevanciaKey] || relevanciaConfig.MEDIA;
 };
 
-const PILULA_TIPOS: Record<string, { icon: typeof Lightbulb; color: string }> = {
-  fato: { icon: Info, color: 'text-blue-400' },
-  conceito: { icon: Lightbulb, color: 'text-purple-400' },
-  prazo: { icon: Calendar, color: 'text-orange-400' },
-  dica: { icon: Sparkles, color: 'text-green-400' },
-  alerta: { icon: AlertTriangle, color: 'text-red-400' },
-};
 
 export default function Noticias() {
   const { profile, user } = useAuth();
@@ -126,7 +112,7 @@ export default function Noticias() {
   const hasAccess = isNavigator;
 
   const [noticias, setNoticias] = useState<Noticia[]>([]);
-  const [pilulaDoDia, setPilulaDoDia] = useState<Pilula | null>(null);
+  
   const [proximoPrazo, setProximoPrazo] = useState<Prazo | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedNoticia, setSelectedNoticia] = useState<Noticia | null>(null);
@@ -157,38 +143,7 @@ export default function Noticias() {
   const fetchData = async () => {
     setLoading(true);
     
-    // Buscar pílula do dia com rotação automática
     const today = new Date().toISOString().split('T')[0];
-    
-    // 1. Verificar se há pílula agendada para hoje
-    const { data: agendada } = await supabase
-      .from('pilulas_reforma')
-      .select('*')
-      .eq('ativo', true)
-      .eq('data_exibicao', today)
-      .limit(1);
-
-    if (agendada && agendada.length > 0) {
-      setPilulaDoDia(agendada[0]);
-    } else {
-      // 2. Rotação automática entre pílulas sem data específica
-      const { data: pilulas } = await supabase
-        .from('pilulas_reforma')
-        .select('*')
-        .eq('ativo', true)
-        .is('data_exibicao', null)
-        .order('created_at', { ascending: true });
-
-      if (pilulas && pilulas.length > 0) {
-        // Calcular dia do ano para rotação (1-365)
-        const startOfYear = new Date(new Date().getFullYear(), 0, 0);
-        const dayOfYear = Math.floor(
-          (Date.now() - startOfYear.getTime()) / 86400000
-        );
-        const indice = dayOfYear % pilulas.length;
-        setPilulaDoDia(pilulas[indice]);
-      }
-    }
 
     // Buscar próximo prazo
     const { data: prazoData } = await supabase
@@ -303,10 +258,6 @@ export default function Noticias() {
             </p>
             <ul className="text-left text-muted-foreground space-y-3 mb-8">
               <li className="flex items-start gap-3">
-                <Lightbulb className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <span>Pílula do dia: conceitos da reforma explicados</span>
-              </li>
-              <li className="flex items-start gap-3">
                 <Calendar className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                 <span>Calendário: prazos que afetam sua empresa</span>
               </li>
@@ -330,34 +281,6 @@ export default function Noticias() {
   return (
     <DashboardLayout title="Notícias da Reforma">
       <div className="p-6 max-w-4xl mx-auto">
-        {/* Pílula do Dia */}
-        {pilulaDoDia && (
-          <Card className="mb-6 border-primary/30 bg-primary/5">
-            <CardContent className="py-5">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                  {(() => {
-                    const config = PILULA_TIPOS[pilulaDoDia.tipo] || PILULA_TIPOS.dica;
-                    const Icon = config.icon;
-                    return <Icon className={cn("w-5 h-5", config.color)} />;
-                  })()}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-medium text-primary uppercase tracking-wide">
-                      💡 Pílula do Dia
-                    </span>
-                    <Badge variant="secondary" className="text-xs capitalize">
-                      {pilulaDoDia.tipo}
-                    </Badge>
-                  </div>
-                  <h3 className="font-semibold text-foreground">{pilulaDoDia.titulo}</h3>
-                  <p className="text-sm text-muted-foreground mt-1">{pilulaDoDia.conteudo}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Próximo Prazo */}
         {proximoPrazo && (
