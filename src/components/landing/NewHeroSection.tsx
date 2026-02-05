@@ -24,7 +24,7 @@ import heroBg from "@/assets/hero-bg-cinematic.jpg";
            >
              Domine a <span className="text-primary">Reforma Tributária</span>
              <br />
-             com a 1ª IA-First do Brasil.
+              com a 1ª AI-First do Brasil.
            </motion.h1>
  
            {/* Subheadline */}
