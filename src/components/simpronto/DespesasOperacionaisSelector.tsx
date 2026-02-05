@@ -4,7 +4,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Plus, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { CATEGORIAS_DESPESAS } from "@/types/despesasOperacionais";
 
 interface DespesasOperacionaisSelectorProps {
@@ -14,6 +15,8 @@ interface DespesasOperacionaisSelectorProps {
 
 export function DespesasOperacionaisSelector({ valores, onChange }: DespesasOperacionaisSelectorProps) {
   const [openCategories, setOpenCategories] = useState<string[]>([]);
+  const [customExpenses, setCustomExpenses] = useState<{ id: string; nome: string }[]>([]);
+  const [newCustomName, setNewCustomName] = useState('');
 
   // Calcular total
   const total = useMemo(() => {
@@ -53,6 +56,24 @@ export function DespesasOperacionaisSelector({ valores, onChange }: DespesasOper
     onChange({ ...valores, [id]: valorNum });
   };
 
+  // Adicionar despesa personalizada
+  const handleAddCustomExpense = () => {
+    if (!newCustomName.trim()) return;
+    
+    const customId = `custom_${Date.now()}`;
+    setCustomExpenses(prev => [...prev, { id: customId, nome: newCustomName.trim() }]);
+    onChange({ ...valores, [customId]: 0 });
+    setNewCustomName('');
+  };
+
+  // Remover despesa personalizada
+  const handleRemoveCustomExpense = (id: string) => {
+    setCustomExpenses(prev => prev.filter(e => e.id !== id));
+    const novosValores = { ...valores };
+    delete novosValores[id];
+    onChange(novosValores);
+  };
+
   // Contar itens selecionados por categoria
   const contarSelecionados = (categoriaId: string): number => {
     const categoria = CATEGORIAS_DESPESAS.find(c => c.id === categoriaId);
@@ -66,6 +87,11 @@ export function DespesasOperacionaisSelector({ valores, onChange }: DespesasOper
     if (!categoria) return 0;
     return categoria.items.reduce((sum, item) => sum + (valores[item.id] || 0), 0);
   };
+
+  // Calcular subtotal de despesas personalizadas
+  const customSubtotal = useMemo(() => {
+    return customExpenses.reduce((sum, exp) => sum + (valores[exp.id] || 0), 0);
+  }, [customExpenses, valores]);
 
   return (
     <div className="space-y-4">
@@ -147,6 +173,78 @@ export function DespesasOperacionaisSelector({ valores, onChange }: DespesasOper
           );
         })}
       </Accordion>
+
+      {/* Campo para despesa personalizada */}
+      <div className="border rounded-lg p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <Label className="text-sm font-medium">Não encontrou na lista?</Label>
+          {customExpenses.length > 0 && (
+            <span className="text-xs text-muted-foreground">
+              {customExpenses.length} item{customExpenses.length > 1 ? 's' : ''} • {formatarTotal(customSubtotal)}
+            </span>
+          )}
+        </div>
+        
+        {/* Lista de despesas personalizadas */}
+        {customExpenses.length > 0 && (
+          <div className="space-y-3">
+            {customExpenses.map((expense) => (
+              <div key={expense.id} className="flex items-center gap-3">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                  onClick={() => handleRemoveCustomExpense(expense.id)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+                <span className="flex-1 text-sm">{expense.nome}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground text-sm">R$</span>
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="0"
+                    value={formatarParaExibicao(valores[expense.id])}
+                    onChange={(e) => handleValueChange(expense.id, e.target.value)}
+                    className="w-32 h-8 text-right"
+                  />
+                  <span className="text-muted-foreground text-xs">/ano</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Input para adicionar nova despesa */}
+        <div className="flex items-center gap-2">
+          <Input
+            type="text"
+            placeholder="Digite o nome da despesa..."
+            value={newCustomName}
+            onChange={(e) => setNewCustomName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleAddCustomExpense();
+              }
+            }}
+            className="flex-1"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleAddCustomExpense}
+            disabled={!newCustomName.trim()}
+            className="gap-1"
+          >
+            <Plus className="h-4 w-4" />
+            Adicionar
+          </Button>
+        </div>
+      </div>
 
       {/* Alerta de subjetividade */}
       <Alert className="border-yellow-500/50 bg-yellow-500/10">
