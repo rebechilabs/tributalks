@@ -293,8 +293,7 @@ const App = () => (
               path="/dashboard/precificacao/priceguard" 
               element={
                 <ProtectedRoute>
-                  {/* Placeholder for PriceGuard - coming soon */}
-                  <PrecificacaoPage />
+                  <Navigate to="/dashboard/precificacao/margem?tab=priceguard" replace />
                 </ProtectedRoute>
               } 
             />
