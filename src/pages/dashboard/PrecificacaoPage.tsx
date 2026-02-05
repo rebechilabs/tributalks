@@ -26,7 +26,6 @@ const tools = [
     icon: Shield,
     stepNumber: 3,
     statusKey: 'priceguard' as const,
-    badge: "Em breve",
   },
 ];
 
@@ -57,7 +56,7 @@ export default function PrecificacaoPage() {
               icon={tool.icon}
               status={getToolStatus(tool.statusKey)}
               stepNumber={tool.stepNumber}
-              badge={tool.badge}
+              badge={'badge' in tool ? (tool.badge as string) : undefined}
             />
           ))}
         </div>
