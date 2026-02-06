@@ -1,50 +1,51 @@
 
 
-# Plano: Trocar Imagem do Hero
+# Plano: Usar Imagem da Sala de Reunião Moderna à Noite
 
-## Problema Atual
+## Resumo
 
-A imagem atual (arquivo uploadado pelo usuário) mostra uma mesa com pessoas e laptop, que não transmite a atmosfera de "sala de reunião executiva premium" desejada para o TribuTalks Connect.
-
----
-
-## Opções de Imagem
-
-| # | Descrição | URL |
-|---|-----------|-----|
-| **1** | Sofá de couro com mesa de centro em ambiente escuro e sofisticado | `photo-1505624198937-c704aff72608` |
-| **2** | Sala de conferência elegante com cadeiras e grande pintura na parede | `photo-1646215993365-125e6428e1dc` |
-| **3** | Interior de quarto moderno com grandes janelas e vista noturna | `photo-1691388203101-7322999dc108` |
+Utilizar a imagem enviada pelo usuário como fundo do Hero. A imagem mostra exatamente o que foi solicitado:
+- Sala de reunião moderna com mesa oval de madeira
+- Cadeiras executivas
+- Grandes janelas panorâmicas com vista para cidade à noite
+- Iluminação ambiente quente
+- Atmosfera corporativa premium
 
 ---
 
-## Recomendação
+## Etapas
 
-**Opção 1** - Mesa de centro com sofás de couro
+### 1. Copiar Imagem para o Projeto
 
-Esta imagem representa melhor o conceito de "clube exclusivo de negócios":
-- Ambiente escuro e sofisticado
-- Mobiliário premium (sofás de couro, mesa de madeira)
-- Sem pessoas visíveis
-- Iluminação quente/âmbar
-- Atmosfera de lounge executivo
+Copiar o arquivo do usuário para a pasta `public/images/` para uso como background CSS.
 
----
+**De:** `user-uploads://Gemini_Generated_Image_w7cxwkw7cxwkw7cx.png`  
+**Para:** `public/images/hero-meeting-room.png`
 
-## Alteração Técnica
+### 2. Atualizar Hero Section
 
 **Arquivo:** `src/components/connect/ConnectHeroSection.tsx`  
 **Linha:** 14
 
 ```typescript
-backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.85)), url('https://images.unsplash.com/photo-1505624198937-c704aff72608?auto=format&fit=crop&w=1920&q=80')`,
+backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.85)), url('/images/hero-meeting-room.png')`,
 ```
 
 ---
 
 ## Overlay
 
-Manter o overlay escuro atual para garantir legibilidade:
-- Gradiente: `rgba(0,0,0,0.6), rgba(0,0,0,0.85)`
-- Bottom fade: `to-black/90`
+Manter as configurações atuais para garantir legibilidade do texto:
+- Gradiente superior: `rgba(0,0,0,0.6), rgba(0,0,0,0.85)`
+- Fade inferior: `to-black/90`
+
+---
+
+## Resultado Esperado
+
+A imagem combina perfeitamente com o conceito "Dark Luxury" do TribuTalks Connect:
+- Vista noturna da cidade com luzes
+- Mesa de reunião executiva oval
+- Ambiente profissional e sofisticado
+- Transmite exclusividade e poder de decisão
 
