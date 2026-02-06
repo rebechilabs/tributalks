@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Scale } from "lucide-react";
 import logoTributalks from "@/assets/logo-tributalks.png";
 import logoRebechiSilva from "@/assets/logo-rebechi-silva.png";
 
@@ -29,6 +30,12 @@ export function ConnectFooter() {
               alt="Rebechi & Silva"
               className="h-12 mx-auto mb-3"
             />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 mb-2">
+              <Scale className="h-3 w-3 text-primary" />
+              <span className="text-xs text-primary font-medium">
+                Powered by Rebechi & Silva Advogados Associados
+              </span>
+            </div>
             <p className="text-muted-foreground text-xs">
               Uma iniciativa de Alexandre Silva
             </p>
