@@ -1482,6 +1482,42 @@ export type Database = {
         }
         Relationships: []
       }
+      connect_applications: {
+        Row: {
+          cargo: string
+          created_at: string
+          email: string
+          empresa: string | null
+          id: string
+          nome: string
+          setor: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          cargo: string
+          created_at?: string
+          email: string
+          empresa?: string | null
+          id?: string
+          nome: string
+          setor: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          cargo?: string
+          created_at?: string
+          email?: string
+          empresa?: string | null
+          id?: string
+          nome?: string
+          setor?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       consultorias: {
         Row: {
           calendly_event_id: string | null
