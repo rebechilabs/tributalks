@@ -62,7 +62,7 @@ export const ConnectFormSection = forwardRef<HTMLDivElement, ConnectFormSectionP
             </div>
 
             <p className="text-center text-sm text-primary mt-4">
-              523 profissionais já na fila.
+              131 profissionais já na fila.
             </p>
           </motion.div>
         </div>
