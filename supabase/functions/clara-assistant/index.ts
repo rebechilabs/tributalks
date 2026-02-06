@@ -1,9 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.91.1";
+import { checkRateLimit, RATE_LIMITS, rateLimitedResponse, createRateLimitHeaders } from "../_shared/rate-limiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 interface ToolContext {
@@ -2178,6 +2179,23 @@ serve(async (req) => {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // ============================================
+    // RATE LIMITING - Protege contra abuso
+    // ============================================
+    // Busca plano do usuário para rate limiting baseado em tier
+    const { data: profileForPlan } = await supabase
+      .from('profiles')
+      .select('plano')
+      .eq('user_id', user.id)
+      .single();
+    const userPlanForRateLimit = profileForPlan?.plano || 'FREE';
+    
+    const rateLimitResult = checkRateLimit(user.id, RATE_LIMITS.ai, userPlanForRateLimit);
+    if (!rateLimitResult.allowed) {
+      console.log(`Rate limit exceeded for user ${user.id} (plan: ${userPlanForRateLimit})`);
+      return rateLimitedResponse(rateLimitResult, RATE_LIMITS.ai.requests, corsHeaders);
     }
 
     // NOVO: Busca contexto completo do usuário em paralelo
