@@ -27,6 +27,7 @@ import NotFound from "./pages/NotFound";
 const Termos = lazy(() => import("./pages/Termos"));
 const Privacidade = lazy(() => import("./pages/Privacidade"));
 const Contato = lazy(() => import("./pages/Contato"));
+const Connect = lazy(() => import("./pages/Connect"));
 const DocumentoComercial = lazy(() => import("./pages/DocumentoComercial"));
 const DocumentoOportunidades = lazy(() => import("./pages/DocumentoOportunidades"));
 const EstudosCaso = lazy(() => import("./pages/EstudosCaso"));
@@ -132,6 +133,7 @@ const App = () => (
             <Route path="/termos" element={<LazyRoute><Termos /></LazyRoute>} />
             <Route path="/privacidade" element={<LazyRoute><Privacidade /></LazyRoute>} />
             <Route path="/contato" element={<LazyRoute><Contato /></LazyRoute>} />
+            <Route path="/connect" element={<LazyRoute><Connect /></LazyRoute>} />
             <Route path="/documento-comercial" element={<LazyRoute><DocumentoComercial /></LazyRoute>} />
             <Route path="/documento-oportunidades" element={<LazyRoute><DocumentoOportunidades /></LazyRoute>} />
             <Route path="/casos" element={<LazyRoute><EstudosCaso /></LazyRoute>} />
