@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,91 +9,103 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { CompanyProvider } from "@/contexts/CompanyContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PublicRoute } from "@/components/PublicRoute";
-// Páginas públicas
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ConnectionStatus } from "@/components/ConnectionStatus";
+import { PresenceTrackerWrapper } from "./components/PresenceTrackerWrapper";
+import { AppVersionChecker } from "./components/AppVersionChecker";
+
+// Páginas públicas (carregadas diretamente - são entry points)
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 import RecuperarSenha from "./pages/RecuperarSenha";
 import RedefinirSenha from "./pages/RedefinirSenha";
 import NotFound from "./pages/NotFound";
-import Termos from "./pages/Termos";
-import Privacidade from "./pages/Privacidade";
-import Contato from "./pages/Contato";
-import DocumentoComercial from "./pages/DocumentoComercial";
-import DocumentoOportunidades from "./pages/DocumentoOportunidades";
-import EstudosCaso from "./pages/EstudosCaso";
-import EstudoCasoDetalhe from "./pages/EstudoCasoDetalhe";
-import PagamentoConfirmacao from "./pages/PagamentoConfirmacao";
-import OAuthCallback from "./pages/OAuthCallback";
 
-// Páginas protegidas
-import Onboarding from "./pages/Onboarding";
-import OnboardingAI from "./pages/OnboardingAI";
-import Setup from "./pages/Setup";
-import WelcomeAI from "./pages/WelcomeAI";
-import Dashboard from "./pages/Dashboard";
-import Upgrade from "./pages/Upgrade";
-import Perfil from "./pages/Perfil";
-import Historico from "./pages/Historico";
-import ClaraAI from "./pages/ClaraAI";
-import Comunidade from "./pages/Comunidade";
-import Configuracoes from "./pages/Configuracoes";
-import NoticiasReforma from "./pages/NoticiasReforma";
-import AdminNoticias from "./pages/AdminNoticias";
-import AnaliseNotasFiscais from "./pages/AnaliseNotasFiscais";
-import XMLResultados from "./pages/XMLResultados";
-import DRE from "./pages/DRE";
-import DREResultados from "./pages/DREResultados";
-import ScoreTributario from "./pages/ScoreTributario";
-import PerfilEmpresa from "./pages/PerfilEmpresa";
-import Oportunidades from "./pages/Oportunidades";
-import CbsIbsNcm from "./pages/CbsIbsNcm";
-import TimelineReforma from "./pages/TimelineReforma";
-import AnalisadorDocumentos from "./pages/AnalisadorDocumentos";
-import WorkflowsGuiados from "./pages/WorkflowsGuiados";
-import ChecklistReforma from "./pages/ChecklistReforma";
-import Integracoes from "./pages/Integracoes";
-import Consultorias from "./pages/Consultorias";
-import Indicar from "./pages/Indicar";
-import Ajuda from "./pages/Ajuda";
-import NewsletterPage from "./pages/NewsletterPage";
+// Páginas públicas com lazy loading
+const Termos = lazy(() => import("./pages/Termos"));
+const Privacidade = lazy(() => import("./pages/Privacidade"));
+const Contato = lazy(() => import("./pages/Contato"));
+const DocumentoComercial = lazy(() => import("./pages/DocumentoComercial"));
+const DocumentoOportunidades = lazy(() => import("./pages/DocumentoOportunidades"));
+const EstudosCaso = lazy(() => import("./pages/EstudosCaso"));
+const EstudoCasoDetalhe = lazy(() => import("./pages/EstudoCasoDetalhe"));
+const PagamentoConfirmacao = lazy(() => import("./pages/PagamentoConfirmacao"));
+const OAuthCallback = lazy(() => import("./pages/OAuthCallback"));
+
+// Páginas protegidas com lazy loading
+const Onboarding = lazy(() => import("./pages/Onboarding"));
+const OnboardingAI = lazy(() => import("./pages/OnboardingAI"));
+const Setup = lazy(() => import("./pages/Setup"));
+const WelcomeAI = lazy(() => import("./pages/WelcomeAI"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Upgrade = lazy(() => import("./pages/Upgrade"));
+const Perfil = lazy(() => import("./pages/Perfil"));
+const Historico = lazy(() => import("./pages/Historico"));
+const ClaraAI = lazy(() => import("./pages/ClaraAI"));
+const Comunidade = lazy(() => import("./pages/Comunidade"));
+const Configuracoes = lazy(() => import("./pages/Configuracoes"));
+const NoticiasReforma = lazy(() => import("./pages/NoticiasReforma"));
+const AdminNoticias = lazy(() => import("./pages/AdminNoticias"));
+const AnaliseNotasFiscais = lazy(() => import("./pages/AnaliseNotasFiscais"));
+const XMLResultados = lazy(() => import("./pages/XMLResultados"));
+const DRE = lazy(() => import("./pages/DRE"));
+const DREResultados = lazy(() => import("./pages/DREResultados"));
+const ScoreTributario = lazy(() => import("./pages/ScoreTributario"));
+const PerfilEmpresa = lazy(() => import("./pages/PerfilEmpresa"));
+const Oportunidades = lazy(() => import("./pages/Oportunidades"));
+const CbsIbsNcm = lazy(() => import("./pages/CbsIbsNcm"));
+const TimelineReforma = lazy(() => import("./pages/TimelineReforma"));
+const AnalisadorDocumentos = lazy(() => import("./pages/AnalisadorDocumentos"));
+const WorkflowsGuiados = lazy(() => import("./pages/WorkflowsGuiados"));
+const ChecklistReforma = lazy(() => import("./pages/ChecklistReforma"));
+const Integracoes = lazy(() => import("./pages/Integracoes"));
+const Consultorias = lazy(() => import("./pages/Consultorias"));
+const Indicar = lazy(() => import("./pages/Indicar"));
+const Ajuda = lazy(() => import("./pages/Ajuda"));
+const NewsletterPage = lazy(() => import("./pages/NewsletterPage"));
 
 // Calculadoras
-import SplitPayment from "./pages/calculadora/SplitPayment";
-import ComparativoRegimes from "./pages/calculadora/ComparativoRegimes";
-import CalculadoraRTC from "./pages/calculadora/CalculadoraRTC";
-import SimprontoPage from "./pages/dashboard/SimprontoPage";
-import CalculadoraNBS from "./pages/calculadora/CalculadoraNBS";
+const SplitPayment = lazy(() => import("./pages/calculadora/SplitPayment"));
+const ComparativoRegimes = lazy(() => import("./pages/calculadora/ComparativoRegimes"));
+const CalculadoraRTC = lazy(() => import("./pages/calculadora/CalculadoraRTC"));
+const SimprontoPage = lazy(() => import("./pages/dashboard/SimprontoPage"));
+const CalculadoraNBS = lazy(() => import("./pages/calculadora/CalculadoraNBS"));
 
 // Painel Executivo
-import PainelExecutivo from "./pages/PainelExecutivo";
-import ValuationPage from "./pages/ValuationPage";
-import Nexus from "./pages/Nexus";
+const PainelExecutivo = lazy(() => import("./pages/PainelExecutivo"));
+const ValuationPage = lazy(() => import("./pages/ValuationPage"));
+const Nexus = lazy(() => import("./pages/Nexus"));
 
 // Margem Ativa
-import MargemAtiva from "./pages/dashboard/MargemAtiva";
+const MargemAtiva = lazy(() => import("./pages/dashboard/MargemAtiva"));
 
-// NEW: Module Pages
-import HomePage from "./pages/dashboard/HomePage";
-import EntenderPage from "./pages/dashboard/EntenderPage";
-import RecuperarPage from "./pages/dashboard/RecuperarPage";
-import PrecificacaoPage from "./pages/dashboard/PrecificacaoPage";
-import ComandarPage from "./pages/dashboard/ComandarPage";
-import ConexaoPage from "./pages/dashboard/ConexaoPage";
+// Module Pages
+const HomePage = lazy(() => import("./pages/dashboard/HomePage"));
+const EntenderPage = lazy(() => import("./pages/dashboard/EntenderPage"));
+const RecuperarPage = lazy(() => import("./pages/dashboard/RecuperarPage"));
+const PrecificacaoPage = lazy(() => import("./pages/dashboard/PrecificacaoPage"));
+const ComandarPage = lazy(() => import("./pages/dashboard/ComandarPage"));
+const ConexaoPage = lazy(() => import("./pages/dashboard/ConexaoPage"));
 
 // Admin
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminMonitoring from "./pages/admin/AdminMonitoring";
-import AdminPilulas from "./pages/admin/AdminPilulas";
-import AdminPrazos from "./pages/admin/AdminPrazos";
-import AdminUsuarios from "./pages/admin/AdminUsuarios";
-import AdminTrainingData from "./pages/admin/AdminTrainingData";
-import AdminRAGDashboard from "./pages/admin/AdminRAGDashboard";
-import AdminAIHealth from "./pages/admin/AdminAIHealth";
-import { PresenceTrackerWrapper } from "./components/PresenceTrackerWrapper";
-import { AppVersionChecker } from "./components/AppVersionChecker";
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminMonitoring = lazy(() => import("./pages/admin/AdminMonitoring"));
+const AdminPilulas = lazy(() => import("./pages/admin/AdminPilulas"));
+const AdminPrazos = lazy(() => import("./pages/admin/AdminPrazos"));
+const AdminUsuarios = lazy(() => import("./pages/admin/AdminUsuarios"));
+const AdminTrainingData = lazy(() => import("./pages/admin/AdminTrainingData"));
+const AdminRAGDashboard = lazy(() => import("./pages/admin/AdminRAGDashboard"));
+const AdminAIHealth = lazy(() => import("./pages/admin/AdminAIHealth"));
 
 const queryClient = new QueryClient();
+
+// Wrapper component for lazy-loaded routes
+const LazyRoute = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<LoadingSpinner text="Carregando..." />}>
+    {children}
+  </Suspense>
+);
 
 const App = () => (
   <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
@@ -101,6 +114,7 @@ const App = () => (
         <BrowserRouter>
         <AuthProvider>
           <CompanyProvider>
+          <ConnectionStatus />
           <AppVersionChecker />
           <PresenceTrackerWrapper />
           <Toaster />
@@ -113,23 +127,23 @@ const App = () => (
             
             <Route path="/recuperar-senha" element={<RecuperarSenha />} />
             <Route path="/redefinir-senha" element={<RedefinirSenha />} />
-            <Route path="/termos" element={<Termos />} />
-            <Route path="/privacidade" element={<Privacidade />} />
-            <Route path="/contato" element={<Contato />} />
-            <Route path="/documento-comercial" element={<DocumentoComercial />} />
-            <Route path="/documento-oportunidades" element={<DocumentoOportunidades />} />
-            <Route path="/casos" element={<EstudosCaso />} />
-            <Route path="/casos/:slug" element={<EstudoCasoDetalhe />} />
-            <Route path="/pagamento/confirmacao" element={<PagamentoConfirmacao />} />
-            <Route path="/oauth/callback" element={<OAuthCallback />} />
-            <Route path="/integracoes" element={<ProtectedRoute><Integracoes /></ProtectedRoute>} />
+            <Route path="/termos" element={<LazyRoute><Termos /></LazyRoute>} />
+            <Route path="/privacidade" element={<LazyRoute><Privacidade /></LazyRoute>} />
+            <Route path="/contato" element={<LazyRoute><Contato /></LazyRoute>} />
+            <Route path="/documento-comercial" element={<LazyRoute><DocumentoComercial /></LazyRoute>} />
+            <Route path="/documento-oportunidades" element={<LazyRoute><DocumentoOportunidades /></LazyRoute>} />
+            <Route path="/casos" element={<LazyRoute><EstudosCaso /></LazyRoute>} />
+            <Route path="/casos/:slug" element={<LazyRoute><EstudoCasoDetalhe /></LazyRoute>} />
+            <Route path="/pagamento/confirmacao" element={<LazyRoute><PagamentoConfirmacao /></LazyRoute>} />
+            <Route path="/oauth/callback" element={<LazyRoute><OAuthCallback /></LazyRoute>} />
+            <Route path="/integracoes" element={<ProtectedRoute><LazyRoute><Integracoes /></LazyRoute></ProtectedRoute>} />
             
             {/* Protegidas */}
             <Route 
               path="/onboarding" 
               element={
                 <ProtectedRoute requireOnboarding={false}>
-                  <OnboardingAI />
+                  <LazyRoute><OnboardingAI /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -138,16 +152,16 @@ const App = () => (
               path="/onboarding-classic" 
               element={
                 <ProtectedRoute requireOnboarding={false}>
-                  <Onboarding />
+                  <LazyRoute><Onboarding /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
-            {/* NEW: Setup page for company registration */}
+            {/* Setup page for company registration */}
             <Route 
               path="/setup" 
               element={
                 <ProtectedRoute requireOnboarding={false}>
-                  <Setup />
+                  <LazyRoute><Setup /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -156,7 +170,7 @@ const App = () => (
               path="/welcome" 
               element={
                 <ProtectedRoute requireOnboarding={false}>
-                  <WelcomeAI />
+                  <LazyRoute><WelcomeAI /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -166,27 +180,27 @@ const App = () => (
               path="/dashboard" 
               element={
                 <ProtectedRoute>
-                  <Dashboard />
+                  <LazyRoute><Dashboard /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
             
-            {/* NEW: Home Inteligente */}
+            {/* Home Inteligente */}
             <Route 
               path="/dashboard/home" 
               element={
                 <ProtectedRoute>
-                  <HomePage />
+                  <LazyRoute><HomePage /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
             
-            {/* NEW: Module Landing Pages */}
+            {/* Module Landing Pages */}
             <Route 
               path="/dashboard/entender" 
               element={
                 <ProtectedRoute>
-                  <EntenderPage />
+                  <LazyRoute><EntenderPage /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -194,7 +208,7 @@ const App = () => (
               path="/dashboard/recuperar" 
               element={
                 <ProtectedRoute>
-                  <RecuperarPage />
+                  <LazyRoute><RecuperarPage /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -202,7 +216,7 @@ const App = () => (
               path="/dashboard/precificacao" 
               element={
                 <ProtectedRoute>
-                  <PrecificacaoPage />
+                  <LazyRoute><PrecificacaoPage /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -210,7 +224,7 @@ const App = () => (
               path="/dashboard/comandar" 
               element={
                 <ProtectedRoute>
-                  <ComandarPage />
+                  <LazyRoute><ComandarPage /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -218,17 +232,17 @@ const App = () => (
               path="/dashboard/conexao" 
               element={
                 <ProtectedRoute>
-                  <ConexaoPage />
+                  <LazyRoute><ConexaoPage /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
             
-            {/* NEW: Tools under ENTENDER module */}
+            {/* Tools under ENTENDER module */}
             <Route 
               path="/dashboard/entender/dre" 
               element={
                 <ProtectedRoute>
-                  <DRE />
+                  <LazyRoute><DRE /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -236,7 +250,7 @@ const App = () => (
               path="/dashboard/entender/score" 
               element={
                 <ProtectedRoute>
-                  <ScoreTributario />
+                  <LazyRoute><ScoreTributario /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -244,7 +258,7 @@ const App = () => (
               path="/dashboard/entender/comparativo" 
               element={
                 <ProtectedRoute>
-                  <SimprontoPage />
+                  <LazyRoute><SimprontoPage /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -254,12 +268,12 @@ const App = () => (
               element={<Navigate to="/dashboard/entender/comparativo" replace />}
             />
             
-            {/* NEW: Tools under RECUPERAR module */}
+            {/* Tools under RECUPERAR module */}
             <Route 
               path="/dashboard/recuperar/radar" 
               element={
                 <ProtectedRoute>
-                  <AnaliseNotasFiscais />
+                  <LazyRoute><AnaliseNotasFiscais /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -267,17 +281,17 @@ const App = () => (
               path="/dashboard/recuperar/oportunidades" 
               element={
                 <ProtectedRoute>
-                  <Oportunidades />
+                  <LazyRoute><Oportunidades /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
             
-            {/* NEW: Tools under PRECIFICACAO module */}
+            {/* Tools under PRECIFICACAO module */}
             <Route 
               path="/dashboard/precificacao/margem" 
               element={
                 <ProtectedRoute>
-                  <MargemAtiva />
+                  <LazyRoute><MargemAtiva /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -285,7 +299,7 @@ const App = () => (
               path="/dashboard/precificacao/split" 
               element={
                 <ProtectedRoute>
-                  <SplitPayment />
+                  <LazyRoute><SplitPayment /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -298,12 +312,12 @@ const App = () => (
               } 
             />
             
-            {/* NEW: Tools under COMANDAR module */}
+            {/* Tools under COMANDAR module */}
             <Route 
               path="/dashboard/comandar/nexus" 
               element={
                 <ProtectedRoute>
-                  <Nexus />
+                  <LazyRoute><Nexus /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -311,7 +325,7 @@ const App = () => (
               path="/dashboard/comandar/valuation" 
               element={
                 <ProtectedRoute>
-                  <ValuationPage />
+                  <LazyRoute><ValuationPage /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -320,7 +334,7 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   {/* Placeholder for Relatórios PDF - coming soon */}
-                  <ComandarPage />
+                  <LazyRoute><ComandarPage /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -342,7 +356,7 @@ const App = () => (
               path="/dashboard/executivo" 
               element={
                 <ProtectedRoute>
-                  <PainelExecutivo />
+                  <LazyRoute><PainelExecutivo /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -350,7 +364,7 @@ const App = () => (
               path="/noticias" 
               element={
                 <ProtectedRoute>
-                  <NoticiasReforma />
+                  <LazyRoute><NoticiasReforma /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -358,7 +372,7 @@ const App = () => (
               path="/dashboard/timeline-reforma" 
               element={
                 <ProtectedRoute>
-                  <TimelineReforma />
+                  <LazyRoute><TimelineReforma /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -366,7 +380,7 @@ const App = () => (
               path="/perfil" 
               element={
                 <ProtectedRoute>
-                  <Perfil />
+                  <LazyRoute><Perfil /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -374,7 +388,7 @@ const App = () => (
               path="/historico" 
               element={
                 <ProtectedRoute>
-                  <Historico />
+                  <LazyRoute><Historico /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -382,17 +396,17 @@ const App = () => (
               path="/clara-ai" 
               element={
                 <ProtectedRoute>
-                  <ClaraAI />
+                  <LazyRoute><ClaraAI /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
             {/* Redirect legado /tribubot → /clara-ai */}
-            <Route path="/tribubot" element={<ProtectedRoute><ClaraAI /></ProtectedRoute>} />
+            <Route path="/tribubot" element={<ProtectedRoute><LazyRoute><ClaraAI /></LazyRoute></ProtectedRoute>} />
             <Route 
               path="/comunidade" 
               element={
                 <ProtectedRoute>
-                  <Comunidade />
+                  <LazyRoute><Comunidade /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -400,7 +414,7 @@ const App = () => (
               path="/newsletter" 
               element={
                 <ProtectedRoute>
-                  <NewsletterPage />
+                  <LazyRoute><NewsletterPage /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -408,7 +422,7 @@ const App = () => (
               path="/indicar" 
               element={
                 <ProtectedRoute>
-                  <Indicar />
+                  <LazyRoute><Indicar /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -416,7 +430,7 @@ const App = () => (
               path="/configuracoes" 
               element={
                 <ProtectedRoute>
-                  <Configuracoes />
+                  <LazyRoute><Configuracoes /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -426,7 +440,7 @@ const App = () => (
               path="/calculadora/rtc" 
               element={
                 <ProtectedRoute>
-                  <CalculadoraRTC />
+                  <LazyRoute><CalculadoraRTC /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -434,7 +448,7 @@ const App = () => (
               path="/calculadora/servicos" 
               element={
                 <ProtectedRoute>
-                  <CalculadoraNBS />
+                  <LazyRoute><CalculadoraNBS /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -443,7 +457,7 @@ const App = () => (
               path="/dashboard/xml-resultados" 
               element={
                 <ProtectedRoute>
-                  <XMLResultados />
+                  <LazyRoute><XMLResultados /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -451,7 +465,7 @@ const App = () => (
               path="/dashboard/dre-resultados" 
               element={
                 <ProtectedRoute>
-              <DREResultados />
+                  <LazyRoute><DREResultados /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -459,7 +473,7 @@ const App = () => (
               path="/dashboard/perfil-empresa" 
               element={
                 <ProtectedRoute>
-                  <PerfilEmpresa />
+                  <LazyRoute><PerfilEmpresa /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -467,7 +481,7 @@ const App = () => (
               path="/dashboard/cbs-ibs-ncm" 
               element={
                 <ProtectedRoute>
-                  <CbsIbsNcm />
+                  <LazyRoute><CbsIbsNcm /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -475,7 +489,7 @@ const App = () => (
               path="/dashboard/analisador-documentos" 
               element={
                 <ProtectedRoute>
-                  <AnalisadorDocumentos />
+                  <LazyRoute><AnalisadorDocumentos /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -483,7 +497,7 @@ const App = () => (
               path="/dashboard/workflows" 
               element={
                 <ProtectedRoute>
-                  <WorkflowsGuiados />
+                  <LazyRoute><WorkflowsGuiados /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -491,7 +505,7 @@ const App = () => (
               path="/dashboard/checklist-reforma" 
               element={
                 <ProtectedRoute>
-                  <ChecklistReforma />
+                  <LazyRoute><ChecklistReforma /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -499,7 +513,7 @@ const App = () => (
               path="/dashboard/integracoes" 
               element={
                 <ProtectedRoute>
-                  <Integracoes />
+                  <LazyRoute><Integracoes /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -507,7 +521,7 @@ const App = () => (
               path="/consultorias" 
               element={
                 <ProtectedRoute>
-                  <Consultorias />
+                  <LazyRoute><Consultorias /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -516,7 +530,7 @@ const App = () => (
               path="/admin" 
               element={
                 <ProtectedRoute>
-                  <AdminDashboard />
+                  <LazyRoute><AdminDashboard /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -524,7 +538,7 @@ const App = () => (
               path="/admin/monitoring" 
               element={
                 <ProtectedRoute>
-                  <AdminMonitoring />
+                  <LazyRoute><AdminMonitoring /></LazyRoute>
                 </ProtectedRoute>
               }
             />
@@ -532,7 +546,7 @@ const App = () => (
               path="/admin/pilulas" 
               element={
                 <ProtectedRoute>
-                  <AdminPilulas />
+                  <LazyRoute><AdminPilulas /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -540,7 +554,7 @@ const App = () => (
               path="/admin/prazos" 
               element={
                 <ProtectedRoute>
-                  <AdminPrazos />
+                  <LazyRoute><AdminPrazos /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -548,7 +562,7 @@ const App = () => (
               path="/admin/usuarios" 
               element={
                 <ProtectedRoute>
-                  <AdminUsuarios />
+                  <LazyRoute><AdminUsuarios /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -556,7 +570,7 @@ const App = () => (
               path="/admin/noticias" 
               element={
                 <ProtectedRoute>
-                  <AdminNoticias />
+                  <LazyRoute><AdminNoticias /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -564,7 +578,7 @@ const App = () => (
               path="/admin/training-data" 
               element={
                 <ProtectedRoute>
-                  <AdminTrainingData />
+                  <LazyRoute><AdminTrainingData /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -572,7 +586,7 @@ const App = () => (
               path="/admin/rag" 
               element={
                 <ProtectedRoute>
-                  <AdminRAGDashboard />
+                  <LazyRoute><AdminRAGDashboard /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -580,7 +594,7 @@ const App = () => (
               path="/admin/ai-health" 
               element={
                 <ProtectedRoute>
-                  <AdminAIHealth />
+                  <LazyRoute><AdminAIHealth /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -588,7 +602,7 @@ const App = () => (
               path="/ajuda" 
               element={
                 <ProtectedRoute>
-                  <Ajuda />
+                  <LazyRoute><Ajuda /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
@@ -596,7 +610,7 @@ const App = () => (
               path="/upgrade" 
               element={
                 <ProtectedRoute>
-                  <Upgrade />
+                  <LazyRoute><Upgrade /></LazyRoute>
                 </ProtectedRoute>
               } 
             />
