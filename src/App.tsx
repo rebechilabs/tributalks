@@ -13,6 +13,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { PresenceTrackerWrapper } from "./components/PresenceTrackerWrapper";
 import { AppVersionChecker } from "./components/AppVersionChecker";
+import { GlobalShortcutsProvider } from "./components/GlobalShortcutsProvider";
 
 // Páginas públicas (carregadas diretamente - são entry points)
 import Index from "./pages/Index";
@@ -114,6 +115,7 @@ const App = () => (
         <BrowserRouter>
         <AuthProvider>
           <CompanyProvider>
+          <GlobalShortcutsProvider>
           <ConnectionStatus />
           <AppVersionChecker />
           <PresenceTrackerWrapper />
@@ -618,6 +620,7 @@ const App = () => (
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </GlobalShortcutsProvider>
           </CompanyProvider>
         </AuthProvider>
         </BrowserRouter>
