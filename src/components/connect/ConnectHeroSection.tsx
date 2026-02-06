@@ -11,7 +11,7 @@ export function ConnectHeroSection({ onScrollToForm }: ConnectHeroSectionProps) 
     <section
       className="relative min-h-screen flex items-center justify-center pt-20"
       style={{
-        backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.85)), url('https://images.unsplash.com/photo-1462826303086-329426d1aef5?auto=format&fit=crop&w=1920&q=80')`,
+        backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.85)), url('https://images.unsplash.com/photo-1582653291997-079a1c04e5a1?auto=format&fit=crop&w=1920&q=80')`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundAttachment: "fixed",
