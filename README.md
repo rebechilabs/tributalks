@@ -1,73 +1,128 @@
-# Welcome to your Lovable project
+# TribuTalks - Inteligência Tributária
 
-## Project info
+Plataforma SaaS de gestão tributária inteligente para empresas brasileiras, com 36+ ferramentas para diagnóstico, recuperação de créditos, precificação e gestão estratégica.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 🚀 Stack Tecnológica
 
-## How can I edit this code?
+| Camada | Tecnologia |
+|--------|------------|
+| Frontend | React 18 + TypeScript + Vite |
+| Styling | Tailwind CSS + shadcn/ui |
+| State | TanStack Query + React Context |
+| Backend | Lovable Cloud (Supabase) |
+| IA | Clara AI (GPT-5/Gemini via Lovable AI) |
+| Animações | Framer Motion |
+| PDF | jsPDF |
+| Tour | React Joyride |
 
-There are several ways of editing your application.
+## 📁 Estrutura do Projeto
 
-**Use Lovable**
+```
+src/
+├── components/          # Componentes React organizados por feature
+│   ├── clara/           # Clara AI (assistente virtual)
+│   ├── dashboard/       # Componentes do painel principal
+│   ├── dre/             # DRE Inteligente
+│   ├── landing/         # Landing page
+│   ├── onboarding/      # Fluxo de onboarding
+│   ├── simpronto/       # Comparativo de regimes tributários
+│   └── ui/              # shadcn/ui components
+├── contexts/            # React Contexts (Auth, Company, Theme)
+├── hooks/               # Custom hooks
+├── integrations/        # Integrações externas (Supabase)
+├── lib/                 # Utilitários e helpers
+├── pages/               # Páginas da aplicação
+└── config/              # Configurações globais
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+supabase/
+├── functions/           # 48 Edge Functions (Deno)
+└── migrations/          # Migrações do banco de dados
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+docs/
+└── TRIBUTALKS_DOCUMENTATION.md  # Documentação técnica completa
 ```
 
-**Edit a file directly in GitHub**
+## 🛠️ Instalação Local
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Pré-requisitos
 
-**Use GitHub Codespaces**
+- Node.js 18+ 
+- npm ou bun
+- Git
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Passos
 
-## What technologies are used for this project?
+```bash
+# 1. Clone o repositório
+git clone <URL_DO_REPOSITORIO>
+cd <NOME_DO_PROJETO>
 
-This project is built with:
+# 2. Instale as dependências
+npm install
+# ou
+bun install
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+# 3. Configure as variáveis de ambiente
+cp .env.example .env
+# Edite o .env com suas credenciais
 
-## How can I deploy this project?
+# 4. Inicie o servidor de desenvolvimento
+npm run dev
+# ou
+bun dev
+```
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+O projeto estará disponível em `http://localhost:5173`
 
-## Can I connect a custom domain to my Lovable project?
+## 📚 Documentação
 
-Yes, you can!
+A documentação técnica completa está em [`docs/TRIBUTALKS_DOCUMENTATION.md`](docs/TRIBUTALKS_DOCUMENTATION.md), incluindo:
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- Arquitetura de autenticação e onboarding
+- Sistema multi-CNPJ
+- Feature gates por plano
+- Estrutura de rotas
+- Descrição de todas as ferramentas
+- Schema do banco de dados (77 tabelas)
+- Edge Functions (48 funções)
+- Configurações globais
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## 🔐 Módulos Principais
+
+| Módulo | Descrição |
+|--------|-----------|
+| **ENTENDER** | DRE Inteligente, Score Tributário, Simpronto |
+| **RECUPERAR** | Radar de Créditos, Oportunidades Fiscais |
+| **PRECIFICAÇÃO** | Margem Ativa, PriceGuard, Split Payment |
+| **COMANDAR** | NEXUS (Centro de Comando), Valuation |
+| **CONEXÃO** | Notícias, Comunidade, Indique e Ganhe |
+
+## 🤖 Clara AI
+
+Assistente virtual especializada em tributação brasileira:
+- Chat conversacional com comandos especiais (`/resumo`, `/diagnostico`)
+- Atalho global: `Ctrl+K`
+- Sistema de memória persistente
+- Base de conhecimento tributário (RAG)
+
+## 📊 Banco de Dados
+
+- **77 tabelas** com RLS (Row Level Security)
+- **48 Edge Functions** para processamento backend
+- Suporte a multi-tenant com isolamento por `user_id`
+
+## 🔗 Links
+
+| Recurso | URL |
+|---------|-----|
+| Preview | https://id-preview--a0c5403f-32d5-4f40-a502-bb558f3296ac.lovable.app |
+| Produção | https://tributechai.lovable.app |
+| Documentação | [docs/TRIBUTALKS_DOCUMENTATION.md](docs/TRIBUTALKS_DOCUMENTATION.md) |
+
+## 📄 Licença
+
+Projeto proprietário - Todos os direitos reservados.
+
+---
+
+**Desenvolvido com [Lovable](https://lovable.dev)**
