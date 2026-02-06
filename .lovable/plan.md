@@ -1,17 +1,34 @@
 
 
-# Plano: Atualizar Contador de Profissionais na Fila
+# Plano: Atualizar Footer com "Powered by Rebechi & Silva"
 
-## Alteração Simples
+## Contexto Atual
+O footer do Connect (linha 32-37) já mostra:
+- "Uma iniciativa de Alexandre Silva"
+- "Sócio-fundador da Rebechi & Silva"
 
-### Arquivo: `src/components/connect/ConnectFormSection.tsx`
+## Alteração a Implementar
 
-**Linha 65** - Atualizar o número de profissionais:
+### Arquivo: `src/components/connect/ConnectFooter.tsx`
+
+**Adicionar a linha "Powered by" na coluna central do footer**, seguindo o padrão visual da landing page principal:
 
 | Antes | Depois |
 |-------|--------|
-| `523 profissionais já na fila.` | `131 profissionais já na fila.` |
+| Logo Rebechi & Silva | Logo Rebechi & Silva |
+| "Uma iniciativa de Alexandre Silva" | **"Powered by Rebechi & Silva Advogados Associados"** |
+| "Sócio-fundador da Rebechi & Silva" | "Uma iniciativa de Alexandre Silva" |
+| | "Sócio-fundador da Rebechi & Silva" |
 
-## Resultado
-O texto abaixo do formulário de aplicação exibirá o número correto de profissionais aguardando na fila.
+**Detalhes visuais:**
+- A nova linha "Powered by..." será adicionada como primeira linha de texto
+- Usará um ícone de balança (`Scale`) na cor primary, similar ao usado na landing page principal
+- Formato: badge/pill com background `bg-primary/10` e borda `border-primary/20`
+
+## Resultado Esperado
+A coluna central do footer terá a hierarquia:
+1. Logo Rebechi & Silva
+2. Badge "Powered by Rebechi & Silva Advogados Associados" (com ícone)
+3. "Uma iniciativa de Alexandre Silva"
+4. "Sócio-fundador da Rebechi & Silva"
 
