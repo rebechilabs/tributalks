@@ -5,9 +5,9 @@ const pillars = [
   {
     icon: Video,
     title: "Reuniões de Célula",
-    subtitle: "Online, a cada 15 dias",
+    subtitle: "A cada 15 dias, via Circle",
     description:
-      "Encontros quinzenais focados em resultados, onde cada membro apresenta desafios e gera referências de negócios qualificadas para os outros.",
+      "Encontros quinzenais realizados no Circle, a plataforma exclusiva para comunidades premium. Cada membro apresenta desafios e gera referências de negócios qualificadas para os outros.",
   },
   {
     icon: MapPin,
