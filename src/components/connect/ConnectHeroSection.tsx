@@ -11,14 +11,14 @@ export function ConnectHeroSection({ onScrollToForm }: ConnectHeroSectionProps) 
     <section
       className="relative min-h-screen flex items-center justify-center pt-20"
       style={{
-        backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1510851896000-498520af2236?auto=format&fit=crop&w=1920&q=80')`,
+        backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.85)), url('https://files.manuscdn.com/user_upload_by_module/session_file/310419663029166293/qaMmEmCHnLviShNr.jpg')`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundAttachment: "fixed",
       }}
     >
       {/* Overlay gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/70" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/90" />
 
       <div className="container mx-auto px-4 md:px-6 lg:px-8 relative z-10">
         <motion.div
