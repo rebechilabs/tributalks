@@ -1,107 +1,55 @@
 
-# Plano de Correção Final - LP TribuTalks·Connect
 
-## Resumo das Alterações
+# Plano: Trocar Imagem do Hero para Escritório Noturno com Vista da Cidade
 
-Este plano cobre os 4 ajustes finos solicitados para alinhar a landing page com a identidade "Dark Luxury".
+## Resumo
 
----
-
-## Ajuste 1: Imagem de Fundo do Hero
-
-**Situação Atual:**  
-A imagem atual (`photo-1582653291997-079a1c04e5a1`) mostra uma sala de reunião com tons claros, o que quebra a estética dark luxury.
-
-**Solução:**  
-Trocar para uma imagem noturna de sala de reunião executiva com:
-- Vista para cidade à noite
-- Iluminação âmbar/dourada
-- Mobiliário escuro e sofisticado
-
-**Imagem sugerida:** `photo-1497366216548-37526070297c` (sala de conferência moderna com vista para cidade à noite, tons escuros e iluminação quente)
-
-**Arquivo:** `src/components/connect/ConnectHeroSection.tsx`
+Substituir a imagem de fundo do Hero por uma foto de interior de escritório moderno à noite, com vista panorâmica para a cidade iluminada pelas janelas.
 
 ---
 
-## Ajuste 2: Bloco do Formulário Typeform
+## Imagem Selecionada
 
-**Situação Atual:**  
-O formulário apenas mostra um container escuro sem feedback enquanto carrega.
+**ID:** `photo-1510851896000-498520af2236`
 
-**Solução:**  
-1. Adicionar estado de loading com spinner dourado e texto "Carregando aplicação..."
-2. Implementar timeout de 10 segundos
-3. Se falhar, mostrar botão "Aplicar em nova aba" que abre o Typeform diretamente
+**Descrição:** Escritório escuro à noite com mesa de madeira, luminária de luz quente/âmbar e janelas panorâmicas mostrando a cidade iluminada ao fundo.
 
-**Arquivo:** `src/components/connect/ConnectFormSection.tsx`
-
-**Mudanças técnicas:**
-- Adicionar estados `isLoading` e `hasError` com `useState`
-- Usar `useEffect` com `setTimeout` de 10s para detectar falha
-- Mostrar `LoadingSpinner` com cor primária (dourada)
-- Botão de fallback abre `https://gtyclpasfkm.typeform.com/to/hJER83zj`
+**Atributos:**
+- Interior de escritório/ambiente de trabalho executivo
+- Noite (cidade com luzes acesas visíveis)
+- Iluminação âmbar/dourada (luminária)
+- Mesa de madeira escura
+- Atmosfera sofisticada e minimalista
+- Imagem gratuita do Unsplash (quase 3 milhões de views)
 
 ---
 
-## Ajuste 3: Contraste do Texto na Seção "Cadeira Única"
+## Alteração Técnica
 
-**Situação Atual:**  
-Os parágrafos usam `text-muted-foreground` que resulta em contraste insuficiente.
+**Arquivo:** `src/components/connect/ConnectHeroSection.tsx`  
+**Linha:** 14
 
-**Solução:**  
-Criar uma classe customizada ou usar estilo inline para aplicar a cor `#A1A1A1` nos parágrafos descritivos.
-
-**Arquivo:** `src/components/connect/ConnectSolutionSection.tsx`
-
-**Linhas afetadas:** 44-55 (os dois parágrafos que começam com "No TribuTalks·Connect...")
-
----
-
-## Ajuste 4: Contador de Profissionais
-
-**Situação Atual:**  
-O texto mostra "131 profissionais já na fila."
-
-**Solução:**  
-Alterar para "523 profissionais já na fila." (número mais forte para prova social)
-
-**Arquivo:** `src/components/connect/ConnectFormSection.tsx`  
-**Linha:** 65
-
----
-
-## Detalhes Técnicos
-
-### Estrutura do Loading State (Ajuste 2)
-
-```text
-┌──────────────────────────────────────┐
-│                                      │
-│    [Typeform carregando...]          │
-│                                      │
-│         🔄 Spinner Dourado           │
-│      "Carregando aplicação..."       │
-│                                      │
-│ ─────── após 10s de falha ─────────  │
-│                                      │
-│   [Botão: Aplicar em nova aba →]     │
-│                                      │
-└──────────────────────────────────────┘
+**Antes:**
+```
+photo-1497366216548-37526070297c
 ```
 
-### Cores Aplicadas
-
-| Elemento | Cor Atual | Cor Nova |
-|----------|-----------|----------|
-| Parágrafos "Cadeira Única" | `text-muted-foreground` (~#71717A) | `#A1A1A1` |
-| Spinner de loading | - | `text-primary` (âmbar) |
-| Botão fallback | - | `bg-primary` (âmbar) |
+**Depois:**
+```
+photo-1510851896000-498520af2236
+```
 
 ---
 
-## Arquivos a Modificar
+## URL Completa
 
-1. `src/components/connect/ConnectHeroSection.tsx` - Nova imagem de fundo
-2. `src/components/connect/ConnectFormSection.tsx` - Loading state + contador
-3. `src/components/connect/ConnectSolutionSection.tsx` - Contraste do texto
+```
+https://images.unsplash.com/photo-1510851896000-498520af2236?auto=format&fit=crop&w=1920&q=80
+```
+
+---
+
+## Resultado Esperado
+
+O Hero da landing page mostrará um ambiente de escritório noturno moderno e sofisticado, com vista para cidade iluminada, alinhado com a identidade "Dark Luxury" do TribuTalks Connect.
+
