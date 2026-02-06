@@ -41,13 +41,13 @@ export function ConnectSolutionSection() {
               <span className="text-primary">Cadeira Única</span>
             </h2>
 
-            <p className="text-muted-foreground text-lg leading-relaxed">
+            <p className="text-lg leading-relaxed" style={{ color: '#A1A1A1' }}>
               No TribuTalks·Connect, operamos em um modelo de células de 35
               membros. Em cada célula, existe apenas uma cadeira por
               especialidade. Um advogado tributarista. Um especialista em
               logística. Um desenvolvedor de software.
             </p>
-            <p className="text-muted-foreground text-lg leading-relaxed mt-4">
+            <p className="text-lg leading-relaxed mt-4" style={{ color: '#A1A1A1' }}>
               Isso significa que, dentro da sua célula, você é a única
               referência na sua área. Os outros 34 membros não são seus
               concorrentes. São seus parceiros, seus conselheiros e,
