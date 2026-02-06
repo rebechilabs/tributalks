@@ -1,55 +1,50 @@
 
 
-# Plano: Trocar Imagem do Hero para Escritório Noturno com Vista da Cidade
+# Plano: Restaurar Hero com Imagem Personalizada
 
 ## Resumo
 
-Substituir a imagem de fundo do Hero por uma foto de interior de escritório moderno à noite, com vista panorâmica para a cidade iluminada pelas janelas.
+Substituir a imagem de fundo do Hero pela imagem fornecida pelo usuário e reverter o overlay para a opacidade original (mais escura).
 
 ---
 
-## Imagem Selecionada
+## Alterações
 
-**ID:** `photo-1510851896000-498520af2236`
+### 1. Imagem de Fundo (Hero)
 
-**Descrição:** Escritório escuro à noite com mesa de madeira, luminária de luz quente/âmbar e janelas panorâmicas mostrando a cidade iluminada ao fundo.
+**Arquivo:** `src/components/connect/ConnectHeroSection.tsx`
 
-**Atributos:**
-- Interior de escritório/ambiente de trabalho executivo
-- Noite (cidade com luzes acesas visíveis)
-- Iluminação âmbar/dourada (luminária)
-- Mesa de madeira escura
-- Atmosfera sofisticada e minimalista
-- Imagem gratuita do Unsplash (quase 3 milhões de views)
+**Substituições na linha 14:**
 
----
+| Elemento | Valor Atual | Novo Valor |
+|----------|-------------|------------|
+| Overlay | `rgba(0,0,0,0.4), rgba(0,0,0,0.6)` | `rgba(0,0,0,0.6), rgba(0,0,0,0.85)` |
+| URL da Imagem | Unsplash `photo-1510851896000-498520af2236` | `https://files.manuscdn.com/user_upload_by_module/session_file/310419663029166293/qaMmEmCHnLviShNr.jpg` |
 
-## Alteração Técnica
+### 2. Overlay Inferior
 
-**Arquivo:** `src/components/connect/ConnectHeroSection.tsx`  
-**Linha:** 14
+**Linha 21:**
 
-**Antes:**
-```
-photo-1497366216548-37526070297c
-```
-
-**Depois:**
-```
-photo-1510851896000-498520af2236
-```
+| Valor Atual | Novo Valor |
+|-------------|------------|
+| `to-black/70` | `to-black/90` |
 
 ---
 
-## URL Completa
+## Sobre o Formulário
 
-```
-https://images.unsplash.com/photo-1510851896000-498520af2236?auto=format&fit=crop&w=1920&q=80
-```
+O formulário já possui:
+- Estado de loading com spinner dourado
+- Timeout de 10 segundos
+- Botão de fallback "Aplicar em nova aba"
+
+A lentidão é do próprio Typeform (serviço externo). O mecanismo de fallback já está implementado para lidar com isso.
 
 ---
 
-## Resultado Esperado
+## Código Final (linha 14)
 
-O Hero da landing page mostrará um ambiente de escritório noturno moderno e sofisticado, com vista para cidade iluminada, alinhado com a identidade "Dark Luxury" do TribuTalks Connect.
+```typescript
+backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.85)), url('https://files.manuscdn.com/user_upload_by_module/session_file/310419663029166293/qaMmEmCHnLviShNr.jpg')`,
+```
 
