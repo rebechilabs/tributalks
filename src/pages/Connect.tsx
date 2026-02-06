@@ -18,7 +18,7 @@ export default function Connect() {
   };
 
   // TODO: Substituir pela URL real do Typeform
-  const typeformUrl = "https://form.typeform.com/to/PLACEHOLDER";
+  const typeformUrl = "https://form.typeform.com/to/hJER83zj";
 
   return (
     <div className="min-h-screen bg-black">
