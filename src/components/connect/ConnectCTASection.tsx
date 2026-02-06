@@ -20,6 +20,11 @@ const faqs = [
       "Não. Se a cadeira para a sua especialidade já estiver ocupada, você pode entrar em uma lista de espera ou aplicar para uma nova célula em formação.",
   },
   {
+    question: "As conversas são confidenciais?",
+    answer:
+      "Sim. Operamos sob a Regra de Chatham House, um padrão global para fóruns executivos. Isso significa que os participantes são livres para usar as informações recebidas, mas não podem revelar a identidade ou a afiliação de quem disse o quê. É a base da nossa confiança.",
+  },
+  {
     question: "Os encontros são gravados?",
     answer:
       "Não, para garantir a confidencialidade e a troca aberta de informações. Apenas conteúdo das imersões presenciais pode ser disponibilizado.",
@@ -53,8 +58,8 @@ export function ConnectCTASection({ onScrollToForm }: ConnectCTASectionProps) {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-6">
-              Sua Cadeira Está{" "}
-              <span className="text-primary">Esperando?</span>
+              Perguntas Frequentes sobre a{" "}
+              <span className="text-primary">Aplicação</span>
             </h2>
 
             <p className="text-muted-foreground text-lg mb-6">

@@ -6,7 +6,10 @@ interface ConnectFormSectionProps {
 }
 
 export const ConnectFormSection = forwardRef<HTMLDivElement, ConnectFormSectionProps>(
-  ({ typeformUrl = "https://form.typeform.com/to/PLACEHOLDER" }, ref) => {
+  ({ typeformUrl = "https://gtyclpasfkm.typeform.com/to/hJER83zj" }, ref) => {
+    // Extract form ID from URL
+    const formId = typeformUrl.split("/to/")[1] || "hJER83zj";
+    
     useEffect(() => {
       // Load Typeform embed script
       const script = document.createElement("script");
@@ -49,7 +52,11 @@ export const ConnectFormSection = forwardRef<HTMLDivElement, ConnectFormSectionP
               style={{ minHeight: "500px" }}
             >
               <div
-                data-tf-live={typeformUrl.split("/to/")[1] || "PLACEHOLDER"}
+                data-tf-widget={formId}
+                data-tf-opacity="100"
+                data-tf-iframe-props="title=TribuTalks Connect Application"
+                data-tf-transitive-search-params
+                data-tf-medium="snippet"
                 style={{ width: "100%", height: "500px" }}
               />
             </div>

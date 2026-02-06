@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Check, X } from "lucide-react";
+import { Check, X, ShieldCheck } from "lucide-react";
 
 const comparisons = [
   {
@@ -93,6 +93,32 @@ export function ConnectSolutionSection() {
             </div>
           </motion.div>
         </div>
+
+        {/* Chatham House Rule Section */}
+        <motion.div
+          className="mt-12 md:mt-16 max-w-3xl mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
+          <div className="bg-card/50 border border-primary/30 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-start gap-5">
+            <div className="w-14 h-14 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+              <ShieldCheck className="h-7 w-7 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-foreground mb-2">
+                Conversas sob a Regra de Chatham House
+              </h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Tudo o que é discutido em nossas reuniões é confidencial. A regra é simples: 
+                você pode usar a informação que recebe, mas não pode revelar quem a disse. 
+                Isso garante um ambiente de confiança absoluta para discutir seus maiores 
+                desafios e oportunidades sem reservas.
+              </p>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </section>
   );

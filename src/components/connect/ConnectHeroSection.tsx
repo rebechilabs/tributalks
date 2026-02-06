@@ -11,7 +11,7 @@ export function ConnectHeroSection({ onScrollToForm }: ConnectHeroSectionProps) 
     <section
       className="relative min-h-screen flex items-center justify-center pt-20"
       style={{
-        backgroundImage: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1920&q=80')`,
+        backgroundImage: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.85)), url('https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1920&q=80')`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundAttachment: "fixed",
@@ -33,8 +33,8 @@ export function ConnectHeroSection({ onScrollToForm }: ConnectHeroSectionProps) 
           </h1>
 
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 md:mb-10">
-            A única comunidade de negócios do Brasil onde você não encontra
-            concorrentes. Apenas parceiros.
+            Não é só networking. É o conselho de negócios que todo líder
+            gostaria de ter — mas nunca teve.
           </p>
 
           <Button
