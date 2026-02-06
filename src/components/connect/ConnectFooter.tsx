@@ -1,12 +1,11 @@
-import { forwardRef } from "react";
 import { Link } from "react-router-dom";
 import { Scale } from "lucide-react";
 import logoTributalks from "@/assets/logo-tributalks.png";
 import logoRebechiSilva from "@/assets/logo-rebechi-silva.png";
 
-export const ConnectFooter = forwardRef<HTMLElement>((_, ref) => {
+export function ConnectFooter() {
   return (
-    <footer ref={ref} className="py-12 md:py-16 bg-[#050505] border-t border-border/50">
+    <footer className="py-12 md:py-16 bg-[#050505] border-t border-border/50">
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className="grid md:grid-cols-3 gap-8 md:gap-12 mb-8">
           {/* Coluna Esquerda - TribuTalks */}
@@ -67,6 +66,4 @@ export const ConnectFooter = forwardRef<HTMLElement>((_, ref) => {
       </div>
     </footer>
   );
-});
-
-ConnectFooter.displayName = "ConnectFooter";
+}
