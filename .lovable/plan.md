@@ -1,50 +1,50 @@
 
 
-# Plano: Restaurar Hero com Imagem Personalizada
+# Plano: Trocar Imagem do Hero
 
-## Resumo
+## Problema Atual
 
-Substituir a imagem de fundo do Hero pela imagem fornecida pelo usuário e reverter o overlay para a opacidade original (mais escura).
-
----
-
-## Alterações
-
-### 1. Imagem de Fundo (Hero)
-
-**Arquivo:** `src/components/connect/ConnectHeroSection.tsx`
-
-**Substituições na linha 14:**
-
-| Elemento | Valor Atual | Novo Valor |
-|----------|-------------|------------|
-| Overlay | `rgba(0,0,0,0.4), rgba(0,0,0,0.6)` | `rgba(0,0,0,0.6), rgba(0,0,0,0.85)` |
-| URL da Imagem | Unsplash `photo-1510851896000-498520af2236` | `https://files.manuscdn.com/user_upload_by_module/session_file/310419663029166293/qaMmEmCHnLviShNr.jpg` |
-
-### 2. Overlay Inferior
-
-**Linha 21:**
-
-| Valor Atual | Novo Valor |
-|-------------|------------|
-| `to-black/70` | `to-black/90` |
+A imagem atual (arquivo uploadado pelo usuário) mostra uma mesa com pessoas e laptop, que não transmite a atmosfera de "sala de reunião executiva premium" desejada para o TribuTalks Connect.
 
 ---
 
-## Sobre o Formulário
+## Opções de Imagem
 
-O formulário já possui:
-- Estado de loading com spinner dourado
-- Timeout de 10 segundos
-- Botão de fallback "Aplicar em nova aba"
-
-A lentidão é do próprio Typeform (serviço externo). O mecanismo de fallback já está implementado para lidar com isso.
+| # | Descrição | URL |
+|---|-----------|-----|
+| **1** | Sofá de couro com mesa de centro em ambiente escuro e sofisticado | `photo-1505624198937-c704aff72608` |
+| **2** | Sala de conferência elegante com cadeiras e grande pintura na parede | `photo-1646215993365-125e6428e1dc` |
+| **3** | Interior de quarto moderno com grandes janelas e vista noturna | `photo-1691388203101-7322999dc108` |
 
 ---
 
-## Código Final (linha 14)
+## Recomendação
+
+**Opção 1** - Mesa de centro com sofás de couro
+
+Esta imagem representa melhor o conceito de "clube exclusivo de negócios":
+- Ambiente escuro e sofisticado
+- Mobiliário premium (sofás de couro, mesa de madeira)
+- Sem pessoas visíveis
+- Iluminação quente/âmbar
+- Atmosfera de lounge executivo
+
+---
+
+## Alteração Técnica
+
+**Arquivo:** `src/components/connect/ConnectHeroSection.tsx`  
+**Linha:** 14
 
 ```typescript
-backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.85)), url('https://files.manuscdn.com/user_upload_by_module/session_file/310419663029166293/qaMmEmCHnLviShNr.jpg')`,
+backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.85)), url('https://images.unsplash.com/photo-1505624198937-c704aff72608?auto=format&fit=crop&w=1920&q=80')`,
 ```
+
+---
+
+## Overlay
+
+Manter o overlay escuro atual para garantir legibilidade:
+- Gradiente: `rgba(0,0,0,0.6), rgba(0,0,0,0.85)`
+- Bottom fade: `to-black/90`
 
