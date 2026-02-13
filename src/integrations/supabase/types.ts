@@ -2540,6 +2540,7 @@ export type Database = {
           arquivo_storage_path: string | null
           cnpj: string | null
           created_at: string | null
+          dados_completos: Json | null
           erro_mensagem: string | null
           id: string
           periodo_apuracao: string | null
@@ -2557,6 +2558,7 @@ export type Database = {
           arquivo_storage_path?: string | null
           cnpj?: string | null
           created_at?: string | null
+          dados_completos?: Json | null
           erro_mensagem?: string | null
           id?: string
           periodo_apuracao?: string | null
@@ -2574,6 +2576,7 @@ export type Database = {
           arquivo_storage_path?: string | null
           cnpj?: string | null
           created_at?: string | null
+          dados_completos?: Json | null
           erro_mensagem?: string | null
           id?: string
           periodo_apuracao?: string | null
