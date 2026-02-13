@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Target, AlertTriangle, FileText, Download, TrendingUp, Sparkles, ListChecks, Scale, RefreshCw, Loader2 } from 'lucide-react';
+import { Target, AlertTriangle, FileText, Download, TrendingUp, Sparkles, ListChecks, Scale, RefreshCw, Loader2, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,7 @@ import { CreditReportDialog } from '@/components/pdf/CreditReportDialog';
 import { MonophasicAlert } from './MonophasicAlert';
 import { IdentifiedCreditsTable } from './IdentifiedCreditsTable';
 import { CreditImplementationWorkflow } from './CreditImplementationWorkflow';
+import { CreditDetailBreakdown } from './CreditDetailBreakdown';
 
 export function CreditRadar() {
   const { data: xmlSummary, isLoading: loadingXmlSummary } = useXmlCreditsSummary();
@@ -253,10 +254,14 @@ export function CreditRadar() {
 
           {/* Main Content Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsList className="grid w-full max-w-lg grid-cols-3">
               <TabsTrigger value="credits" className="gap-2">
                 <FileText className="h-4 w-4" />
-                Créditos Identificados
+                Créditos
+              </TabsTrigger>
+              <TabsTrigger value="details" className="gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Detalhamento
               </TabsTrigger>
               <TabsTrigger value="workflow" className="gap-2">
                 <ListChecks className="h-4 w-4" />
@@ -287,6 +292,18 @@ export function CreditRadar() {
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+            <TabsContent value="details">
+              {hasIdentifiedCredits && identifiedCredits ? (
+                <CreditDetailBreakdown credits={identifiedCredits} />
+              ) : (
+                <Card>
+                  <CardContent className="py-8 text-center text-muted-foreground">
+                    <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>O detalhamento estará disponível após a identificação de créditos.</p>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent value="workflow">
