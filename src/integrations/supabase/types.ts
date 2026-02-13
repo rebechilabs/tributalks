@@ -2367,6 +2367,39 @@ export type Database = {
         }
         Relationships: []
       }
+      monophasic_ncms: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          is_active: boolean | null
+          legal_basis: string
+          ncm_prefix: string
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          is_active?: boolean | null
+          legal_basis: string
+          ncm_prefix: string
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          is_active?: boolean | null
+          legal_basis?: string
+          ncm_prefix?: string
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
       noticias_tributarias: {
         Row: {
           acao_recomendada: string | null
@@ -3216,6 +3249,54 @@ export type Database = {
           typical_custo_aluguel_percent?: number | null
           typical_custo_folha_percent?: number | null
           year?: number | null
+        }
+        Relationships: []
+      }
+      simples_tax_distribution: {
+        Row: {
+          aliquota_nominal: number
+          anexo: string
+          cofins: number
+          cpp: number
+          csll: number
+          deducao: number
+          faixa: number
+          icms: number
+          irpj: number
+          iss: number
+          pis: number
+          receita_max: number
+          receita_min: number
+        }
+        Insert: {
+          aliquota_nominal: number
+          anexo: string
+          cofins: number
+          cpp: number
+          csll: number
+          deducao?: number
+          faixa: number
+          icms?: number
+          irpj: number
+          iss?: number
+          pis: number
+          receita_max: number
+          receita_min: number
+        }
+        Update: {
+          aliquota_nominal?: number
+          anexo?: string
+          cofins?: number
+          cpp?: number
+          csll?: number
+          deducao?: number
+          faixa?: number
+          icms?: number
+          irpj?: number
+          iss?: number
+          pis?: number
+          receita_max?: number
+          receita_min?: number
         }
         Relationships: []
       }

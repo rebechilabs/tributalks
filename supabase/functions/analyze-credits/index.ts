@@ -68,6 +68,8 @@ interface CompanyContext {
   setor: string | null
   aliquotaEfetiva: number
   pgdasData: Record<string, unknown> | null
+  temAtividadesMistas: boolean
+  cnaeSecundarios: string[] | null
 }
 
 interface SimplesTaxDistribution {
@@ -77,40 +79,19 @@ interface SimplesTaxDistribution {
   pis: number
   cpp: number
   icms: number
+  iss: number
 }
 
-// ========== SIMPLES NACIONAL TAX DISTRIBUTION ==========
-// Based on LC 123/2006, Anexo I (Comércio)
-function getSimplesTaxDistribution(faixa: number, anexo: string): SimplesTaxDistribution {
-  // Anexo I - Comércio
-  if (anexo === 'I' || anexo === '1') {
-    switch (faixa) {
-      case 1: return { irpj: 5.50, csll: 3.50, cofins: 12.74, pis: 2.76, cpp: 41.50, icms: 34.00 }
-      case 2: return { irpj: 5.50, csll: 3.50, cofins: 12.74, pis: 2.76, cpp: 41.50, icms: 34.00 }
-      case 3: return { irpj: 5.50, csll: 3.50, cofins: 12.74, pis: 2.76, cpp: 42.00, icms: 33.50 }
-      case 4: return { irpj: 5.50, csll: 3.50, cofins: 12.74, pis: 2.76, cpp: 41.50, icms: 34.00 }
-      case 5: return { irpj: 5.50, csll: 3.50, cofins: 12.74, pis: 2.76, cpp: 42.00, icms: 33.50 }
-      case 6: return { irpj: 13.50, csll: 10.00, cofins: 28.27, pis: 6.13, cpp: 42.10, icms: 0.00 }
-      default: return { irpj: 5.50, csll: 3.50, cofins: 12.74, pis: 2.76, cpp: 41.50, icms: 34.00 }
-    }
-  }
-  // Anexo II - Indústria
-  if (anexo === 'II' || anexo === '2') {
-    switch (faixa) {
-      case 1: return { irpj: 5.50, csll: 3.50, cofins: 11.51, pis: 2.49, cpp: 37.50, icms: 32.00 }
-      case 2: return { irpj: 5.50, csll: 3.50, cofins: 11.51, pis: 2.49, cpp: 37.50, icms: 32.00 }
-      case 3: return { irpj: 5.50, csll: 3.50, cofins: 11.51, pis: 2.49, cpp: 37.50, icms: 32.00 }
-      case 4: return { irpj: 5.50, csll: 3.50, cofins: 11.51, pis: 2.49, cpp: 37.50, icms: 32.00 }
-      case 5: return { irpj: 5.50, csll: 3.50, cofins: 11.51, pis: 2.49, cpp: 37.50, icms: 32.00 }
-      case 6: return { irpj: 8.50, csll: 7.50, cofins: 20.96, pis: 4.54, cpp: 23.50, icms: 35.00 }
-      default: return { irpj: 5.50, csll: 3.50, cofins: 11.51, pis: 2.49, cpp: 37.50, icms: 32.00 }
-    }
-  }
-  // Default (Anexo I, Faixa 4)
-  return { irpj: 5.50, csll: 3.50, cofins: 12.74, pis: 2.76, cpp: 41.50, icms: 34.00 }
+interface MonophasicNcm {
+  ncm_prefix: string
+  category: string
+  legal_basis: string
+  description: string | null
 }
 
-function detectFaixaFromRBT12(rbt12: number): number {
+// ========== EXPORTED HELPER FUNCTIONS (for testing) ==========
+
+export function detectFaixaFromRBT12(rbt12: number): number {
   if (rbt12 <= 180000) return 1
   if (rbt12 <= 360000) return 2
   if (rbt12 <= 720000) return 3
@@ -119,15 +100,26 @@ function detectFaixaFromRBT12(rbt12: number): number {
   return 6
 }
 
-function detectAnexoFromCNAE(cnae: string): string {
+export function detectAnexoFromCNAE(cnae: string): string {
   if (!cnae) return 'I'
   const prefix = cnae.substring(0, 2)
   // Indústria
   if (['10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','33'].includes(prefix)) return 'II'
   // Comércio
   if (['45','46','47'].includes(prefix)) return 'I'
-  // Serviços (simplified)
+  // Serviços de construção/vigilância/limpeza
+  if (['41','42','43','80','81'].includes(prefix)) return 'IV'
+  // Tecnologia/engenharia
+  if (['62','63','71','73'].includes(prefix)) return 'V'
+  // Serviços gerais
   return 'III'
+}
+
+export function isMonophasicNCMFromList(ncm: string, monophasicList: MonophasicNcm[]): MonophasicNcm | null {
+  for (const item of monophasicList) {
+    if (ncm.startsWith(item.ncm_prefix)) return item
+  }
+  return null
 }
 
 // ========== HELPER FUNCTIONS ==========
@@ -157,6 +149,7 @@ function isEnergyOrTelecom(cfop: string): boolean {
   return ['1253', '2253', '1254', '2254', '1255', '2255'].includes(cfop);
 }
 
+// Legacy fallback (used for Lucro Real rules)
 function isMonophasicNCM(ncm: string): boolean {
   if (ncm.startsWith('2710') || ncm.startsWith('2207')) return true;
   if (ncm.startsWith('3004') || ncm.startsWith('3003')) return true;
@@ -239,29 +232,86 @@ serve(async (req) => {
     // ========== FETCH COMPANY CONTEXT ==========
     const { data: profile } = await supabaseAdmin
       .from('company_profile')
-      .select('regime_tributario, cnae_principal, setor')
+      .select('regime_tributario, cnae_principal, setor, tem_atividades_mistas, cnae_secundarios')
       .eq('user_id', userId)
       .maybeSingle()
 
-    const { data: pgdasRecord } = await supabaseAdmin
+    // Fetch all PGDAS from last 12 months for RBT12 calculation
+    const twelveMonthsAgo = new Date()
+    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12)
+    
+    const { data: pgdasRecords } = await supabaseAdmin
       .from('pgdas_arquivos')
-      .select('aliquota_efetiva, dados_completos, periodo_apuracao')
+      .select('aliquota_efetiva, dados_completos, periodo_apuracao, anexo_simples, receita_bruta')
       .eq('user_id', userId)
+      .gte('periodo_apuracao', twelveMonthsAgo.toISOString().split('T')[0])
       .order('periodo_apuracao', { ascending: false })
-      .limit(1)
-      .maybeSingle()
+
+    const latestPgdas = pgdasRecords?.[0] || null
+
+    // Calculate RBT12 from PGDAS records
+    let rbt12Calculated = 0
+    if (pgdasRecords && pgdasRecords.length > 0) {
+      for (const pgdas of pgdasRecords) {
+        const rb = pgdas.receita_bruta || 
+          (pgdas.dados_completos as Record<string, unknown>)?.receita_bruta as number || 0
+        rbt12Calculated += rb
+      }
+    }
+    
+    // Fallback to dados_completos.rbt12 if calculated is 0
+    const rbt12FromDados = (latestPgdas?.dados_completos as Record<string, unknown>)?.rbt12 as number || 0
+    const rbt12Final = rbt12Calculated > 0 ? rbt12Calculated : rbt12FromDados
 
     const companyContext: CompanyContext = {
       regime: profile?.regime_tributario || null,
       cnae: profile?.cnae_principal || null,
       setor: profile?.setor || null,
-      aliquotaEfetiva: pgdasRecord?.aliquota_efetiva || 0,
-      pgdasData: pgdasRecord?.dados_completos as Record<string, unknown> || null,
+      aliquotaEfetiva: latestPgdas?.aliquota_efetiva || 0,
+      pgdasData: latestPgdas?.dados_completos as Record<string, unknown> || null,
+      temAtividadesMistas: profile?.tem_atividades_mistas || false,
+      cnaeSecundarios: profile?.cnae_secundarios || null,
     }
 
     const isSimplesNacional = companyContext.regime === 'simples_nacional'
     
-    console.log(`[analyze-credits] Regime: ${companyContext.regime}, CNAE: ${companyContext.cnae}, Simples: ${isSimplesNacional}, Alíquota: ${companyContext.aliquotaEfetiva}`)
+    console.log(`[analyze-credits] Regime: ${companyContext.regime}, CNAE: ${companyContext.cnae}, Simples: ${isSimplesNacional}, Alíquota: ${companyContext.aliquotaEfetiva}, RBT12: ${rbt12Final}, Mistas: ${companyContext.temAtividadesMistas}`)
+
+    // ========== FETCH REFERENCE DATA FROM DB ==========
+    // Fetch monophasic NCMs from database
+    let monophasicNcms: MonophasicNcm[] = []
+    if (isSimplesNacional) {
+      const { data: ncmData } = await supabaseAdmin
+        .from('monophasic_ncms')
+        .select('ncm_prefix, category, legal_basis, description')
+        .eq('is_active', true)
+      monophasicNcms = (ncmData || []) as MonophasicNcm[]
+      console.log(`[analyze-credits] Loaded ${monophasicNcms.length} monophasic NCMs from DB`)
+    }
+
+    // Fetch tax distribution from database
+    let taxDistributions: Record<string, SimplesTaxDistribution> = {}
+    if (isSimplesNacional) {
+      const { data: distData } = await supabaseAdmin
+        .from('simples_tax_distribution')
+        .select('*')
+      
+      if (distData) {
+        for (const row of distData) {
+          const key = `${row.anexo}_${row.faixa}`
+          taxDistributions[key] = {
+            irpj: Number(row.irpj),
+            csll: Number(row.csll),
+            cofins: Number(row.cofins),
+            pis: Number(row.pis),
+            cpp: Number(row.cpp),
+            icms: Number(row.icms),
+            iss: Number(row.iss),
+          }
+        }
+      }
+      console.log(`[analyze-credits] Loaded ${Object.keys(taxDistributions).length} tax distribution entries from DB`)
+    }
 
     // 1. Fetch active rules
     const { data: rules, error: rulesError } = await supabaseAdmin
@@ -296,18 +346,20 @@ serve(async (req) => {
     // 2. Analyze each XML
     if (isSimplesNacional) {
       // ========== SIMPLES NACIONAL ANALYSIS ==========
-      // For Simples, we analyze exit operations to find segregation opportunities
-      const anexo = detectAnexoFromCNAE(companyContext.cnae || '')
-      const rbt12 = (companyContext.pgdasData?.rbt12 as number) || 0
-      const faixa = rbt12 > 0 ? detectFaixaFromRBT12(rbt12) : 4
+      // Determine anexo: prefer PGDAS field, then CNAE inference
+      const anexo = latestPgdas?.anexo_simples || detectAnexoFromCNAE(companyContext.cnae || '')
+      const faixa = rbt12Final > 0 ? detectFaixaFromRBT12(rbt12Final) : 4
       const aliquotaEfetiva = companyContext.aliquotaEfetiva > 0 
         ? companyContext.aliquotaEfetiva / 100 
         : 0.0976 // fallback
-      const taxDist = getSimplesTaxDistribution(faixa, anexo)
+      
+      // Get tax distribution from DB, fallback to hardcoded
+      const taxDistKey = `${anexo}_${faixa}`
+      const taxDist = taxDistributions[taxDistKey] || { irpj: 5.50, csll: 3.50, cofins: 12.74, pis: 2.76, cpp: 41.50, icms: 34.00, iss: 0 }
       const parcelaPisCofins = (taxDist.pis + taxDist.cofins) / 100
       const parcelaIcms = taxDist.icms / 100
 
-      console.log(`[analyze-credits] Simples config: Anexo ${anexo}, Faixa ${faixa}, Alíquota ${aliquotaEfetiva}, PIS+COFINS ${parcelaPisCofins}, ICMS ${parcelaIcms}`)
+      console.log(`[analyze-credits] Simples config: Anexo ${anexo}, Faixa ${faixa}, RBT12 ${rbt12Final}, Alíquota ${aliquotaEfetiva}, PIS+COFINS ${parcelaPisCofins}, ICMS ${parcelaIcms}`)
 
       // Find Simples-specific rules
       const simplesMonoRule = applicableRules.find((r: CreditRule) => r.rule_code === 'SIMPLES_MONO_001')
@@ -326,34 +378,50 @@ serve(async (req) => {
           // Only analyze exit operations for Simples segregation
           if (!isExitOperation(cfop)) continue
 
-          // SIMPLES_MONO_001: Monophasic PIS/COFINS segregation
-          if (simplesMonoRule && isMonophasicNCM(ncm) && valorItem > 0) {
-            const category = getMonophasicCategory(ncm)
-            const recovery = valorItem * aliquotaEfetiva * parcelaPisCofins
-            
-            identifiedCredits.push({
-              rule_id: simplesMonoRule.id,
-              original_tax_value: valorItem * aliquotaEfetiva,
-              potential_recovery: recovery,
-              ncm_code: ncm,
-              cfop: cfop,
-              cst: cstPis || '04',
-              confidence_level: 'high',
-              confidence_score: 92,
-              product_description: `Produto monofásico (${category}) - Segregação PGDAS-D - ${getMonophasicLegalBasis(ncm)}`,
-              nfe_key: xml.chave_nfe || '',
-              nfe_number: xml.numero || '',
-              nfe_date: xml.data_emissao || new Date().toISOString().split('T')[0],
-              supplier_cnpj: xml.cnpj_emitente || '',
-              supplier_name: xml.nome_emitente || '',
-            })
+          // Determine item-level anexo for mixed activities
+          let itemAnexo = anexo
+          if (companyContext.temAtividadesMistas && companyContext.cnaeSecundarios?.length) {
+            // For now, use the primary CNAE's anexo as default
+            // Future: map item CNAE to specific anexo
+            itemAnexo = anexo
+          }
+
+          // Get distribution for this item's anexo (may differ in mixed activities)
+          const itemDistKey = `${itemAnexo}_${faixa}`
+          const itemDist = taxDistributions[itemDistKey] || taxDist
+          const itemParcelaPisCofins = (itemDist.pis + itemDist.cofins) / 100
+          const itemParcelaIcms = itemDist.icms / 100
+
+          // SIMPLES_MONO_001: Monophasic PIS/COFINS segregation (uses DB list)
+          if (simplesMonoRule && valorItem > 0) {
+            const monoMatch = isMonophasicNCMFromList(ncm, monophasicNcms)
+            if (monoMatch) {
+              const recovery = valorItem * aliquotaEfetiva * itemParcelaPisCofins
+              
+              identifiedCredits.push({
+                rule_id: simplesMonoRule.id,
+                original_tax_value: valorItem * aliquotaEfetiva,
+                potential_recovery: recovery,
+                ncm_code: ncm,
+                cfop: cfop,
+                cst: cstPis || '04',
+                confidence_level: 'high',
+                confidence_score: 92,
+                product_description: `Produto monofásico (${monoMatch.category}) - Segregação PGDAS-D - ${monoMatch.legal_basis}`,
+                nfe_key: xml.chave_nfe || '',
+                nfe_number: xml.numero || '',
+                nfe_date: xml.data_emissao || new Date().toISOString().split('T')[0],
+                supplier_cnpj: xml.cnpj_emitente || '',
+                supplier_name: xml.nome_emitente || '',
+              })
+            }
           }
 
           // SIMPLES_ICMS_ST_001: ICMS-ST segregation
           if (simplesIcmsStRule && valorItem > 0) {
             const isST = csosn === '500' || cfop === '5405' || cfop === '6404'
             if (isST) {
-              const recovery = valorItem * aliquotaEfetiva * parcelaIcms
+              const recovery = valorItem * aliquotaEfetiva * itemParcelaIcms
               
               identifiedCredits.push({
                 rule_id: simplesIcmsStRule.id,
@@ -472,6 +540,12 @@ serve(async (req) => {
       credits_count: identifiedCredits.length,
       by_tax_type: byTaxType,
       regime: companyContext.regime,
+      simples_config: isSimplesNacional ? {
+        rbt12: rbt12Final,
+        faixa: rbt12Final > 0 ? detectFaixaFromRBT12(rbt12Final) : 4,
+        anexo: latestPgdas?.anexo_simples || detectAnexoFromCNAE(companyContext.cnae || ''),
+        aliquota_efetiva: companyContext.aliquotaEfetiva,
+      } : null,
     }
 
     console.log(`[analyze-credits] Summary: ${JSON.stringify(summary)}`)
