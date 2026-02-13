@@ -1,29 +1,44 @@
 
+# Corrigir botão "Carregar XML" que não funciona
 
-# Plano: Clarear Mais a Imagem do Hero
+## Problema
 
-## Alteração
+O botão "Carregar XML" dentro da área de upload usa `e.stopPropagation()` para evitar que o clique se propague ao `div` pai, mas nao executa nenhuma ação propria. Ou seja, o clique e interceptado e descartado.
 
-Reduzir ainda mais a opacidade do overlay escuro para deixar a imagem da sala de reunião mais visível.
+## Solucao
 
----
+Alterar o `onClick` do botao para abrir o seletor de arquivos diretamente, mantendo o `stopPropagation` para evitar dupla abertura do dialog.
 
-## Mudança Técnica
+## Detalhes Tecnicos
 
-**Arquivo:** `src/components/connect/ConnectHeroSection.tsx`  
-**Linha:** 14
+**Arquivo:** `src/pages/AnaliseNotasFiscais.tsx`
+**Linhas:** 630-637
 
-| Atual | Novo |
-|-------|------|
-| `rgba(0,0,0,0.3), rgba(0,0,0,0.6)` | `rgba(0,0,0,0.2), rgba(0,0,0,0.5)` |
-
-```typescript
-backgroundImage: `linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.5)), url('/images/hero-meeting-room.png')`,
+**De:**
+```tsx
+<Button
+  variant="outline"
+  size="sm"
+  onClick={(e) => e.stopPropagation()}
+>
+  <Upload className="mr-2 h-4 w-4" />
+  Carregar XML
+</Button>
 ```
 
----
+**Para:**
+```tsx
+<Button
+  variant="outline"
+  size="sm"
+  onClick={(e) => {
+    e.stopPropagation();
+    document.getElementById('file-input')?.click();
+  }}
+>
+  <Upload className="mr-2 h-4 w-4" />
+  Carregar XML
+</Button>
+```
 
-## Resultado
-
-A imagem ficará mais clara e visível, mantendo contraste suficiente para leitura do texto branco.
-
+O `stopPropagation` continua necessario para que o clique nao dispare tambem o `onClick` do div pai (que faz a mesma coisa), evitando abrir o dialog de arquivos duas vezes.
