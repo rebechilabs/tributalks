@@ -1,128 +1,202 @@
 
 
-# Revisao Completa do Radar de Creditos para Simples Nacional
+# Complementos ao Radar de Creditos — Simples Nacional
 
-## Diagnostico
+## Visao Geral
 
-Apos analisar o codigo da edge function `analyze-credits/index.ts`, identifiquei a causa raiz de todos os 5 problemas reportados:
-
-**O motor de creditos NAO consulta o regime tributario do usuario.** Ele aplica todas as 24 regras indiscriminadamente, como se toda empresa fosse Lucro Real/Presumido. Para Simples Nacional, a logica de recuperacao e fundamentalmente diferente.
+O motor de creditos ja tem a logica base para Simples Nacional funcionando (regras `SIMPLES_MONO_001` e `SIMPLES_ICMS_ST_001`, filtragem por regime, funcao `getSimplesTaxDistribution`). Porem, existem 5 lacunas criticas que precisam ser preenchidas para que o sistema seja robusto e confiavel.
 
 ---
 
-## Problemas e Correcoes
+## 1. Tabela de NCMs Monofasicos no Banco de Dados
 
-### 1. IPI de R$ 658,46 -- Falso Positivo (Prioridade Alta)
+**Problema:** A lista de NCMs monofasicos esta hardcoded em 3 arquivos diferentes (`analyze-credits`, `process-xml-batch`, `MonophasicAlert.tsx`), com duplicacao e risco de inconsistencia. Faltam NCMs importantes.
 
-**Causa:** A regra `IPI_001` identifica credito de IPI em qualquer compra de insumos com IPI destacado (`isPurchaseOfInputs(cfop) && valorIpi > 0`). Nao verifica se a empresa e industrial nem se esta no Simples Nacional.
+**Solucao:** Criar tabela `monophasic_ncms` no banco com:
+- `ncm_prefix` (text, PK) — ex: "3303", "2202"
+- `category` (text) — ex: "Cosmeticos", "Bebidas"
+- `legal_basis` (text) — ex: "Lei 10.147/2000"
+- `description` (text) — descricao do grupo
+- `is_active` (boolean, default true)
+- `valid_from` / `valid_until` (date) — vigencia
 
-**Correcao:** Quando `regime = 'simples_nacional'` e CNAE indica comercio (47xx), desativar completamente as regras IPI_001, IPI_002 e IPI_003.
+Popular com os NCMs atuais mais adicionar os faltantes (farmacos, higiene pessoal, maquinas agricolas, etc.).
 
-### 2. ICMS de R$ 14.241,84 -- Calculo Incorreto (Prioridade Alta)
+Atualizar `analyze-credits/index.ts` e `process-xml-batch/index.ts` para consultar essa tabela ao inves de usar listas hardcoded.
 
-**Causa:** A regra `ICMS_001` identifica credito para qualquer compra interestadual (CFOP 2xxx) com ICMS destacado e sem credito escriturado. No Simples Nacional, o ICMS e pago de forma unificada no DAS -- nao existe "credito de ICMS de entrada".
+## 2. Tabela de Reparticao por Faixa e Anexo
 
-**Correcao:** Desativar regras ICMS_001, ICMS_002 e ICMS_005 para Simples Nacional. A unica oportunidade de ICMS no Simples e a **segregacao de receitas com ST** (produtos com CSOSN 500 / CFOP 5405), onde a empresa pagou ICMS-ST antecipado e nao deveria pagar ICMS novamente no DAS sobre essas receitas.
+**Problema:** A funcao `getSimplesTaxDistribution()` so cobre Anexos I e II (12 combinacoes de 36 possiveis). Anexos III, IV, V e VI estao faltando completamente.
 
-**Nova logica para Simples Nacional:** Criar regra `SIMPLES_ICMS_ST_001` que calcula:
-- Receita de produtos com ST (CSOSN 500)
-- Parcela de ICMS no DAS (ex: 34% da aliquota efetiva no Anexo I, 4a faixa)
-- Credito = Receita ST x Aliquota efetiva x Parcela ICMS
+**Solucao:** Criar tabela `simples_tax_distribution` com:
+- `anexo` (text) — I a V (VI foi extinto, incorporado ao V)
+- `faixa` (integer) — 1 a 6
+- `irpj`, `csll`, `cofins`, `pis`, `cpp`, `icms`, `iss` (numeric) — percentuais de reparticao
+- `aliquota_nominal` (numeric)
+- `deducao` (numeric)
+- `receita_min` / `receita_max` (numeric) — faixas de RBT12
+- PK composta: (`anexo`, `faixa`)
 
-### 3. ICMS-ST de R$ 359,38 -- Esclarecimento
+Popular com todas as 30 combinacoes (5 anexos x 6 faixas, conforme LC 123/2006).
 
-**Causa:** A regra `ICMS_ST_001` pega qualquer item com `valorIcmsSt > 0` e aplica 15% como potencial de recuperacao (comparacao MVA vs preco real). Isso e uma logica de Lucro Presumido/Real.
+Atualizar `getSimplesTaxDistribution()` para consultar o banco ao inves de switch/case hardcoded. Os dados serao passados no `companyContext` para evitar queries adicionais durante a analise.
 
-**Correcao:** Para Simples Nacional, o conceito de "ressarcimento de ICMS-ST por MVA" nao se aplica da mesma forma. O campo ICMS-ST no Radar do Simples deveria representar apenas o valor de ICMS-ST destacado nas notas de entrada (informativo), enquanto a oportunidade real esta na segregacao de receitas (item 2 acima).
+## 3. Calculo Automatico de RBT12 e Faixa
 
-### 4. PIS/COFINS de R$ 12.991,39 -- Calculo Incorreto (Prioridade Alta)
+**Problema:** O sistema depende do campo `rbt12` no `dados_completos` do PGDAS, mas se o usuario subir 12 meses de PGDAS, o sistema deveria inferir o RBT12 somando as receitas brutas.
 
-**Causa:** As regras `PIS_COFINS_008`, `PIS_COFINS_010` e `PIS_COFINS_011` calculam o credito usando o `valorPis + valorCofins` diretamente dos XMLs. Isso funciona para Lucro Real (regime nao-cumulativo), mas no Simples Nacional:
-- PIS/COFINS e pago dentro do DAS, nao ha destaque individual
-- A recuperacao e feita via **segregacao de receitas** no PGDAS-D
-- O calculo correto e: `Receita Monofasica x Aliquota Efetiva DAS x Parcela PIS+COFINS no DAS`
+**Solucao:** Na edge function `analyze-credits`, antes de determinar a faixa:
 
-**Nova logica para Simples Nacional:** Criar regra `SIMPLES_MONO_001` que:
-1. Identifica receitas de saida com NCMs monofasicos
-2. Busca dados do PGDAS (aliquota efetiva, parcela PIS+COFINS)
-3. Calcula: `Receita Monofasica x Aliquota Efetiva x (% PIS + % COFINS no DAS)`
+1. Buscar todos os PGDAS do usuario dos ultimos 12 meses
+2. Somar `receita_bruta` de cada periodo
+3. Se o RBT12 calculado for > 0, usa-lo. Senao, usar o do `dados_completos`
+4. Determinar faixa automaticamente via `detectFaixaFromRBT12()`
+5. Salvar o RBT12 calculado no `dados_completos` do PGDAS mais recente para cache
 
-Com os dados do teste: R$ 303.812 x 9,76% x 15,50% = ~R$ 4.596
+Tambem atualizar `detectAnexoFromCNAE()` para usar o campo `anexo_simples` da tabela `pgdas_arquivos` quando disponivel (mais confiavel que inferir pelo CNAE).
 
-### 5. Detalhamento na Interface (Prioridade Media)
+## 4. Atividades Mistas (Multiplos Anexos)
 
-**Causa:** O componente `CreditRadar.tsx` mostra apenas totais agregados. Os dados por NCM, mes e base legal ja existem na tabela `identified_credits`, mas nao sao exibidos de forma detalhada.
+**Problema:** Algumas empresas do Simples tem receitas em mais de um anexo (ex: comercio no Anexo I + servicos no Anexo III). A reparticao de tributos e diferente para cada anexo.
 
-**Correcao:** Adicionar secoes de detalhamento ao Radar:
-- Detalhamento mes a mes
-- NCMs que geraram cada credito
-- Base legal por oportunidade
-- Orientacao pratica (retificacao PGDAS, PER/DCOMP)
-- Prazo prescricional de 5 anos
+**Solucao:** Ajustar a logica do `analyze-credits`:
+
+1. Verificar o campo `tem_atividades_mistas` no `company_profile` (ja existe na tabela)
+2. Se mista, buscar os CNAEs secundarios (`cnae_secundarios`) e mapear cada um para seu anexo
+3. Para cada item de saida, determinar o anexo correto baseado no CNAE da atividade
+4. Aplicar a reparticao de tributos correspondente ao anexo daquele item
+
+Como simplificacao inicial: se a empresa tem atividades mistas, usar o anexo do PGDAS como default e permitir que o usuario ajuste manualmente (campo `anexo_override` por NCM ou CFOP seria uma evolucao futura).
+
+## 5. Testes Automatizados com Dados Ficticios
+
+**Problema:** Nao existem testes unitarios para o motor de creditos. Qualquer alteracao pode quebrar os calculos sem deteccao.
+
+**Solucao:** Criar testes Deno para a edge function `analyze-credits`:
+
+**Arquivo:** `supabase/functions/analyze-credits/index.test.ts`
+
+Cenarios de teste com os dados ficticios do caso controlado:
+
+- **Teste 1 — Simples Nacional Comercio:** Validar que IPI = R$ 0 (regra desabilitada)
+- **Teste 2 — PIS/COFINS Monofasico:** Receita monofasica R$ 303.812 x 9,76% x 15,50% ≈ R$ 4.596
+- **Teste 3 — ICMS-ST Segregacao:** Receita ST ~R$ 19.275 x 9,76% x 34% ≈ R$ 640
+- **Teste 4 — Lucro Real:** Validar que regras padrao (IPI_001, ICMS_001, etc.) funcionam normalmente
+- **Teste 5 — Funcoes auxiliares:** `detectFaixaFromRBT12`, `detectAnexoFromCNAE`, `isMonophasicNCM`
+- **Teste 6 — Reparticao por faixa:** Validar que todas as 30 combinacoes retornam valores corretos
+
+Os testes usarao dados mockados (sem chamadas ao banco real) para velocidade e confiabilidade.
 
 ---
 
 ## Detalhes Tecnicos
 
-### Arquivo: `supabase/functions/analyze-credits/index.ts`
+### Migracoes SQL
 
-**Mudanca principal:** No inicio da funcao `serve`, buscar o perfil do usuario para obter `regime`, `cnae` e dados do PGDAS:
-
-```text
-1. Buscar profile do usuario (regime, cnae, setor)
-2. Buscar dados do PGDAS mais recente (aliquota_efetiva, dados_completos)
-3. Passar essas informacoes para evaluateRule()
-4. Adicionar parametro "regime" a evaluateRule
-```
-
-**Nova funcao `evaluateRuleSimplesNacional()`:**
-- Desativa regras: IPI_001/002/003, ICMS_001/002/005, PIS_COFINS_001/002/003/004/005/006/007
-- Ativa novas regras especificas:
-  - `SIMPLES_MONO_001`: PIS/COFINS monofasico via segregacao
-  - `SIMPLES_ICMS_ST_001`: ICMS sobre receitas ST indevido no DAS
-- Usa dados do PGDAS para aliquota efetiva e reparticao de tributos
-
-**Nova funcao auxiliar `getSimplesTaxDistribution()`:**
+**Migracao 1 — Tabela `monophasic_ncms`:**
 
 ```text
-Recebe: faixa do Simples, anexo
-Retorna: { irpj, csll, cofins, pis, cpp, icms } (percentuais)
+CREATE TABLE monophasic_ncms (
+  ncm_prefix text PRIMARY KEY,
+  category text NOT NULL,
+  legal_basis text NOT NULL,
+  description text,
+  is_active boolean DEFAULT true,
+  valid_from date DEFAULT '2000-01-01',
+  valid_until date DEFAULT NULL,
+  created_at timestamptz DEFAULT now()
+);
 
-Exemplo Anexo I, 4a Faixa:
-  IRPJ: 5.50%, CSLL: 3.50%, COFINS: 12.74%
-  PIS: 2.76%, CPP: 41.50%, ICMS: 34.00%
+-- Popular com ~20 prefixos NCM conhecidos
+INSERT INTO monophasic_ncms VALUES
+  ('2710', 'Combustiveis', 'Lei 11.116/2005', 'Oleos de petroleo'),
+  ('2207', 'Combustiveis', 'Lei 11.116/2005', 'Alcool etilico'),
+  ('3003', 'Medicamentos', 'Lei 10.147/2000', 'Medicamentos (mistura)'),
+  ('3004', 'Medicamentos', 'Lei 10.147/2000', 'Medicamentos (dose)'),
+  ('3303', 'Cosmeticos', 'Lei 10.147/2000', 'Perfumes'),
+  ('3304', 'Cosmeticos', 'Lei 10.147/2000', 'Maquiagem e cuidados da pele'),
+  ('3305', 'Cosmeticos', 'Lei 10.147/2000', 'Preparacoes capilares'),
+  ('3306', 'Higiene', 'Lei 10.147/2000', 'Preparacoes para higiene bucal'),
+  ('3307', 'Higiene', 'Lei 10.147/2000', 'Desodorantes e sais de banho'),
+  ('2201', 'Bebidas', 'Lei 13.097/2015', 'Aguas minerais'),
+  ('2202', 'Bebidas', 'Lei 13.097/2015', 'Bebidas nao alcoolicas'),
+  ('2203', 'Bebidas', 'Lei 13.097/2015', 'Cervejas'),
+  ('2204', 'Bebidas', 'Lei 13.097/2015', 'Vinhos'),
+  ('8708', 'Autopecas', 'Lei 10.485/2002', 'Pecas para veiculos'),
+  ('4011', 'Autopecas', 'Lei 10.485/2002', 'Pneus novos'),
+  ('8507', 'Autopecas', 'Lei 10.485/2002', 'Baterias'),
+  ('8433', 'Maq.Agricolas', 'Lei 10.485/2002', 'Maquinas agricolas'),
+  ('8701', 'Maq.Agricolas', 'Lei 10.485/2002', 'Tratores');
+
+-- RLS: leitura publica (dados legislativos)
+ALTER TABLE monophasic_ncms ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "read_all" ON monophasic_ncms FOR SELECT USING (true);
 ```
 
-### Migracao de Banco
-
-Adicionar novas regras na tabela `credit_rules`:
+**Migracao 2 — Tabela `simples_tax_distribution`:**
 
 ```text
-SIMPLES_MONO_001 - Segregacao de receita monofasica PIS/COFINS no Simples
-SIMPLES_ICMS_ST_001 - ICMS pago indevidamente no DAS sobre receita com ST
+CREATE TABLE simples_tax_distribution (
+  anexo text NOT NULL,
+  faixa integer NOT NULL,
+  aliquota_nominal numeric NOT NULL,
+  deducao numeric NOT NULL DEFAULT 0,
+  receita_min numeric NOT NULL,
+  receita_max numeric NOT NULL,
+  irpj numeric NOT NULL,
+  csll numeric NOT NULL,
+  cofins numeric NOT NULL,
+  pis numeric NOT NULL,
+  cpp numeric NOT NULL,
+  icms numeric NOT NULL DEFAULT 0,
+  iss numeric NOT NULL DEFAULT 0,
+  PRIMARY KEY (anexo, faixa)
+);
+
+-- Popular com 30 combinacoes (5 anexos x 6 faixas)
+-- Exemplo Anexo I completo:
+INSERT INTO simples_tax_distribution VALUES
+  ('I',1,4.00,0,0,180000,5.50,3.50,12.74,2.76,41.50,34.00,0),
+  ('I',2,7.30,5940,180000.01,360000,5.50,3.50,12.74,2.76,41.50,34.00,0),
+  ('I',3,9.50,13860,360000.01,720000,5.50,3.50,12.74,2.76,42.00,33.50,0),
+  ('I',4,10.70,22500,720000.01,1800000,5.50,3.50,12.74,2.76,41.50,34.00,0),
+  ('I',5,14.30,87300,1800000.01,3600000,5.50,3.50,12.74,2.76,42.00,33.50,0),
+  ('I',6,19.00,378000,3600000.01,4800000,13.50,10.00,28.27,6.13,42.10,0,0);
+  -- (+ Anexos II a V com mesma estrutura)
+
+ALTER TABLE simples_tax_distribution ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "read_all" ON simples_tax_distribution FOR SELECT USING (true);
 ```
 
-### Arquivo: `src/components/credits/CreditRadar.tsx`
+### Edge Function `analyze-credits/index.ts`
 
-Adicionar nova secao de detalhamento com:
-- Tabela expandivel por mes
-- Coluna de NCM e base legal
-- Card de "Como Recuperar" com passos praticos
-- Indicacao de prazo prescricional
+Mudancas principais:
 
-### Arquivo: `src/components/credits/CreditRadarMetrics.tsx`
+1. **Buscar NCMs monofasicos do banco** no inicio (uma query), substituindo `isMonophasicNCM()` hardcoded
+2. **Buscar reparticao do banco** substituindo `getSimplesTaxDistribution()` hardcoded
+3. **Calcular RBT12** somando receitas dos ultimos 12 PGDAS
+4. **Logar faixa/anexo calculados** para debug
 
-Ajustar para mostrar subtotais por tipo de oportunidade:
-- Segregacao de receitas monofasicas
-- Segregacao de receitas com ST
-- Orientacao sobre retificacao do PGDAS-D
+### Testes Deno
+
+```text
+Arquivo: supabase/functions/analyze-credits/index.test.ts
+
+- Testa funcoes auxiliares puras (detectFaixaFromRBT12, detectAnexoFromCNAE)
+- Testa cenario Simples Nacional com XMLs mockados
+- Valida que IPI = 0 para Simples comercio
+- Valida calculo PIS/COFINS monofasico ≈ R$ 4.596
+- Valida calculo ICMS-ST ≈ R$ 640
+```
 
 ---
 
 ## Sequencia de Implementacao
 
-1. Criar migracao com novas regras `SIMPLES_MONO_001` e `SIMPLES_ICMS_ST_001`
-2. Atualizar `analyze-credits/index.ts` com verificacao de regime e novas regras
-3. Atualizar componentes do Radar para exibir detalhamento
-4. Testar com os mesmos dados do cenario controlado
+1. Criar migracao com tabela `monophasic_ncms` (com dados)
+2. Criar migracao com tabela `simples_tax_distribution` (com dados dos 5 anexos)
+3. Atualizar `analyze-credits/index.ts` para consultar as novas tabelas + calcular RBT12
+4. Adicionar tratamento basico de atividades mistas
+5. Criar testes unitarios Deno
+6. Deployar e testar com os dados ficticios
 
