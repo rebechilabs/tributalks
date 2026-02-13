@@ -1,44 +1,28 @@
 
-# Corrigir botão "Carregar XML" que não funciona
+# Corrigir Upload de PGDAS TXT
 
 ## Problema
 
-O botão "Carregar XML" dentro da área de upload usa `e.stopPropagation()` para evitar que o clique se propague ao `div` pai, mas nao executa nenhuma ação propria. Ou seja, o clique e interceptado e descartado.
+O bucket de armazenamento `pgdas-files` não possui política de **INSERT** (upload). Apenas políticas de SELECT (leitura) e DELETE (exclusão) estão configuradas. Isso impede qualquer upload de arquivos PGDAS.
 
-## Solucao
+## Solução
 
-Alterar o `onClick` do botao para abrir o seletor de arquivos diretamente, mantendo o `stopPropagation` para evitar dupla abertura do dialog.
+Adicionar uma política de storage que permita aos usuários autenticados fazer upload de arquivos no bucket `pgdas-files`, dentro da pasta do próprio usuário.
 
-## Detalhes Tecnicos
+## Detalhes Técnicos
 
-**Arquivo:** `src/pages/AnaliseNotasFiscais.tsx`
-**Linhas:** 630-637
+**Migração SQL necessária:**
 
-**De:**
-```tsx
-<Button
-  variant="outline"
-  size="sm"
-  onClick={(e) => e.stopPropagation()}
->
-  <Upload className="mr-2 h-4 w-4" />
-  Carregar XML
-</Button>
+```sql
+CREATE POLICY "Users can upload pgdas files"
+ON storage.objects
+FOR INSERT
+WITH CHECK (
+  bucket_id = 'pgdas-files'
+  AND (auth.uid())::text = (storage.foldername(name))[1]
+);
 ```
 
-**Para:**
-```tsx
-<Button
-  variant="outline"
-  size="sm"
-  onClick={(e) => {
-    e.stopPropagation();
-    document.getElementById('file-input')?.click();
-  }}
->
-  <Upload className="mr-2 h-4 w-4" />
-  Carregar XML
-</Button>
-```
+Essa política garante que cada usuário só pode fazer upload na sua própria pasta (identificada pelo `user.id`), seguindo o mesmo padrão das políticas de SELECT e DELETE já existentes.
 
-O `stopPropagation` continua necessario para que o clique nao dispare tambem o `onClick` do div pai (que faz a mesma coisa), evitando abrir o dialog de arquivos duas vezes.
+**Nenhuma alteração de código é necessária** — o componente `PgdasUploader.tsx` já está correto e faz o upload para o caminho `{user.id}/{timestamp}_{filename}`.
