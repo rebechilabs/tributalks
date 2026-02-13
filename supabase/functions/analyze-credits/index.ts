@@ -187,7 +187,9 @@ const SIMPLES_DISABLED_RULES = new Set([
   'ICMS_001', 'ICMS_002', 'ICMS_005',
   'ICMS_ST_001', 'ICMS_ST_002',
   'PIS_COFINS_001', 'PIS_COFINS_002', 'PIS_COFINS_003',
-  'PIS_COFINS_007', 'PIS_COFINS_008', 'PIS_COFINS_010', 'PIS_COFINS_011',
+  'PIS_COFINS_004', 'PIS_COFINS_005', 'PIS_COFINS_006',
+  'PIS_COFINS_007', 'PIS_COFINS_008', 'PIS_COFINS_009',
+  'PIS_COFINS_010', 'PIS_COFINS_011',
 ])
 
 serve(async (req) => {
@@ -236,6 +238,13 @@ serve(async (req) => {
       .eq('user_id', userId)
       .maybeSingle()
 
+    // Fetch user profile as fallback for regime/cnae
+    const { data: userProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('regime, cnae, setor')
+      .eq('user_id', userId)
+      .maybeSingle()
+
     // Fetch all PGDAS from last 12 months for RBT12 calculation
     const twelveMonthsAgo = new Date()
     twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12)
@@ -263,19 +272,24 @@ serve(async (req) => {
     const rbt12FromDados = (latestPgdas?.dados_completos as Record<string, unknown>)?.rbt12 as number || 0
     const rbt12Final = rbt12Calculated > 0 ? rbt12Calculated : rbt12FromDados
 
+    // Normalize regime: DB stores 'SIMPLES', 'PRESUMIDO', 'REAL'
+    const rawRegime = profile?.regime_tributario || (userProfile as Record<string, unknown>)?.regime as string || ''
+    const normalizedRegime = rawRegime.toString().toLowerCase().trim()
+
     const companyContext: CompanyContext = {
-      regime: profile?.regime_tributario || null,
-      cnae: profile?.cnae_principal || null,
-      setor: profile?.setor || null,
+      regime: normalizedRegime || null,
+      cnae: profile?.cnae_principal || (userProfile as Record<string, unknown>)?.cnae as string || null,
+      setor: profile?.setor || (userProfile as Record<string, unknown>)?.setor as string || null,
       aliquotaEfetiva: latestPgdas?.aliquota_efetiva || 0,
       pgdasData: latestPgdas?.dados_completos as Record<string, unknown> || null,
       temAtividadesMistas: profile?.tem_atividades_mistas || false,
       cnaeSecundarios: profile?.cnae_secundarios || null,
     }
 
-    const isSimplesNacional = companyContext.regime === 'simples_nacional'
+    // Correct detection: 'SIMPLES' or 'simples_nacional' both match
+    const isSimplesNacional = normalizedRegime.startsWith('simples')
     
-    console.log(`[analyze-credits] Regime: ${companyContext.regime}, CNAE: ${companyContext.cnae}, Simples: ${isSimplesNacional}, Alíquota: ${companyContext.aliquotaEfetiva}, RBT12: ${rbt12Final}, Mistas: ${companyContext.temAtividadesMistas}`)
+    console.log(`[analyze-credits] Regime raw: '${rawRegime}', normalized: '${normalizedRegime}', Simples: ${isSimplesNacional}, CNAE: ${companyContext.cnae}, Alíquota: ${companyContext.aliquotaEfetiva}, RBT12: ${rbt12Final}, Mistas: ${companyContext.temAtividadesMistas}`)
 
     // ========== FETCH REFERENCE DATA FROM DB ==========
     // Fetch monophasic NCMs from database
@@ -419,7 +433,7 @@ serve(async (req) => {
 
           // SIMPLES_ICMS_ST_001: ICMS-ST segregation
           if (simplesIcmsStRule && valorItem > 0) {
-            const isST = csosn === '500' || cfop === '5405' || cfop === '6404'
+            const isST = csosn === '500' || cfop === '5405' || cfop === '6405'
             if (isST) {
               const recovery = valorItem * aliquotaEfetiva * itemParcelaIcms
               
