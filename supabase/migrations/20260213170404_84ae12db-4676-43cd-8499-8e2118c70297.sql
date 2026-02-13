@@ -1,0 +1,1 @@
+ALTER TABLE public.pgdas_arquivos ADD COLUMN IF NOT EXISTS dados_completos jsonb;

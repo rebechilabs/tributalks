@@ -16,23 +16,66 @@ interface PgdasResult {
   anexoSimples: string;
 }
 
-// Parse PGDAS text content to extract key information
-function parsePgdasContent(content: string): Partial<PgdasResult> {
-  const result: Partial<PgdasResult> = {};
+interface DadosCompletos {
+  rbt12?: number;
+  faixa?: string;
+  aliquotaNominal?: number;
+  reparticao?: {
+    irpj?: number;
+    csll?: number;
+    cofins?: number;
+    pis?: number;
+    cpp?: number;
+    icms?: number;
+    iss?: number;
+  };
+  receitaMonofasica?: number;
+  receitaST?: number;
+  receitaExportacao?: number;
+  receitaIsenta?: number;
+}
 
-  // Try to extract CNPJ
+// Smart money parser that auto-detects BR vs US format
+function parseMoneyValue(raw: string): number {
+  if (!raw || raw === "") return 0;
+  let str = String(raw).trim();
+  // Remove currency symbols and spaces
+  str = str.replace(/[R$\s]/g, "");
+
+  const lastComma = str.lastIndexOf(",");
+  const lastDot = str.lastIndexOf(".");
+
+  if (lastComma > lastDot) {
+    // BR format: 200.000,00
+    str = str.replace(/\./g, "");
+    str = str.replace(",", ".");
+  } else {
+    // US format: 200,000.00
+    str = str.replace(/,/g, "");
+  }
+
+  const parsed = parseFloat(str);
+  return isNaN(parsed) ? 0 : parsed;
+}
+
+// Parse PGDAS text content to extract key information
+function parsePgdasContent(content: string): { result: Partial<PgdasResult>; dadosCompletos: DadosCompletos } {
+  const result: Partial<PgdasResult> = {};
+  const dadosCompletos: DadosCompletos = {};
+
+  // CNPJ
   const cnpjMatch = content.match(/CNPJ[:\s]*(\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2})/i);
   if (cnpjMatch) {
     result.cnpj = cnpjMatch[1].replace(/[^\d]/g, "");
   }
 
-  // Try to extract company name
+  // Razão Social
   const razaoMatch = content.match(/Raz[ãa]o Social[:\s]*([^\n]+)/i);
   if (razaoMatch) {
     result.razaoSocial = razaoMatch[1].trim();
   }
 
-  // Try to extract period (MM/YYYY format)
+  // Período (MM/YYYY)
   const periodoMatch = content.match(/Per[íi]odo de Apura[çc][ãa]o[:\s]*(\d{2}\/\d{4})/i) ||
                        content.match(/Compet[êe]ncia[:\s]*(\d{2}\/\d{4})/i) ||
                        content.match(/(\d{2}\/\d{4})/);
@@ -40,36 +83,106 @@ function parsePgdasContent(content: string): Partial<PgdasResult> {
     result.periodo = periodoMatch[1];
   }
 
-  // Try to extract revenue
-  const receitaMatch = content.match(/Receita Bruta[:\s]*R?\$?\s*([\d.,]+)/i) ||
-                       content.match(/Receita Total[:\s]*R?\$?\s*([\d.,]+)/i);
+  // Receita Bruta - flexible regex
+  const receitaMatch = content.match(/RECEITA\s+BRUTA[\s\w]*?:\s*R?\$?\s*([\d.,]+)/i) ||
+                       content.match(/Receita\s+Bruta[:\s]*R?\$?\s*([\d.,]+)/i) ||
+                       content.match(/Receita\s+Total[:\s]*R?\$?\s*([\d.,]+)/i);
   if (receitaMatch) {
-    result.receitaBruta = parseFloat(receitaMatch[1].replace(/\./g, "").replace(",", "."));
+    result.receitaBruta = parseMoneyValue(receitaMatch[1]);
   }
 
-  // Try to extract DAS value
-  const valorMatch = content.match(/Valor do DAS[:\s]*R?\$?\s*([\d.,]+)/i) ||
-                     content.match(/Valor a Pagar[:\s]*R?\$?\s*([\d.,]+)/i) ||
-                     content.match(/Total a Recolher[:\s]*R?\$?\s*([\d.,]+)/i);
+  // Valor do DAS - flexible regex
+  const valorMatch = content.match(/VALOR\s+(?:TOTAL\s+)?(?:DO\s+)?DAS[:\s]*R?\$?\s*([\d.,]+)/i) ||
+                     content.match(/Valor\s+(?:do\s+)?DAS[:\s]*R?\$?\s*([\d.,]+)/i) ||
+                     content.match(/Valor\s+a\s+Pagar[:\s]*R?\$?\s*([\d.,]+)/i) ||
+                     content.match(/Total\s+a\s+Recolher[:\s]*R?\$?\s*([\d.,]+)/i);
   if (valorMatch) {
-    result.valorDevido = parseFloat(valorMatch[1].replace(/\./g, "").replace(",", "."));
+    result.valorDevido = parseMoneyValue(valorMatch[1]);
   }
 
-  // Try to extract effective rate
-  const aliquotaMatch = content.match(/Al[íi]quota Efetiva[:\s]*([\d.,]+)%?/i) ||
-                        content.match(/Al[íi]quota[:\s]*([\d.,]+)%?/i);
+  // Alíquota Efetiva
+  const aliquotaMatch = content.match(/Al[íi]quota\s+Efetiva[:\s]*([\d.,]+)\s*%?/i) ||
+                        content.match(/Al[íi]quota[:\s]*([\d.,]+)\s*%?/i);
   if (aliquotaMatch) {
-    const value = parseFloat(aliquotaMatch[1].replace(",", "."));
-    result.aliquotaEfetiva = value > 1 ? value / 100 : value; // Convert if percentage
+    const value = parseMoneyValue(aliquotaMatch[1]);
+    result.aliquotaEfetiva = value > 1 ? value / 100 : value;
   }
 
-  // Try to extract Simples Nacional annex
+  // Anexo do Simples
   const anexoMatch = content.match(/Anexo[:\s]*(I{1,3}|IV|V)/i);
   if (anexoMatch) {
     result.anexoSimples = anexoMatch[1].toUpperCase();
   }
 
-  return result;
+  // --- Dados Completos ---
+
+  // RBT12
+  const rbt12Match = content.match(/RBT12[:\s]*R?\$?\s*([\d.,]+)/i) ||
+                     content.match(/Receita\s+Bruta\s+(?:Acumulada|Total)\s+(?:nos\s+)?(?:\d+\s+)?(?:[Úú]ltimos\s+)?12[:\s]*R?\$?\s*([\d.,]+)/i);
+  if (rbt12Match) {
+    dadosCompletos.rbt12 = parseMoneyValue(rbt12Match[1]);
+  }
+
+  // Faixa
+  const faixaMatch = content.match(/Faixa[:\s]*(\d[ªa]?\s*[Ff]aixa|\d+)/i);
+  if (faixaMatch) {
+    dadosCompletos.faixa = faixaMatch[1].trim();
+  }
+
+  // Alíquota Nominal
+  const aliqNomMatch = content.match(/Al[íi]quota\s+Nominal[:\s]*([\d.,]+)\s*%?/i);
+  if (aliqNomMatch) {
+    dadosCompletos.aliquotaNominal = parseMoneyValue(aliqNomMatch[1]);
+  }
+
+  // Repartição de tributos
+  const reparticao: DadosCompletos["reparticao"] = {};
+  const tributos = [
+    { key: "irpj" as const, regex: /IRPJ[:\s]*R?\$?\s*([\d.,]+)/i },
+    { key: "csll" as const, regex: /CSLL[:\s]*R?\$?\s*([\d.,]+)/i },
+    { key: "cofins" as const, regex: /COFINS[:\s]*R?\$?\s*([\d.,]+)/i },
+    { key: "pis" as const, regex: /PIS(?:\/PASEP)?[:\s]*R?\$?\s*([\d.,]+)/i },
+    { key: "cpp" as const, regex: /CPP[:\s]*R?\$?\s*([\d.,]+)/i },
+    { key: "icms" as const, regex: /ICMS[:\s]*R?\$?\s*([\d.,]+)/i },
+    { key: "iss" as const, regex: /ISS[:\s]*R?\$?\s*([\d.,]+)/i },
+  ];
+  let hasReparticao = false;
+  for (const t of tributos) {
+    const m = content.match(t.regex);
+    if (m) {
+      reparticao[t.key] = parseMoneyValue(m[1]);
+      hasReparticao = true;
+    }
+  }
+  if (hasReparticao) {
+    dadosCompletos.reparticao = reparticao;
+  }
+
+  // Receita Monofásica
+  const monoMatch = content.match(/(?:Receita|Valor)[\s\w]*?Monof[áa]sic[ao][:\s]*R?\$?\s*([\d.,]+)/i);
+  if (monoMatch) {
+    dadosCompletos.receitaMonofasica = parseMoneyValue(monoMatch[1]);
+  }
+
+  // Receita com ST
+  const stMatch = content.match(/(?:Receita|Valor)[\s\w]*?(?:Substitui[çc][ãa]o|ST)[:\s]*R?\$?\s*([\d.,]+)/i);
+  if (stMatch) {
+    dadosCompletos.receitaST = parseMoneyValue(stMatch[1]);
+  }
+
+  // Receita Exportação
+  const expMatch = content.match(/(?:Receita|Valor)[\s\w]*?Exporta[çc][ãa]o[:\s]*R?\$?\s*([\d.,]+)/i);
+  if (expMatch) {
+    dadosCompletos.receitaExportacao = parseMoneyValue(expMatch[1]);
+  }
+
+  // Receita Isenta
+  const isentaMatch = content.match(/(?:Receita|Valor)[\s\w]*?Isent[ao][:\s]*R?\$?\s*([\d.,]+)/i);
+  if (isentaMatch) {
+    dadosCompletos.receitaIsenta = parseMoneyValue(isentaMatch[1]);
+  }
+
+  return { result, dadosCompletos };
 }
 
 // Convert period string to date
@@ -118,22 +231,20 @@ Deno.serve(async (req) => {
     if (fileName.endsWith(".txt")) {
       textContent = await fileData.text();
     } else if (fileName.endsWith(".pdf")) {
-      // For PDF files, we'll extract basic text
-      // In a real implementation, you'd use a PDF parsing library
-      // For now, we'll try to read as text and provide mock data if that fails
       try {
         textContent = await fileData.text();
       } catch {
         console.log("[process-pgdas] Could not parse PDF as text, using filename hints");
-        textContent = storagePath; // Use filename for hints
+        textContent = storagePath;
       }
     }
 
     console.log(`[process-pgdas] Extracted ${textContent.length} characters`);
 
     // Parse the content
-    const parsedData = parsePgdasContent(textContent);
+    const { result: parsedData, dadosCompletos } = parsePgdasContent(textContent);
     console.log("[process-pgdas] Parsed data:", parsedData);
+    console.log("[process-pgdas] Dados completos:", dadosCompletos);
 
     // Use parsed data or defaults
     const result: PgdasResult = {
@@ -159,6 +270,7 @@ Deno.serve(async (req) => {
         valor_devido: result.valorDevido,
         aliquota_efetiva: result.aliquotaEfetiva,
         anexo_simples: result.anexoSimples,
+        dados_completos: dadosCompletos,
         status: "completed",
         updated_at: new Date().toISOString(),
       })
@@ -179,6 +291,7 @@ Deno.serve(async (req) => {
         valorDevido: result.valorDevido,
         aliquotaEfetiva: result.aliquotaEfetiva,
         anexoSimples: result.anexoSimples,
+        dadosCompletos,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
