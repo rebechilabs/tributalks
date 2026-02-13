@@ -630,7 +630,10 @@ export default function AnaliseNotasFiscais() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+                              e.stopPropagation();
+                              document.getElementById('file-input')?.click();
+                            }}
                           >
                             <Upload className="mr-2 h-4 w-4" />
                             Carregar XML
