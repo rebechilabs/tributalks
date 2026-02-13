@@ -23,6 +23,7 @@ interface XmlItem {
   cst_pis?: string
   cst_cofins?: string
   cst_icms?: string
+  csosn?: string
   valor_pis?: number
   valor_cofins?: number
   valor_icms?: number
@@ -61,53 +62,110 @@ interface IdentifiedCredit {
   supplier_name?: string
 }
 
-// Helper to check if CFOP is an entry operation (purchases)
+interface CompanyContext {
+  regime: string | null
+  cnae: string | null
+  setor: string | null
+  aliquotaEfetiva: number
+  pgdasData: Record<string, unknown> | null
+}
+
+interface SimplesTaxDistribution {
+  irpj: number
+  csll: number
+  cofins: number
+  pis: number
+  cpp: number
+  icms: number
+}
+
+// ========== SIMPLES NACIONAL TAX DISTRIBUTION ==========
+// Based on LC 123/2006, Anexo I (Comércio)
+function getSimplesTaxDistribution(faixa: number, anexo: string): SimplesTaxDistribution {
+  // Anexo I - Comércio
+  if (anexo === 'I' || anexo === '1') {
+    switch (faixa) {
+      case 1: return { irpj: 5.50, csll: 3.50, cofins: 12.74, pis: 2.76, cpp: 41.50, icms: 34.00 }
+      case 2: return { irpj: 5.50, csll: 3.50, cofins: 12.74, pis: 2.76, cpp: 41.50, icms: 34.00 }
+      case 3: return { irpj: 5.50, csll: 3.50, cofins: 12.74, pis: 2.76, cpp: 42.00, icms: 33.50 }
+      case 4: return { irpj: 5.50, csll: 3.50, cofins: 12.74, pis: 2.76, cpp: 41.50, icms: 34.00 }
+      case 5: return { irpj: 5.50, csll: 3.50, cofins: 12.74, pis: 2.76, cpp: 42.00, icms: 33.50 }
+      case 6: return { irpj: 13.50, csll: 10.00, cofins: 28.27, pis: 6.13, cpp: 42.10, icms: 0.00 }
+      default: return { irpj: 5.50, csll: 3.50, cofins: 12.74, pis: 2.76, cpp: 41.50, icms: 34.00 }
+    }
+  }
+  // Anexo II - Indústria
+  if (anexo === 'II' || anexo === '2') {
+    switch (faixa) {
+      case 1: return { irpj: 5.50, csll: 3.50, cofins: 11.51, pis: 2.49, cpp: 37.50, icms: 32.00 }
+      case 2: return { irpj: 5.50, csll: 3.50, cofins: 11.51, pis: 2.49, cpp: 37.50, icms: 32.00 }
+      case 3: return { irpj: 5.50, csll: 3.50, cofins: 11.51, pis: 2.49, cpp: 37.50, icms: 32.00 }
+      case 4: return { irpj: 5.50, csll: 3.50, cofins: 11.51, pis: 2.49, cpp: 37.50, icms: 32.00 }
+      case 5: return { irpj: 5.50, csll: 3.50, cofins: 11.51, pis: 2.49, cpp: 37.50, icms: 32.00 }
+      case 6: return { irpj: 8.50, csll: 7.50, cofins: 20.96, pis: 4.54, cpp: 23.50, icms: 35.00 }
+      default: return { irpj: 5.50, csll: 3.50, cofins: 11.51, pis: 2.49, cpp: 37.50, icms: 32.00 }
+    }
+  }
+  // Default (Anexo I, Faixa 4)
+  return { irpj: 5.50, csll: 3.50, cofins: 12.74, pis: 2.76, cpp: 41.50, icms: 34.00 }
+}
+
+function detectFaixaFromRBT12(rbt12: number): number {
+  if (rbt12 <= 180000) return 1
+  if (rbt12 <= 360000) return 2
+  if (rbt12 <= 720000) return 3
+  if (rbt12 <= 1800000) return 4
+  if (rbt12 <= 3600000) return 5
+  return 6
+}
+
+function detectAnexoFromCNAE(cnae: string): string {
+  if (!cnae) return 'I'
+  const prefix = cnae.substring(0, 2)
+  // Indústria
+  if (['10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','33'].includes(prefix)) return 'II'
+  // Comércio
+  if (['45','46','47'].includes(prefix)) return 'I'
+  // Serviços (simplified)
+  return 'III'
+}
+
+// ========== HELPER FUNCTIONS ==========
+
 function isEntryOperation(cfop: string): boolean {
   return cfop.startsWith('1') || cfop.startsWith('2') || cfop.startsWith('3');
 }
 
-// Helper to check if CFOP is an exit operation (sales)
 function isExitOperation(cfop: string): boolean {
   return cfop.startsWith('5') || cfop.startsWith('6') || cfop.startsWith('7');
 }
 
-// Helper to check if CFOP is a return operation
 function isReturnOperation(cfop: string): boolean {
   const returnCfops = ['1411', '1412', '2411', '2412', '5411', '5412', '6411', '6412'];
   return returnCfops.includes(cfop) || cfop.includes('411') || cfop.includes('412');
 }
 
-// Helper to check if CFOP is a purchase for resale
 function isPurchaseForResale(cfop: string): boolean {
   return ['1102', '2102', '1403', '2403'].includes(cfop);
 }
 
-// Helper to check if CFOP is a purchase of inputs
 function isPurchaseOfInputs(cfop: string): boolean {
   return ['1101', '2101', '1111', '2111', '1116', '2116', '1117', '2117'].includes(cfop);
 }
 
-// Helper to check if CFOP is energy/telecommunications
 function isEnergyOrTelecom(cfop: string): boolean {
   return ['1253', '2253', '1254', '2254', '1255', '2255'].includes(cfop);
 }
 
-// Helper to check if NCM is monophasic (fuels, pharma, cosmetics, beverages, autoparts)
 function isMonophasicNCM(ncm: string): boolean {
-  // Fuels - Lei 11.116/2005
   if (ncm.startsWith('2710') || ncm.startsWith('2207')) return true;
-  // Pharmaceuticals - Lei 10.147/2000
   if (ncm.startsWith('3004') || ncm.startsWith('3003')) return true;
-  // Cosmetics - Lei 10.147/2000
   if (ncm.startsWith('3303') || ncm.startsWith('3304') || ncm.startsWith('3305')) return true;
-  // Beverages - Lei 13.097/2015
   if (ncm.startsWith('2201') || ncm.startsWith('2202') || ncm.startsWith('2203') || ncm.startsWith('2204')) return true;
-  // Autoparts and Tires - Lei 10.485/2002
   if (ncm.startsWith('8708') || ncm.startsWith('4011') || ncm.startsWith('8507')) return true;
   return false;
 }
 
-// Helper to get monophasic category for an NCM
 function getMonophasicCategory(ncm: string): string | null {
   if (ncm.startsWith('2710') || ncm.startsWith('2207')) return 'Combustíveis';
   if (ncm.startsWith('3004') || ncm.startsWith('3003')) return 'Medicamentos';
@@ -117,15 +175,10 @@ function getMonophasicCategory(ncm: string): string | null {
   return null;
 }
 
-// Helper to check if CST indicates proper monophasic treatment (zero-rated)
 function isMonophasicCST(cst: string): boolean {
-  // CST 04 = Operação tributável monofásica - revenda a alíquota zero
-  // CST 05 = Operação tributável por substituição tributária (monofásico)
-  // CST 06 = Operação tributável a alíquota zero
   return ['04', '05', '06'].includes(cst);
 }
 
-// Helper to get legal basis for monophasic NCM
 function getMonophasicLegalBasis(ncm: string): string {
   if (ncm.startsWith('2710') || ncm.startsWith('2207')) return 'Lei 11.116/2005';
   if (ncm.startsWith('3004') || ncm.startsWith('3003')) return 'Lei 10.147/2000';
@@ -134,6 +187,15 @@ function getMonophasicLegalBasis(ncm: string): string {
   if (ncm.startsWith('8708') || ncm.startsWith('4011') || ncm.startsWith('8507')) return 'Lei 10.485/2002';
   return 'Legislação monofásica';
 }
+
+// Rules that should be DISABLED for Simples Nacional
+const SIMPLES_DISABLED_RULES = new Set([
+  'IPI_001', 'IPI_002', 'IPI_003',
+  'ICMS_001', 'ICMS_002', 'ICMS_005',
+  'ICMS_ST_001', 'ICMS_ST_002',
+  'PIS_COFINS_001', 'PIS_COFINS_002', 'PIS_COFINS_003',
+  'PIS_COFINS_007', 'PIS_COFINS_008', 'PIS_COFINS_010', 'PIS_COFINS_011',
+])
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -152,12 +214,6 @@ serve(async (req) => {
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    )
-
-    const supabaseUser = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: authHeader } } }
     )
 
     const token = authHeader.replace('Bearer ', '')
@@ -180,6 +236,33 @@ serve(async (req) => {
       )
     }
 
+    // ========== FETCH COMPANY CONTEXT ==========
+    const { data: profile } = await supabaseAdmin
+      .from('company_profile')
+      .select('regime_tributario, cnae_principal, setor')
+      .eq('user_id', userId)
+      .maybeSingle()
+
+    const { data: pgdasRecord } = await supabaseAdmin
+      .from('pgdas_arquivos')
+      .select('aliquota_efetiva, dados_completos, periodo_apuracao')
+      .eq('user_id', userId)
+      .order('periodo_apuracao', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    const companyContext: CompanyContext = {
+      regime: profile?.regime_tributario || null,
+      cnae: profile?.cnae_principal || null,
+      setor: profile?.setor || null,
+      aliquotaEfetiva: pgdasRecord?.aliquota_efetiva || 0,
+      pgdasData: pgdasRecord?.dados_completos as Record<string, unknown> || null,
+    }
+
+    const isSimplesNacional = companyContext.regime === 'simples_nacional'
+    
+    console.log(`[analyze-credits] Regime: ${companyContext.regime}, CNAE: ${companyContext.cnae}, Simples: ${isSimplesNacional}, Alíquota: ${companyContext.aliquotaEfetiva}`)
+
     // 1. Fetch active rules
     const { data: rules, error: rulesError } = await supabaseAdmin
       .from('credit_rules')
@@ -194,25 +277,123 @@ serve(async (req) => {
       )
     }
 
+    // Filter rules based on regime
+    const applicableRules = (rules || []).filter((rule: CreditRule) => {
+      if (isSimplesNacional && SIMPLES_DISABLED_RULES.has(rule.rule_code)) {
+        return false
+      }
+      // For non-Simples, disable Simples-specific rules
+      if (!isSimplesNacional && rule.rule_code.startsWith('SIMPLES_')) {
+        return false
+      }
+      return true
+    })
+
+    console.log(`[analyze-credits] Total rules: ${rules?.length}, Applicable: ${applicableRules.length}`)
+
     const identifiedCredits: IdentifiedCredit[] = []
 
-    // 2. Analyze each XML against each rule
-    for (const xml of parsed_xmls as ParsedXml[]) {
-      const items = xml.itens || []
-      
-      for (const item of items) {
-        for (const rule of (rules || []) as CreditRule[]) {
-          const credit = evaluateRule(rule, xml, item)
-          if (credit) {
+    // 2. Analyze each XML
+    if (isSimplesNacional) {
+      // ========== SIMPLES NACIONAL ANALYSIS ==========
+      // For Simples, we analyze exit operations to find segregation opportunities
+      const anexo = detectAnexoFromCNAE(companyContext.cnae || '')
+      const rbt12 = (companyContext.pgdasData?.rbt12 as number) || 0
+      const faixa = rbt12 > 0 ? detectFaixaFromRBT12(rbt12) : 4
+      const aliquotaEfetiva = companyContext.aliquotaEfetiva > 0 
+        ? companyContext.aliquotaEfetiva / 100 
+        : 0.0976 // fallback
+      const taxDist = getSimplesTaxDistribution(faixa, anexo)
+      const parcelaPisCofins = (taxDist.pis + taxDist.cofins) / 100
+      const parcelaIcms = taxDist.icms / 100
+
+      console.log(`[analyze-credits] Simples config: Anexo ${anexo}, Faixa ${faixa}, Alíquota ${aliquotaEfetiva}, PIS+COFINS ${parcelaPisCofins}, ICMS ${parcelaIcms}`)
+
+      // Find Simples-specific rules
+      const simplesMonoRule = applicableRules.find((r: CreditRule) => r.rule_code === 'SIMPLES_MONO_001')
+      const simplesIcmsStRule = applicableRules.find((r: CreditRule) => r.rule_code === 'SIMPLES_ICMS_ST_001')
+
+      for (const xml of parsed_xmls as ParsedXml[]) {
+        const items = xml.itens || []
+        
+        for (const item of items) {
+          const cfop = item.cfop || ''
+          const ncm = item.ncm || ''
+          const cstPis = item.cst_pis || ''
+          const csosn = item.csosn || item.cst_icms || ''
+          const valorItem = item.valor_item || 0
+
+          // Only analyze exit operations for Simples segregation
+          if (!isExitOperation(cfop)) continue
+
+          // SIMPLES_MONO_001: Monophasic PIS/COFINS segregation
+          if (simplesMonoRule && isMonophasicNCM(ncm) && valorItem > 0) {
+            const category = getMonophasicCategory(ncm)
+            const recovery = valorItem * aliquotaEfetiva * parcelaPisCofins
+            
             identifiedCredits.push({
-              ...credit,
+              rule_id: simplesMonoRule.id,
+              original_tax_value: valorItem * aliquotaEfetiva,
+              potential_recovery: recovery,
+              ncm_code: ncm,
+              cfop: cfop,
+              cst: cstPis || '04',
+              confidence_level: 'high',
+              confidence_score: 92,
+              product_description: `Produto monofásico (${category}) - Segregação PGDAS-D - ${getMonophasicLegalBasis(ncm)}`,
               nfe_key: xml.chave_nfe || '',
               nfe_number: xml.numero || '',
               nfe_date: xml.data_emissao || new Date().toISOString().split('T')[0],
               supplier_cnpj: xml.cnpj_emitente || '',
               supplier_name: xml.nome_emitente || '',
-              product_description: item.descricao || '',
             })
+          }
+
+          // SIMPLES_ICMS_ST_001: ICMS-ST segregation
+          if (simplesIcmsStRule && valorItem > 0) {
+            const isST = csosn === '500' || cfop === '5405' || cfop === '6404'
+            if (isST) {
+              const recovery = valorItem * aliquotaEfetiva * parcelaIcms
+              
+              identifiedCredits.push({
+                rule_id: simplesIcmsStRule.id,
+                original_tax_value: valorItem * aliquotaEfetiva,
+                potential_recovery: recovery,
+                ncm_code: ncm,
+                cfop: cfop,
+                cst: csosn || '500',
+                confidence_level: 'high',
+                confidence_score: 90,
+                product_description: `ICMS-ST já recolhido - Segregação PGDAS-D - LC 123/2006, art. 18, §4º-A`,
+                nfe_key: xml.chave_nfe || '',
+                nfe_number: xml.numero || '',
+                nfe_date: xml.data_emissao || new Date().toISOString().split('T')[0],
+                supplier_cnpj: xml.cnpj_emitente || '',
+                supplier_name: xml.nome_emitente || '',
+              })
+            }
+          }
+        }
+      }
+    } else {
+      // ========== LUCRO REAL / PRESUMIDO ANALYSIS ==========
+      for (const xml of parsed_xmls as ParsedXml[]) {
+        const items = xml.itens || []
+        
+        for (const item of items) {
+          for (const rule of applicableRules as CreditRule[]) {
+            const credit = evaluateRule(rule, xml, item)
+            if (credit) {
+              identifiedCredits.push({
+                ...credit,
+                nfe_key: xml.chave_nfe || '',
+                nfe_number: xml.numero || '',
+                nfe_date: xml.data_emissao || new Date().toISOString().split('T')[0],
+                supplier_cnpj: xml.cnpj_emitente || '',
+                supplier_name: xml.nome_emitente || '',
+                product_description: item.descricao || '',
+              })
+            }
           }
         }
       }
@@ -258,17 +439,22 @@ serve(async (req) => {
       iss: 0
     }
 
+    // Use rule-based categorization for accurate summary
+    const ruleMap = new Map((rules || []).map((r: CreditRule) => [r.id, r]))
+    
     for (const credit of identifiedCredits) {
-      const cfop = credit.cfop || ''
-      const cst = credit.cst || ''
-      
-      // Categorize by the rule that matched or by item characteristics
-      if (cst.startsWith('5') || cst.startsWith('7') || cst.startsWith('0')) {
-        byTaxType.pis_cofins += credit.potential_recovery
-      } else if (cfop.startsWith('2')) {
-        byTaxType.icms += credit.potential_recovery
-      } else if (cfop.startsWith('1')) {
-        byTaxType.icms += credit.potential_recovery
+      const rule = ruleMap.get(credit.rule_id) as CreditRule | undefined
+      if (rule) {
+        const taxType = rule.tax_type || ''
+        if (taxType.includes('PIS') || taxType.includes('COFINS')) {
+          byTaxType.pis_cofins += credit.potential_recovery
+        } else if (taxType === 'ICMS-ST') {
+          byTaxType.icms_st += credit.potential_recovery
+        } else if (taxType === 'ICMS') {
+          byTaxType.icms += credit.potential_recovery
+        } else if (taxType === 'IPI') {
+          byTaxType.ipi += credit.potential_recovery
+        }
       }
     }
 
@@ -284,8 +470,11 @@ serve(async (req) => {
         .filter(c => c.confidence_level === 'low')
         .reduce((sum, c) => sum + c.potential_recovery, 0),
       credits_count: identifiedCredits.length,
-      by_tax_type: byTaxType
+      by_tax_type: byTaxType,
+      regime: companyContext.regime,
     }
+
+    console.log(`[analyze-credits] Summary: ${JSON.stringify(summary)}`)
 
     // 5. Save summary
     const { error: summaryError } = await supabaseAdmin
@@ -311,7 +500,7 @@ serve(async (req) => {
       console.error('Error inserting summary:', summaryError)
     }
 
-    // 6. Create notification for the user if credits were found
+    // 6. Create notification
     if (identifiedCredits.length > 0) {
       const formatCurrency = (value: number) => 
         new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
@@ -322,6 +511,10 @@ serve(async (req) => {
         : `💰 ${identifiedCredits.length} créditos tributários identificados!`
       
       let notificationMessage = `Potencial de recuperação: ${formatCurrency(summary.total_potential)}.`
+      
+      if (isSimplesNacional) {
+        notificationMessage += ' Identificado via segregação de receitas no PGDAS-D.'
+      }
       
       if (highConfidenceCredits.length > 0) {
         notificationMessage += ` ${highConfidenceCredits.length} com alta confiança (${formatCurrency(summary.high_confidence)}).`
@@ -353,7 +546,6 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    // Log error internally for debugging, but return sanitized message
     console.error('Error in analyze-credits:', error)
     return new Response(
       JSON.stringify({ error: 'Erro ao analisar créditos. Tente novamente.' }),
@@ -362,6 +554,7 @@ serve(async (req) => {
   }
 })
 
+// ========== LUCRO REAL/PRESUMIDO RULE EVALUATOR ==========
 function evaluateRule(rule: CreditRule, xml: ParsedXml, item: XmlItem): IdentifiedCredit | null {
   const cfop = item.cfop || ''
   const ncm = item.ncm || ''
@@ -378,7 +571,6 @@ function evaluateRule(rule: CreditRule, xml: ParsedXml, item: XmlItem): Identifi
 
   // ==== PIS/COFINS RULES ====
   
-  // PIS_COFINS_001: CST with credit right but not used
   if (rule.rule_code === 'PIS_COFINS_001') {
     const cstWithCredit = ['50', '51', '52', '53', '54', '55', '56']
     if (cstWithCredit.includes(cstPis) && creditoPis === 0 && valorPis > 0) {
@@ -386,103 +578,76 @@ function evaluateRule(rule: CreditRule, xml: ParsedXml, item: XmlItem): Identifi
         rule_id: rule.id,
         original_tax_value: valorPis + valorCofins,
         potential_recovery: (valorPis + valorCofins) * 0.9,
-        ncm_code: ncm,
-        cfop: cfop,
-        cst: cstPis,
-        confidence_level: 'high',
-        confidence_score: 85
+        ncm_code: ncm, cfop, cst: cstPis,
+        confidence_level: 'high', confidence_score: 85
       }
     }
   }
 
-  // PIS_COFINS_002: Input without credit (purchase CFOPs)
   if (rule.rule_code === 'PIS_COFINS_002') {
     if (isPurchaseOfInputs(cfop) || isPurchaseForResale(cfop)) {
-      // CST 70-73 indicates non-cumulative with no credit taken
       const cstNoCredit = ['70', '71', '72', '73']
       if (cstNoCredit.includes(cstPis) && valorPis > 0) {
         return {
           rule_id: rule.id,
           original_tax_value: valorPis + valorCofins,
           potential_recovery: (valorPis + valorCofins) * 0.75,
-          ncm_code: ncm,
-          cfop: cfop,
-          cst: cstPis,
-          confidence_level: 'medium',
-          confidence_score: 70
+          ncm_code: ncm, cfop, cst: cstPis,
+          confidence_level: 'medium', confidence_score: 70
         }
       }
-      // Also check if CST 01 (taxable) with no credit claimed on entry
       if (cstPis === '01' && valorPis > 0 && isEntryOperation(cfop)) {
         return {
           rule_id: rule.id,
           original_tax_value: valorPis + valorCofins,
           potential_recovery: (valorPis + valorCofins) * 0.8,
-          ncm_code: ncm,
-          cfop: cfop,
-          cst: cstPis,
-          confidence_level: 'medium',
-          confidence_score: 68
+          ncm_code: ncm, cfop, cst: cstPis,
+          confidence_level: 'medium', confidence_score: 68
         }
       }
     }
   }
 
-  // PIS_COFINS_003: Industrial energy
   if (rule.rule_code === 'PIS_COFINS_003') {
     if (isEnergyOrTelecom(cfop) && valorPis > 0) {
       return {
         rule_id: rule.id,
         original_tax_value: valorPis + valorCofins,
         potential_recovery: (valorPis + valorCofins) * 0.85,
-        ncm_code: ncm,
-        cfop: cfop,
-        cst: cstPis,
-        confidence_level: 'high',
-        confidence_score: 88
+        ncm_code: ncm, cfop, cst: cstPis,
+        confidence_level: 'high', confidence_score: 88
       }
     }
   }
 
-  // PIS_COFINS_007: Monophasic products (fuels)
   if (rule.rule_code === 'PIS_COFINS_007') {
     if (isMonophasicNCM(ncm) && isEntryOperation(cfop)) {
       return {
         rule_id: rule.id,
         original_tax_value: valorPis + valorCofins,
         potential_recovery: (valorPis + valorCofins) * 0.6,
-        ncm_code: ncm,
-        cfop: cfop,
-        cst: cstPis,
-        confidence_level: 'high',
-        confidence_score: 82
+        ncm_code: ncm, cfop, cst: cstPis,
+        confidence_level: 'high', confidence_score: 82
       }
     }
   }
 
-  // PIS_COFINS_008: Monophasic products on exit operations - undue payment
   if (rule.rule_code === 'PIS_COFINS_008') {
-    // Check any monophasic NCM on exit operations
     if (isMonophasicNCM(ncm) && isExitOperation(cfop)) {
-      // If CST is NOT monophasic (04/05/06) OR if PIS/COFINS was charged when it shouldn't be
       if (!isMonophasicCST(cstPis) || valorPis > 0 || valorCofins > 0) {
         const category = getMonophasicCategory(ncm);
         return {
           rule_id: rule.id,
           original_tax_value: valorPis + valorCofins,
-          potential_recovery: valorPis + valorCofins, // Full recovery - should be zero
-          ncm_code: ncm,
-          cfop: cfop,
-          cst: cstPis,
-          confidence_level: 'high',
-          confidence_score: 92,
+          potential_recovery: valorPis + valorCofins,
+          ncm_code: ncm, cfop, cst: cstPis,
+          confidence_level: 'high', confidence_score: 92,
           product_description: `Produto monofásico (${category}) - ${getMonophasicLegalBasis(ncm)}`
         }
       }
     }
   }
 
-  // PIS_COFINS_010: Autoparts monophasic (NCM 8708, 4011, 8507)
   if (rule.rule_code === 'PIS_COFINS_010') {
     if ((ncm.startsWith('8708') || ncm.startsWith('4011') || ncm.startsWith('8507')) && isExitOperation(cfop)) {
       if (!isMonophasicCST(cstPis) || valorPis > 0 || valorCofins > 0) {
@@ -490,18 +655,14 @@ function evaluateRule(rule: CreditRule, xml: ParsedXml, item: XmlItem): Identifi
           rule_id: rule.id,
           original_tax_value: valorPis + valorCofins,
           potential_recovery: valorPis + valorCofins,
-          ncm_code: ncm,
-          cfop: cfop,
-          cst: cstPis,
-          confidence_level: 'high',
-          confidence_score: 92,
+          ncm_code: ncm, cfop, cst: cstPis,
+          confidence_level: 'high', confidence_score: 92,
           product_description: `Autopeças/Pneus - Lei 10.485/2002`
         }
       }
     }
   }
 
-  // PIS_COFINS_011: Cosmetics monophasic (NCM 3303, 3304, 3305)
   if (rule.rule_code === 'PIS_COFINS_011') {
     if ((ncm.startsWith('3303') || ncm.startsWith('3304') || ncm.startsWith('3305')) && isExitOperation(cfop)) {
       if (!isMonophasicCST(cstPis) || valorPis > 0 || valorCofins > 0) {
@@ -509,11 +670,8 @@ function evaluateRule(rule: CreditRule, xml: ParsedXml, item: XmlItem): Identifi
           rule_id: rule.id,
           original_tax_value: valorPis + valorCofins,
           potential_recovery: valorPis + valorCofins,
-          ncm_code: ncm,
-          cfop: cfop,
-          cst: cstPis,
-          confidence_level: 'high',
-          confidence_score: 92,
+          ncm_code: ncm, cfop, cst: cstPis,
+          confidence_level: 'high', confidence_score: 92,
           product_description: `Cosméticos - Lei 10.147/2000`
         }
       }
@@ -522,52 +680,39 @@ function evaluateRule(rule: CreditRule, xml: ParsedXml, item: XmlItem): Identifi
 
   // ==== ICMS RULES ====
 
-  // ICMS_001: Interstate purchase without credit
   if (rule.rule_code === 'ICMS_001') {
     if (cfop.startsWith('2') && valorIcms > 0 && creditoIcms === 0) {
       return {
         rule_id: rule.id,
         original_tax_value: valorIcms,
         potential_recovery: valorIcms * 0.85,
-        ncm_code: ncm,
-        cfop: cfop,
-        cst: cstIcms,
-        confidence_level: 'high',
-        confidence_score: 80
+        ncm_code: ncm, cfop, cst: cstIcms,
+        confidence_level: 'high', confidence_score: 80
       }
     }
   }
 
-  // ICMS_002: Energy for industrialization
   if (rule.rule_code === 'ICMS_002') {
     if (isEnergyOrTelecom(cfop) && valorIcms > 0) {
       return {
         rule_id: rule.id,
         original_tax_value: valorIcms,
         potential_recovery: valorIcms * 0.8,
-        ncm_code: ncm,
-        cfop: cfop,
-        cst: cstIcms,
-        confidence_level: 'high',
-        confidence_score: 85
+        ncm_code: ncm, cfop, cst: cstIcms,
+        confidence_level: 'high', confidence_score: 85
       }
     }
   }
 
-  // ICMS_005: DIFAL on fixed assets
   if (rule.rule_code === 'ICMS_005') {
-    // CFOP 2551 = purchase of fixed asset interstate
     if (cfop === '2551' || cfop === '1551') {
       if (valorIcms > 0) {
         return {
           rule_id: rule.id,
           original_tax_value: valorIcms,
-          potential_recovery: valorIcms * 0.5, // CIAP recovery over 48 months
-          ncm_code: ncm,
-          cfop: cfop,
-          cst: cstIcms,
-          confidence_level: 'high',
-          confidence_score: 78
+          potential_recovery: valorIcms * 0.5,
+          ncm_code: ncm, cfop, cst: cstIcms,
+          confidence_level: 'high', confidence_score: 78
         }
       }
     }
@@ -575,23 +720,18 @@ function evaluateRule(rule: CreditRule, xml: ParsedXml, item: XmlItem): Identifi
 
   // ==== ICMS-ST RULES ====
 
-  // ICMS_ST_001: ST with MVA above real price
   if (rule.rule_code === 'ICMS_ST_001') {
     if (valorIcmsSt > 0) {
       return {
         rule_id: rule.id,
         original_tax_value: valorIcmsSt,
         potential_recovery: valorIcmsSt * 0.15,
-        ncm_code: ncm,
-        cfop: cfop,
-        cst: cstIcms,
-        confidence_level: 'low',
-        confidence_score: 45
+        ncm_code: ncm, cfop, cst: cstIcms,
+        confidence_level: 'low', confidence_score: 45
       }
     }
   }
 
-  // ICMS_ST_002: ST refund on interstate operations
   if (rule.rule_code === 'ICMS_ST_002') {
     const refundCfops = ['6403', '6404', '6102']
     if (refundCfops.includes(cfop) && valorIcmsSt > 0) {
@@ -599,49 +739,35 @@ function evaluateRule(rule: CreditRule, xml: ParsedXml, item: XmlItem): Identifi
         rule_id: rule.id,
         original_tax_value: valorIcmsSt,
         potential_recovery: valorIcmsSt * 0.7,
-        ncm_code: ncm,
-        cfop: cfop,
-        cst: cstIcms,
-        confidence_level: 'high',
-        confidence_score: 75
+        ncm_code: ncm, cfop, cst: cstIcms,
+        confidence_level: 'high', confidence_score: 75
       }
     }
   }
 
   // ==== IPI RULES ====
 
-  // IPI_001: IPI credit on industrial inputs
   if (rule.rule_code === 'IPI_001') {
     if (valorIpi > 0 && isPurchaseOfInputs(cfop)) {
       return {
         rule_id: rule.id,
         original_tax_value: valorIpi,
         potential_recovery: valorIpi * 0.95,
-        ncm_code: ncm,
-        cfop: cfop,
-        cst: '',
-        confidence_level: 'high',
-        confidence_score: 90
+        ncm_code: ncm, cfop, cst: '',
+        confidence_level: 'high', confidence_score: 90
       }
     }
   }
 
   // ==== RETURN OPERATIONS ====
-  // Check for returns that may generate credit recovery
-
   if (isReturnOperation(cfop)) {
-    // Entry returns (1411, 2411) = receiving returned goods = debit reversal
     if (isEntryOperation(cfop) && (valorPis > 0 || valorCofins > 0)) {
-      // This is a potential debit reversal opportunity
       return {
         rule_id: rule.id,
         original_tax_value: valorPis + valorCofins,
         potential_recovery: (valorPis + valorCofins) * 0.9,
-        ncm_code: ncm,
-        cfop: cfop,
-        cst: cstPis,
-        confidence_level: 'medium',
-        confidence_score: 65
+        ncm_code: ncm, cfop, cst: cstPis,
+        confidence_level: 'medium', confidence_score: 65
       }
     }
   }
