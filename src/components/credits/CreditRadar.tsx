@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Target, AlertTriangle, FileText, Download, TrendingUp, Sparkles, ListChecks, Scale, RefreshCw, Loader2, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,19 +6,29 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useXmlCreditsSummary } from '@/hooks/useXmlCredits';
 import { useIdentifiedCredits, useIdentifiedCreditsSummary } from '@/hooks/useIdentifiedCredits';
 import { useReanalyzeCredits } from '@/hooks/useReanalyzeCredits';
+import { useXmlImportSessions } from '@/hooks/useXmlImportSessions';
 import { CreditReportDialog } from '@/components/pdf/CreditReportDialog';
 import { MonophasicAlert } from './MonophasicAlert';
 import { IdentifiedCreditsTable } from './IdentifiedCreditsTable';
 import { CreditImplementationWorkflow } from './CreditImplementationWorkflow';
 import { CreditDetailBreakdown } from './CreditDetailBreakdown';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export function CreditRadar() {
+  const { data: importSessions, isLoading: loadingSessions } = useXmlImportSessions();
+  const [selectedImportId, setSelectedImportId] = useState<string | undefined>(undefined);
+  
+  // Auto-select the most recent import when data loads
+  const activeImportId = selectedImportId || importSessions?.[0]?.id;
+
   const { data: xmlSummary, isLoading: loadingXmlSummary } = useXmlCreditsSummary();
-  const { data: identifiedCredits, isLoading: loadingCredits } = useIdentifiedCredits(100);
-  const { data: creditsSummary, isLoading: loadingSummary } = useIdentifiedCreditsSummary();
+  const { data: identifiedCredits, isLoading: loadingCredits } = useIdentifiedCredits(100, activeImportId);
+  const { data: creditsSummary, isLoading: loadingSummary } = useIdentifiedCreditsSummary(activeImportId);
   const { reanalyze, isAnalyzing, progress } = useReanalyzeCredits();
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [activeTab, setActiveTab] = useState('credits');
@@ -29,6 +39,26 @@ export function CreditRadar() {
       currency: 'BRL'
     }).format(value);
   };
+
+  // Group imports by date for the selector label
+  const importOptions = useMemo(() => {
+    if (!importSessions) return [];
+    // Group by date (same day = same batch)
+    const groups: Record<string, { ids: string[]; date: string; count: number }> = {};
+    for (const session of importSessions) {
+      const dateKey = format(new Date(session.created_at), 'yyyy-MM-dd');
+      if (!groups[dateKey]) {
+        groups[dateKey] = { ids: [], date: session.created_at, count: 0 };
+      }
+      groups[dateKey].ids.push(session.id);
+      groups[dateKey].count++;
+    }
+    // Return individual sessions with labels
+    return importSessions.map(s => ({
+      id: s.id,
+      label: `${format(new Date(s.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })} - ${s.file_name || 'XML'}`,
+    }));
+  }, [importSessions]);
 
   // Use identified credits summary if available, otherwise fall back to XML estimates
   const hasIdentifiedCredits = creditsSummary && creditsSummary.total_credits_count > 0;
@@ -56,7 +86,7 @@ export function CreditRadar() {
     totalCredits: xmlSummary?.totalXmls || 0,
   };
 
-  const isLoading = loadingXmlSummary || loadingCredits || loadingSummary;
+  const isLoading = loadingXmlSummary || loadingCredits || loadingSummary || loadingSessions;
   const hasData = (xmlSummary && xmlSummary.totalXmls > 0) || hasIdentifiedCredits;
 
   const taxBreakdown = [
@@ -73,13 +103,16 @@ export function CreditRadar() {
   ];
 
   const handleAskClara = () => {
-    // Trigger Clara with credit recovery context
     const event = new CustomEvent('open-clara', { 
       detail: { 
         message: 'Como faço para recuperar os créditos tributários identificados no Radar?' 
       } 
     });
     window.dispatchEvent(event);
+  };
+
+  const handleReanalyze = () => {
+    reanalyze(activeImportId);
   };
 
   if (isLoading) {
@@ -119,8 +152,8 @@ export function CreditRadar() {
         <div className="flex gap-2">
           <Button 
             variant="outline" 
-            onClick={reanalyze} 
-            disabled={isAnalyzing || !xmlSummary?.totalXmls}
+            onClick={handleReanalyze} 
+            disabled={isAnalyzing || !activeImportId}
           >
             {isAnalyzing ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -135,6 +168,35 @@ export function CreditRadar() {
           </Button>
         </div>
       </div>
+
+      {/* Import Session Selector */}
+      {importOptions.length > 0 && (
+        <Card>
+          <CardContent className="py-3">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Importação:</span>
+              <Select
+                value={activeImportId || ''}
+                onValueChange={(value) => setSelectedImportId(value)}
+              >
+                <SelectTrigger className="max-w-md">
+                  <SelectValue placeholder="Selecione uma importação" />
+                </SelectTrigger>
+                <SelectContent>
+                  {importOptions.map((opt) => (
+                    <SelectItem key={opt.id} value={opt.id}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <span className="text-xs text-muted-foreground">
+                {importOptions.length} importação(ões) disponíveis
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Analysis Progress */}
       {isAnalyzing && (

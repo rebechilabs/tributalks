@@ -488,7 +488,22 @@ serve(async (req) => {
       }
     }
 
-    // 3. Save identified credits
+    // 3. Clean previous credits for this import (avoid duplicates on re-analysis)
+    if (xml_import_id) {
+      const { error: deleteError } = await supabaseAdmin
+        .from('identified_credits')
+        .delete()
+        .eq('user_id', userId)
+        .eq('xml_import_id', xml_import_id)
+      
+      if (deleteError) {
+        console.error('Error cleaning previous credits:', deleteError)
+      } else {
+        console.log(`Cleaned previous credits for import ${xml_import_id}`)
+      }
+    }
+
+    // 4. Save identified credits
     if (identifiedCredits.length > 0) {
       const creditsToInsert = identifiedCredits.map(c => ({
         user_id: userId,
