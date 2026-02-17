@@ -212,17 +212,24 @@ serve(async (req) => {
     )
 
     const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token)
-    
-    if (userError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
+    const requestBody = await req.json()
+    const { xml_import_id, parsed_xmls, user_id: bodyUserId } = requestBody
 
-    const userId = user.id
-    const { xml_import_id, parsed_xmls } = await req.json()
+    // Support internal calls with service role key + user_id in body
+    let userId: string
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    if (token === serviceRoleKey && bodyUserId) {
+      userId = bodyUserId
+    } else {
+      const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token)
+      if (userError || !user) {
+        return new Response(
+          JSON.stringify({ error: 'Unauthorized' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+      userId = user.id
+    }
 
     if (!parsed_xmls || !Array.isArray(parsed_xmls)) {
       return new Response(
