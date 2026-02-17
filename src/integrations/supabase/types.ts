@@ -2307,6 +2307,84 @@ export type Database = {
           },
         ]
       }
+      identified_credits_archive: {
+        Row: {
+          archived_at: string
+          archived_reason: string
+          cfop: string | null
+          confidence_level: string | null
+          confidence_score: number | null
+          credit_not_used: number | null
+          cst: string | null
+          id: string
+          ncm_code: string | null
+          nfe_date: string | null
+          nfe_key: string | null
+          nfe_number: string | null
+          original_created_at: string | null
+          original_credit_id: string
+          original_tax_value: number | null
+          potential_recovery: number | null
+          product_description: string | null
+          rule_id: string | null
+          status: string | null
+          supplier_cnpj: string | null
+          supplier_name: string | null
+          user_id: string
+          xml_import_id: string | null
+        }
+        Insert: {
+          archived_at?: string
+          archived_reason?: string
+          cfop?: string | null
+          confidence_level?: string | null
+          confidence_score?: number | null
+          credit_not_used?: number | null
+          cst?: string | null
+          id?: string
+          ncm_code?: string | null
+          nfe_date?: string | null
+          nfe_key?: string | null
+          nfe_number?: string | null
+          original_created_at?: string | null
+          original_credit_id: string
+          original_tax_value?: number | null
+          potential_recovery?: number | null
+          product_description?: string | null
+          rule_id?: string | null
+          status?: string | null
+          supplier_cnpj?: string | null
+          supplier_name?: string | null
+          user_id: string
+          xml_import_id?: string | null
+        }
+        Update: {
+          archived_at?: string
+          archived_reason?: string
+          cfop?: string | null
+          confidence_level?: string | null
+          confidence_score?: number | null
+          credit_not_used?: number | null
+          cst?: string | null
+          id?: string
+          ncm_code?: string | null
+          nfe_date?: string | null
+          nfe_key?: string | null
+          nfe_number?: string | null
+          original_created_at?: string | null
+          original_credit_id?: string
+          original_tax_value?: number | null
+          potential_recovery?: number | null
+          product_description?: string | null
+          rule_id?: string | null
+          status?: string | null
+          supplier_cnpj?: string | null
+          supplier_name?: string | null
+          user_id?: string
+          xml_import_id?: string | null
+        }
+        Relationships: []
+      }
       margin_dashboard: {
         Row: {
           created_at: string | null
