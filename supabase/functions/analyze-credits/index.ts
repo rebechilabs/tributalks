@@ -100,18 +100,22 @@ export function detectFaixaFromRBT12(rbt12: number): number {
   return 6
 }
 
+// [CORREÇÃO #5] Mapeamento CNAE → Anexo expandido com cobertura completa
 export function detectAnexoFromCNAE(cnae: string): string {
   if (!cnae) return 'I'
   const prefix = cnae.substring(0, 2)
-  // Indústria
-  if (['10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','33'].includes(prefix)) return 'II'
-  // Comércio
+  // Indústria (Anexo II)
+  if (['10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','33','35','36','37','38','39'].includes(prefix)) return 'II'
+  // Comércio (Anexo I)
   if (['45','46','47'].includes(prefix)) return 'I'
-  // Serviços de construção/vigilância/limpeza
+  // Transporte, alimentação, turismo, serviços gerais (Anexo III)
+  if (['49','50','51','52','53','55','56','58','59','60','61','64','65','66','68','69','70','72','74','75','77','78','79','82','84','85','86','87','88','90','91','92','93','94','95','96','97','99'].includes(prefix)) return 'III'
+  // Serviços de construção/vigilância/limpeza (Anexo IV)
   if (['41','42','43','80','81'].includes(prefix)) return 'IV'
-  // Tecnologia/engenharia
-  if (['62','63','71','73'].includes(prefix)) return 'V'
-  // Serviços gerais
+  // Tecnologia/engenharia (Anexo V)
+  if (['62','63','71','73','76'].includes(prefix)) return 'V'
+  // Fallback seguro
+  console.warn(`[analyze-credits] CNAE prefix '${prefix}' não mapeado para Anexo, usando III como fallback`)
   return 'III'
 }
 
@@ -132,17 +136,23 @@ function isExitOperation(cfop: string): boolean {
   return cfop.startsWith('5') || cfop.startsWith('6') || cfop.startsWith('7');
 }
 
+// [CORREÇÃO #10b] isReturnOperation com lista explícita (sem includes genérico)
 function isReturnOperation(cfop: string): boolean {
-  const returnCfops = ['1411', '1412', '2411', '2412', '5411', '5412', '6411', '6412'];
-  return returnCfops.includes(cfop) || cfop.includes('411') || cfop.includes('412');
+  const returnCfops = [
+    '1411', '1412', '1413', '2411', '2412', '2413',
+    '5411', '5412', '5413', '6411', '6412', '6413',
+    '1556', '2556', '5556', '6556'
+  ];
+  return returnCfops.includes(cfop);
 }
 
+// [CORREÇÃO #10a] CFOPs expandidos para compras
 function isPurchaseForResale(cfop: string): boolean {
-  return ['1102', '2102', '1403', '2403'].includes(cfop);
+  return ['1102', '2102', '3102', '1403', '2403', '3403'].includes(cfop);
 }
 
 function isPurchaseOfInputs(cfop: string): boolean {
-  return ['1101', '2101', '1111', '2111', '1116', '2116', '1117', '2117'].includes(cfop);
+  return ['1101', '2101', '3101', '1111', '2111', '1116', '2116', '1117', '2117', '1126', '2126'].includes(cfop);
 }
 
 function isEnergyOrTelecom(cfop: string): boolean {
@@ -181,6 +191,25 @@ function getMonophasicLegalBasis(ncm: string): string {
   return 'Legislação monofásica';
 }
 
+// [CORREÇÃO #2] Normalização segura da alíquota efetiva
+// Detecta automaticamente se o valor está em percentual (ex: 9.76) ou decimal (ex: 0.0976)
+function normalizeAliquotaEfetiva(rawAliquota: number): number {
+  if (rawAliquota <= 0) return 0.0976 // fallback Faixa 4 Anexo I
+  // Se > 1, assume que está em percentual (ex: 9.76) → divide por 100
+  // Se <= 1, assume que já está em decimal (ex: 0.0976) → usa direto
+  if (rawAliquota > 1) return rawAliquota / 100
+  return rawAliquota
+}
+
+// [CORREÇÃO #6] Fallbacks por Anexo em vez de hardcoded único
+const FALLBACK_TAX_DISTRIBUTIONS: Record<string, SimplesTaxDistribution> = {
+  'I':   { irpj: 5.50, csll: 3.50, cofins: 12.74, pis: 2.76, cpp: 41.50, icms: 34.00, iss: 0 },
+  'II':  { irpj: 5.50, csll: 3.50, cofins: 11.51, pis: 2.49, cpp: 37.50, icms: 32.00, iss: 0 },
+  'III': { irpj: 6.00, csll: 3.50, cofins: 13.64, pis: 2.96, cpp: 43.40, icms: 0,     iss: 33.50 },
+  'IV':  { irpj: 18.80, csll: 15.20, cofins: 17.67, pis: 3.83, cpp: 44.50, icms: 0,   iss: 0 },
+  'V':   { irpj: 23.00, csll: 15.00, cofins: 14.10, pis: 3.05, cpp: 28.85, icms: 0,   iss: 16.00 },
+}
+
 // Rules that should be DISABLED for Simples Nacional
 const SIMPLES_DISABLED_RULES = new Set([
   'IPI_001', 'IPI_002', 'IPI_003',
@@ -191,6 +220,9 @@ const SIMPLES_DISABLED_RULES = new Set([
   'PIS_COFINS_007', 'PIS_COFINS_008', 'PIS_COFINS_009',
   'PIS_COFINS_010', 'PIS_COFINS_011',
 ])
+
+// [CORREÇÃO #12] Limite máximo de XMLs por requisição para evitar DoS
+const MAX_XMLS_PER_REQUEST = 500
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -213,7 +245,7 @@ serve(async (req) => {
 
     const token = authHeader.replace('Bearer ', '')
     const requestBody = await req.json()
-    const { xml_import_id, parsed_xmls, user_id: bodyUserId, append_mode } = requestBody
+    const { xml_import_id, parsed_xmls, user_id: bodyUserId } = requestBody
 
     // Support internal calls with service role key + user_id in body
     let userId: string
@@ -238,6 +270,14 @@ serve(async (req) => {
       )
     }
 
+    // [CORREÇÃO #12] Validação de tamanho do array
+    if (parsed_xmls.length > MAX_XMLS_PER_REQUEST) {
+      return new Response(
+        JSON.stringify({ error: `Máximo de ${MAX_XMLS_PER_REQUEST} XMLs por requisição. Recebido: ${parsed_xmls.length}` }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     // ========== FETCH COMPANY CONTEXT ==========
     const { data: profile } = await supabaseAdmin
       .from('company_profile')
@@ -255,7 +295,7 @@ serve(async (req) => {
     // Fetch all PGDAS from last 12 months for RBT12 calculation
     const twelveMonthsAgo = new Date()
     twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12)
-    
+
     const { data: pgdasRecords } = await supabaseAdmin
       .from('pgdas_arquivos')
       .select('aliquota_efetiva, dados_completos, periodo_apuracao, anexo_simples, receita_bruta')
@@ -265,16 +305,22 @@ serve(async (req) => {
 
     const latestPgdas = pgdasRecords?.[0] || null
 
-    // Calculate RBT12 from PGDAS records
+    // [CORREÇÃO #9] Calculate RBT12 com proporcionalização para períodos incompletos
     let rbt12Calculated = 0
+    const mesesComDados = pgdasRecords?.length || 0
     if (pgdasRecords && pgdasRecords.length > 0) {
       for (const pgdas of pgdasRecords) {
-        const rb = pgdas.receita_bruta || 
+        const rb = pgdas.receita_bruta ||
           (pgdas.dados_completos as Record<string, unknown>)?.receita_bruta as number || 0
         rbt12Calculated += rb
       }
+      // Proporcionalizar se menos de 12 meses (LC 123/2006, Art. 18, §1º)
+      if (mesesComDados > 0 && mesesComDados < 12) {
+        rbt12Calculated = (rbt12Calculated / mesesComDados) * 12
+        console.log(`[analyze-credits] RBT12 proporcionalizado: ${mesesComDados} meses → estimativa 12 meses: ${rbt12Calculated}`)
+      }
     }
-    
+
     // Fallback to dados_completos.rbt12 if calculated is 0
     const rbt12FromDados = (latestPgdas?.dados_completos as Record<string, unknown>)?.rbt12 as number || 0
     const rbt12Final = rbt12Calculated > 0 ? rbt12Calculated : rbt12FromDados
@@ -295,7 +341,7 @@ serve(async (req) => {
 
     // Correct detection: 'SIMPLES' or 'simples_nacional' both match
     const isSimplesNacional = normalizedRegime.startsWith('simples')
-    
+
     console.log(`[analyze-credits] Regime raw: '${rawRegime}', normalized: '${normalizedRegime}', Simples: ${isSimplesNacional}, CNAE: ${companyContext.cnae}, Alíquota: ${companyContext.aliquotaEfetiva}, RBT12: ${rbt12Final}, Mistas: ${companyContext.temAtividadesMistas}`)
 
     // ========== FETCH REFERENCE DATA FROM DB ==========
@@ -316,7 +362,7 @@ serve(async (req) => {
       const { data: distData } = await supabaseAdmin
         .from('simples_tax_distribution')
         .select('*')
-      
+
       if (distData) {
         for (const row of distData) {
           const key = `${row.anexo}_${row.faixa}`
@@ -369,14 +415,20 @@ serve(async (req) => {
       // ========== SIMPLES NACIONAL ANALYSIS ==========
       // Determine anexo: prefer PGDAS field, then CNAE inference
       const anexo = latestPgdas?.anexo_simples || detectAnexoFromCNAE(companyContext.cnae || '')
-      const faixa = rbt12Final > 0 ? detectFaixaFromRBT12(rbt12Final) : 4
-      const aliquotaEfetiva = companyContext.aliquotaEfetiva > 0 
-        ? companyContext.aliquotaEfetiva / 100 
-        : 0.0976 // fallback
-      
-      // Get tax distribution from DB, fallback to hardcoded
+      // [CORREÇÃO #11] Faixa default 1 (mais conservador) em vez de 4
+      const faixa = rbt12Final > 0 ? detectFaixaFromRBT12(rbt12Final) : 1
+      // [CORREÇÃO #2] Usar normalização segura da alíquota
+      const aliquotaEfetiva = normalizeAliquotaEfetiva(companyContext.aliquotaEfetiva)
+
+      // [CORREÇÃO #6] Get tax distribution from DB, fallback por Anexo específico
       const taxDistKey = `${anexo}_${faixa}`
-      const taxDist = taxDistributions[taxDistKey] || { irpj: 5.50, csll: 3.50, cofins: 12.74, pis: 2.76, cpp: 41.50, icms: 34.00, iss: 0 }
+      const fallbackDist = FALLBACK_TAX_DISTRIBUTIONS[anexo] || FALLBACK_TAX_DISTRIBUTIONS['I']
+      const taxDist = taxDistributions[taxDistKey] || fallbackDist
+
+      if (!taxDistributions[taxDistKey]) {
+        console.warn(`[analyze-credits] Tax distribution não encontrada para ${taxDistKey}, usando fallback do Anexo ${anexo}`)
+      }
+
       const parcelaPisCofins = (taxDist.pis + taxDist.cofins) / 100
       const parcelaIcms = taxDist.icms / 100
 
@@ -388,7 +440,7 @@ serve(async (req) => {
 
       for (const xml of parsed_xmls as ParsedXml[]) {
         const items = xml.itens || []
-        
+
         for (const item of items) {
           const cfop = item.cfop || ''
           const ncm = item.ncm || ''
@@ -409,7 +461,8 @@ serve(async (req) => {
 
           // Get distribution for this item's anexo (may differ in mixed activities)
           const itemDistKey = `${itemAnexo}_${faixa}`
-          const itemDist = taxDistributions[itemDistKey] || taxDist
+          const itemFallback = FALLBACK_TAX_DISTRIBUTIONS[itemAnexo] || fallbackDist
+          const itemDist = taxDistributions[itemDistKey] || itemFallback
           const itemParcelaPisCofins = (itemDist.pis + itemDist.cofins) / 100
           const itemParcelaIcms = itemDist.icms / 100
 
@@ -418,7 +471,7 @@ serve(async (req) => {
             const monoMatch = isMonophasicNCMFromList(ncm, monophasicNcms)
             if (monoMatch) {
               const recovery = valorItem * aliquotaEfetiva * itemParcelaPisCofins
-              
+
               identifiedCredits.push({
                 rule_id: simplesMonoRule.id,
                 original_tax_value: valorItem * aliquotaEfetiva,
@@ -439,11 +492,12 @@ serve(async (req) => {
           }
 
           // SIMPLES_ICMS_ST_001: ICMS-ST segregation
+          // [CORREÇÃO #10c] CFOPs expandidos para ICMS-ST
           if (simplesIcmsStRule && valorItem > 0) {
-            const isST = csosn === '500' || cfop === '5405' || cfop === '6405'
+            const isST = csosn === '500' || ['5405', '6405', '5403', '6403'].includes(cfop)
             if (isST) {
               const recovery = valorItem * aliquotaEfetiva * itemParcelaIcms
-              
+
               identifiedCredits.push({
                 rule_id: simplesIcmsStRule.id,
                 original_tax_value: valorItem * aliquotaEfetiva,
@@ -466,10 +520,42 @@ serve(async (req) => {
       }
     } else {
       // ========== LUCRO REAL / PRESUMIDO ANALYSIS ==========
+      // [CORREÇÃO #1] Encontrar a regra de devolução UMA VEZ, fora do loop de regras
+      const returnRule = applicableRules.find((r: CreditRule) =>
+        r.rule_code === 'RETURN_001' || r.tax_type?.includes('DEVOLUÇÃO') || r.tax_type?.includes('DEVOLUCION')
+      )
+
       for (const xml of parsed_xmls as ParsedXml[]) {
         const items = xml.itens || []
-        
+
         for (const item of items) {
+          // [CORREÇÃO #1] Verificar devoluções SEPARADAMENTE, UMA VEZ por item
+          const cfop = item.cfop || ''
+          if (returnRule && isReturnOperation(cfop) && isEntryOperation(cfop)) {
+            const valorPis = item.valor_pis || 0
+            const valorCofins = item.valor_cofins || 0
+            if (valorPis > 0 || valorCofins > 0) {
+              identifiedCredits.push({
+                rule_id: returnRule.id,
+                original_tax_value: valorPis + valorCofins,
+                potential_recovery: (valorPis + valorCofins) * 0.9,
+                ncm_code: item.ncm || '',
+                cfop: cfop,
+                cst: item.cst_pis || '',
+                confidence_level: 'medium',
+                confidence_score: 65,
+                product_description: item.descricao || 'Devolução de mercadoria',
+                nfe_key: xml.chave_nfe || '',
+                nfe_number: xml.numero || '',
+                nfe_date: xml.data_emissao || new Date().toISOString().split('T')[0],
+                supplier_cnpj: xml.cnpj_emitente || '',
+                supplier_name: xml.nome_emitente || '',
+              })
+              continue // Pula para o próximo item após tratar devolução
+            }
+          }
+
+          // Avaliar regras normais (sem catch-all de devolução)
           for (const rule of applicableRules as CreditRule[]) {
             const credit = evaluateRule(rule, xml, item)
             if (credit) {
@@ -480,7 +566,7 @@ serve(async (req) => {
                 nfe_date: xml.data_emissao || new Date().toISOString().split('T')[0],
                 supplier_cnpj: xml.cnpj_emitente || '',
                 supplier_name: xml.nome_emitente || '',
-                product_description: item.descricao || '',
+                product_description: credit.product_description || item.descricao || '',
               })
             }
           }
@@ -489,53 +575,13 @@ serve(async (req) => {
     }
 
     // 3. Clean previous credits for this import (avoid duplicates on re-analysis)
-    // Skip cleanup in append_mode (subsequent batches)
-    if (xml_import_id && !append_mode) {
-      // Archive before deleting
-      const { data: existingCredits } = await supabaseAdmin
-        .from('identified_credits')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('xml_import_id', xml_import_id)
-
-      if (existingCredits && existingCredits.length > 0) {
-        const archiveRows = existingCredits.map((c: any) => ({
-          original_credit_id: c.id,
-          archived_reason: 'reanalysis',
-          nfe_key: c.nfe_key,
-          nfe_number: c.nfe_number,
-          nfe_date: c.nfe_date,
-          supplier_cnpj: c.supplier_cnpj,
-          supplier_name: c.supplier_name,
-          original_tax_value: c.original_tax_value,
-          credit_not_used: c.credit_not_used,
-          potential_recovery: c.potential_recovery,
-          ncm_code: c.ncm_code,
-          product_description: c.product_description,
-          cfop: c.cfop,
-          cst: c.cst,
-          confidence_score: c.confidence_score,
-          confidence_level: c.confidence_level,
-          status: c.status,
-          rule_id: c.rule_id,
-          xml_import_id: c.xml_import_id,
-          user_id: userId,
-          original_created_at: c.created_at,
-        }))
-
-        await supabaseAdmin
-          .from('identified_credits_archive')
-          .insert(archiveRows)
-
-        console.log(`Archived ${archiveRows.length} credits before re-analysis`)
-      }
-
+    if (xml_import_id) {
       const { error: deleteError } = await supabaseAdmin
         .from('identified_credits')
         .delete()
         .eq('user_id', userId)
         .eq('xml_import_id', xml_import_id)
-      
+
       if (deleteError) {
         console.error('Error cleaning previous credits:', deleteError)
       } else {
@@ -574,7 +620,7 @@ serve(async (req) => {
       }
     }
 
-    // 4. Calculate summary by tax type
+    // 5. Calculate summary by tax type
     const byTaxType = {
       pis_cofins: 0,
       icms: 0,
@@ -585,7 +631,7 @@ serve(async (req) => {
 
     // Use rule-based categorization for accurate summary
     const ruleMap = new Map((rules || []).map((r: CreditRule) => [r.id, r]))
-    
+
     for (const credit of identifiedCredits) {
       const rule = ruleMap.get(credit.rule_id) as CreditRule | undefined
       if (rule) {
@@ -618,7 +664,7 @@ serve(async (req) => {
       regime: companyContext.regime,
       simples_config: isSimplesNacional ? {
         rbt12: rbt12Final,
-        faixa: rbt12Final > 0 ? detectFaixaFromRBT12(rbt12Final) : 4,
+        faixa: rbt12Final > 0 ? detectFaixaFromRBT12(rbt12Final) : 1,
         anexo: latestPgdas?.anexo_simples || detectAnexoFromCNAE(companyContext.cnae || ''),
         aliquota_efetiva: companyContext.aliquotaEfetiva,
       } : null,
@@ -626,7 +672,14 @@ serve(async (req) => {
 
     console.log(`[analyze-credits] Summary: ${JSON.stringify(summary)}`)
 
-    // 5. Save summary
+    // [CORREÇÃO #7] Save summary com delete + insert (evita duplicatas)
+    // Primeiro limpa sumários anteriores do mesmo dia para o mesmo usuário
+    await supabaseAdmin
+      .from('credit_analysis_summary')
+      .delete()
+      .eq('user_id', userId)
+      .eq('analysis_date', new Date().toISOString().split('T')[0])
+
     const { error: summaryError } = await supabaseAdmin
       .from('credit_analysis_summary')
       .insert({
@@ -652,24 +705,24 @@ serve(async (req) => {
 
     // 6. Create notification
     if (identifiedCredits.length > 0) {
-      const formatCurrency = (value: number) => 
+      const formatCurrency = (value: number) =>
         new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
-      
+
       const highConfidenceCredits = identifiedCredits.filter(c => c.confidence_level === 'high')
-      const notificationTitle = identifiedCredits.length === 1 
+      const notificationTitle = identifiedCredits.length === 1
         ? '💰 1 crédito tributário identificado!'
         : `💰 ${identifiedCredits.length} créditos tributários identificados!`
-      
+
       let notificationMessage = `Potencial de recuperação: ${formatCurrency(summary.total_potential)}.`
-      
+
       if (isSimplesNacional) {
         notificationMessage += ' Identificado via segregação de receitas no PGDAS-D.'
       }
-      
+
       if (highConfidenceCredits.length > 0) {
         notificationMessage += ` ${highConfidenceCredits.length} com alta confiança (${formatCurrency(summary.high_confidence)}).`
       }
-      
+
       notificationMessage += ' Clique para ver detalhes no Radar de Créditos.'
 
       await supabaseAdmin
@@ -686,9 +739,9 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        summary, 
+      JSON.stringify({
+        success: true,
+        summary,
         details: identifiedCredits,
         credits_count: identifiedCredits.length
       }),
@@ -705,6 +758,7 @@ serve(async (req) => {
 })
 
 // ========== LUCRO REAL/PRESUMIDO RULE EVALUATOR ==========
+// [CORREÇÃO #1] Removido catch-all de devoluções — agora tratado no loop principal
 function evaluateRule(rule: CreditRule, xml: ParsedXml, item: XmlItem): IdentifiedCredit | null {
   const cfop = item.cfop || ''
   const ncm = item.ncm || ''
@@ -720,14 +774,16 @@ function evaluateRule(rule: CreditRule, xml: ParsedXml, item: XmlItem): Identifi
   const valorItem = item.valor_item || 0
 
   // ==== PIS/COFINS RULES ====
-  
+
   if (rule.rule_code === 'PIS_COFINS_001') {
+    // CSTs 50-56: operação com direito a crédito
     const cstWithCredit = ['50', '51', '52', '53', '54', '55', '56']
     if (cstWithCredit.includes(cstPis) && creditoPis === 0 && valorPis > 0) {
       return {
         rule_id: rule.id,
         original_tax_value: valorPis + valorCofins,
-        potential_recovery: (valorPis + valorCofins) * 0.9,
+        // [CORREÇÃO #8] Recovery = valor integral do crédito não aproveitado
+        potential_recovery: valorPis + valorCofins,
         ncm_code: ncm, cfop, cst: cstPis,
         confidence_level: 'high', confidence_score: 85
       }
@@ -736,20 +792,24 @@ function evaluateRule(rule: CreditRule, xml: ParsedXml, item: XmlItem): Identifi
 
   if (rule.rule_code === 'PIS_COFINS_002') {
     if (isPurchaseOfInputs(cfop) || isPurchaseForResale(cfop)) {
+      // CSTs 70-73: operação sem incidência — se há valor de PIS, está errado
       const cstNoCredit = ['70', '71', '72', '73']
       if (cstNoCredit.includes(cstPis) && valorPis > 0) {
         return {
           rule_id: rule.id,
           original_tax_value: valorPis + valorCofins,
-          potential_recovery: (valorPis + valorCofins) * 0.75,
+          // [CORREÇÃO #8] PIS cobrado indevidamente em operação sem incidência = 100% recuperável
+          potential_recovery: valorPis + valorCofins,
           ncm_code: ncm, cfop, cst: cstPis,
           confidence_level: 'medium', confidence_score: 70
         }
       }
+      // CST 01 em entrada de insumos/revenda — crédito básico não aproveitado
       if (cstPis === '01' && valorPis > 0 && isEntryOperation(cfop)) {
         return {
           rule_id: rule.id,
           original_tax_value: valorPis + valorCofins,
+          // [CORREÇÃO #8] Crédito básico: alíquotas de 1.65% PIS e 7.6% COFINS (Lei 10.833/2003)
           potential_recovery: (valorPis + valorCofins) * 0.8,
           ncm_code: ncm, cfop, cst: cstPis,
           confidence_level: 'medium', confidence_score: 68
@@ -759,6 +819,7 @@ function evaluateRule(rule: CreditRule, xml: ParsedXml, item: XmlItem): Identifi
   }
 
   if (rule.rule_code === 'PIS_COFINS_003') {
+    // Energia elétrica e telecomunicações — crédito permitido (Lei 10.833/2003, art. 3º, III)
     if (isEnergyOrTelecom(cfop) && valorPis > 0) {
       return {
         rule_id: rule.id,
@@ -770,29 +831,51 @@ function evaluateRule(rule: CreditRule, xml: ParsedXml, item: XmlItem): Identifi
     }
   }
 
+  // [CORREÇÃO #4] PIS_COFINS_007: Monofásico na entrada — só gera crédito se PIS/COFINS > 0
   if (rule.rule_code === 'PIS_COFINS_007') {
-    if (isMonophasicNCM(ncm) && isEntryOperation(cfop)) {
-      return {
-        rule_id: rule.id,
-        original_tax_value: valorPis + valorCofins,
-        potential_recovery: (valorPis + valorCofins) * 0.6,
-        ncm_code: ncm, cfop, cst: cstPis,
-        confidence_level: 'high', confidence_score: 82
+    if (isMonophasicNCM(ncm) && isEntryOperation(cfop) && (valorPis > 0 || valorCofins > 0)) {
+      // Produto monofásico com PIS/COFINS destacado na entrada:
+      // Verificar se CST indica cobrança indevida (não deveria haver PIS/COFINS na revenda)
+      if (!isMonophasicCST(cstPis)) {
+        return {
+          rule_id: rule.id,
+          original_tax_value: valorPis + valorCofins,
+          // [CORREÇÃO #8] Cobrança indevida na cadeia monofásica
+          potential_recovery: (valorPis + valorCofins) * 0.6,
+          ncm_code: ncm, cfop, cst: cstPis,
+          confidence_level: 'medium', confidence_score: 65,
+          product_description: `Produto monofásico com PIS/COFINS na entrada - verificar cadeia tributária`
+        }
       }
     }
   }
 
+  // [CORREÇÃO #3] PIS_COFINS_008: Exige que haja valor > 0 para criar crédito
   if (rule.rule_code === 'PIS_COFINS_008') {
     if (isMonophasicNCM(ncm) && isExitOperation(cfop)) {
-      if (!isMonophasicCST(cstPis) || valorPis > 0 || valorCofins > 0) {
+      const totalPisCofins = valorPis + valorCofins
+      // Só cria crédito se houver valor efetivo de PIS/COFINS cobrado indevidamente
+      if (totalPisCofins > 0 && !isMonophasicCST(cstPis)) {
         const category = getMonophasicCategory(ncm);
         return {
           rule_id: rule.id,
-          original_tax_value: valorPis + valorCofins,
-          potential_recovery: valorPis + valorCofins,
+          original_tax_value: totalPisCofins,
+          potential_recovery: totalPisCofins,
           ncm_code: ncm, cfop, cst: cstPis,
           confidence_level: 'high', confidence_score: 92,
           product_description: `Produto monofásico (${category}) - ${getMonophasicLegalBasis(ncm)}`
+        }
+      }
+      // CST é monofásico mas tem valor > 0 — inconsistência na NFe
+      if (totalPisCofins > 0 && isMonophasicCST(cstPis)) {
+        const category = getMonophasicCategory(ncm);
+        return {
+          rule_id: rule.id,
+          original_tax_value: totalPisCofins,
+          potential_recovery: totalPisCofins,
+          ncm_code: ncm, cfop, cst: cstPis,
+          confidence_level: 'medium', confidence_score: 75,
+          product_description: `Produto monofásico (${category}) com CST correto mas valor PIS/COFINS > 0 - inconsistência NFe`
         }
       }
     }
@@ -800,11 +883,13 @@ function evaluateRule(rule: CreditRule, xml: ParsedXml, item: XmlItem): Identifi
 
   if (rule.rule_code === 'PIS_COFINS_010') {
     if ((ncm.startsWith('8708') || ncm.startsWith('4011') || ncm.startsWith('8507')) && isExitOperation(cfop)) {
-      if (!isMonophasicCST(cstPis) || valorPis > 0 || valorCofins > 0) {
+      const totalPisCofins = valorPis + valorCofins
+      // [CORREÇÃO #3] Exige valor > 0
+      if (totalPisCofins > 0 && (!isMonophasicCST(cstPis) || totalPisCofins > 0)) {
         return {
           rule_id: rule.id,
-          original_tax_value: valorPis + valorCofins,
-          potential_recovery: valorPis + valorCofins,
+          original_tax_value: totalPisCofins,
+          potential_recovery: totalPisCofins,
           ncm_code: ncm, cfop, cst: cstPis,
           confidence_level: 'high', confidence_score: 92,
           product_description: `Autopeças/Pneus - Lei 10.485/2002`
@@ -815,11 +900,13 @@ function evaluateRule(rule: CreditRule, xml: ParsedXml, item: XmlItem): Identifi
 
   if (rule.rule_code === 'PIS_COFINS_011') {
     if ((ncm.startsWith('3303') || ncm.startsWith('3304') || ncm.startsWith('3305')) && isExitOperation(cfop)) {
-      if (!isMonophasicCST(cstPis) || valorPis > 0 || valorCofins > 0) {
+      const totalPisCofins = valorPis + valorCofins
+      // [CORREÇÃO #3] Exige valor > 0
+      if (totalPisCofins > 0 && (!isMonophasicCST(cstPis) || totalPisCofins > 0)) {
         return {
           rule_id: rule.id,
-          original_tax_value: valorPis + valorCofins,
-          potential_recovery: valorPis + valorCofins,
+          original_tax_value: totalPisCofins,
+          potential_recovery: totalPisCofins,
           ncm_code: ncm, cfop, cst: cstPis,
           confidence_level: 'high', confidence_score: 92,
           product_description: `Cosméticos - Lei 10.147/2000`
@@ -909,18 +996,7 @@ function evaluateRule(rule: CreditRule, xml: ParsedXml, item: XmlItem): Identifi
     }
   }
 
-  // ==== RETURN OPERATIONS ====
-  if (isReturnOperation(cfop)) {
-    if (isEntryOperation(cfop) && (valorPis > 0 || valorCofins > 0)) {
-      return {
-        rule_id: rule.id,
-        original_tax_value: valorPis + valorCofins,
-        potential_recovery: (valorPis + valorCofins) * 0.9,
-        ncm_code: ncm, cfop, cst: cstPis,
-        confidence_level: 'medium', confidence_score: 65
-      }
-    }
-  }
+  // [CORREÇÃO #1] Removido bloco catch-all de devoluções que gerava duplicatas
 
   return null
 }
