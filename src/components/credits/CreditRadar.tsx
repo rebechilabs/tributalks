@@ -10,25 +10,31 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useXmlCreditsSummary } from '@/hooks/useXmlCredits';
 import { useIdentifiedCredits, useIdentifiedCreditsSummary } from '@/hooks/useIdentifiedCredits';
 import { useReanalyzeCredits } from '@/hooks/useReanalyzeCredits';
-import { useXmlImportSessions } from '@/hooks/useXmlImportSessions';
+import { useXmlImportSessions, XmlImportSession } from '@/hooks/useXmlImportSessions';
 import { CreditReportDialog } from '@/components/pdf/CreditReportDialog';
 import { MonophasicAlert } from './MonophasicAlert';
 import { IdentifiedCreditsTable } from './IdentifiedCreditsTable';
 import { CreditImplementationWorkflow } from './CreditImplementationWorkflow';
 import { CreditDetailBreakdown } from './CreditDetailBreakdown';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 export function CreditRadar() {
   const { data: importSessions, isLoading: loadingSessions } = useXmlImportSessions();
-  const [selectedImportId, setSelectedImportId] = useState<string | undefined>(undefined);
+  const [selectedBatchId, setSelectedBatchId] = useState<string | undefined>(undefined);
   
-  // Auto-select the most recent import when data loads
-  const activeImportId = selectedImportId || importSessions?.[0]?.id;
+  // Get the active batch's import IDs
+  const activeBatch = useMemo(() => {
+    if (!importSessions || importSessions.length === 0) return undefined;
+    if (selectedBatchId) {
+      return importSessions.find(s => s.batchId === selectedBatchId);
+    }
+    return importSessions[0]; // most recent
+  }, [importSessions, selectedBatchId]);
+
+  const activeImportIds = activeBatch?.importIds;
 
   const { data: xmlSummary, isLoading: loadingXmlSummary } = useXmlCreditsSummary();
-  const { data: identifiedCredits, isLoading: loadingCredits } = useIdentifiedCredits(100, activeImportId);
-  const { data: creditsSummary, isLoading: loadingSummary } = useIdentifiedCreditsSummary(activeImportId);
+  const { data: identifiedCredits, isLoading: loadingCredits } = useIdentifiedCredits(100, activeImportIds);
+  const { data: creditsSummary, isLoading: loadingSummary } = useIdentifiedCreditsSummary(activeImportIds);
   const { reanalyze, isAnalyzing, progress } = useReanalyzeCredits();
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [activeTab, setActiveTab] = useState('credits');
@@ -39,26 +45,6 @@ export function CreditRadar() {
       currency: 'BRL'
     }).format(value);
   };
-
-  // Group imports by date for the selector label
-  const importOptions = useMemo(() => {
-    if (!importSessions) return [];
-    // Group by date (same day = same batch)
-    const groups: Record<string, { ids: string[]; date: string; count: number }> = {};
-    for (const session of importSessions) {
-      const dateKey = format(new Date(session.created_at), 'yyyy-MM-dd');
-      if (!groups[dateKey]) {
-        groups[dateKey] = { ids: [], date: session.created_at, count: 0 };
-      }
-      groups[dateKey].ids.push(session.id);
-      groups[dateKey].count++;
-    }
-    // Return individual sessions with labels
-    return importSessions.map(s => ({
-      id: s.id,
-      label: `${format(new Date(s.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })} - ${s.file_name || 'XML'}`,
-    }));
-  }, [importSessions]);
 
   // Use identified credits summary if available, otherwise fall back to XML estimates
   const hasIdentifiedCredits = creditsSummary && creditsSummary.total_credits_count > 0;
@@ -112,7 +98,7 @@ export function CreditRadar() {
   };
 
   const handleReanalyze = () => {
-    reanalyze(activeImportId);
+    reanalyze(activeImportIds);
   };
 
   if (isLoading) {
@@ -153,7 +139,7 @@ export function CreditRadar() {
           <Button 
             variant="outline" 
             onClick={handleReanalyze} 
-            disabled={isAnalyzing || !activeImportId}
+            disabled={isAnalyzing || !activeBatch}
           >
             {isAnalyzing ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -169,29 +155,29 @@ export function CreditRadar() {
         </div>
       </div>
 
-      {/* Import Session Selector */}
-      {importOptions.length > 0 && (
+      {/* Import Session Selector (now batch-based) */}
+      {importSessions && importSessions.length > 0 && (
         <Card>
           <CardContent className="py-3">
             <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Importação:</span>
+              <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Sessão de Importação:</span>
               <Select
-                value={activeImportId || ''}
-                onValueChange={(value) => setSelectedImportId(value)}
+                value={activeBatch?.batchId || ''}
+                onValueChange={(value) => setSelectedBatchId(value)}
               >
                 <SelectTrigger className="max-w-md">
-                  <SelectValue placeholder="Selecione uma importação" />
+                  <SelectValue placeholder="Selecione uma sessão" />
                 </SelectTrigger>
                 <SelectContent>
-                  {importOptions.map((opt) => (
-                    <SelectItem key={opt.id} value={opt.id}>
-                      {opt.label}
+                  {importSessions.map((session) => (
+                    <SelectItem key={session.batchId} value={session.batchId}>
+                      {session.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <span className="text-xs text-muted-foreground">
-                {importOptions.length} importação(ões) disponíveis
+                {importSessions.length} sessão(ões) disponíveis
               </span>
             </div>
           </CardContent>
@@ -204,7 +190,7 @@ export function CreditRadar() {
           <CardContent className="py-4">
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Analisando XMLs com motor de regras...</span>
+                <span>Analisando {activeBatch?.fileCount || 0} XMLs com motor de regras...</span>
                 <span>{progress.current} de {progress.total}</span>
               </div>
               <Progress value={progress.total > 0 ? (progress.current / progress.total) * 100 : 0} />

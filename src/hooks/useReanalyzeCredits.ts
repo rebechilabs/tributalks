@@ -10,7 +10,7 @@ export function useReanalyzeCredits() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
 
-  const reanalyze = async (importId?: string) => {
+  const reanalyze = async (batchImportIds?: string[]) => {
     if (!user) {
       toast.error("Usuário não autenticado");
       return { success: false, creditsFound: 0 };
@@ -20,41 +20,98 @@ export function useReanalyzeCredits() {
     setProgress({ current: 0, total: 0 });
 
     try {
-      // Determine which import to analyze
-      let targetImportId = importId;
+      let targetImportIds = batchImportIds || [];
 
-      if (!targetImportId) {
-        // Use the most recent completed import
-        const { data: latestImport, error: latestError } = await supabase
+      // If no import IDs provided, use the most recent batch
+      if (targetImportIds.length === 0) {
+        const { data: latestImport } = await supabase
           .from("xml_imports")
-          .select("id")
+          .select("id, batch_id")
           .eq("user_id", user.id)
           .eq("status", "COMPLETED")
           .order("created_at", { ascending: false })
           .limit(1)
           .single();
 
-        if (latestError || !latestImport) {
+        if (!latestImport) {
           toast.info("Nenhum XML processado para análise");
           setIsAnalyzing(false);
           return { success: false, creditsFound: 0 };
         }
-        targetImportId = latestImport.id;
+
+        // Get all imports in the same batch
+        if (latestImport.batch_id) {
+          const { data: batchImports } = await supabase
+            .from("xml_imports")
+            .select("id")
+            .eq("batch_id", latestImport.batch_id)
+            .eq("status", "COMPLETED");
+          targetImportIds = (batchImports || []).map(i => i.id);
+        } else {
+          targetImportIds = [latestImport.id];
+        }
       }
 
       setProgress({ current: 0, total: 1 });
 
-      // Call analyze-credits for this specific import
-      const response = await supabase.functions.invoke('process-xml-batch', {
-        body: { importIds: [targetImportId] }
+      // Fetch already-parsed XML data from xml_analysis
+      const { data: analyses, error: analysisError } = await supabase
+        .from("xml_analysis")
+        .select("raw_data, import_id")
+        .in("import_id", targetImportIds);
+
+      if (analysisError) {
+        console.error("Error fetching xml_analysis:", analysisError);
+        toast.error("Erro ao buscar dados dos XMLs");
+        setIsAnalyzing(false);
+        return { success: false, creditsFound: 0 };
+      }
+
+      if (!analyses || analyses.length === 0) {
+        toast.info("Nenhum dado XML encontrado para análise. Reprocesse os XMLs primeiro.");
+        setIsAnalyzing(false);
+        return { success: false, creditsFound: 0 };
+      }
+
+      // Convert raw_data to parsed_xmls format expected by analyze-credits
+      const parsedXmls = analyses.map((a: any) => {
+        const raw = a.raw_data;
+        if (!raw) return null;
+        // raw_data from xml_analysis already has the NFe structure
+        return {
+          chave_nfe: raw.chave_nfe || raw.chaveNfe || '',
+          numero: raw.numero || raw.nfe_number || '',
+          data_emissao: raw.data_emissao || raw.dataEmissao || '',
+          cnpj_emitente: raw.cnpj_emitente || raw.cnpjEmitente || '',
+          nome_emitente: raw.nome_emitente || raw.nomeEmitente || '',
+          itens: raw.itens || raw.items || [],
+        };
+      }).filter(Boolean);
+
+      if (parsedXmls.length === 0) {
+        toast.info("Nenhum XML válido para análise.");
+        setIsAnalyzing(false);
+        return { success: false, creditsFound: 0 };
+      }
+
+      // Use first import ID as the reference for this batch
+      const referenceImportId = targetImportIds[0];
+
+      // Call analyze-credits directly with the parsed data
+      const response = await supabase.functions.invoke('analyze-credits', {
+        body: {
+          parsed_xmls: parsedXmls,
+          xml_import_id: referenceImportId,
+        }
       });
 
       let totalCreditsFound = 0;
 
       if (response.error) {
         console.error('Analysis error:', response.error);
-      } else if (response.data?.creditAnalysis) {
-        totalCreditsFound = response.data.creditAnalysis.creditsFound || 0;
+        toast.error("Erro na análise de créditos");
+      } else {
+        totalCreditsFound = response.data?.credits_count || response.data?.creditAnalysis?.creditsFound || 0;
       }
 
       setProgress({ current: 1, total: 1 });

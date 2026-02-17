@@ -251,6 +251,8 @@ export default function AnaliseNotasFiscais() {
 
   const processChunk = async (chunkFiles: FileItem[]): Promise<BatchResult | null> => {
     const importIds: string[] = [];
+    // Generate a unique batch_id for this upload session
+    const batchId = `${user!.id}_${new Date().toISOString().replace(/[-:T]/g, '').slice(0, 12)}`;
     
     for (const fileItem of chunkFiles) {
       try {
@@ -280,7 +282,8 @@ export default function AnaliseNotasFiscais() {
             file_name: fileItem.file.name,
             file_size: fileItem.file.size,
             file_path: path,
-            status: 'PENDING'
+            status: 'PENDING',
+            batch_id: batchId
           })
           .select()
           .single();
