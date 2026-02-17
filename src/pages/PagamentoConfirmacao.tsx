@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Clock, XCircle, ArrowRight, RefreshCw, Home, Loader2 } from "lucide-react";
+import { CheckCircle2, Clock, XCircle, ArrowRight, RefreshCw, Home, Loader2, UserPlus, Building2, Target, Check } from "lucide-react";
 import { motion } from "framer-motion";
 
 type PaymentStatus = "approved" | "pending" | "rejected" | "unknown";
@@ -205,6 +205,39 @@ export default function PagamentoConfirmacao() {
                   </div>
                 )}
               </div>
+            )}
+
+            {/* Onboarding Steps Preview */}
+            {(paymentStatus === "approved" || paymentStatus === "pending" || paymentStatus === "unknown") && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.4 }}
+                className="rounded-xl border border-border/60 bg-muted/30 p-4 space-y-3"
+              >
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Próximos passos
+                </p>
+                {[
+                  { icon: UserPlus, label: "Criar sua conta", desc: "E-mail e senha" },
+                  { icon: Building2, label: "Configurar empresa", desc: "CNPJ e dados fiscais" },
+                  { icon: Target, label: "Escolher prioridade", desc: "Foco da sua gestão tributária" },
+                ].map((step, idx) => (
+                  <div key={idx} className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-bold">
+                      {idx + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium leading-tight">{step.label}</p>
+                      <p className="text-xs text-muted-foreground">{step.desc}</p>
+                    </div>
+                    <step.icon className="h-4 w-4 text-muted-foreground/60 shrink-0" />
+                  </div>
+                ))}
+                <p className="text-[11px] text-muted-foreground text-center pt-1">
+                  ⏱ Leva menos de 2 minutos
+                </p>
+              </motion.div>
             )}
 
             {/* Countdown for auto-redirect */}
