@@ -1,25 +1,43 @@
 
 
-# Atualizar `src/data/codigos-fiscais.ts` com interfaces enriquecidas do Prompt 3
+# Alterar Regime para Simples Nacional e Reprocessar Creditos
 
-## O que muda
+## Etapa 1 -- Atualizar o regime nas tabelas do banco
 
-O arquivo atual tem interfaces simplificadas (`CodigoCSOSN` com 4 campos, `CodigoCST` com 5 campos). O Prompt 3 traz interfaces mais ricas com campos adicionais de relevancia para o Radar de Creditos:
+Executar dois UPDATEs no banco de dados:
 
-- **`CsosnInfo`** substitui `CodigoCSOSN`: adiciona `icmsJaRecolhidoPorST` (booleano explicito) e `relevanciaPataRadar` (texto explicativo para cada codigo)
-- **`CstPisCofinsInfo`** substitui `CodigoCST`: adiciona `tributado`, `tipo` detalhado (monofasico, aliquota_zero, etc.) e `relevanciaPataRadar`
-- **`isMonofasicoPorCst()`** muda de `["04","05","06"]` para apenas `"04"` (mais preciso tecnicamente -- CST 05 e 06 nao sao monofasicos, sao ST e aliquota zero respectivamente)
+```sql
+UPDATE profiles 
+SET regime = 'SIMPLES' 
+WHERE user_id = '37307539-3b5a-452e-afdd-201965336fba';
 
-## Impacto
+UPDATE company_profile 
+SET regime_tributario = 'simples' 
+WHERE user_id = '37307539-3b5a-452e-afdd-201965336fba';
+```
 
-- Unico consumidor externo: `src/lib/simples-nacional-rules.ts` importa `isMonofasicoPorCst` e `isIcmsRecolhidoPorST` -- assinaturas identicas, sem quebra
-- `CSOSN_TABLE` e `CST_PIS_COFINS_SAIDA` nao sao importados em nenhum outro arquivo
-- Nenhum outro arquivo referencia `CodigoCST` ou `CodigoCSOSN`
+Dados atuais confirmados:
+- `profiles.regime` = `PRESUMIDO` (sera alterado para `SIMPLES`)
+- `company_profile.regime_tributario` = `presumido` (sera alterado para `simples`)
 
-## Implementacao
+A edge function `analyze-credits` ja detecta corretamente o regime usando `normalizedRegime.startsWith('simples')`, entao ambos os valores funcionam.
 
-**Arquivo unico:** Reescrever `src/data/codigos-fiscais.ts` com o conteudo exato do Prompt 3, incluindo:
-1. Novas interfaces `CsosnInfo` e `CstPisCofinsInfo`
-2. `CSOSN_TABLE` com campos enriquecidos (10 codigos)
-3. `CST_PIS_COFINS_SAIDA` com campos enriquecidos (11 codigos)
-4. Funcoes auxiliares atualizadas (`isMonofasicoPorCst` retorna `cst === "04"` em vez de array)
+## Etapa 2 -- Reprocessar creditos
+
+Apos a alteracao do regime, chamar a edge function `analyze-credits` para reprocessar os XMLs ja importados. Isso ativara as regras:
+
+- **SIMPLES_MONO_001** -- PIS/COFINS sobre produtos monofasicos
+- **SIMPLES_ICMS_ST_001** -- ICMS sobre receita com ST
+
+E bloqueara automaticamente as 18 regras incompativeis (IPI_001-003, ICMS_001/002/005, PIS_COFINS_001-011, etc).
+
+## Etapa 3 -- Verificar resultados
+
+Conferir os logs da edge function e os valores salvos em `identified_credits` para validar que os totais mudaram conforme esperado (~R$ 5.236 total).
+
+## Detalhes tecnicos
+
+- Tabelas afetadas: `profiles`, `company_profile`
+- Edge function: `analyze-credits` (nenhuma alteracao de codigo necessaria)
+- Nenhuma migracao de schema necessaria -- apenas UPDATE de dados existentes
+
