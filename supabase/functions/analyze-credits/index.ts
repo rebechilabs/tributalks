@@ -213,7 +213,7 @@ serve(async (req) => {
 
     const token = authHeader.replace('Bearer ', '')
     const requestBody = await req.json()
-    const { xml_import_id, parsed_xmls, user_id: bodyUserId } = requestBody
+    const { xml_import_id, parsed_xmls, user_id: bodyUserId, append_mode } = requestBody
 
     // Support internal calls with service role key + user_id in body
     let userId: string
@@ -489,7 +489,47 @@ serve(async (req) => {
     }
 
     // 3. Clean previous credits for this import (avoid duplicates on re-analysis)
-    if (xml_import_id) {
+    // Skip cleanup in append_mode (subsequent batches)
+    if (xml_import_id && !append_mode) {
+      // Archive before deleting
+      const { data: existingCredits } = await supabaseAdmin
+        .from('identified_credits')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('xml_import_id', xml_import_id)
+
+      if (existingCredits && existingCredits.length > 0) {
+        const archiveRows = existingCredits.map((c: any) => ({
+          original_credit_id: c.id,
+          archived_reason: 'reanalysis',
+          nfe_key: c.nfe_key,
+          nfe_number: c.nfe_number,
+          nfe_date: c.nfe_date,
+          supplier_cnpj: c.supplier_cnpj,
+          supplier_name: c.supplier_name,
+          original_tax_value: c.original_tax_value,
+          credit_not_used: c.credit_not_used,
+          potential_recovery: c.potential_recovery,
+          ncm_code: c.ncm_code,
+          product_description: c.product_description,
+          cfop: c.cfop,
+          cst: c.cst,
+          confidence_score: c.confidence_score,
+          confidence_level: c.confidence_level,
+          status: c.status,
+          rule_id: c.rule_id,
+          xml_import_id: c.xml_import_id,
+          user_id: userId,
+          original_created_at: c.created_at,
+        }))
+
+        await supabaseAdmin
+          .from('identified_credits_archive')
+          .insert(archiveRows)
+
+        console.log(`Archived ${archiveRows.length} credits before re-analysis`)
+      }
+
       const { error: deleteError } = await supabaseAdmin
         .from('identified_credits')
         .delete()

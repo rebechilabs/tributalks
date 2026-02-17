@@ -190,8 +190,8 @@ export function CreditRadar() {
           <CardContent className="py-4">
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Analisando {activeBatch?.fileCount || 0} XMLs com motor de regras...</span>
-                <span>{progress.current} de {progress.total}</span>
+                <span>Analisando XMLs com motor de regras...</span>
+                <span>{progress.total > 0 ? `${progress.current} de ${progress.total}` : 'Preparando...'}</span>
               </div>
               <Progress value={progress.total > 0 ? (progress.current / progress.total) * 100 : 0} />
             </div>

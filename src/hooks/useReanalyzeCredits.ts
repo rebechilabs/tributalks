@@ -1,14 +1,17 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+
+const BATCH_SIZE = 50; // XMLs per batch call
 
 export function useReanalyzeCredits() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
+  const cancelRef = useRef(false);
 
   const reanalyze = async (batchImportIds?: string[]) => {
     if (!user) {
@@ -18,6 +21,7 @@ export function useReanalyzeCredits() {
 
     setIsAnalyzing(true);
     setProgress({ current: 0, total: 0 });
+    cancelRef.current = false;
 
     try {
       let targetImportIds = batchImportIds || [];
@@ -39,7 +43,6 @@ export function useReanalyzeCredits() {
           return { success: false, creditsFound: 0 };
         }
 
-        // Get all imports in the same batch
         if (latestImport.batch_id) {
           const { data: batchImports } = await supabase
             .from("xml_imports")
@@ -52,12 +55,10 @@ export function useReanalyzeCredits() {
         }
       }
 
-      setProgress({ current: 0, total: 1 });
-
-      // Fetch already-parsed XML data from xml_analysis
+      // Fetch all xml_analysis records (only lightweight fields first)
       const { data: analyses, error: analysisError } = await supabase
         .from("xml_analysis")
-        .select("raw_data, import_id")
+        .select("id, raw_data, import_id")
         .in("import_id", targetImportIds);
 
       if (analysisError) {
@@ -73,11 +74,10 @@ export function useReanalyzeCredits() {
         return { success: false, creditsFound: 0 };
       }
 
-      // Convert raw_data to parsed_xmls format expected by analyze-credits
-      const parsedXmls = analyses.map((a: any) => {
+      // Convert to parsed format
+      const allParsedXmls = analyses.map((a: any) => {
         const raw = a.raw_data;
         if (!raw) return null;
-        // raw_data from xml_analysis already has the NFe structure
         return {
           chave_nfe: raw.chave_nfe || raw.chaveNfe || '',
           numero: raw.numero || raw.nfe_number || '',
@@ -88,33 +88,53 @@ export function useReanalyzeCredits() {
         };
       }).filter(Boolean);
 
-      if (parsedXmls.length === 0) {
+      if (allParsedXmls.length === 0) {
         toast.info("Nenhum XML válido para análise.");
         setIsAnalyzing(false);
         return { success: false, creditsFound: 0 };
       }
 
-      // Use first import ID as the reference for this batch
+      const totalXmls = allParsedXmls.length;
+      setProgress({ current: 0, total: totalXmls });
+
       const referenceImportId = targetImportIds[0];
-
-      // Call analyze-credits directly with the parsed data
-      const response = await supabase.functions.invoke('analyze-credits', {
-        body: {
-          parsed_xmls: parsedXmls,
-          xml_import_id: referenceImportId,
-        }
-      });
-
       let totalCreditsFound = 0;
+      let processed = 0;
 
-      if (response.error) {
-        console.error('Analysis error:', response.error);
-        toast.error("Erro na análise de créditos");
-      } else {
-        totalCreditsFound = response.data?.credits_count || response.data?.creditAnalysis?.creditsFound || 0;
+      // Process in batches
+      for (let i = 0; i < totalXmls; i += BATCH_SIZE) {
+        if (cancelRef.current) break;
+
+        const batch = allParsedXmls.slice(i, i + BATCH_SIZE);
+        const isFirstBatch = i === 0;
+
+        try {
+          const response = await supabase.functions.invoke('analyze-credits', {
+            body: {
+              parsed_xmls: batch,
+              xml_import_id: referenceImportId,
+              // Only first batch should archive/clean previous credits
+              append_mode: !isFirstBatch,
+            }
+          });
+
+          if (response.error) {
+            console.error(`Batch ${i / BATCH_SIZE + 1} error:`, response.error);
+          } else {
+            totalCreditsFound += response.data?.credits_count || response.data?.creditAnalysis?.creditsFound || 0;
+          }
+        } catch (err) {
+          console.error(`Batch ${i / BATCH_SIZE + 1} failed:`, err);
+        }
+
+        processed += batch.length;
+        setProgress({ current: processed, total: totalXmls });
+
+        // Small delay between batches to avoid rate limiting
+        if (i + BATCH_SIZE < totalXmls) {
+          await new Promise(r => setTimeout(r, 100));
+        }
       }
-
-      setProgress({ current: 1, total: 1 });
 
       // Invalidate queries to refresh data
       await queryClient.invalidateQueries({ queryKey: ["identified-credits"] });
