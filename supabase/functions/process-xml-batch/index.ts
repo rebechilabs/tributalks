@@ -388,7 +388,8 @@ async function triggerCreditAnalysis(
   parsedXmls: ParsedXmlForCredits[], 
   supabaseUrl: string, 
   authToken: string,
-  xmlImportId?: string
+  xmlImportId?: string,
+  userId?: string
 ): Promise<any> {
   try {
     const response = await fetch(`${supabaseUrl}/functions/v1/analyze-credits`, {
@@ -399,7 +400,8 @@ async function triggerCreditAnalysis(
       },
       body: JSON.stringify({ 
         xml_import_id: xmlImportId,
-        parsed_xmls: parsedXmls 
+        parsed_xmls: parsedXmls,
+        user_id: userId
       })
     });
 
@@ -608,8 +610,9 @@ serve(async (req) => {
       creditAnalysisResult = await triggerCreditAnalysis(
         parsedXmlsForCredits, 
         supabaseUrl, 
-        authHeader,
-        importIds.length === 1 ? importIds[0] : undefined
+        supabaseKey,
+        importIds.length === 1 ? importIds[0] : undefined,
+        user.id
       );
       console.log('Credit analysis result:', creditAnalysisResult);
     }
