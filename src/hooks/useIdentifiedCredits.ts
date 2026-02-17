@@ -46,11 +46,11 @@ export interface IdentifiedCreditsSummary {
   credits_by_rule: Record<string, { count: number; total: number; rule_name: string }>;
 }
 
-export function useIdentifiedCredits(limit = 100, importId?: string) {
+export function useIdentifiedCredits(limit = 100, importIds?: string[]) {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ["identified-credits", user?.id, limit, importId],
+    queryKey: ["identified-credits", user?.id, limit, importIds],
     queryFn: async (): Promise<IdentifiedCredit[]> => {
       if (!user) throw new Error("User not authenticated");
 
@@ -88,8 +88,8 @@ export function useIdentifiedCredits(limit = 100, importId?: string) {
         .order("potential_recovery", { ascending: false })
         .limit(limit);
 
-      if (importId) {
-        query = query.eq("xml_import_id", importId);
+      if (importIds && importIds.length > 0) {
+        query = query.in("xml_import_id", importIds);
       }
 
       const { data, error } = await query;
@@ -105,11 +105,11 @@ export function useIdentifiedCredits(limit = 100, importId?: string) {
   });
 }
 
-export function useIdentifiedCreditsSummary(importId?: string) {
+export function useIdentifiedCreditsSummary(importIds?: string[]) {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ["identified-credits-summary", user?.id, importId],
+    queryKey: ["identified-credits-summary", user?.id, importIds],
     queryFn: async (): Promise<IdentifiedCreditsSummary> => {
       if (!user) throw new Error("User not authenticated");
 
@@ -126,8 +126,8 @@ export function useIdentifiedCreditsSummary(importId?: string) {
         `)
         .eq("user_id", user.id);
 
-      if (importId) {
-        query = query.eq("xml_import_id", importId);
+      if (importIds && importIds.length > 0) {
+        query = query.in("xml_import_id", importIds);
       }
 
       const { data, error } = await query;

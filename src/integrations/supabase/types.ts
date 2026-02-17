@@ -4624,6 +4624,7 @@ export type Database = {
       }
       xml_imports: {
         Row: {
+          batch_id: string | null
           created_at: string
           error_message: string | null
           file_name: string
@@ -4635,6 +4636,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          batch_id?: string | null
           created_at?: string
           error_message?: string | null
           file_name: string
@@ -4646,6 +4648,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          batch_id?: string | null
           created_at?: string
           error_message?: string | null
           file_name?: string
