@@ -10,7 +10,7 @@ export function useReanalyzeCredits() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
 
-  const reanalyze = async () => {
+  const reanalyze = async (importId?: string) => {
     if (!user) {
       toast.error("Usuário não autenticado");
       return { success: false, creditsFound: 0 };
@@ -20,45 +20,44 @@ export function useReanalyzeCredits() {
     setProgress({ current: 0, total: 0 });
 
     try {
-      // Get all completed XML imports for this user
-      const { data: xmlImports, error: xmlError } = await supabase
-        .from("xml_imports")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("status", "COMPLETED")
-        .order("created_at", { ascending: false })
-        .limit(500); // Process in batches
+      // Determine which import to analyze
+      let targetImportId = importId;
 
-      if (xmlError) throw xmlError;
+      if (!targetImportId) {
+        // Use the most recent completed import
+        const { data: latestImport, error: latestError } = await supabase
+          .from("xml_imports")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("status", "COMPLETED")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
 
-      if (!xmlImports || xmlImports.length === 0) {
-        toast.info("Nenhum XML processado para análise");
-        setIsAnalyzing(false);
-        return { success: false, creditsFound: 0 };
+        if (latestError || !latestImport) {
+          toast.info("Nenhum XML processado para análise");
+          setIsAnalyzing(false);
+          return { success: false, creditsFound: 0 };
+        }
+        targetImportId = latestImport.id;
       }
 
-      const importIds = xmlImports.map(x => x.id);
-      setProgress({ current: 0, total: importIds.length });
+      setProgress({ current: 0, total: 1 });
 
-      // Process in smaller batches to avoid timeouts
-      const batchSize = 50;
+      // Call analyze-credits for this specific import
+      const response = await supabase.functions.invoke('process-xml-batch', {
+        body: { importIds: [targetImportId] }
+      });
+
       let totalCreditsFound = 0;
 
-      for (let i = 0; i < importIds.length; i += batchSize) {
-        const batch = importIds.slice(i, i + batchSize);
-        
-        const response = await supabase.functions.invoke('process-xml-batch', {
-          body: { importIds: batch }
-        });
-
-        if (response.error) {
-          console.error('Batch error:', response.error);
-        } else if (response.data?.creditAnalysis) {
-          totalCreditsFound += response.data.creditAnalysis.creditsFound || 0;
-        }
-
-        setProgress({ current: i + batch.length, total: importIds.length });
+      if (response.error) {
+        console.error('Analysis error:', response.error);
+      } else if (response.data?.creditAnalysis) {
+        totalCreditsFound = response.data.creditAnalysis.creditsFound || 0;
       }
+
+      setProgress({ current: 1, total: 1 });
 
       // Invalidate queries to refresh data
       await queryClient.invalidateQueries({ queryKey: ["identified-credits"] });

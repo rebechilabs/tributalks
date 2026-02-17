@@ -603,19 +603,9 @@ serve(async (req) => {
       }
     }
 
-    // After processing all XMLs, trigger credit analysis
-    let creditAnalysisResult = null;
-    if (parsedXmlsForCredits.length > 0) {
-      console.log(`Triggering credit analysis for ${parsedXmlsForCredits.length} XMLs...`);
-      creditAnalysisResult = await triggerCreditAnalysis(
-        parsedXmlsForCredits, 
-        supabaseUrl, 
-        supabaseKey,
-        importIds.length === 1 ? importIds[0] : undefined,
-        user.id
-      );
-      console.log('Credit analysis result:', creditAnalysisResult);
-    }
+    // Credit analysis is no longer triggered automatically.
+    // The user controls when to run analysis via the "Identificar Créditos" button.
+    const creditAnalysisResult = null;
 
     // Build metadata for summary
     const processingTimeMs = Date.now();

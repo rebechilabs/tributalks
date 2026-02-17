@@ -46,15 +46,15 @@ export interface IdentifiedCreditsSummary {
   credits_by_rule: Record<string, { count: number; total: number; rule_name: string }>;
 }
 
-export function useIdentifiedCredits(limit = 100) {
+export function useIdentifiedCredits(limit = 100, importId?: string) {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ["identified-credits", user?.id, limit],
+    queryKey: ["identified-credits", user?.id, limit, importId],
     queryFn: async (): Promise<IdentifiedCredit[]> => {
       if (!user) throw new Error("User not authenticated");
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("identified_credits")
         .select(`
           id,
@@ -88,6 +88,12 @@ export function useIdentifiedCredits(limit = 100) {
         .order("potential_recovery", { ascending: false })
         .limit(limit);
 
+      if (importId) {
+        query = query.eq("xml_import_id", importId);
+      }
+
+      const { data, error } = await query;
+
       if (error) throw error;
 
       return (data || []).map((row: any) => ({
@@ -99,15 +105,15 @@ export function useIdentifiedCredits(limit = 100) {
   });
 }
 
-export function useIdentifiedCreditsSummary() {
+export function useIdentifiedCreditsSummary(importId?: string) {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ["identified-credits-summary", user?.id],
+    queryKey: ["identified-credits-summary", user?.id, importId],
     queryFn: async (): Promise<IdentifiedCreditsSummary> => {
       if (!user) throw new Error("User not authenticated");
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("identified_credits")
         .select(`
           potential_recovery,
@@ -119,6 +125,12 @@ export function useIdentifiedCreditsSummary() {
           )
         `)
         .eq("user_id", user.id);
+
+      if (importId) {
+        query = query.eq("xml_import_id", importId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
