@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Heart, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, 
   AlertOctagon, Download, RefreshCw, ChevronRight, Target,
-  Users, CreditCard, Home, Star, BarChart3, Zap, Calculator
+  Users, CreditCard, Home, Star, BarChart3, Zap, Calculator, Clock
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -137,15 +137,16 @@ export function DREDashboard({ dreId }: DREDashboardProps) {
     return colors[status] || colors.pending;
   };
 
-  const getHealthEmoji = (status: string) => {
-    const emojis: Record<string, string> = {
-      excellent: '🌟',
-      healthy: '💚',
-      warning: '⚠️',
-      critical: '🚨',
-      pending: '⏳'
+  const getHealthIcon = (status: string) => {
+    const icons: Record<string, { icon: React.ReactNode; color: string }> = {
+      excellent: { icon: <Star className="h-8 w-8" />, color: 'text-yellow-500' },
+      healthy: { icon: <Heart className="h-8 w-8" />, color: 'text-emerald-500' },
+      warning: { icon: <AlertTriangle className="h-8 w-8" />, color: 'text-amber-500' },
+      critical: { icon: <AlertOctagon className="h-8 w-8" />, color: 'text-red-500' },
+      pending: { icon: <Clock className="h-8 w-8" />, color: 'text-muted-foreground' },
     };
-    return emojis[status] || emojis.pending;
+    const config = icons[status] || icons.pending;
+    return <span className={config.color}>{config.icon}</span>;
   };
 
   const getHealthMessage = (status: string) => {
@@ -184,10 +185,10 @@ export function DREDashboard({ dreId }: DREDashboardProps) {
 
   const getDiagnosticBadge = (status: string) => {
     const variants: Record<string, { bg: string; text: string; label: string }> = {
-      excellent: { bg: 'bg-emerald-100 dark:bg-emerald-900', text: 'text-emerald-700 dark:text-emerald-300', label: '🟢 Excelente' },
-      ok: { bg: 'bg-blue-100 dark:bg-blue-900', text: 'text-blue-700 dark:text-blue-300', label: '🔵 OK' },
-      warning: { bg: 'bg-amber-100 dark:bg-amber-900', text: 'text-amber-700 dark:text-amber-300', label: '🟡 Atenção' },
-      critical: { bg: 'bg-red-100 dark:bg-red-900', text: 'text-red-700 dark:text-red-300', label: '🔴 Crítico' }
+      excellent: { bg: 'bg-emerald-100 dark:bg-emerald-900', text: 'text-emerald-700 dark:text-emerald-300', label: 'Excelente' },
+      ok: { bg: 'bg-blue-100 dark:bg-blue-900', text: 'text-blue-700 dark:text-blue-300', label: 'OK' },
+      warning: { bg: 'bg-amber-100 dark:bg-amber-900', text: 'text-amber-700 dark:text-amber-300', label: 'Atenção' },
+      critical: { bg: 'bg-red-100 dark:bg-red-900', text: 'text-red-700 dark:text-red-300', label: 'Crítico' }
     };
 
     const v = variants[status] || variants.ok;
@@ -243,7 +244,7 @@ export function DREDashboard({ dreId }: DREDashboardProps) {
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className={`text-5xl`}>{getHealthEmoji(dre.health_status)}</div>
+              <div>{getHealthIcon(dre.health_status)}</div>
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <Heart className={`h-5 w-5 ${getHealthColor(dre.health_status)}`} />
@@ -414,7 +415,7 @@ export function DREDashboard({ dreId }: DREDashboardProps) {
         <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              📊 Simulação Reforma 2027
+              <BarChart3 className="h-5 w-5 inline mr-1" /> Simulação Reforma 2027
               {dre.reforma_source === 'api_oficial' ? (
                 <Badge className="bg-green-600 hover:bg-green-600 text-xs">
                   <Calculator className="h-3 w-3 mr-1" />

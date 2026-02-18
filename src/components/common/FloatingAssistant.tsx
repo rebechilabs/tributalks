@@ -60,14 +60,14 @@ const GETTING_STARTED_MESSAGES: Record<string, string> = {
 
 No plano Starter, você tem acesso a ferramentas essenciais para dar seus primeiros passos na Reforma Tributária:
 
-🎯 **Suas ferramentas disponíveis:**
+**Suas ferramentas disponíveis:**
 
 - **Score Tributário** - Descubra o nível de complexidade tributária da sua empresa
 - **Simulador Split Payment** - Entenda a nova forma automática de pagamento de impostos
 - **Comparativo de Regimes** - Compare Simples Nacional, Lucro Presumido e Lucro Real
 - **Calculadora RTC** - Simule como CBS, IBS e Imposto Seletivo impactam sua operação
 
-💡 **Por onde começar?**
+**Por onde começar?**
 
 Recomendo fortemente o **Score Tributário**. Em poucos minutos, você terá:
 - Um panorama claro da sua situação tributária atual
@@ -76,11 +76,11 @@ Recomendo fortemente o **Score Tributário**. Em poucos minutos, você terá:
 
 Quer que eu te guie passo a passo no preenchimento do Score Tributário? Ou prefere conhecer outra ferramenta primeiro?
 
-⚠️ *Lembre-se: antes de implementar qualquer estratégia tributária em sua empresa, converse com seu contador ou advogado tributarista para avaliar sua situação específica.*`,
+> *Lembre-se: antes de implementar qualquer estratégia tributária em sua empresa, converse com seu contador ou advogado tributarista para avaliar sua situação específica.*`,
 
   NAVIGATOR: `Excelente! Você tem acesso completo ao TribuTalks Inteligência Tributária. Vou te orientar na jornada ideal:
 
-📍 **JORNADA RECOMENDADA:**
+**JORNADA RECOMENDADA:**
 
 **FASE 1 - Entenda o Cenário** (comece aqui)
 - **Timeline 2026-2033** - Visualize todos os prazos e etapas da Reforma que impactam você
@@ -105,7 +105,7 @@ Quer que eu te guie passo a passo no preenchimento do Score Tributário? Ou pref
 **FASE 4 - Tire Dúvidas Específicas**
 - **Clara AI** (10 msgs/dia) - Use a IA para esclarecer dúvidas específicas durante suas análises
 
-💡 **Minha recomendação de início:**
+**Minha recomendação de início:**
 
 Dedique 1 hora para completar:
 1. Timeline 2026-2033 (15 min)
@@ -116,17 +116,17 @@ Isso te dará uma base sólida para entender seu cenário e próximos passos.
 
 Quer começar pela Timeline ou prefere ir direto ao Score Tributário? Posso te guiar em cada ferramenta passo a passo.
 
-⚠️ *Lembre-se: antes de implementar qualquer estratégia tributária em sua empresa, converse com seu contador ou advogado tributarista para avaliar sua situação específica.*`,
+> *Lembre-se: antes de implementar qualquer estratégia tributária em sua empresa, converse com seu contador ou advogado tributarista para avaliar sua situação específica.*`,
 
   PROFESSIONAL: `Perfeito! Você tem a plataforma completa com diagnóstico automatizado e inteligência artificial ilimitada.
 
-🚀 **WORKFLOWS GUIADOS + AUTOMAÇÃO COMPLETA:**
+**WORKFLOWS GUIADOS + AUTOMAÇÃO COMPLETA:**
 
 Você tem acesso a 4 Workflows Guiados - jornadas estruturadas que conectam diferentes ferramentas da plataforma de forma lógica e eficiente, como um roteiro personalizado para cada objetivo.
 
-📋 **Seus Workflows (versão turbinada):**
+**Seus Workflows (versão turbinada):**
 
-**1. Diagnóstico Tributário Completo ⭐**
+**1. Diagnóstico Tributário Completo** *(destaque)*
 Análise automática e profunda com importação ilimitada de XMLs.
 → Importador de XMLs automatizado → Radar de Créditos → DRE Inteligente → Oportunidades Tributárias (37+)
 *Diferencial: Processamento ilimitado de notas fiscais e análise contínua*
@@ -146,17 +146,17 @@ Cálculo preciso com base nos seus XMLs reais de compra e venda.
 → Dados reais de operação → Split Payment real → Precificação otimizada
 *Diferencial: Simulação com margem real, não teórica*
 
-🎁 **EXCLUSIVIDADES DO PROFISSIONAL:**
-✅ Importador de XMLs ilimitado
-✅ Radar de Créditos Fiscais
-✅ DRE Inteligente
-✅ 37+ Oportunidades Tributárias
-✅ Relatórios PDF Profissionais
-✅ Clara AI ilimitada
-✅ Comunidade exclusiva
-✅ Alertas por Email
+**EXCLUSIVIDADES DO PROFISSIONAL:**
+- Importador de XMLs ilimitado
+- Radar de Créditos Fiscais
+- DRE Inteligente
+- 37+ Oportunidades Tributárias
+- Relatórios PDF Profissionais
+- Clara AI ilimitada
+- Comunidade exclusiva
+- Alertas por Email
 
-💡 **Quick Start Recomendado (90 minutos):**
+**Quick Start Recomendado (90 minutos):**
 
 **Passo 1:** Execute o Workflow 1 completo com seus XMLs reais (45 min)
 **Passo 2:** Analise os resultados do Radar de Créditos e DRE Inteligente (30 min)
@@ -166,37 +166,37 @@ Cálculo preciso com base nos seus XMLs reais de compra e venda.
 
 Por qual Workflow quer começar? Ou prefere que eu te ajude a importar seus XMLs primeiro?
 
-⚠️ *Lembre-se: antes de implementar qualquer estratégia tributária em sua empresa, converse com seu contador ou advogado tributarista para avaliar sua situação específica.*`,
+> *Lembre-se: antes de implementar qualquer estratégia tributária em sua empresa, converse com seu contador ou advogado tributarista para avaliar sua situação específica.*`,
 
   ENTERPRISE: `Excelente escolha! Você tem a plataforma completa + acompanhamento especializado da Rebechi & Silva Advogados.
 
-🎯 **TUDO DO PROFISSIONAL + CONSULTORIA ESTRATÉGICA:**
+**TUDO DO PROFISSIONAL + CONSULTORIA ESTRATÉGICA:**
 
-✅ **Você tem acesso a:**
+**Você tem acesso a:**
 - Todos os 4 Workflows Guiados (versão completa)
 - Importador de XMLs, Radar de Créditos, DRE Inteligente
 - 37+ Oportunidades Tributárias mapeadas
 - Clara AI ilimitada + Comunidade
 - Relatórios PDF Profissionais
 
-🏆 **EXCLUSIVIDADES ENTERPRISE:**
+**EXCLUSIVIDADES ENTERPRISE:**
 
 **FASE 1 - Diagnóstico Estratégico com Especialista**
-✅ Diagnóstico completo personalizado - Advogado tributarista analisa sua situação específica
-✅ Painel Executivo - Dashboard com KPIs tributários em tempo real
-✅ Análise por CNPJ - Simulações considerando todas as particularidades da sua empresa
+- Diagnóstico completo personalizado - Advogado tributarista analisa sua situação específica
+- Painel Executivo - Dashboard com KPIs tributários em tempo real
+- Análise por CNPJ - Simulações considerando todas as particularidades da sua empresa
 
 **FASE 2 - Acompanhamento Contínuo**
-✅ Reuniões mensais estratégicas - Alinhamento periódico com especialista dedicado
-✅ Consultorias ilimitadas - Acesso direto aos advogados tributaristas sempre que precisar
-✅ Suporte prioritário - Atendimento preferencial em todas as demandas
+- Reuniões mensais estratégicas - Alinhamento periódico com especialista dedicado
+- Consultorias ilimitadas - Acesso direto aos advogados tributaristas sempre que precisar
+- Suporte prioritário - Atendimento preferencial em todas as demandas
 
 **FASE 3 - Implementação Assistida**
-✅ Implementação guiada - Apoio prático na execução das estratégias definidas
-✅ Histórico completo - Rastreabilidade de todas as análises, decisões e recomendações
-✅ Configurações personalizadas - Plataforma ajustada às necessidades específicas do seu negócio
+- Implementação guiada - Apoio prático na execução das estratégias definidas
+- Histórico completo - Rastreabilidade de todas as análises, decisões e recomendações
+- Configurações personalizadas - Plataforma ajustada às necessidades específicas do seu negócio
 
-💡 **Próximos Passos Recomendados:**
+**Próximos Passos Recomendados:**
 
 **Agora:**
 1. Acesse **Enterprise > Consultorias** e agende sua primeira reunião de diagnóstico
@@ -208,13 +208,13 @@ Por qual Workflow quer começar? Ou prefere que eu te ajude a importar seus XMLs
 - Definiremos estratégia personalizada para sua empresa
 - Estabeleceremos cronograma de implementação e próximos encontros
 
-📞 **Quer agendar sua reunião de diagnóstico agora?**
+**Quer agendar sua reunião de diagnóstico agora?**
 
 Entre em contato pelo menu **Enterprise > Consultorias** ou me avise que direciono você para o time da Rebechi & Silva.
 
 Posso te ajudar a preparar os dados para a consultoria? Ou prefere que eu explique alguma ferramenta específica da plataforma?
 
-✨ *Lembre-se: No Enterprise, suas consultorias com advogados tributaristas são incluídas e ilimitadas. Use esse benefício sem moderação para maximizar seus resultados.*`
+> *No Enterprise, suas consultorias com advogados tributaristas são incluídas e ilimitadas. Use esse benefício sem moderação para maximizar seus resultados.*`
 };
 
 export function FloatingAssistant() {
@@ -402,7 +402,7 @@ export function FloatingAssistant() {
       // Fallback greeting
       setMessages([{ 
         role: "assistant", 
-        content: `Olá! Sou a **Clara**, sua consultora especializada em Reforma Tributária. 👋\n\nPosso te ajudar com dúvidas sobre a reforma, impostos, cronograma ou qualquer ferramenta do TribuTalks. Como posso ajudar?` 
+        content: `Olá! Sou a **Clara**, sua consultora especializada em Reforma Tributária.\n\nPosso te ajudar com dúvidas sobre a reforma, impostos, cronograma ou qualquer ferramenta do TribuTalks. Como posso ajudar?` 
       }]);
       setHasGreeted(true);
     } finally {

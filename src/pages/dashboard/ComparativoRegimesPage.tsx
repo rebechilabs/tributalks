@@ -92,7 +92,7 @@ export default function ComparativoRegimesPage() {
 
           <MotivationalBanner
             id="comparativo"
-            icon="⚖️"
+            icon="scale"
             text="Informe seus dados e veja lado a lado qual regime tributário gera mais economia: Simples Nacional, Lucro Presumido, Lucro Real e as novas opções IBS/CBS 2027."
           />
 

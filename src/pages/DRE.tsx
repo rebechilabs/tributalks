@@ -10,7 +10,7 @@ export default function DRE() {
         <FeatureGate feature="dre_inteligente">
           <MotivationalBanner
             id="dre"
-            icon="📊"
+            icon="barChart"
             text="Ao preencher sua DRE, você receberá: diagnóstico completo com Receita Líquida, Margem Bruta, EBITDA, Lucro Líquido e comparação automática com empresas do seu setor."
           />
           <DREWizard />

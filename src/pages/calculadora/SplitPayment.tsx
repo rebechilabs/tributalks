@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wallet, Info, TrendingDown, Calendar, RefreshCw, FileDown, Loader2, CheckCircle, Calculator, AlertTriangle, Trash2 } from "lucide-react";
+import { Wallet, Info, TrendingDown, Calendar, RefreshCw, FileDown, Loader2, CheckCircle, Calculator, AlertTriangle, Trash2, Search, BarChart3, DollarSign as DollarSignIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -514,15 +514,15 @@ const SplitPayment = () => {
                 
                 <div className="grid sm:grid-cols-3 gap-3 mb-4">
                   <div className="bg-card border border-border rounded-lg p-3 text-center shadow-sm">
-                    <p className="text-2xl font-bold text-primary">🔍</p>
+                    <Search className="w-6 h-6 text-primary mx-auto" />
                     <p className="text-xs text-foreground mt-1">Análise de XMLs para identificar créditos perdidos</p>
                   </div>
                   <div className="bg-card border border-border rounded-lg p-3 text-center shadow-sm">
-                    <p className="text-2xl font-bold text-primary">📊</p>
+                    <BarChart3 className="w-6 h-6 text-primary mx-auto" />
                     <p className="text-xs text-foreground mt-1">DRE Inteligente com impacto da reforma</p>
                   </div>
                   <div className="bg-card border border-border rounded-lg p-3 text-center shadow-sm">
-                    <p className="text-2xl font-bold text-primary">💰</p>
+                    <DollarSignIcon className="w-6 h-6 text-primary mx-auto" />
                     <p className="text-xs text-foreground mt-1">Radar de 57 oportunidades tributárias</p>
                   </div>
                 </div>

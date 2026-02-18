@@ -36,7 +36,7 @@ export default function MargemAtiva() {
 
         <MotivationalBanner
           id="margem"
-          icon="💰"
+          icon="dollarSign"
           text="Descubra o impacto tributário real na sua margem de lucro e receba sugestões de precificação otimizada considerando a Reforma Tributária 2027."
         />
 

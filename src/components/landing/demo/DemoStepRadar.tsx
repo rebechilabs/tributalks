@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
-import { TrendingUp, DollarSign } from "lucide-react";
+import { TrendingUp, DollarSign, Package, Factory } from "lucide-react";
 import { useEffect, useState } from "react";
+import type { LucideIcon } from "lucide-react";
 
-const CREDITS = [
-  { type: "ICMS-ST", value: 23500, icon: "📦" },
-  { type: "PIS/COFINS", value: 15800, icon: "💰" },
-  { type: "IPI", value: 7700, icon: "🏭" },
+const CREDITS: { type: string; value: number; icon: LucideIcon }[] = [
+  { type: "ICMS-ST", value: 23500, icon: Package },
+  { type: "PIS/COFINS", value: 15800, icon: DollarSign },
+  { type: "IPI", value: 7700, icon: Factory },
 ];
 
 export function DemoStepRadar() {
@@ -99,7 +100,7 @@ export function DemoStepRadar() {
             transition={{ delay: index * 0.2 }}
           >
             <div className="flex items-center gap-3">
-              <span className="text-xl">{credit.icon}</span>
+              <credit.icon className="w-5 h-5 text-primary" />
               <span className="font-medium text-foreground">{credit.type}</span>
             </div>
             <span className="text-green-500 font-semibold">

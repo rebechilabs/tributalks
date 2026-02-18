@@ -340,7 +340,7 @@ export default function AnaliseNotasFiscais() {
 
           <MotivationalBanner
             id="radar"
-            icon="🔍"
+            icon="search"
             text="Siga os 3 passos para que nossa IA identifique automaticamente créditos tributários não aproveitados, pagamentos em duplicidade e alíquotas incorretas."
           />
 
