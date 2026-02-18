@@ -35,7 +35,7 @@
            className="max-w-4xl mx-auto"
          >
            <div 
-             className="relative aspect-video bg-[#222222] rounded-2xl border border-white/10 overflow-hidden cursor-pointer group"
+             className="relative aspect-video bg-[#1A1A1A] rounded-2xl border border-white/10 overflow-hidden cursor-pointer group"
              onClick={onOpenDemo}
            >
              {/* Placeholder gradient background */}

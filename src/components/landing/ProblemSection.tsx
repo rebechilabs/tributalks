@@ -47,7 +47,7 @@
                whileInView={{ opacity: 1, y: 0 }}
                viewport={{ once: true }}
                transition={{ duration: 0.6, delay: index * 0.1 }}
-               className="bg-[#222222] border border-white/10 rounded-2xl p-8 hover:border-primary/50 transition-all duration-300 group"
+               className="bg-[#1A1A1A] border border-white/10 rounded-2xl p-8 hover:border-primary/50 transition-all duration-300 group"
              >
                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
                  <benefit.icon className="w-7 h-7 text-primary" />

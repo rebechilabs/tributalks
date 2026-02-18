@@ -48,7 +48,7 @@
                whileInView={{ opacity: 1, y: 0 }}
                viewport={{ once: true }}
                transition={{ duration: 0.6, delay: index * 0.1 }}
-               className="bg-[#222222] rounded-2xl p-6 md:p-8 border border-white/10"
+               className="bg-[#1A1A1A] rounded-2xl p-6 md:p-8 border border-white/10"
              >
                {/* Quote icon */}
                <Quote className="w-10 h-10 text-primary/30 mb-4" />
