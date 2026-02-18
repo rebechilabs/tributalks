@@ -233,8 +233,8 @@ export const MENU_PROFESSIONAL_V2: MenuElement[] = [
     moduleHref: '/dashboard/precificacao',
     items: [
       { label: 'Margem Ativa', href: '/dashboard/precificacao/margem', icon: Target, description: 'Análise por NCM' },
-      { label: 'Split Payment', href: '/dashboard/precificacao/split', icon: Wallet, description: 'Impacto 2026' },
       { label: 'PriceGuard', href: '/dashboard/precificacao/priceguard', icon: Shield, badge: 'Novo' },
+      { label: 'Split Payment', href: '/dashboard/precificacao/split', icon: Wallet, description: 'Impacto 2026' },
     ]
   },
   // Módulo RECUPERAR
