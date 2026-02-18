@@ -97,15 +97,9 @@ export const MENU_STARTER: MenuElement[] = [
   },
   { type: 'divider' as const },
   {
-    title: 'NOTÍCIAS',
-    collapsible: true,
-    items: [
-      { label: 'Reforma Tributária', href: '/noticias', icon: Newspaper, description: 'Atualizações da Reforma' },
-    ]
-  },
-  {
     title: '',
     items: [
+      { label: 'Notícias', href: '/noticias', icon: Newspaper, description: 'Reforma Tributária' },
       { label: 'Indique e Ganhe', href: '/indicar', icon: Gift, badge: 'Até 20%', badgeVariant: 'success', description: 'Ganhe desconto indicando' },
       { label: 'Integrações', href: '/dashboard/integracoes', icon: Plug },
       { label: 'Configurações', href: '/configuracoes', icon: Settings },
@@ -193,15 +187,9 @@ export const MENU_NAVIGATOR: MenuElement[] = [
   { type: 'divider' as const },
   // Seções secundárias
   {
-    title: 'NOTÍCIAS',
-    collapsible: true,
-    items: [
-      { label: 'Reforma Tributária', href: '/noticias', icon: Newspaper, description: 'Atualizações da Reforma' },
-    ]
-  },
-  {
     title: '',
     items: [
+      { label: 'Notícias', href: '/noticias', icon: Newspaper, description: 'Reforma Tributária' },
       { label: 'Indique e Ganhe', href: '/indicar', icon: Gift, badge: 'Até 20%', badgeVariant: 'success', description: 'Ganhe desconto indicando' },
       { label: 'Integrações', href: '/dashboard/integracoes', icon: Plug },
       { label: 'Configurações', href: '/configuracoes', icon: Settings },
@@ -284,15 +272,9 @@ export const MENU_PROFESSIONAL_V2: MenuElement[] = [
   { type: 'divider' as const },
   // Seções secundárias
   {
-    title: 'NOTÍCIAS',
-    collapsible: true,
-    items: [
-      { label: 'Reforma Tributária', href: '/noticias', icon: Newspaper, description: 'Atualizações da Reforma' },
-    ]
-  },
-  {
     title: '',
     items: [
+      { label: 'Notícias', href: '/noticias', icon: Newspaper, description: 'Reforma Tributária' },
       { label: 'Indique e Ganhe', href: '/indicar', icon: Gift, badge: 'Até 20%', badgeVariant: 'success', description: 'Ganhe desconto indicando' },
       { label: 'Integrações', href: '/dashboard/integracoes', icon: Plug },
       { label: 'Configurações', href: '/configuracoes', icon: Settings },
