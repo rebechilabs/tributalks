@@ -53,7 +53,7 @@ const PLANS = [
       'NEXUS Command Center (8 KPIs)',
       'Radar de Créditos Tributários',
       'DRE Inteligente',
-      'Oportunidades Fiscais (61+)',
+      'Oportunidades Tributárias (61+)',
       'Suíte Margem Ativa',
       'Integração ERP',
       'Clara AI ilimitada',

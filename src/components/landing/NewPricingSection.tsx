@@ -32,7 +32,7 @@
        "DRE Inteligente",
        "Score Tributário 0-1000",
        "Calculadora CBS/IBS por NCM",
-       "Comparativo de Regimes",
+       "Comparativo de Regimes Tributários",
        "Timeline 2026-2033",
        "Newsletter TribuTalks News",
      ],

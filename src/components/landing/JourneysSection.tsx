@@ -49,7 +49,7 @@ const journeys = [
     description: '"Preciso tomar decisões informadas e proteger meu caixa AGORA."',
     benefitBlocks: [
       "Tudo do Navigator, com Clara AI ilimitada e poder total de decisão.",
-      "Identifique créditos tributários com análise de XMLs, Radar de Créditos e 61+ oportunidades fiscais mapeadas.",
+      "Identifique créditos tributários com análise de XMLs, Radar de Créditos e 61+ oportunidades tributárias mapeadas.",
       "Projete seu lucro com o DRE Inteligente e proteja sua margem com a Suíte Margem Ativa 2026: analise fornecedores (OMC-AI), simule preços (PriceGuard) e monitore tudo no Dashboard Executivo.",
       "Monitore tudo em tempo real no NEXUS, seu centro de comando com 8 KPIs executivos.",
       "Conecte seu ERP e exporte relatórios PDF profissionais prontos para apresentar."

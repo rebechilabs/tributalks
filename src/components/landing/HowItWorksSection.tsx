@@ -13,7 +13,7 @@ const steps = [
     number: "2",
     icon: Search,
     title: "Identifique Oportunidades",
-    description: "Radar analisa automaticamente e encontra créditos tributários não aproveitados (média R$ 47k). 61+ oportunidades fiscais mapeadas.",
+    description: "Radar analisa automaticamente e encontra créditos tributários não aproveitados (média R$ 47k). 61+ oportunidades tributárias mapeadas.",
   },
   {
     number: "3",

@@ -118,7 +118,7 @@ export function TribuTalksPitchPdf() {
         outputs: "Valores de CBS (federal), IBS estadual, IBS municipal, Imposto Seletivo, alíquota efetiva total"
       },
       {
-        name: "Comparativo de Regimes",
+        name: "Comparativo de Regimes Tributários",
         badge: null,
         desc: "Compara Simples Nacional, Lucro Presumido e Lucro Real para identificar o regime mais econômico.",
         inputs: "Faturamento mensal, despesas dedutíveis, folha de pagamento, setor de atividade",
@@ -160,7 +160,7 @@ export function TribuTalksPitchPdf() {
         outputs: "Score total, nota por dimensão, ações recomendadas priorizadas, economia potencial"
       },
       {
-        name: "Oportunidades Fiscais",
+        name: "Oportunidades Tributárias",
         badge: "Novo",
         desc: "Motor de matching que identifica 37+ benefícios fiscais aplicáveis ao perfil da empresa.",
         inputs: "Perfil completo da empresa (setor, faturamento, atividades, UFs de operação, produtos)",
@@ -271,7 +271,7 @@ export function TribuTalksPitchPdf() {
     const functions = [
       { name: "calculate-rtc", desc: "Cálculo de impostos da reforma tributária via API oficial" },
       { name: "calculate-tax-score", desc: "Geração do Score Tributário com 5 dimensões" },
-      { name: "match-opportunities", desc: "Motor de matching de 37+ oportunidades fiscais" },
+      { name: "match-opportunities", desc: "Motor de matching de 37+ oportunidades tributárias" },
       { name: "process-dre", desc: "Processamento de DRE com diagnósticos e simulação de reforma" },
       { name: "process-xml-batch", desc: "Parsing em lote de NF-e, NFS-e e CT-e" },
       { name: "analyze-credits", desc: "Identificação de créditos tributários não aproveitados" },

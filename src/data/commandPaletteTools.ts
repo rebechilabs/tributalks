@@ -65,7 +65,7 @@ export const ALL_TOOLS: CommandTool[] = [
   },
   {
     id: 'oportunidades',
-    name: 'Oportunidades Fiscais',
+    name: 'Oportunidades Tributárias',
     path: '/oportunidades',
     icon: '📊',
     plan: 'professional',
@@ -159,7 +159,7 @@ export const ALL_TOOLS: CommandTool[] = [
   },
   {
     id: 'regimes',
-    name: 'Comparativo de Regimes',
+    name: 'Comparativo de Regimes Tributários',
     path: '/calculadora/regimes',
     icon: '⚖️',
     plan: 'starter',

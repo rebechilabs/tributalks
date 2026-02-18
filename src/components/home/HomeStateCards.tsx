@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { 
   BarChart3, Trophy, FileText, Plug, CheckCircle2, ArrowRight,
-  Sparkles, TrendingUp, AlertCircle, Target, Coins, Gift, Scale, DollarSign
+  Sparkles, TrendingUp, AlertCircle, Target, Coins, Gift, Scale, DollarSign, Lightbulb
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,12 +55,14 @@ function UpcomingStepCard({
   step, 
   icon: Icon, 
   title, 
-  description 
+  description,
+  moduleTag,
 }: { 
   step: number;
   icon: React.ElementType; 
   title: string; 
   description: string;
+  moduleTag?: string;
 }) {
   return (
     <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
@@ -71,6 +73,11 @@ function UpcomingStepCard({
         <div className="flex items-center gap-2">
           <Icon className="w-4 h-4 text-muted-foreground" />
           <p className="text-sm font-medium">{title}</p>
+          {moduleTag && (
+            <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600">
+              {moduleTag}
+            </span>
+          )}
         </div>
         <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
       </div>
@@ -84,7 +91,7 @@ export function NoDRECard({ hasERP }: { hasERP: boolean }) {
     <div className="space-y-6">
       <ModuleHeader 
         icon={BarChart3}
-        title="MÓDULO: ENTENDER MEU NEGÓCIO"
+        title="MÓDULO: ENTENDER"
         description="Aqui você terá a oportunidade de entender a saúde tributária da sua empresa através de diagnósticos inteligentes."
       />
 
@@ -132,30 +139,35 @@ export function NoDRECard({ hasERP }: { hasERP: boolean }) {
             icon={Trophy}
             title="Score Tributário"
             description="Um panorama da situação tributária atual da empresa em uma escala de 0 a 1000 pontos."
+            moduleTag="ENTENDER"
           />
           <UpcomingStepCard 
             step={3}
             icon={Scale}
-            title="Comparativo de Regimes"
-            description="Compare os regimes tributários e descubra qual é o mais vantajoso para sua empresa."
+            title="Comparativo de Regimes Tributários"
+            description="Compare os regimes tributários e descubra qual é o mais vantajoso para sua empresa, incluindo as novas opções IBS/CBS 2027."
+            moduleTag="ENTENDER"
           />
           <UpcomingStepCard 
             step={4}
             icon={DollarSign}
             title="Margem Ativa"
             description="Precifique seus produtos e serviços com inteligência tributária embutida."
+            moduleTag="PRECIFICAR"
           />
           <UpcomingStepCard 
             step={5}
             icon={Coins}
             title="Radar de Créditos"
             description="Identifica tributos pagos indevidamente nos últimos 5 anos que podem ser recuperados."
+            moduleTag="RECUPERAR"
           />
           <UpcomingStepCard 
             step={6}
-            icon={Gift}
-            title="Oportunidades"
-            description="Benefícios fiscais e incentivos aplicáveis ao perfil do seu negócio."
+            icon={Lightbulb}
+            title="Oportunidades Tributárias"
+            description="Com base no perfil da sua empresa, nossa IA identificou oportunidades de economia tributária e planejamento fiscal para o seu negócio."
+            moduleTag="PLANEJAR"
           />
         </div>
       </div>
@@ -169,7 +181,7 @@ export function NoScoreCard({ dreData }: { dreData: NonNullable<HomeStateData['d
     <div className="space-y-6">
       <ModuleHeader 
         icon={BarChart3}
-        title="MÓDULO: ENTENDER MEU NEGÓCIO"
+        title="MÓDULO: ENTENDER"
         description="Seu DRE está preenchido! Agora vamos descobrir sua nota tributária."
       />
 
@@ -214,26 +226,30 @@ export function NoScoreCard({ dreData }: { dreData: NonNullable<HomeStateData['d
           <UpcomingStepCard 
             step={3}
             icon={Scale}
-            title="Comparativo de Regimes"
-            description="Compare os regimes tributários e descubra qual é o mais vantajoso para sua empresa."
+            title="Comparativo de Regimes Tributários"
+            description="Compare os regimes tributários e descubra qual é o mais vantajoso para sua empresa, incluindo as novas opções IBS/CBS 2027."
+            moduleTag="ENTENDER"
           />
           <UpcomingStepCard 
             step={4}
             icon={DollarSign}
             title="Margem Ativa"
             description="Precifique seus produtos e serviços com inteligência tributária embutida."
+            moduleTag="PRECIFICAR"
           />
           <UpcomingStepCard 
             step={5}
             icon={Coins}
             title="Radar de Créditos"
             description="Identifica tributos pagos indevidamente nos últimos 5 anos que podem ser recuperados."
+            moduleTag="RECUPERAR"
           />
           <UpcomingStepCard 
             step={6}
-            icon={Gift}
-            title="Oportunidades"
-            description="Benefícios fiscais e incentivos aplicáveis ao perfil do seu negócio."
+            icon={Lightbulb}
+            title="Oportunidades Tributárias"
+            description="Com base no perfil da sua empresa, nossa IA identificou oportunidades de economia tributária e planejamento fiscal para o seu negócio."
+            moduleTag="PLANEJAR"
           />
         </div>
       </div>
@@ -253,7 +269,7 @@ export function NoCreditsCard({
     <div className="space-y-6">
       <ModuleHeader 
         icon={Coins}
-        title="MÓDULO: RECUPERAR MEU DINHEIRO"
+        title="MÓDULO: RECUPERAR"
         description="Hora de identificar valores que sua empresa pode ter pago a mais em tributos."
       />
 

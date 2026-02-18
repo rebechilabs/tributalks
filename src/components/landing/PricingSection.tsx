@@ -44,10 +44,10 @@ const plans: Plan[] = [
     cnpjLimit: "1 CNPJ • 1 Usuário",
     features: [
       { text: "Clara AI (Assistente)", included: "limited", limitText: "30 msgs/dia" },
-      { text: "Módulo ENTENDER MEU NEGÓCIO", included: true, limitText: "Diagnóstico completo" },
+      { text: "Módulo ENTENDER", included: true, limitText: "Diagnóstico completo" },
       { text: "DRE Inteligente", included: true, isSubItem: true, limitText: "Impacto na margem" },
       { text: "Score Tributário", included: true, isSubItem: true, limitText: "Saúde tributária 0-1000" },
-      { text: "Comparativo de Regimes", included: true, isSubItem: true, limitText: "Simples x LP x LR" },
+      { text: "Comparativo de Regimes Tributários", included: true, isSubItem: true, limitText: "Simples x LP x LR" },
       { text: "Comparativo 2027", included: true, isSubItem: true, limitText: "Simples: Por Dentro x Por Fora" },
       { text: "Calculadora CBS/IBS", included: true, limitText: "Por NCM (produtos)" },
       { text: "Timeline 2026-2033", included: true, limitText: "Prazos críticos" },
@@ -68,7 +68,7 @@ const plans: Plan[] = [
     features: [
       { text: "Clara AI (Copiloto)", included: "limited", limitText: "100 msgs/dia" },
       { text: "Tudo do Starter +", included: true },
-      { text: "Módulo RECUPERAR CRÉDITOS", included: true },
+      { text: "Módulo RECUPERAR", included: true },
       { text: "Radar de Créditos", included: true, isSubItem: true, limitText: "XML, SPED, DCTF, PGDAS" },
       { text: "Planejamento Tributário", included: true, isSubItem: true, limitText: "61+ oportunidades" },
       { text: "Calculadora NCM e NBS", included: true, limitText: "Produtos e Serviços" },
@@ -98,7 +98,7 @@ const plans: Plan[] = [
     features: [
       { text: "Clara AI ilimitada", included: true, limitText: "Respostas sem limite" },
       { text: "Tudo do Navigator +", included: true, limitText: "Todas ferramentas anteriores" },
-      { text: "Módulo PRECIFICAÇÃO", included: true, limitText: "Margem protegida" },
+      { text: "Módulo PRECIFICAR", included: true, limitText: "Margem protegida" },
       { text: "Margem Ativa (NCM)", included: true, isSubItem: true, limitText: "Impacto por produto" },
       { text: "Split Payment 2026", included: true, isSubItem: true, limitText: "Simulação de caixa" },
       { text: "PriceGuard", included: true, isSubItem: true, limitText: "Quando reajustar preço" },
