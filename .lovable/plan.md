@@ -1,51 +1,36 @@
 
-# Melhorias de UX: DRE Inteligente e Comparativo de Regimes
 
-## Problema 1 -- Abas da DRE clicaveis
+# Reordenacao dos Modulos no Sidebar
 
-**Arquivo:** `src/components/dre/DREWizard.tsx` (linhas 362-373)
+## O que precisa mudar
 
-Atualmente as abas (Suas Vendas, Custos, Despesas, Financeiro, Impostos, Produtos) sao apenas `div` sem interacao. A correcao:
+A ordem atual no `MENU_PROFESSIONAL_V2` (src/data/menuConfig.ts) e:
+1. ENTENDER
+2. RECUPERAR
+3. PLANEJAR
+4. PRECIFICAR
+5. COMANDAR
 
-- Adicionar `onClick={() => setCurrentStep(step.id)}` em cada aba
-- Adicionar `cursor-pointer` na classe do container da aba
-- Adicionar efeito `hover:bg-muted/50` para feedback visual
-- Manter o check verde nas abas ja completadas (ja existe)
-- Botoes Proximo/Voltar continuam funcionando normalmente
+A ordem solicitada e:
+1. ENTENDER
+2. PRECIFICAR (sobe da 4a para 2a posicao)
+3. RECUPERAR (desce da 2a para 3a posicao)
+4. PLANEJAR (desce da 3a para 4a posicao)
+5. COMANDAR (mantido)
 
-**Mudanca no codigo:** Apenas a `div` da aba (linha 366) precisa de `onClick` e classes CSS extras. Nenhuma logica adicional necessaria -- o `setCurrentStep` ja existe e funciona.
+## Alteracao
 
-## Problema 2 -- Validacao visivel no Comparativo de Regimes
+**Arquivo unico:** `src/data/menuConfig.ts`
 
-**Arquivo:** `src/components/simpronto/SimprontoWizard.tsx`
+Mover o bloco do modulo PRECIFICAR (linhas 244-254) para logo apos o modulo ENTENDER (apos linha 224), antes do modulo RECUPERAR.
 
-Atualmente o botao "Proximo" e desabilitado quando `faturamento_anual` esta zerado, mas nao ha mensagem explicativa. O usuario nao entende por que nao consegue avancar.
+Nenhuma alteracao de nome, rota, icone ou conteudo -- apenas reposicionamento do bloco.
 
-Correcoes:
+## O que NAO muda
 
-1. **Adicionar estado de validacao:** `const [showErrors, setShowErrors] = useState(false)`
+- Nomes dos modulos (ja estao corretos da alteracao anterior)
+- URLs/rotas
+- Conteudo dos submenus
+- MENU_STARTER e MENU_NAVIGATOR (nao possuem PRECIFICAR)
+- Landing page, Stripe, trial
 
-2. **Trocar o comportamento do botao "Proximo":** Em vez de `disabled={!isStep1Valid()}`, o botao fica sempre habilitado. Ao clicar:
-   - Se valido: avanca para step 2
-   - Se invalido: seta `setShowErrors(true)` e faz scroll para o primeiro campo com erro
-
-3. **Mostrar mensagens de erro:** Abaixo dos campos obrigatorios (Faturamento Anual, Folha de Pagamento), quando `showErrors` e `true` e o valor e 0 ou vazio:
-   - Texto vermelho: "Este campo e obrigatorio"
-   - Borda vermelha no input: `border-destructive`
-
-4. **Scroll automatico:** Usar `document.getElementById('faturamento_anual')?.scrollIntoView({ behavior: 'smooth' })` para o primeiro campo invalido
-
-5. **Limpar erros:** Quando o usuario digita em um campo com erro, a mensagem desaparece para aquele campo
-
-## Resumo de arquivos alterados
-
-| Arquivo | Alteracao |
-|---|---|
-| `src/components/dre/DREWizard.tsx` | Adicionar onClick + cursor-pointer + hover nas abas |
-| `src/components/simpronto/SimprontoWizard.tsx` | Adicionar validacao visual com mensagens de erro |
-
-## O que NAO sera alterado
-- Botoes da landing page
-- Configuracoes do Stripe
-- Logica de trial de 7 dias
-- Nenhum outro modulo
