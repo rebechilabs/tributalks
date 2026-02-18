@@ -12,7 +12,7 @@ import heroBg from "@/assets/hero-bg-cinematic.jpg";
    };
  
    return (
-    <section className="relative bg-[#0A0A0A]">
+    <section className="relative bg-[#1A1A1A]">
       <div className="container mx-auto px-4 md:px-8 pt-32 md:pt-40">
          <div className="max-w-4xl mx-auto text-center">
            {/* Main Headline */}
@@ -58,14 +58,23 @@ import heroBg from "@/assets/hero-bg-cinematic.jpg";
          </div>
        </div>
       
-      {/* Cinematic background image - directly after button */}
-      <div 
-        className="h-[50vh] md:h-[60vh] mt-10 bg-cover bg-no-repeat"
-        style={{ 
-          backgroundImage: `url(${heroBg})`, 
-          backgroundPosition: 'center bottom' 
-        }}
-      />
+       {/* Cinematic background image with blur edges */}
+       <div className="relative mt-10">
+         <div 
+           className="h-[50vh] md:h-[60vh] bg-cover bg-no-repeat"
+           style={{ 
+             backgroundImage: `url(${heroBg})`, 
+             backgroundPosition: 'center bottom' 
+           }}
+         />
+         {/* Top blur fade */}
+         <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-[#1A1A1A] to-transparent backdrop-blur-sm" style={{ maskImage: 'linear-gradient(to bottom, black 30%, transparent)' }} />
+         {/* Bottom blur fade */}
+         <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#1A1A1A] to-transparent backdrop-blur-sm" style={{ maskImage: 'linear-gradient(to top, black 30%, transparent)' }} />
+         {/* Side blur fades */}
+         <div className="absolute top-0 bottom-0 left-0 w-16 bg-gradient-to-r from-[#1A1A1A] to-transparent" />
+         <div className="absolute top-0 bottom-0 right-0 w-16 bg-gradient-to-l from-[#1A1A1A] to-transparent" />
+       </div>
      </section>
    );
  }
