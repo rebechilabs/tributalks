@@ -363,28 +363,6 @@ export function CreditRadar() {
             </TabsContent>
           </Tabs>
 
-          {/* CTA Section */}
-          <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
-            <CardContent className="py-6">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/20 rounded-full">
-                    <Sparkles className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold">Dúvidas sobre recuperação?</h3>
-                    <p className="text-sm text-muted-foreground">
-                      A Clara pode explicar cada crédito e o processo de recuperação.
-                    </p>
-                  </div>
-                </div>
-                <Button onClick={handleAskClara}>
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Perguntar à Clara
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         </>
       )}
 
