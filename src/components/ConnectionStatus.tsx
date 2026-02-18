@@ -1,38 +1,68 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { WifiOff, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function ConnectionStatus() {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isOnline, setIsOnline] = useState(true); // Assume online by default
   const [showBanner, setShowBanner] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
+  // Actually verify connectivity with a real request
+  const checkConnectivity = useCallback(async () => {
+    try {
+      const response = await fetch('/version.json?t=' + Date.now(), { 
+        method: 'HEAD',
+        cache: 'no-store' 
+      });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }, []);
+
   useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
-      // Hide banner after a short delay when coming back online
-      setTimeout(() => setShowBanner(false), 2000);
+    let mounted = true;
+
+    const handleOnline = async () => {
+      const reallyOnline = await checkConnectivity();
+      if (!mounted) return;
+      if (reallyOnline) {
+        setIsOnline(true);
+        setTimeout(() => setShowBanner(false), 2000);
+      }
     };
     
-    const handleOffline = () => {
-      setIsOnline(false);
-      setShowBanner(true);
-      setDismissed(false);
+    const handleOffline = async () => {
+      // Double-check with a real request before showing the banner
+      const reallyOnline = await checkConnectivity();
+      if (!mounted) return;
+      if (!reallyOnline) {
+        setIsOnline(false);
+        setShowBanner(true);
+        setDismissed(false);
+      }
     };
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
-    // Set initial state
+    // Initial check - only show banner if truly offline
     if (!navigator.onLine) {
-      setShowBanner(true);
+      checkConnectivity().then((online) => {
+        if (!mounted) return;
+        if (!online) {
+          setShowBanner(true);
+          setIsOnline(false);
+        }
+      });
     }
 
     return () => {
+      mounted = false;
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, []);
+  }, [checkConnectivity]);
 
   if (!showBanner || dismissed) return null;
 
