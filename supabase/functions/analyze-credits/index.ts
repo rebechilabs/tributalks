@@ -292,18 +292,29 @@ serve(async (req) => {
       .eq('user_id', userId)
       .maybeSingle()
 
-    // Fetch all PGDAS from last 12 months for RBT12 calculation
-    const twelveMonthsAgo = new Date()
-    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12)
+    // Fetch latest PGDAS record (no date filter) for reparticao data
+    const { data: latestPgdasRecord } = await supabaseAdmin
+      .from('pgdas_arquivos')
+      .select('aliquota_efetiva, dados_completos, periodo_apuracao, anexo_simples, receita_bruta')
+      .eq('user_id', userId)
+      .order('periodo_apuracao', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    // Fetch PGDAS from last 60 months for RBT12 calculation
+    const sixtyMonthsAgo = new Date()
+    sixtyMonthsAgo.setMonth(sixtyMonthsAgo.getMonth() - 60)
 
     const { data: pgdasRecords } = await supabaseAdmin
       .from('pgdas_arquivos')
       .select('aliquota_efetiva, dados_completos, periodo_apuracao, anexo_simples, receita_bruta')
       .eq('user_id', userId)
-      .gte('periodo_apuracao', twelveMonthsAgo.toISOString().split('T')[0])
+      .gte('periodo_apuracao', sixtyMonthsAgo.toISOString().split('T')[0])
       .order('periodo_apuracao', { ascending: false })
 
-    const latestPgdas = pgdasRecords?.[0] || null
+    // Use latestPgdasRecord for reparticao; pgdasRecords for RBT12
+    const latestPgdas = latestPgdasRecord || null
+    console.log(`[analyze-credits] PGDAS: latestRecord periodo=${latestPgdas?.periodo_apuracao || 'null'}, pgdasRecords count=${pgdasRecords?.length || 0}`)
 
     // [CORREÇÃO #9] Calculate RBT12 com proporcionalização para períodos incompletos
     let rbt12Calculated = 0
