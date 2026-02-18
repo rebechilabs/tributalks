@@ -32,6 +32,7 @@ const plans: PlanCard[] = [
     highlight: "1 CNPJ",
     claraInfo: "Clara AI: Assistente (30 msgs/dia)",
     features: [
+      "@ENTENDER",
       "DRE Inteligente",
       "Score Tributário 0-1000",
       "Calculadora CBS/IBS por NCM",
@@ -52,7 +53,9 @@ const plans: PlanCard[] = [
     claraInfo: "Clara AI: Copiloto (100 msgs/dia)",
     features: [
       "Tudo do Starter +",
+      "@RECUPERAR",
       "Radar de Créditos (XML, SPED)",
+      "@PLANEJAR",
       "Planejamento com 61+ oportunidades",
       "Calculadora NCM e NBS",
       "Analisador de Documentos IA",
@@ -72,10 +75,12 @@ const plans: PlanCard[] = [
     claraInfo: "Clara AI: Ilimitada",
     features: [
       "Tudo do Navigator +",
-      "NEXUS (Centro de Comando)",
+      "@PRECIFICAR",
       "Margem Ativa por NCM",
       "Split Payment 2026",
       "PriceGuard",
+      "@COMANDAR",
+      "NEXUS (Centro de Comando)",
       "OMC-AI (Fornecedores)",
       "Valuation (3 metodologias)",
       "Relatórios Executivos PDF",
@@ -193,12 +198,21 @@ export function NewPricingSection() {
 
                 {/* Features */}
                 <div className="flex-1 space-y-3 my-4">
-                  {plan.features.map((feature) => (
-                    <div key={feature} className="flex items-start gap-2.5">
-                      <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                      <span className="text-sm text-white/80">{feature}</span>
-                    </div>
-                  ))}
+                  {plan.features.map((feature) => {
+                    if (feature.startsWith("@")) {
+                      return (
+                        <p key={feature} className="text-xs font-bold text-primary uppercase tracking-wider mt-3 mb-1">
+                          {feature.slice(1)}
+                        </p>
+                      );
+                    }
+                    return (
+                      <div key={feature} className="flex items-start gap-2.5">
+                        <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                        <span className="text-sm text-white/80">{feature}</span>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* CTA */}
