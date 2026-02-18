@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { 
   BarChart3, Trophy, FileText, Plug, CheckCircle2, ArrowRight,
-  Sparkles, TrendingUp, AlertCircle, Target, Coins, Gift
+  Sparkles, TrendingUp, AlertCircle, Target, Coins, Gift, Scale, DollarSign
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -135,12 +135,24 @@ export function NoDRECard({ hasERP }: { hasERP: boolean }) {
           />
           <UpcomingStepCard 
             step={3}
+            icon={Scale}
+            title="Comparativo de Regimes"
+            description="Compare os regimes tributários e descubra qual é o mais vantajoso para sua empresa."
+          />
+          <UpcomingStepCard 
+            step={4}
+            icon={DollarSign}
+            title="Margem Ativa"
+            description="Precifique seus produtos e serviços com inteligência tributária embutida."
+          />
+          <UpcomingStepCard 
+            step={5}
             icon={Coins}
             title="Radar de Créditos"
             description="Identifica tributos pagos indevidamente nos últimos 5 anos que podem ser recuperados."
           />
           <UpcomingStepCard 
-            step={4}
+            step={6}
             icon={Gift}
             title="Oportunidades"
             description="Benefícios fiscais e incentivos aplicáveis ao perfil do seu negócio."
@@ -201,12 +213,24 @@ export function NoScoreCard({ dreData }: { dreData: NonNullable<HomeStateData['d
         <div className="grid gap-2">
           <UpcomingStepCard 
             step={3}
+            icon={Scale}
+            title="Comparativo de Regimes"
+            description="Compare os regimes tributários e descubra qual é o mais vantajoso para sua empresa."
+          />
+          <UpcomingStepCard 
+            step={4}
+            icon={DollarSign}
+            title="Margem Ativa"
+            description="Precifique seus produtos e serviços com inteligência tributária embutida."
+          />
+          <UpcomingStepCard 
+            step={5}
             icon={Coins}
             title="Radar de Créditos"
             description="Identifica tributos pagos indevidamente nos últimos 5 anos que podem ser recuperados."
           />
           <UpcomingStepCard 
-            step={4}
+            step={6}
             icon={Gift}
             title="Oportunidades"
             description="Benefícios fiscais e incentivos aplicáveis ao perfil do seu negócio."
