@@ -1,11 +1,11 @@
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { ModuleToolCard, ToolStatus } from "@/components/home/ModuleToolCard";
-import { Target, Wallet, Shield } from "lucide-react";
+import { Target, Wallet } from "lucide-react";
 
 const tools = [
   {
-    title: "Margem Ativa",
-    description: "Upload em lote por NCM para análise de margens e impostos.",
+    title: "Margem Ativa + PriceGuard",
+    description: "Análise de margens por NCM e cálculo de novos preços em lote.",
     href: "/dashboard/precificacao/margem",
     icon: Target,
     stepNumber: 1,
@@ -19,20 +19,10 @@ const tools = [
     stepNumber: 2,
     statusKey: 'split' as const,
   },
-  {
-    title: "PriceGuard",
-    description: "Calcule novos preços em lote e exporte planilha.",
-    href: "/dashboard/precificacao/priceguard",
-    icon: Shield,
-    stepNumber: 3,
-    statusKey: 'priceguard' as const,
-  },
 ];
 
 export default function PrecificacaoPage() {
-  const getToolStatus = (statusKey: string): ToolStatus => {
-    // For now, all tools are pending until we implement status tracking
-    if (statusKey === 'priceguard') return 'pending';
+  const getToolStatus = (_statusKey: string): ToolStatus => {
     return 'pending';
   };
 
@@ -46,7 +36,7 @@ export default function PrecificacaoPage() {
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2">
           {tools.map((tool) => (
             <ModuleToolCard
               key={tool.href}
