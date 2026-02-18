@@ -23,13 +23,13 @@ import {
 } from "./rtcConstants";
 import { useMunicipios } from "@/hooks/useMunicipios";
 
-// Detecta automaticamente: NCM (8 dígitos para produtos) ou NBS (9 dígitos para serviços)
+// Detecta automaticamente: NCM (8 dígitos para produtos) ou NBS (5-9 dígitos para serviços)
 const codigoSchema = z.string()
   .min(1, "Informe o código NCM ou NBS")
-  .transform(val => val.replace(/\D/g, "")) // Remove non-digits
+  .transform(val => val.replace(/\D/g, "")) // Remove non-digits (dots, dashes, etc.)
   .refine(
-    val => val.length === 8 || val.length === 9,
-    { message: "Código inválido: informe NCM (8 dígitos) ou NBS (9 dígitos)" }
+    val => [5, 6, 7, 8, 9].includes(val.length),
+    { message: "Código inválido: informe NCM (8 dígitos) ou NBS (5 a 9 dígitos, ex: 1.0501)" }
   );
 
 const itemSchema = z.object({
@@ -321,7 +321,7 @@ export function TaxCalculatorForm({ onSubmit, isLoading }: TaxCalculatorFormProp
                       </Button>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Produtos: NCM 8 dígitos (ex: 69101100) • Serviços: NBS 9 dígitos (ex: 123456789)
+                      Produtos: NCM 8 dígitos (ex: 69101100) • Serviços: NBS 5-9 dígitos (ex: 1.0501)
                     </p>
                     {errors.itens?.[index]?.ncm && (
                       <p className="text-xs text-destructive">
