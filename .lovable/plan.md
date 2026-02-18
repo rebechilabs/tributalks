@@ -1,52 +1,58 @@
 
-# Adicionar "Indique e Ganhe" no Sidebar e na Home
+# Correcao: Datas Duplicadas no Grafico de Evolucao do Score
 
-## Resumo
+## Problema
 
-Tornar o "Indique e Ganhe" acessivel diretamente pelo sidebar (em todos os planos) e como acao sugerida na Home do dashboard, sem depender do modulo Conexao.
+O eixo X do grafico usa formato "dd/MM", causando labels repetidos quando ha multiplas avaliacoes no mesmo dia (ex: "23/01, 23/01, 26/01, 26/01").
 
-## Mudancas
+## Solucao
 
-### 1. Sidebar - Adicionar item em `src/data/menuConfig.ts`
+Editar apenas `src/components/score/ScoreHistoryChart.tsx` com as seguintes mudancas:
 
-Adicionar "Indique e Ganhe" como item standalone (sem grupo) antes de "Configuracoes" em todos os 3 menus:
+### 1. Agrupar por dia e manter apenas a ultima avaliacao
 
-- **MENU_STARTER** (linha ~99-104): Adicionar item `{ label: 'Indique e Ganhe', href: '/indicar', icon: Gift, badge: 'Até 20%', badgeVariant: 'success', description: 'Ganhe desconto indicando' }` antes de Configuracoes
-- **MENU_NAVIGATOR** (linha ~184-191): Mesmo item antes de Configuracoes
-- **MENU_PROFESSIONAL_V2** (linha ~256-264): Mesmo item antes de Configuracoes/Integracoes
-
-O item ficara visivel em todos os planos, sem precisar expandir nenhum modulo. O icone Gift (ja importado) com badge verde "Ate 20%" cria destaque visual.
-
-### 2. Home - Adicionar CTA na `CompleteCard` em `src/components/home/HomeStateCards.tsx`
-
-Na secao "Acoes sugeridas" da CompleteCard (linha ~413-438), adicionar um terceiro link apos o Split Payment:
+Antes de formatar os dados para o grafico, agrupar as entradas por data (dia) e manter apenas a mais recente de cada dia. Isso elimina duplicatas na raiz.
 
 ```
-<Link to="/indicar" ...>
-  <Gift className="w-5 h-5 text-green-500" />
-  <div>
-    <p>Indique e ganhe ate 20% de desconto</p>
-    <p>Convide empresarios para a plataforma</p>
-  </div>
-  <ArrowRight />
-</Link>
+// Agrupar por dia, manter ultima avaliacao
+const latestPerDay = Map<string, entry> -> ultimo de cada "YYYY-MM-DD"
 ```
 
-Gift ja esta importado no arquivo.
+### 2. Formato adaptativo no eixo X
 
-### 3. Home - Adicionar CTA tambem nos estados intermediarios
+Calcular a diferenca em dias entre a primeira e ultima avaliacao:
 
-Na `NoDRECard` e `NoScoreCard`, nao adicionar (usuario ainda esta no onboarding). Na `NoCreditsCard` (linha ~298), adicionar um card simples abaixo do resumo com link para /indicar.
+- Menos de 7 dias: formato "dd/MM HH:mm"
+- 7 a 30 dias: formato "dd/MM"
+- Mais de 30 dias: formato "dd MMM" (ex: "23 Jan")
+
+### 3. Garantir labels unicos consecutivos
+
+Apos formatar, verificar se ha labels consecutivos iguais. Se houver, adicionar horario ao segundo para diferenciar.
 
 ## Secao tecnica
 
-### Arquivos editados
-- `src/data/menuConfig.ts` — Adicionar item Gift em MENU_STARTER, MENU_NAVIGATOR, MENU_PROFESSIONAL_V2
-- `src/components/home/HomeStateCards.tsx` — Adicionar link para /indicar nas acoes sugeridas da CompleteCard e NoCreditsCard
+### Arquivo editado
+- `src/components/score/ScoreHistoryChart.tsx`
+
+### Logica detalhada
+
+1. Apos o fetch dos dados (`history`), criar um `Map` agrupando por `format(date, 'yyyy-MM-dd')`. Para cada chave, manter apenas a entrada com `calculated_at` mais recente.
+
+2. Substituir `history` pelo array filtrado antes de gerar `chartData`.
+
+3. Calcular `daySpan = differenceInDays(lastDate, firstDate)` usando `date-fns` (ja importado).
+
+4. Escolher formato de data baseado no `daySpan`:
+   - `daySpan < 7` -> "dd/MM HH:mm"
+   - `daySpan <= 30` -> "dd/MM"
+   - `daySpan > 30` -> "dd MMM"
+
+5. Apos formatar, iterar pelo array e se `chartData[i].date === chartData[i-1].date`, adicionar horario ao label duplicado.
 
 ### O que NAO muda
-- Pagina /indicar (ja existe e funciona)
-- Modulo Conexao (continua tendo o card de Indique e Ganhe)
-- Botoes da landing page
-- Configuracoes do Stripe
-- Logica de trial de 7 dias
+- Query ao banco (continua buscando 12 entradas)
+- Tooltip (continua mostrando data completa)
+- Calculo de tendencia (continua usando os 2 ultimos do array original)
+- Logica de calculo do Score
+- Landing page, Stripe, trial
