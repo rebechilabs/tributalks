@@ -17,6 +17,7 @@ import {
 import { useCompany } from "@/contexts/CompanyContext";
 import { usePlanAccess, PLAN_LABELS } from "@/hooks/useFeatureAccess";
 import { AddCompanyModal } from "./AddCompanyModal";
+import { RegimeBadgeSelector } from "./RegimeBadgeSelector";
 import { formatCnpj } from "@/hooks/useCnpjLookup";
 import { cn } from "@/lib/utils";
 
@@ -120,6 +121,8 @@ export function CompanySelector() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {currentCompany && <RegimeBadgeSelector />}
 
         <TooltipProvider>
           <Tooltip>
