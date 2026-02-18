@@ -8,6 +8,7 @@ import { MarginExecutiveTab } from "@/components/margem-ativa/executive/MarginEx
 import { ResetCalculationButton } from "@/components/common/ResetCalculationButton";
 import { HelpButton } from "@/components/common/HelpButton";
 import { ShoppingCart, Tag, BarChart3 } from "lucide-react";
+import { MotivationalBanner } from "@/components/common/MotivationalBanner";
 
 export default function MargemAtiva() {
   const [activeTab, setActiveTab] = useState("omc");
@@ -32,6 +33,12 @@ export default function MargemAtiva() {
             <HelpButton toolSlug="margem-ativa" size="default" className="gap-2" />
           </div>
         </div>
+
+        <MotivationalBanner
+          id="margem"
+          icon="💰"
+          text="Descubra o impacto tributário real na sua margem de lucro e receba sugestões de precificação otimizada considerando a Reforma Tributária 2027."
+        />
 
         {/* Tabs da Suíte */}
         <Tabs value={activeTab} onValueChange={setActiveTab} key={resetKey}>

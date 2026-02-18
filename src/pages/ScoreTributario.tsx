@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { MotivationalBanner } from "@/components/common/MotivationalBanner";
 import { Building2, Scale, Shield, FileCheck, Clock, Settings, Info, DollarSign, Bell, CreditCard, Target, FileSearch, AlertTriangle, TrendingUp, Lightbulb } from "lucide-react";
 import { HelpButton } from "@/components/common/HelpButton";
 import { ResetCalculationButton } from "@/components/common/ResetCalculationButton";
@@ -259,6 +260,12 @@ export default function ScoreTributario() {
             <HelpButton toolSlug="score-tributario" size="default" className="gap-2" />
           </div>
         </div>
+
+        <MotivationalBanner
+          id="score"
+          icon="🏆"
+          text="Responda 11 perguntas e descubra sua nota fiscal de 0 a 1000. Compare com empresas do seu setor e receba recomendações personalizadas da Clara AI para melhorar seu score."
+        />
 
         {/* Clara AI Card */}
         <ClaraContextualCard />

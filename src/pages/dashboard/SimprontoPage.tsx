@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { MotivationalBanner } from "@/components/common/MotivationalBanner";
 import { useMutation } from "@tanstack/react-query";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { FeatureGate } from "@/components/FeatureGate";
@@ -99,6 +100,12 @@ export default function SimprontoPage() {
               </div>
             </div>
           </div>
+
+          <MotivationalBanner
+            id="comparativo"
+            icon="⚖️"
+            text="Informe seus dados e veja lado a lado qual regime tributário gera mais economia: Simples Nacional, Lucro Presumido, Lucro Real e as novas opções IBS/CBS 2027."
+          />
 
           {!result ? (
             <SimprontoWizard 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { MotivationalBanner } from "@/components/common/MotivationalBanner";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -318,6 +319,11 @@ export default function Oportunidades() {
     <DashboardLayout>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-8">
+        <MotivationalBanner
+          id="oportunidades"
+          icon="💡"
+          text="Com base no perfil da sua empresa, nossa IA cruzou mais de 200 cenários e encontrou oportunidades de economia tributária específicas para o seu negócio."
+        />
         {/* ============ HEADER COM IMPACTO TOTAL ============ */}
         <Card className="bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 border-primary/20">
           <CardContent className="p-6 md:p-8">

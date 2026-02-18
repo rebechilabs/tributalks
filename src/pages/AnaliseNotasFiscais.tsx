@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from "react";
+import { MotivationalBanner } from "@/components/common/MotivationalBanner";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -535,6 +536,12 @@ export default function AnaliseNotasFiscais() {
             Importe XMLs, identifique créditos recuperáveis e projete sua exposição tributária
           </p>
         </div>
+
+        <MotivationalBanner
+          id="radar"
+          icon="🔍"
+          text="Faça upload dos seus documentos fiscais e nossa IA identificará automaticamente créditos tributários não aproveitados, pagamentos em duplicidade e alíquotas incorretas."
+        />
 
         {/* Savings Summary Card */}
         <SavingsSummaryCard />
