@@ -74,7 +74,7 @@ export function MargemAtivaHeader() {
           Proteja sua margem na transição da Reforma Tributária
         </p>
         <div className="flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/10 p-3 mt-3">
-          <span className="shrink-0 text-lg" aria-hidden="true">⚠️</span>
+          <AlertTriangle className="shrink-0 w-5 h-5 text-warning mt-0.5" />
           <p className="text-sm text-muted-foreground">
             Para analisar seus fornecedores e calcular o impacto da Reforma Tributária na sua margem, precisamos das suas notas fiscais de compra em formato XML. É simples: importe os XMLs uma vez e tudo aparece automaticamente aqui. 🎯
           </p>
