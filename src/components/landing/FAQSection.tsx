@@ -11,32 +11,12 @@ import { CONFIG } from "@/config/site";
 
 const faqs = [
   {
-    question: "Para quem é o TribuTalks?",
-    answer: `TribuTalks é para empresas de R$ 1M a R$ 100M de faturamento anual que querem:
-• Identificar créditos tributários não aproveitados
-• Proteger margens na transição da Reforma Tributária
-• Tomar decisões fiscais informadas sem depender só do contador
-
-Ideal para CFOs, Controllers e empresários que querem ter inteligência tributária in-house.`,
-  },
-  {
     question: "Preciso substituir meu contador?",
     answer: `Não! TribuTalks complementa o trabalho do seu contador.
 
 Seu contador cuida de compliance (apuração, DCTF, obrigações). TribuTalks cuida de inteligência estratégica (créditos, margens, planejamento).
 
 Na prática, TribuTalks ajuda você a fazer perguntas melhores pro seu contador e validar se ele está aproveitando todas as oportunidades tributárias.`,
-  },
-  {
-    question: "Como funciona a integração com meu ERP?",
-    answer: `Conectamos via API nativa com Omie, Bling, Conta Azul, Tiny/Olist, Sankhya e TOTVS.
-
-A integração leva menos de 5 minutos:
-1. Autoriza acesso (OAuth)
-2. Sincronização automática de NF-e, produtos e DRE
-3. Dados atualizados diariamente
-
-Se seu ERP não está na lista, você pode fazer upload manual de XMLs.`,
   },
   {
     question: "Quanto tempo leva para ver resultados?",
@@ -76,21 +56,6 @@ Importante: TribuTalks é ferramenta de inteligência, não substitui parecer ju
 ✅ Pagamento Seguro (Powered by Stripe)
 
 Nunca compartilhamos seus dados com terceiros.`,
-  },
-  {
-    question: "Qual a diferença entre Clara AI Assistente vs Copiloto vs Ilimitada?",
-    answer: `• Assistente (Starter): 30 mensagens/dia
-  Responde perguntas básicas sobre ferramentas
-
-• Copiloto (Navigator): 100 mensagens/dia
-  Análise contextual + sugestões proativas
-
-• Ilimitada (Professional): Sem limite
-  Análise profunda + workflows automatizados + integração NEXUS`,
-  },
-  {
-    question: "Grupos econômicos ou faturamento acima de R$ 10M?",
-    answer: "enterprise",
   },
 ];
 
