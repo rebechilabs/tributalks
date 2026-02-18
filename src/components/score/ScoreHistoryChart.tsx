@@ -6,7 +6,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { TrendingUp, TrendingDown, Minus, History } from "lucide-react";
-import { format } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface ScoreHistoryEntry {
@@ -49,7 +49,22 @@ export function ScoreHistoryChart({ currentScore }: ScoreHistoryChartProps) {
     fetchHistory();
   }, [user]);
 
-  // Calculate trend
+  // Deduplicate: keep only latest entry per day
+  const deduplicatedHistory = (() => {
+    const dayMap = new Map<string, ScoreHistoryEntry>();
+    for (const entry of history) {
+      const dayKey = format(new Date(entry.calculated_at), 'yyyy-MM-dd');
+      const existing = dayMap.get(dayKey);
+      if (!existing || new Date(entry.calculated_at) > new Date(existing.calculated_at)) {
+        dayMap.set(dayKey, entry);
+      }
+    }
+    return Array.from(dayMap.values()).sort(
+      (a, b) => new Date(a.calculated_at).getTime() - new Date(b.calculated_at).getTime()
+    );
+  })();
+
+  // Calculate trend (uses original history for accuracy)
   const getTrend = () => {
     if (history.length < 2) return null;
     const lastScore = history[history.length - 1]?.score_total || 0;
@@ -64,13 +79,36 @@ export function ScoreHistoryChart({ currentScore }: ScoreHistoryChartProps) {
 
   const trend = getTrend();
 
+  // Adaptive date format based on time span
+  const getDateFormat = () => {
+    if (deduplicatedHistory.length < 2) return "dd/MM";
+    const first = new Date(deduplicatedHistory[0].calculated_at);
+    const last = new Date(deduplicatedHistory[deduplicatedHistory.length - 1].calculated_at);
+    const daySpan = differenceInDays(last, first);
+    if (daySpan < 7) return "dd/MM HH:mm";
+    if (daySpan > 30) return "dd MMM";
+    return "dd/MM";
+  };
+
+  const dateFormat = getDateFormat();
+
   // Format data for chart
-  const chartData = history.map((entry) => ({
-    date: format(new Date(entry.calculated_at), "dd/MM", { locale: ptBR }),
+  const chartData = deduplicatedHistory.map((entry) => ({
+    date: format(new Date(entry.calculated_at), dateFormat, { locale: ptBR }),
     fullDate: format(new Date(entry.calculated_at), "dd 'de' MMM 'de' yyyy", { locale: ptBR }),
     score: entry.score_total,
     grade: entry.score_grade,
   }));
+
+  // Ensure consecutive labels are unique
+  for (let i = 1; i < chartData.length; i++) {
+    if (chartData[i].date === chartData[i - 1].date) {
+      chartData[i].date = format(new Date(deduplicatedHistory[i].calculated_at), "dd/MM HH:mm", { locale: ptBR });
+      if (chartData[i - 1].date === chartData[i - 2]?.date || !chartData[i - 1].date.includes(':')) {
+        chartData[i - 1].date = format(new Date(deduplicatedHistory[i - 1].calculated_at), "dd/MM HH:mm", { locale: ptBR });
+      }
+    }
+  }
 
   // Get grade color
   const getGradeColor = (grade: string) => {
