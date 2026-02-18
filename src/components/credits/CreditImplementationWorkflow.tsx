@@ -10,8 +10,10 @@ import {
   MessageSquare,
   ExternalLink,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Phone
 } from 'lucide-react';
+import { EnterpriseModal } from '@/components/landing/EnterpriseModal';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -34,18 +36,17 @@ interface WorkflowStep {
 interface CreditImplementationWorkflowProps {
   totalRecoverable: number;
   creditsCount: number;
-  onAskClara?: () => void;
   onGenerateReport?: () => void;
 }
 
 export function CreditImplementationWorkflow({ 
   totalRecoverable, 
   creditsCount,
-  onAskClara,
   onGenerateReport 
 }: CreditImplementationWorkflowProps) {
   const { profile } = useAuth();
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
+  const [enterpriseModalOpen, setEnterpriseModalOpen] = useState(false);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -237,7 +238,7 @@ export function CreditImplementationWorkflow({
           );
         })}
 
-        {/* Ask Clara CTA */}
+        {/* Contact Team CTA */}
         <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
           <CardContent className="py-4">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -246,19 +247,21 @@ export function CreditImplementationWorkflow({
                   <MessageSquare className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium">Dúvidas sobre o processo?</p>
+                  <p className="font-medium">Dúvidas sobre recuperação?</p>
                   <p className="text-sm text-muted-foreground">
-                    A Clara pode explicar cada etapa em detalhes
+                    Nosso time está esperando seu contato
                   </p>
                 </div>
               </div>
-              <Button variant="outline" onClick={onAskClara}>
-                <Sparkles className="h-4 w-4 mr-2" />
-                Perguntar à Clara
+              <Button variant="outline" onClick={() => setEnterpriseModalOpen(true)}>
+                <Phone className="h-4 w-4 mr-2" />
+                Fale com o nosso time!
               </Button>
             </div>
           </CardContent>
         </Card>
+
+        <EnterpriseModal open={enterpriseModalOpen} onOpenChange={setEnterpriseModalOpen} />
 
 
       </CardContent>

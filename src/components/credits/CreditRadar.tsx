@@ -358,7 +358,6 @@ export function CreditRadar() {
               <CreditImplementationWorkflow
                 totalRecoverable={totalRecuperavel}
                 creditsCount={summaryData.totalCredits}
-                onAskClara={handleAskClara}
                 onGenerateReport={() => setShowPdfModal(true)}
               />
             </TabsContent>
