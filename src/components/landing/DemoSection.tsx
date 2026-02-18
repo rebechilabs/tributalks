@@ -21,9 +21,9 @@
            <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white mb-4">
              Veja a <span className="text-primary">Clara AI</span> em Ação
            </h2>
-           <p className="text-lg md:text-xl text-white/60 max-w-2xl mx-auto">
-             Do preenchimento do DRE ao diagnóstico completo em menos de 2 minutos.
-           </p>
+            <p className="text-lg md:text-xl text-white/60 max-w-2xl mx-auto">
+              Veja como 5 agentes especializados trabalham com seus dados em menos de 2 minutos.
+            </p>
          </motion.div>
  
          {/* Demo Preview */}
