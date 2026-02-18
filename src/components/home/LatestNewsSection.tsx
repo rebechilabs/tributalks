@@ -3,52 +3,56 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Newspaper, ArrowRight, ExternalLink } from "lucide-react";
+import { Newspaper, ArrowRight, Bell, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
-import { formatDistanceBrasilia, formatBrasilia } from "@/lib/dateUtils";
+import { formatBrasilia } from "@/lib/dateUtils";
+import { usePlanAccess } from "@/hooks/useFeatureAccess";
 
-const relevanciaConfig: Record<string, { label: string; className: string }> = {
-  ALTA: { label: "ALTA", className: "bg-destructive text-destructive-foreground" },
-  MEDIA: { label: "MÉDIA", className: "bg-yellow-500 text-white" },
-  BAIXA: { label: "BAIXA", className: "bg-muted text-muted-foreground" },
+const impactConfig: Record<string, { emoji: string; label: string; className: string }> = {
+  ALTA: { emoji: "🔴", label: "Alto impacto", className: "text-destructive" },
+  MEDIA: { emoji: "🟡", label: "Médio impacto", className: "text-yellow-500" },
+  BAIXA: { emoji: "🟢", label: "Baixo impacto", className: "text-green-500" },
 };
+
+const tagColors: Record<string, string> = {
+  "IBS/CBS": "bg-blue-500/15 text-blue-400 border-blue-500/30",
+  "IBS": "bg-blue-500/15 text-blue-400 border-blue-500/30",
+  "CBS": "bg-indigo-500/15 text-indigo-400 border-indigo-500/30",
+  "Split Payment": "bg-purple-500/15 text-purple-400 border-purple-500/30",
+  "Simples Nacional": "bg-green-500/15 text-green-400 border-green-500/30",
+  "Lucro Real": "bg-orange-500/15 text-orange-400 border-orange-500/30",
+  "Lucro Presumido": "bg-amber-500/15 text-amber-400 border-amber-500/30",
+  "ICMS": "bg-red-500/15 text-red-400 border-red-500/30",
+  "PIS/COFINS": "bg-teal-500/15 text-teal-400 border-teal-500/30",
+};
+
+const defaultTagColor = "bg-muted text-muted-foreground border-border";
 
 export function LatestNewsSection() {
   const { data: news, isLoading, error } = useLatestNews(5);
+  const { isProfessional } = usePlanAccess();
 
-  if (error) {
-    return null; // Silently fail - don't break the home page
-  }
-
-  const latestUpdateTime = news?.[0]?.data_publicacao 
-    ? formatBrasilia(news[0].data_publicacao, "dd/MM 'às' HH:mm")
-    : null;
+  if (error) return null;
 
   return (
-    <Card className="border-border/50">
+    <Card className="border-amber-500/30 bg-card">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Newspaper className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">Notícias do Dia</CardTitle>
-          </div>
-          {latestUpdateTime && (
-            <span className="text-xs text-muted-foreground">
-              Última atualização: {latestUpdateTime}
-            </span>
-          )}
+        <div className="flex items-center gap-2">
+          <Newspaper className="h-5 w-5 text-amber-500" />
+          <CardTitle className="text-lg">Últimas da Reforma Tributária</CardTitle>
         </div>
+        <p className="text-sm text-muted-foreground">
+          Acompanhe as mudanças que impactam seu negócio
+        </p>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-2">
         {isLoading ? (
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex gap-3 p-3 rounded-lg border border-border/50">
-                <Skeleton className="h-5 w-14 shrink-0" />
-                <div className="space-y-2 flex-1">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-3 w-3/4" />
-                </div>
+              <div key={i} className="p-3 rounded-lg border border-border/50">
+                <Skeleton className="h-3 w-20 mb-2" />
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-3 w-32" />
               </div>
             ))}
           </div>
@@ -56,49 +60,58 @@ export function LatestNewsSection() {
           <>
             <div className="space-y-2">
               {news.map((item) => {
-                const config = relevanciaConfig[item.relevancia] || relevanciaConfig.BAIXA;
+                const impact = impactConfig[item.relevancia] || impactConfig.BAIXA;
+                const tags = item.tributos_relacionados || [];
                 return (
                   <Link
                     key={item.id}
                     to="/noticias"
-                    className="flex gap-3 p-3 rounded-lg border border-border/50 hover:bg-accent/50 transition-colors group"
+                    className="block p-3 rounded-lg border border-border/50 hover:border-amber-500/40 hover:bg-accent/30 transition-all group"
                   >
-                    <Badge className={`${config.className} shrink-0 h-5`}>
-                      {config.label}
-                    </Badge>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium line-clamp-1 group-hover:text-primary transition-colors">
-                        {item.titulo_original}
-                      </h4>
-                      {item.resumo_executivo && (
-                        <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
-                          {item.resumo_executivo}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs text-muted-foreground">
-                          {formatDistanceBrasilia(item.data_publicacao)}
+                    <span className="text-xs text-muted-foreground">
+                      {formatBrasilia(item.data_publicacao, "dd MMM yyyy")}
+                    </span>
+                    <h4 className="text-sm font-medium line-clamp-1 mt-0.5 group-hover:text-primary transition-colors">
+                      {item.titulo_original}
+                    </h4>
+                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                      {tags.slice(0, 3).map((tag) => (
+                        <span
+                          key={tag}
+                          className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${tagColors[tag] || defaultTagColor}`}
+                        >
+                          {tag}
                         </span>
-                        {item.fonte && (
-                          <>
-                            <span className="text-muted-foreground">•</span>
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              {item.fonte}
-                              <ExternalLink className="h-3 w-3" />
-                            </span>
-                          </>
-                        )}
-                      </div>
+                      ))}
+                      <span className={`text-xs ${impact.className}`}>
+                        {impact.emoji} {impact.label}
+                      </span>
                     </div>
                   </Link>
                 );
               })}
             </div>
-            <div className="pt-2">
-              <Button variant="ghost" size="sm" asChild className="w-full">
-                <Link to="/noticias" className="flex items-center justify-center gap-2">
+
+            {/* Footer links */}
+            <div className="pt-3 space-y-2 border-t border-border/50">
+              <Button variant="ghost" size="sm" asChild className="w-full justify-between">
+                <Link to="/noticias">
                   Ver todas as notícias
                   <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button variant="ghost" size="sm" asChild className="w-full justify-between text-muted-foreground">
+                <Link to={isProfessional ? "/noticias" : "/#planos"}>
+                  <span className="flex items-center gap-1.5">
+                    <Bell className="h-3.5 w-3.5" />
+                    Configurar alertas por email
+                  </span>
+                  {!isProfessional && (
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 flex items-center gap-1">
+                      <Lock className="h-2.5 w-2.5" />
+                      Professional
+                    </Badge>
+                  )}
                 </Link>
               </Button>
             </div>
