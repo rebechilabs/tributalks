@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,6 +15,24 @@ import { PresenceTrackerWrapper } from "./components/PresenceTrackerWrapper";
 import { AppVersionChecker } from "./components/AppVersionChecker";
 import { GlobalShortcutsProvider } from "./components/GlobalShortcutsProvider";
 
+// Helper: retry dynamic imports to handle stale Vite HMR cache
+const lazyWithRetry = (importFn: () => Promise<any>, retries = 3): React.LazyExoticComponent<any> => {
+  return lazy(() => {
+    const attempt = (attemptsLeft: number): Promise<any> =>
+      importFn().catch((error: any) => {
+        if (attemptsLeft <= 1) {
+          // Last resort: force a full page reload to clear stale cache
+          window.location.reload();
+          return new Promise(() => {}); // never resolves — page is reloading
+        }
+        return new Promise((resolve) => setTimeout(resolve, 1000)).then(() =>
+          attempt(attemptsLeft - 1)
+        );
+      });
+    return attempt(retries);
+  });
+};
+
 // Páginas públicas (carregadas diretamente - são entry points)
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -24,82 +42,82 @@ import RedefinirSenha from "./pages/RedefinirSenha";
 import NotFound from "./pages/NotFound";
 
 // Páginas públicas com lazy loading
-const Termos = lazy(() => import("./pages/Termos"));
-const Privacidade = lazy(() => import("./pages/Privacidade"));
-const Contato = lazy(() => import("./pages/Contato"));
-const Connect = lazy(() => import("./pages/Connect"));
-const DocumentoComercial = lazy(() => import("./pages/DocumentoComercial"));
-const DocumentoOportunidades = lazy(() => import("./pages/DocumentoOportunidades"));
-const EstudosCaso = lazy(() => import("./pages/EstudosCaso"));
-const EstudoCasoDetalhe = lazy(() => import("./pages/EstudoCasoDetalhe"));
-const PagamentoConfirmacao = lazy(() => import("./pages/PagamentoConfirmacao"));
-const OAuthCallback = lazy(() => import("./pages/OAuthCallback"));
+const Termos = lazyWithRetry(() => import("./pages/Termos"));
+const Privacidade = lazyWithRetry(() => import("./pages/Privacidade"));
+const Contato = lazyWithRetry(() => import("./pages/Contato"));
+const Connect = lazyWithRetry(() => import("./pages/Connect"));
+const DocumentoComercial = lazyWithRetry(() => import("./pages/DocumentoComercial"));
+const DocumentoOportunidades = lazyWithRetry(() => import("./pages/DocumentoOportunidades"));
+const EstudosCaso = lazyWithRetry(() => import("./pages/EstudosCaso"));
+const EstudoCasoDetalhe = lazyWithRetry(() => import("./pages/EstudoCasoDetalhe"));
+const PagamentoConfirmacao = lazyWithRetry(() => import("./pages/PagamentoConfirmacao"));
+const OAuthCallback = lazyWithRetry(() => import("./pages/OAuthCallback"));
 
 // Páginas protegidas com lazy loading
-const Onboarding = lazy(() => import("./pages/Onboarding"));
-const OnboardingAI = lazy(() => import("./pages/OnboardingAI"));
-const Setup = lazy(() => import("./pages/Setup"));
-const WelcomeAI = lazy(() => import("./pages/WelcomeAI"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Upgrade = lazy(() => import("./pages/Upgrade"));
-const Perfil = lazy(() => import("./pages/Perfil"));
-const Historico = lazy(() => import("./pages/Historico"));
-const ClaraAI = lazy(() => import("./pages/ClaraAI"));
-const Comunidade = lazy(() => import("./pages/Comunidade"));
-const Configuracoes = lazy(() => import("./pages/Configuracoes"));
-const NoticiasReforma = lazy(() => import("./pages/NoticiasReforma"));
-const AdminNoticias = lazy(() => import("./pages/AdminNoticias"));
-const AnaliseNotasFiscais = lazy(() => import("./pages/AnaliseNotasFiscais"));
-const XMLResultados = lazy(() => import("./pages/XMLResultados"));
-const DRE = lazy(() => import("./pages/DRE"));
-const DREResultados = lazy(() => import("./pages/DREResultados"));
-const ScoreTributario = lazy(() => import("./pages/ScoreTributario"));
-const PerfilEmpresa = lazy(() => import("./pages/PerfilEmpresa"));
-const Oportunidades = lazy(() => import("./pages/Oportunidades"));
-const CbsIbsNcm = lazy(() => import("./pages/CbsIbsNcm"));
-const TimelineReforma = lazy(() => import("./pages/TimelineReforma"));
-const AnalisadorDocumentos = lazy(() => import("./pages/AnalisadorDocumentos"));
-const WorkflowsGuiados = lazy(() => import("./pages/WorkflowsGuiados"));
-const ChecklistReforma = lazy(() => import("./pages/ChecklistReforma"));
-const Integracoes = lazy(() => import("./pages/Integracoes"));
-const Consultorias = lazy(() => import("./pages/Consultorias"));
-const Indicar = lazy(() => import("./pages/Indicar"));
-const Ajuda = lazy(() => import("./pages/Ajuda"));
-const NewsletterPage = lazy(() => import("./pages/NewsletterPage"));
+const Onboarding = lazyWithRetry(() => import("./pages/Onboarding"));
+const OnboardingAI = lazyWithRetry(() => import("./pages/OnboardingAI"));
+const Setup = lazyWithRetry(() => import("./pages/Setup"));
+const WelcomeAI = lazyWithRetry(() => import("./pages/WelcomeAI"));
+const Dashboard = lazyWithRetry(() => import("./pages/Dashboard"));
+const Upgrade = lazyWithRetry(() => import("./pages/Upgrade"));
+const Perfil = lazyWithRetry(() => import("./pages/Perfil"));
+const Historico = lazyWithRetry(() => import("./pages/Historico"));
+const ClaraAI = lazyWithRetry(() => import("./pages/ClaraAI"));
+const Comunidade = lazyWithRetry(() => import("./pages/Comunidade"));
+const Configuracoes = lazyWithRetry(() => import("./pages/Configuracoes"));
+const NoticiasReforma = lazyWithRetry(() => import("./pages/NoticiasReforma"));
+const AdminNoticias = lazyWithRetry(() => import("./pages/AdminNoticias"));
+const AnaliseNotasFiscais = lazyWithRetry(() => import("./pages/AnaliseNotasFiscais"));
+const XMLResultados = lazyWithRetry(() => import("./pages/XMLResultados"));
+const DRE = lazyWithRetry(() => import("./pages/DRE"));
+const DREResultados = lazyWithRetry(() => import("./pages/DREResultados"));
+const ScoreTributario = lazyWithRetry(() => import("./pages/ScoreTributario"));
+const PerfilEmpresa = lazyWithRetry(() => import("./pages/PerfilEmpresa"));
+const Oportunidades = lazyWithRetry(() => import("./pages/Oportunidades"));
+const CbsIbsNcm = lazyWithRetry(() => import("./pages/CbsIbsNcm"));
+const TimelineReforma = lazyWithRetry(() => import("./pages/TimelineReforma"));
+const AnalisadorDocumentos = lazyWithRetry(() => import("./pages/AnalisadorDocumentos"));
+const WorkflowsGuiados = lazyWithRetry(() => import("./pages/WorkflowsGuiados"));
+const ChecklistReforma = lazyWithRetry(() => import("./pages/ChecklistReforma"));
+const Integracoes = lazyWithRetry(() => import("./pages/Integracoes"));
+const Consultorias = lazyWithRetry(() => import("./pages/Consultorias"));
+const Indicar = lazyWithRetry(() => import("./pages/Indicar"));
+const Ajuda = lazyWithRetry(() => import("./pages/Ajuda"));
+const NewsletterPage = lazyWithRetry(() => import("./pages/NewsletterPage"));
 
 // Calculadoras
-const SplitPayment = lazy(() => import("./pages/calculadora/SplitPayment"));
-const ComparativoRegimes = lazy(() => import("./pages/calculadora/ComparativoRegimes"));
-const CalculadoraRTC = lazy(() => import("./pages/calculadora/CalculadoraRTC"));
-const ComparativoRegimesPage = lazy(() => import("./pages/dashboard/ComparativoRegimesPage"));
-const CalculadoraNBS = lazy(() => import("./pages/calculadora/CalculadoraNBS"));
+const SplitPayment = lazyWithRetry(() => import("./pages/calculadora/SplitPayment"));
+const ComparativoRegimes = lazyWithRetry(() => import("./pages/calculadora/ComparativoRegimes"));
+const CalculadoraRTC = lazyWithRetry(() => import("./pages/calculadora/CalculadoraRTC"));
+const ComparativoRegimesPage = lazyWithRetry(() => import("./pages/dashboard/ComparativoRegimesPage"));
+const CalculadoraNBS = lazyWithRetry(() => import("./pages/calculadora/CalculadoraNBS"));
 
 // Painel Executivo
-const PainelExecutivo = lazy(() => import("./pages/PainelExecutivo"));
-const ValuationPage = lazy(() => import("./pages/ValuationPage"));
-const Nexus = lazy(() => import("./pages/Nexus"));
+const PainelExecutivo = lazyWithRetry(() => import("./pages/PainelExecutivo"));
+const ValuationPage = lazyWithRetry(() => import("./pages/ValuationPage"));
+const Nexus = lazyWithRetry(() => import("./pages/Nexus"));
 
 // Margem Ativa
-const MargemAtiva = lazy(() => import("./pages/dashboard/MargemAtiva"));
+const MargemAtiva = lazyWithRetry(() => import("./pages/dashboard/MargemAtiva"));
 
 // Module Pages
-const HomePage = lazy(() => import("./pages/dashboard/HomePage"));
-const EntenderPage = lazy(() => import("./pages/dashboard/EntenderPage"));
-const RecuperarPage = lazy(() => import("./pages/dashboard/RecuperarPage"));
-const PlanejarPage = lazy(() => import("./pages/dashboard/PlanejarPage"));
-const PrecificacaoPage = lazy(() => import("./pages/dashboard/PrecificacaoPage"));
-const ComandarPage = lazy(() => import("./pages/dashboard/ComandarPage"));
-const ConexaoPage = lazy(() => import("./pages/dashboard/ConexaoPage"));
+const HomePage = lazyWithRetry(() => import("./pages/dashboard/HomePage"));
+const EntenderPage = lazyWithRetry(() => import("./pages/dashboard/EntenderPage"));
+const RecuperarPage = lazyWithRetry(() => import("./pages/dashboard/RecuperarPage"));
+const PlanejarPage = lazyWithRetry(() => import("./pages/dashboard/PlanejarPage"));
+const PrecificacaoPage = lazyWithRetry(() => import("./pages/dashboard/PrecificacaoPage"));
+const ComandarPage = lazyWithRetry(() => import("./pages/dashboard/ComandarPage"));
+const ConexaoPage = lazyWithRetry(() => import("./pages/dashboard/ConexaoPage"));
 
 // Admin
-const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
-const AdminMonitoring = lazy(() => import("./pages/admin/AdminMonitoring"));
-const AdminPilulas = lazy(() => import("./pages/admin/AdminPilulas"));
-const AdminPrazos = lazy(() => import("./pages/admin/AdminPrazos"));
-const AdminUsuarios = lazy(() => import("./pages/admin/AdminUsuarios"));
-const AdminTrainingData = lazy(() => import("./pages/admin/AdminTrainingData"));
-const AdminRAGDashboard = lazy(() => import("./pages/admin/AdminRAGDashboard"));
-const AdminAIHealth = lazy(() => import("./pages/admin/AdminAIHealth"));
+const AdminDashboard = lazyWithRetry(() => import("./pages/admin/AdminDashboard"));
+const AdminMonitoring = lazyWithRetry(() => import("./pages/admin/AdminMonitoring"));
+const AdminPilulas = lazyWithRetry(() => import("./pages/admin/AdminPilulas"));
+const AdminPrazos = lazyWithRetry(() => import("./pages/admin/AdminPrazos"));
+const AdminUsuarios = lazyWithRetry(() => import("./pages/admin/AdminUsuarios"));
+const AdminTrainingData = lazyWithRetry(() => import("./pages/admin/AdminTrainingData"));
+const AdminRAGDashboard = lazyWithRetry(() => import("./pages/admin/AdminRAGDashboard"));
+const AdminAIHealth = lazyWithRetry(() => import("./pages/admin/AdminAIHealth"));
 
 const queryClient = new QueryClient();
 

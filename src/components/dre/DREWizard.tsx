@@ -192,15 +192,15 @@ export function DREWizard({ onComplete, initialData }: DREWizardProps) {
           <div className="space-y-6">
             <div><h3 className="text-lg font-semibold mb-2">Quanto sua empresa vendeu em {getPeriodLabel()}?</h3><p className="text-sm text-muted-foreground mb-6">Informe os valores totais de vendas de {getPeriodLabel()}</p></div>
             <div className="grid gap-4 md:grid-cols-2">
-              <VoiceCurrencyInput label="Vendas de produtos" field="vendas_produtos" value={getNumValue('vendas_produtos')} onChange={(v) => handleInputChange('vendas_produtos', v)} tooltip="Total de notas fiscais de produtos vendidos" placeholder="150.000" />
-              <VoiceCurrencyInput label="Vendas de serviços" field="vendas_servicos" value={getNumValue('vendas_servicos')} onChange={(v) => handleInputChange('vendas_servicos', v)} tooltip="Total de notas de serviço emitidas" placeholder="80.000" />
-              <VoiceCurrencyInput label="Outras receitas" field="outras_receitas" value={getNumValue('outras_receitas')} onChange={(v) => handleInputChange('outras_receitas', v)} tooltip="Aluguéis, comissões, rendimentos, etc" placeholder="5.000" />
+              <VoiceCurrencyInput label="Vendas de produtos" field="vendas_produtos" value={getNumValue('vendas_produtos')} onChange={(v) => handleInputChange('vendas_produtos', v)} tooltip="Total de notas fiscais de produtos vendidos" />
+              <VoiceCurrencyInput label="Vendas de serviços" field="vendas_servicos" value={getNumValue('vendas_servicos')} onChange={(v) => handleInputChange('vendas_servicos', v)} tooltip="Total de notas de serviço emitidas" />
+              <VoiceCurrencyInput label="Outras receitas" field="outras_receitas" value={getNumValue('outras_receitas')} onChange={(v) => handleInputChange('outras_receitas', v)} tooltip="Aluguéis, comissões, rendimentos, etc" />
             </div>
             <div className="border-t pt-4">
               <p className="text-sm text-muted-foreground mb-4">Deduções da receita</p>
               <div className="grid gap-4 md:grid-cols-2">
-                <VoiceCurrencyInput label="Devoluções" field="devolucoes" value={getNumValue('devolucoes')} onChange={(v) => handleInputChange('devolucoes', v)} tooltip="Vendas canceladas ou devolvidas" placeholder="3.000" />
-                <VoiceCurrencyInput label="Descontos concedidos" field="descontos" value={getNumValue('descontos')} onChange={(v) => handleInputChange('descontos', v)} tooltip="Descontos dados aos clientes" placeholder="2.000" />
+                <VoiceCurrencyInput label="Devoluções" field="devolucoes" value={getNumValue('devolucoes')} onChange={(v) => handleInputChange('devolucoes', v)} tooltip="Vendas canceladas ou devolvidas" />
+                <VoiceCurrencyInput label="Descontos concedidos" field="descontos" value={getNumValue('descontos')} onChange={(v) => handleInputChange('descontos', v)} tooltip="Descontos dados aos clientes" />
               </div>
             </div>
             <Card className="bg-muted/50"><CardContent className="pt-4">
