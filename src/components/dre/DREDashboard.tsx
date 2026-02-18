@@ -43,6 +43,8 @@ interface DREData {
   reforma_impacto_percentual: number;
   reforma_source?: 'estimativa' | 'api_oficial';
   reforma_calculated_at?: string;
+  input_vendas_produtos?: number;
+  input_vendas_servicos?: number;
 }
 
 interface Diagnostic {
@@ -460,8 +462,8 @@ export function DREDashboard({ dreId }: DREDashboardProps) {
                 </div>
               </div>
 
-              {/* CTA para Simulação Precisa */}
-              {dre.reforma_source !== 'api_oficial' && (
+              {/* CTA para Simulação Precisa - apenas para comércio (produtos) */}
+              {dre.reforma_source !== 'api_oficial' && (dre.input_vendas_produtos || 0) > 0 && (
                 <div className="p-4 bg-background/80 rounded-lg border border-dashed border-primary/30 space-y-3">
                   <div className="flex items-start gap-3">
                     <div className="p-2 bg-primary/10 rounded-full">
@@ -492,14 +494,16 @@ export function DREDashboard({ dreId }: DREDashboardProps) {
                 </p>
               )}
 
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => navigate('/calculadora/rtc')}
-              >
-                Ver Simulação Detalhada
-                <ChevronRight className="h-4 w-4 ml-2" />
-              </Button>
+              {(dre.input_vendas_produtos || 0) > 0 && (
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => navigate('/calculadora/rtc')}
+                >
+                  Ver Simulação Detalhada
+                  <ChevronRight className="h-4 w-4 ml-2" />
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
