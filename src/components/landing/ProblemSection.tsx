@@ -22,7 +22,7 @@
  export function ProblemSection() {
    return (
     <section className="bg-[#0A0A0A]">
-      <div className="container mx-auto px-4 md:px-8 pt-10 pb-20 md:pb-32">
+      <div className="container mx-auto px-4 md:px-8 pt-10 pb-16 md:pb-20">
          {/* Section Header */}
          <motion.div
            initial={{ opacity: 0, y: 20 }}
