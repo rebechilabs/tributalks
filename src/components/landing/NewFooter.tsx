@@ -78,8 +78,8 @@ import { ArrowRight, Linkedin, Instagram, Youtube, Scale, Shield, Cloud } from "
            </div>
  
            {/* Powered by & Social */}
-           <div className="border-t border-white/10 pt-8">
-             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="border-t border-white/10 pt-8">
+              <div className="flex flex-col items-center gap-6 md:flex-row md:justify-between">
                {/* Powered by Rebechi & Silva */}
                <div className="flex items-center gap-3">
                  <Scale className="w-5 h-5 text-white/40" />

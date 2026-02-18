@@ -158,7 +158,7 @@ export function NewPricingSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className={`relative flex flex-col bg-[#222222] rounded-2xl p-6 md:p-8 border-2 ${
+                className={`relative flex flex-col bg-[#222222] rounded-2xl p-5 md:p-8 border-2 ${
                   plan.recommended
                     ? "border-primary shadow-lg shadow-primary/20"
                     : "border-white/10"
