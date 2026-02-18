@@ -2835,6 +2835,7 @@ export type Database = {
           updated_at: string | null
           user_id: string
           variacao_preco_percent: number | null
+          volume_mensal: number | null
         }
         Insert: {
           aliquota_cbs?: number | null
@@ -2874,6 +2875,7 @@ export type Database = {
           updated_at?: string | null
           user_id: string
           variacao_preco_percent?: number | null
+          volume_mensal?: number | null
         }
         Update: {
           aliquota_cbs?: number | null
@@ -2913,6 +2915,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           variacao_preco_percent?: number | null
+          volume_mensal?: number | null
         }
         Relationships: []
       }

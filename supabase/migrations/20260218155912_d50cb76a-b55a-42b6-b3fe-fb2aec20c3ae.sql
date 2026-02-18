@@ -1,0 +1,1 @@
+ALTER TABLE public.price_simulations ADD COLUMN IF NOT EXISTS volume_mensal integer DEFAULT 1;
