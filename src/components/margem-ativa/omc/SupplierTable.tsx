@@ -2,6 +2,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 interface Supplier {
   id: string;
@@ -24,6 +25,7 @@ interface SupplierTableProps {
 }
 
 export function SupplierTable({ suppliers, loading, onSelectSupplier, selectedId }: SupplierTableProps) {
+  const navigate = useNavigate();
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -89,9 +91,53 @@ export function SupplierTable({ suppliers, loading, onSelectSupplier, selectedId
 
   if (suppliers.length === 0) {
     return (
-      <div className="text-center py-12 text-muted-foreground">
-        <p>Nenhum fornecedor encontrado.</p>
-        <p className="text-sm mt-2">Importe XMLs de compra para identificar fornecedores automaticamente.</p>
+      <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
+        <div className="text-6xl mb-6">🧾</div>
+        <h3 className="text-xl font-semibold text-foreground mb-3">
+          Vamos ativar sua Margem Ativa!
+        </h3>
+        <p className="text-sm text-muted-foreground mb-2 max-w-lg">
+          Para analisar seus fornecedores e calcular o impacto da Reforma Tributária na sua margem, 
+          precisamos das suas <strong className="text-foreground">notas fiscais de compra em formato XML</strong>.
+        </p>
+        <p className="text-sm text-muted-foreground mb-8 max-w-lg">
+          É simples: importe os XMLs uma vez e tudo aparece automaticamente aqui. 🎯
+        </p>
+
+        <label
+          htmlFor="xml-upload-margem"
+          className="cursor-pointer group flex flex-col items-center justify-center w-full max-w-md py-10 px-6 border-2 border-dashed border-yellow-500/40 rounded-2xl hover:border-yellow-400 hover:bg-yellow-500/5 transition-all duration-200"
+        >
+          <span className="text-3xl mb-3 group-hover:scale-110 transition-transform">⬆️</span>
+          <span className="text-base font-semibold text-yellow-400 mb-1">
+            Clique aqui para importar seus XMLs
+          </span>
+          <span className="text-xs text-muted-foreground">
+            ou arraste os arquivos direto aqui
+          </span>
+          <span className="text-xs text-muted-foreground/60 mt-3">
+            Aceita arquivos .xml de NF-e de compra
+          </span>
+          <input
+            id="xml-upload-margem"
+            type="file"
+            accept=".xml"
+            multiple
+            className="hidden"
+            onChange={(e) => {
+              if (e.target.files && e.target.files.length > 0) {
+                navigate('/dashboard/importar-xml');
+              }
+            }}
+          />
+        </label>
+
+        <div className="flex items-start gap-2 mt-6 max-w-md bg-muted/50 rounded-xl px-4 py-3 text-left">
+          <span className="text-lg mt-0.5">💡</span>
+          <p className="text-xs text-muted-foreground">
+            <strong className="text-foreground/80">Dica:</strong> Quanto mais notas você importar, mais precisa fica a análise de fornecedores e o cálculo do impacto na sua margem.
+          </p>
+        </div>
       </div>
     );
   }

@@ -2066,7 +2066,8 @@ const buildSystemPrompt = (
   userPlan: string,
   userName: string | null = null,
   isSimple: boolean = false,
-  userContext: UserPlatformContext | null = null
+  userContext: UserPlatformContext | null = null,
+  toolSlug: string | null = null
 ): string => {
   const nameContext = userName 
     ? `O nome do usuário é ${userName}. Use-o naturalmente na primeira resposta (ex: "Oi ${userName}!"). Nas respostas seguintes, use o nome dele pelo menos uma vez de forma natural.`
@@ -2140,6 +2141,40 @@ Passo a passo desta ferramenta:
 ${toolContext.stepByStep.map((step, i) => `${i + 1}. ${step}`).join("\n")}
 
 Ao se apresentar pela primeira vez, mencione brevemente o que a ferramenta faz e ofereça guiar o usuário pelo processo.`;
+  }
+
+  // Estado vazio da Margem Ativa — instrução especial para a Clara
+  const isMargemAtivaEmpty = toolSlug === 'margem-ativa' && userContext?.progresso?.xmlsProcessados === 0;
+  if (isMargemAtivaEmpty) {
+    prompt += `\n\n${'='.repeat(50)}
+⚠️ ESTADO VAZIO — INSTRUÇÃO CRÍTICA
+${'='.repeat(50)}
+O usuário está na Margem Ativa sem XMLs importados. A tela está zerada.
+
+RESPONDA DE FORMA ACOLHEDORA E DIRETA:
+1. Comece reconhecendo que a ferramenta está pronta mas precisa de dados
+2. Explique de forma simples que os XMLs são as notas fiscais de compra
+3. Dê o caminho exato em no máximo 3 passos
+4. Termine com encorajamento e ofereça ajuda
+
+EXEMPLO DE TOM CERTO:
+"Alexandre, a Margem Ativa está pronta — só falta um ingrediente: suas notas fiscais de compra em XML. 📂
+
+Com elas, consigo identificar quais fornecedores estão drenando sua margem e simular o impacto da Reforma no seu preço.
+
+Para começar:
+1. Vá em Recuperar > Importar XMLs
+2. Suba os arquivos .xml das suas notas de compra
+3. Volte aqui — os dados aparecem automaticamente ✅
+
+Você já tem os XMLs em mãos? Posso te ajudar a localizá-los no seu sistema."
+
+NÃO FAÇA:
+❌ Explicar funcionalidades ou impactos da Reforma
+❌ Citar números de margem que estão zerados
+❌ Respostas longas com muitos conceitos
+❌ Tom técnico ou burocrático
+`;
   }
   
   return prompt;
@@ -2416,7 +2451,7 @@ serve(async (req) => {
       : '';
 
     // Combina tudo no prompt: base + conhecimento + RAG + contexto de agente + histórico + tela
-    const systemPrompt = buildSystemPrompt(toolContext, userPlan, userName, isSimple, userContext) 
+    const systemPrompt = buildSystemPrompt(toolContext, userPlan, userName, isSimple, userContext, toolSlug) 
       + knowledgePrompt 
       + semanticPrompt 
       + agentPrompt
