@@ -99,7 +99,7 @@ export const MENU_STARTER: MenuElement[] = [
   {
     title: '',
     items: [
-      { label: 'Conexão & Negócios', href: '/dashboard/conexao', icon: Handshake, description: 'Comunidade e networking' },
+      { label: 'Conexão & Comunicação', href: '/dashboard/conexao', icon: Handshake, description: 'Comunidade e networking' },
       { label: 'Integrações', href: '/dashboard/integracoes', icon: Plug },
       { label: 'Configurações', href: '/configuracoes', icon: Settings },
     ]
@@ -188,7 +188,7 @@ export const MENU_NAVIGATOR: MenuElement[] = [
   {
     title: '',
     items: [
-      { label: 'Conexão & Negócios', href: '/dashboard/conexao', icon: Handshake, description: 'Comunidade e networking' },
+      { label: 'Conexão & Comunicação', href: '/dashboard/conexao', icon: Handshake, description: 'Comunidade e networking' },
       { label: 'Integrações', href: '/dashboard/integracoes', icon: Plug },
       { label: 'Configurações', href: '/configuracoes', icon: Settings },
     ]
@@ -272,7 +272,7 @@ export const MENU_PROFESSIONAL_V2: MenuElement[] = [
   {
     title: '',
     items: [
-      { label: 'Conexão & Negócios', href: '/dashboard/conexao', icon: Handshake, description: 'Comunidade e networking' },
+      { label: 'Conexão & Comunicação', href: '/dashboard/conexao', icon: Handshake, description: 'Comunidade e networking' },
       { label: 'Integrações', href: '/dashboard/integracoes', icon: Plug },
       { label: 'Configurações', href: '/configuracoes', icon: Settings },
     ]
