@@ -21,7 +21,7 @@
  
  export function ProblemSection() {
    return (
-    <section className="bg-[#1A1A1A]">
+    <section className="bg-[#111111]">
       <div className="container mx-auto px-4 md:px-8 pt-10 pb-16 md:pb-20">
          {/* Section Header */}
          <motion.div
