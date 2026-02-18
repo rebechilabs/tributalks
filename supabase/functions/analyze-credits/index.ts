@@ -440,13 +440,13 @@ serve(async (req) => {
       const ncmsEncontrados: Set<string> = new Set()
 
       for (const xml of parsed_xmls as ParsedXml[]) {
-        const items = xml.itens || []
+        const items = xml.itens || xml.items || xml.produtos || []
         for (const item of items) {
           const cfop = item.cfop || ''
           const ncm = item.ncm || ''
-          const cstPis = item.cst_pis || ''
-          const csosn = item.csosn || item.cst_icms || ''
-          const valorItem = item.valor_item || 0
+          const cstPis = item.cst_pis || item.cstPis || ''
+          const csosn = item.csosn || item.cst_icms || item.cstIcms || ''
+          const valorItem = item.valor_item || item.valorTotal || item.valor_total || 0
 
           // Only analyze exit operations for Simples segregation
           if (!isExitOperation(cfop)) continue
