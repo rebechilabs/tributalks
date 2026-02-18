@@ -45,6 +45,16 @@ export function MarginExecutiveTab() {
         </div>
       </div>
 
+      {/* Empty state */}
+      {!data?.temDados && !loading && (
+        <div className="text-center py-12 text-muted-foreground">
+          <p className="text-base font-medium">Nenhum dado analisado ainda.</p>
+          <p className="text-sm mt-2">
+            Importe XMLs de compra ou simule preços de produtos para visualizar o impacto no seu EBITDA.
+          </p>
+        </div>
+      )}
+
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* OMC-AI Summary */}

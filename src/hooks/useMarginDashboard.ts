@@ -21,6 +21,7 @@ interface MarginDashboardData {
   impactoEbitdaAnualMin: number;
   impactoEbitdaAnualMax: number;
   scoreProntidao: number;
+  temDados: boolean;
 }
 
 export function useMarginDashboard() {
@@ -75,22 +76,31 @@ export function useMarginDashboard() {
       const gapCompetitivoMedio = simList.length > 0
         ? simList.reduce((sum, s) => sum + Math.abs(s.gap_competitivo_percent || 0), 0) / simList.length
         : 0;
-      const skusEmRisco = simList.filter(s => (s.gap_competitivo_percent || 0) > 5).length;
+      // Gap competitivo acima deste % indica risco de perda de clientes/volume
+      // Referência: estudos de elasticidade de preço em mercado B2B brasileiro
+      const THRESHOLD_GAP_COMPETITIVO = 5;
+
+      const skusEmRisco = simList.filter(s => 
+        (s.gap_competitivo_percent || 0) > THRESHOLD_GAP_COMPETITIVO
+      ).length;
       
-      // Risco de perda: estimativa baseada no gap competitivo
+      // Risco de perda: estimativa baseada no gap competitivo × volume
       const riscoPerdaMargem = simList
-        .filter(s => (s.gap_competitivo_percent || 0) > 5)
+        .filter(s => (s.gap_competitivo_percent || 0) > THRESHOLD_GAP_COMPETITIVO)
         .reduce((sum, s) => {
           const precoAtual = s.preco_atual || 0;
+          const volumeMensal = s.volume_mensal || 1; // unidades/mês
           const gap = (s.gap_competitivo_percent || 0) / 100;
-          return sum + (precoAtual * gap * 12); // Anualizado
+          return sum + (precoAtual * volumeMensal * gap * 12); // Anualizado com volume
         }, 0);
 
       // Calculate consolidated impact
-      // Pessimista: gap de crédito atual + risco de perda de vendas
-      const impactoMin = -(gapTotal + riscoPerdaMargem);
-      // Otimista: economia potencial com ações (70% de capture rate)
-      const impactoMax = economiaPotencial * 0.7;
+      // Pessimista: gap de crédito atual + risco de perda de vendas (abs garante sinal correto)
+      const impactoMin = -(Math.abs(gapTotal) + Math.abs(riscoPerdaMargem));
+      // Taxa de captura: estimativa conservadora de que 70% da economia potencial
+      // identificada é efetivamente realizada após renegociações e troca de fornecedores
+      const TAXA_CAPTURA_ECONOMIA = 0.7;
+      const impactoMax = economiaPotencial * TAXA_CAPTURA_ECONOMIA;
 
       // Score de prontidão
       const hasSuppliers = supplierList.length > 0;
@@ -117,7 +127,8 @@ export function useMarginDashboard() {
         skusEmRisco,
         impactoEbitdaAnualMin: impactoMin,
         impactoEbitdaAnualMax: impactoMax,
-        scoreProntidao: Math.min(score, 100)
+        scoreProntidao: Math.min(score, 100),
+        temDados: supplierList.length > 0 || simList.length > 0,
       });
 
     } catch (error) {
