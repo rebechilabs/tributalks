@@ -1,0 +1,1 @@
+ALTER TABLE public.suppliers ADD COLUMN IF NOT EXISTS preco_indiferenca numeric DEFAULT 0;

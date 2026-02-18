@@ -3740,6 +3740,7 @@ export type Database = {
           id: string
           municipio: string | null
           ncms_frequentes: string[] | null
+          preco_indiferenca: number | null
           qtd_notas_12m: number | null
           razao_social: string | null
           regime_confianca: string | null
@@ -3759,6 +3760,7 @@ export type Database = {
           id?: string
           municipio?: string | null
           ncms_frequentes?: string[] | null
+          preco_indiferenca?: number | null
           qtd_notas_12m?: number | null
           razao_social?: string | null
           regime_confianca?: string | null
@@ -3778,6 +3780,7 @@ export type Database = {
           id?: string
           municipio?: string | null
           ncms_frequentes?: string[] | null
+          preco_indiferenca?: number | null
           qtd_notas_12m?: number | null
           razao_social?: string | null
           regime_confianca?: string | null
