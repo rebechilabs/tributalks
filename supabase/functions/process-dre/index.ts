@@ -221,6 +221,28 @@ serve(async (req) => {
       savedDre = data
     }
 
+    // Sync key financial data to company_profile for cross-tool sharing
+    try {
+      await supabaseAdmin
+        .from('company_profile')
+        .update({
+          faturamento_anual: dre.receita_bruta * 12,
+          faturamento_mensal_medio: dre.receita_bruta,
+          folha_mensal: (inputs.salarios_encargos || 0) + (inputs.prolabore || 0),
+          regime_tributario: inputs.regime_tributario || null,
+          receita_liquida_mensal: dre.receita_liquida,
+          margem_bruta_percentual: dre.margem_bruta,
+          compras_insumos_mensal: (inputs.custo_mercadorias || 0) + (inputs.custo_materiais || 0),
+          prolabore_mensal: inputs.prolabore || 0,
+          dados_financeiros_origem: 'dre',
+          dados_financeiros_atualizados_em: new Date().toISOString(),
+        })
+        .eq('user_id', userId)
+        .eq('is_active', true)
+    } catch (syncError) {
+      console.error('Non-critical: failed to sync DRE data to company_profile', syncError)
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
