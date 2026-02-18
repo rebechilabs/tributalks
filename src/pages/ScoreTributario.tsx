@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { MotivationalBanner } from "@/components/common/MotivationalBanner";
-import { Building2, Scale, Shield, FileCheck, Clock, Settings, Info, DollarSign, Bell, CreditCard, Target, FileSearch, AlertTriangle, TrendingUp, Lightbulb } from "lucide-react";
+import { Building2, Scale, Shield, FileCheck, Clock, Settings, Info, DollarSign, Bell, CreditCard, Target, FileSearch, AlertTriangle, TrendingUp, Lightbulb, ChevronRight } from "lucide-react";
 import { HelpButton } from "@/components/common/HelpButton";
 import { ResetCalculationButton } from "@/components/common/ResetCalculationButton";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
@@ -70,6 +71,7 @@ interface ScoreAction {
 }
 
 export default function ScoreTributario() {
+  const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const { isNavigator } = usePlanAccess();
@@ -657,11 +659,37 @@ export default function ScoreTributario() {
 
         {/* Seção de Resultados - Botões de ação */}
         {scoreData && scoreData.score_total > 0 && (
-          <ScoreResults
-            onRecalculate={calculateScore}
-            onDownloadPdf={handleDownloadPdf}
-            isLoading={calculating}
-          />
+          <>
+            <ScoreResults
+              onRecalculate={calculateScore}
+              onDownloadPdf={handleDownloadPdf}
+              isLoading={calculating}
+            />
+
+            {/* CTA Comparativo de Regimes */}
+            <Card className="border-primary/30 bg-primary/5">
+              <CardContent className="p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div className="p-3 bg-primary/10 rounded-full">
+                    <Scale className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-base">Próximo passo: Comparativo de Regimes Tributários</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Descubra se o seu regime atual é o mais vantajoso. Compare Simples Nacional, Lucro Presumido e Lucro Real com projeções para 2027.
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={() => navigate('/dashboard/entender/comparativo')}
+                    className="shrink-0"
+                  >
+                    Comparar Regimes
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </>
         )}
 
         {/* PDF Report Modal */}
