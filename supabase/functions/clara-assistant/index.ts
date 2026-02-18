@@ -2204,7 +2204,7 @@ serve(async (req) => {
     const userName = userContext.userName;
     const hasUserData = userContext.progresso.xmlsProcessados > 0 || userContext.financeiro !== null;
 
-    const { messages, toolSlug, isGreeting, getStarters, sessionId, conversationHistory } = await req.json();
+    const { messages, toolSlug, isGreeting, getStarters, sessionId, conversationHistory, navigationContext, screenContext } = await req.json();
 
     // Return conversation starters if requested
     if (getStarters) {
@@ -2409,12 +2409,19 @@ serve(async (req) => {
       ? formatConversationHistoryForPrompt(conversationHistory as ConversationHistoryContext)
       : '';
     
-    // Combina tudo no prompt: base + conhecimento + RAG + contexto de agente + histórico
+    // Formata contexto de navegação (tela atual do usuário)
+    const screenInfo = navigationContext?.screen || navigationContext?.screenLabel || screenContext || null;
+    const screenContextPrompt = screenInfo 
+      ? `\n${'='.repeat(50)}\n📍 TELA ATUAL DO USUÁRIO\n${'='.repeat(50)}\nO usuário está na página: ${screenInfo}${navigationContext?.screenLabel ? ` (${navigationContext.screenLabel})` : ''}\n${navigationContext?.lastAction ? `Última ação: ${navigationContext.lastAction}` : ''}\n${navigationContext?.toolsUsed?.length > 0 ? `Ferramentas usadas nesta sessão: ${navigationContext.toolsUsed.join(', ')}` : ''}\nUse esta informação para contextualizar suas respostas. Se o usuário perguntar onde está ou em que página está, responda com base nesta informação.\n`
+      : '';
+
+    // Combina tudo no prompt: base + conhecimento + RAG + contexto de agente + histórico + tela
     const systemPrompt = buildSystemPrompt(toolContext, userPlan, userName, isSimple, userContext) 
       + knowledgePrompt 
       + semanticPrompt 
       + agentPrompt
-      + conversationHistoryPrompt;
+      + conversationHistoryPrompt
+      + screenContextPrompt;
 
     // ============================================
     // ANÁLISE LINHA A LINHA - Responde pedidos de explicação
