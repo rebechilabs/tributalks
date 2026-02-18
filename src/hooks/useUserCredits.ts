@@ -49,7 +49,6 @@ export function getCreditPackages(): CreditPackage[] {
 
 // Mapeamento de planos legados
 const LEGACY_PLAN_MAP: Record<string, UserPlan> = {
-  'FREE': 'FREE',
   'BASICO': 'STARTER',
   'PROFISSIONAL': 'PROFESSIONAL',
   'PREMIUM': 'ENTERPRISE',
@@ -67,8 +66,8 @@ export function useUserCredits() {
   const [error, setError] = useState<string | null>(null);
 
   // Normaliza o plano
-  const rawPlan = (profile?.plano as string) || 'FREE';
-  const userPlan: UserPlan = LEGACY_PLAN_MAP[rawPlan] || 'FREE';
+  const rawPlan = (profile?.plano as string) || 'STARTER';
+  const userPlan: UserPlan = LEGACY_PLAN_MAP[rawPlan] || 'STARTER';
   
   const isStarter = userPlan === 'STARTER';
   const isNavigator = userPlan === 'NAVIGATOR';
@@ -186,8 +185,7 @@ export function useUserCredits() {
       return true;
     }
     
-    // FREE não tem acesso à Clara
-    if (userPlan === 'FREE') return false;
+    // Todos os planos pagos têm acesso à Clara
     
     // STARTER e NAVIGATOR: verificar limite diário + créditos extras
     const currentDailyLimit = typeof dailyLimit === 'number' ? dailyLimit : 0;
@@ -270,7 +268,6 @@ export function useUserCredits() {
   // Verifica se pode enviar mensagem (para UI)
   const canSendMessage = (): boolean => {
     if (isProfessionalOrHigher) return true;
-    if (userPlan === 'FREE') return false;
     
     const currentDailyLimit = typeof dailyLimit === 'number' ? dailyLimit : 0;
     

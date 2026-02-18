@@ -33,7 +33,7 @@ import {
 
 // Limits per plan
 const CNPJ_LIMITS: Record<string, number> = {
-  'FREE': 1,
+  'STARTER': 1,
   'NAVIGATOR': 2,
   'PROFESSIONAL': 5,
   'ENTERPRISE': 999,
@@ -73,11 +73,11 @@ export function CnpjGroupManager({
   const [showAddForm, setShowAddForm] = useState(false);
   const [pendingCnpjData, setPendingCnpjData] = useState<CnpjData | null>(null);
 
-  const plan = userPlan?.toUpperCase() || 'FREE';
+  const plan = userPlan?.toUpperCase() || 'STARTER';
   const limit = CNPJ_LIMITS[plan] || 1;
   const allCnpjs = [cnpjPrincipal, ...cnpjsGrupo].filter(Boolean) as string[];
   const canAddMore = allCnpjs.length < limit;
-  const isPlanLimited = plan === 'FREE' || plan === 'NAVIGATOR';
+  const isPlanLimited = plan === 'STARTER' || plan === 'NAVIGATOR';
 
   // Format CNPJ input
   const handleCnpjInput = (value: string) => {

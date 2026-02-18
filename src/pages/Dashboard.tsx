@@ -164,24 +164,24 @@ const toolGroups: ToolGroup[] = [
 
 // Mapeamento de planos legados para novos
 const LEGACY_PLAN_MAP: Record<string, string> = {
-  'FREE': 'FREE',
   'BASICO': 'NAVIGATOR',
   'PROFISSIONAL': 'PROFESSIONAL',
   'PREMIUM': 'ENTERPRISE',
+  'STARTER': 'STARTER',
   'NAVIGATOR': 'NAVIGATOR',
   'PROFESSIONAL': 'PROFESSIONAL',
   'ENTERPRISE': 'ENTERPRISE',
 };
 
 const PLAN_LIMITS: Record<string, { simulations: number; label: string }> = {
-  FREE: { simulations: 1, label: 'Grátis' },
+  STARTER: { simulations: -1, label: 'Starter' },
   NAVIGATOR: { simulations: -1, label: 'Navigator' },
   PROFESSIONAL: { simulations: -1, label: 'Professional' },
   ENTERPRISE: { simulations: -1, label: 'Enterprise' },
 };
 
 const PLAN_HIERARCHY: Record<string, number> = {
-  'FREE': 0,
+  'STARTER': 0,
   'NAVIGATOR': 1,
   'PROFESSIONAL': 2,
   'ENTERPRISE': 3,
@@ -310,8 +310,8 @@ const Dashboard = () => {
     }
   }, []);
 
-  const rawPlan = profile?.plano || 'FREE';
-  const currentPlan = LEGACY_PLAN_MAP[rawPlan] || 'FREE';
+  const rawPlan = profile?.plano || 'STARTER';
+  const currentPlan = LEGACY_PLAN_MAP[rawPlan] || 'STARTER';
   const planLimit = PLAN_LIMITS[currentPlan]?.simulations || 1;
 
   const hasAccess = (requiredPlan?: string) => {
@@ -684,7 +684,7 @@ const Dashboard = () => {
                 )}
               </div>
 
-              {currentPlan === 'FREE' && (
+              {currentPlan === 'STARTER' && (
                 <Link to="/#planos">
                   <Button className="gap-2">
                     <Sparkles className="w-4 h-4" />

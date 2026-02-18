@@ -228,7 +228,7 @@ async function buildUserContext(supabase: SupabaseClient, userId: string): Promi
     cnpj: companyProfile?.cnpj_principal || null,
     setor: companyProfile?.setor || null,
     regime: companyProfile?.regime_tributario || null,
-    plano: profile?.plano || "FREE",
+    plano: profile?.plano || "STARTER",
     
     score: taxScore ? {
       total: taxScore.score_total,
@@ -1235,7 +1235,6 @@ const CONVERSATION_STARTERS = [
 // ESCOPO DE FERRAMENTAS POR PLANO
 // ============================================
 const PLAN_TOOL_SCOPE: Record<string, string[]> = {
-  'FREE': [],
   'STARTER': [
     'score_tributario', 
     'split_payment', 
@@ -1588,16 +1587,6 @@ Clareza é saber o que fazer. Informação sem direção é ruído.`;
 // RESPOSTAS POR PLANO
 // ============================================
 const PLAN_RESPONSES: Record<string, string> = {
-  FREE: `Oi! O plano Grátis não inclui acesso à Clara AI. 😊
-
-Para conversar comigo e ter orientação personalizada sobre a Reforma Tributária, você precisa de um plano pago.
-
-💡 **Suas opções:**
-- **Starter (R$ 297/mês)** - 30 mensagens/dia + 1 CNPJ
-- **Navigator (R$ 1.997/mês)** - 100 mensagens/dia + até 2 CNPJs
-- **Professional (R$ 2.997/mês)** - Mensagens ilimitadas + até 6 CNPJs
-
-Quer conhecer os planos?`,
 
   STARTER: `Oi! Vou te ajudar a começar do jeito certo. 🎯
 
@@ -1709,7 +1698,6 @@ No plano **Enterprise** você gerencia **CNPJs ilimitados** para todo o grupo ec
 
 // Mapeamento de planos legados
 const PLAN_MAPPING: Record<string, string> = {
-  'FREE': 'FREE',
   'BASICO': 'NAVIGATOR',
   'STARTER': 'STARTER',
   'NAVIGATOR': 'NAVIGATOR',
@@ -2096,14 +2084,13 @@ const buildSystemPrompt = (
 
   // Contexto de escopo por plano - REGRA CRÍTICA SOBRE UPGRADES
   const planDescriptions: Record<string, string> = {
-    'FREE': 'Grátis (acesso básico)',
     'STARTER': 'Starter (5 ferramentas essenciais)',
     'NAVIGATOR': 'Navigator (ferramentas avançadas + simuladores)',
     'PROFESSIONAL': 'Professional (diagnóstico automatizado + XMLs ilimitados + DRE + Radar de Créditos + Oportunidades)',
     'ENTERPRISE': 'Enterprise (tudo + consultoria jurídica ilimitada)',
   };
   
-  const planDescription = planDescriptions[userPlan] || planDescriptions['FREE'];
+  const planDescription = planDescriptions[userPlan] || planDescriptions['STARTER'];
   
   const scopeContext = `
 REGRA CRÍTICA - PLANO DO USUÁRIO (NUNCA IGNORE):
@@ -2190,7 +2177,7 @@ serve(async (req) => {
       .select('plano')
       .eq('user_id', user.id)
       .single();
-    const userPlanForRateLimit = profileForPlan?.plano || 'FREE';
+    const userPlanForRateLimit = profileForPlan?.plano || 'STARTER';
     
     const rateLimitResult = checkRateLimit(user.id, RATE_LIMITS.ai, userPlanForRateLimit);
     if (!rateLimitResult.allowed) {
@@ -2202,7 +2189,7 @@ serve(async (req) => {
     const userContext = await buildUserContext(supabase, user.id);
     
     // Extrai valores básicos do contexto
-    const userPlan = PLAN_MAPPING[userContext.plano] || "FREE";
+    const userPlan = PLAN_MAPPING[userContext.plano] || "STARTER";
     const userName = userContext.userName;
     const hasUserData = userContext.progresso.xmlsProcessados > 0 || userContext.financeiro !== null;
 

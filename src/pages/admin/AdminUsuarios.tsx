@@ -42,7 +42,7 @@ interface UserProfile {
 }
 
 const PLANOS = [
-  { value: 'FREE', label: 'Grátis' },
+  { value: 'STARTER', label: 'Starter' },
   { value: 'NAVIGATOR', label: 'Navigator' },
   { value: 'PROFESSIONAL', label: 'Professional' },
   { value: 'ENTERPRISE', label: 'Enterprise' },
@@ -248,7 +248,7 @@ export default function AdminUsuarios() {
                       </TableCell>
                       <TableCell>
                         <Badge className={getPlanoBadgeColor(usuario.plano)}>
-                          {usuario.plano || 'FREE'}
+                          {usuario.plano || 'STARTER'}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -261,7 +261,7 @@ export default function AdminUsuarios() {
                       </TableCell>
                       <TableCell>
                         <Select
-                          value={usuario.plano || 'FREE'}
+                          value={usuario.plano || 'STARTER'}
                           onValueChange={(v) => handlePlanChange(usuario.user_id, v)}
                         >
                           <SelectTrigger className="h-8">

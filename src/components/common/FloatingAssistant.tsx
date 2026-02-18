@@ -48,10 +48,10 @@ const ROUTE_TO_TOOL: Record<string, string> = {
 
 // Mapeamento de planos legados
 const LEGACY_PLAN_MAP: Record<string, string> = {
-  'FREE': 'FREE',
   'BASICO': 'NAVIGATOR',
   'PROFISSIONAL': 'PROFESSIONAL',
   'PREMIUM': 'ENTERPRISE',
+  'STARTER': 'STARTER',
   'NAVIGATOR': 'NAVIGATOR',
   'PROFESSIONAL': 'PROFESSIONAL',
   'ENTERPRISE': 'ENTERPRISE',
@@ -59,9 +59,9 @@ const LEGACY_PLAN_MAP: Record<string, string> = {
 
 // Mensagens de boas-vindas por plano
 const GETTING_STARTED_MESSAGES: Record<string, string> = {
-  FREE: `Ótima pergunta! Vamos começar do jeito certo.
+  STARTER: `Ótima pergunta! Vamos começar do jeito certo.
 
-No plano Grátis, você tem acesso a ferramentas essenciais para dar seus primeiros passos na Reforma Tributária. Cada ferramenta pode ser usada 1 vez para você experimentar:
+No plano Starter, você tem acesso a ferramentas essenciais para dar seus primeiros passos na Reforma Tributária:
 
 🎯 **Suas ferramentas disponíveis:**
 
@@ -391,9 +391,9 @@ export function FloatingAssistant() {
 
   // Show personalized getting started message based on plan
   const showGettingStartedMessage = () => {
-    const rawPlan = profile?.plano || 'FREE';
-    const currentPlan = LEGACY_PLAN_MAP[rawPlan] || 'FREE';
-    const message = GETTING_STARTED_MESSAGES[currentPlan] || GETTING_STARTED_MESSAGES.FREE;
+    const rawPlan = profile?.plano || 'STARTER';
+    const currentPlan = LEGACY_PLAN_MAP[rawPlan] || 'STARTER';
+    const message = GETTING_STARTED_MESSAGES[currentPlan] || GETTING_STARTED_MESSAGES.STARTER;
     
     setMessages([{ role: "assistant", content: message }]);
     setHasGreeted(true);

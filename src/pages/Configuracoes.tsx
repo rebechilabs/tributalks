@@ -167,7 +167,7 @@ const Configuracoes = () => {
           {user && companyProfileLoaded && (
             <CnpjGroupManager
               userId={user.id}
-              userPlan={profile?.plano || 'FREE'}
+              userPlan={profile?.plano || 'STARTER'}
               cnpjPrincipal={cnpjPrincipal}
               cnpjsGrupo={cnpjsGrupo}
               onUpdate={(principal, grupo) => {

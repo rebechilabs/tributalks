@@ -19,7 +19,6 @@ import { useNavigate } from "react-router-dom";
 
 // Limits per plan - Navigator pode adicionar 1 a mais (total 2), Professional até 5
 const CNPJ_LIMITS: Record<string, number> = {
-  'FREE': 1,
   'STARTER': 1,
   'NAVIGATOR': 2,
   'PROFESSIONAL': 5,
@@ -52,7 +51,7 @@ export function QuickAddCnpj({
   const [showForm, setShowForm] = useState(false);
   const [pendingCnpjData, setPendingCnpjData] = useState<CnpjData | null>(null);
 
-  const plan = userPlan?.toUpperCase() || 'FREE';
+  const plan = userPlan?.toUpperCase() || 'STARTER';
   const limit = CNPJ_LIMITS[plan] || 1;
   const allCnpjs = [cnpjPrincipal, ...cnpjsGrupo].filter(Boolean) as string[];
   const currentCount = allCnpjs.length;
@@ -60,7 +59,7 @@ export function QuickAddCnpj({
   
   // Calcula quantos CNPJs extras pode adicionar
   const extraSlots = Math.max(0, limit - currentCount);
-  const isPlanLimited = plan === 'FREE' || plan === 'STARTER';
+  const isPlanLimited = plan === 'STARTER';
 
   // Format CNPJ input
   const handleCnpjInput = (value: string) => {
