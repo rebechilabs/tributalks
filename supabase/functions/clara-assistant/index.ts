@@ -613,7 +613,7 @@ function formatConversationHistoryForPrompt(history: ConversationHistoryContext 
   return lines.join('\n');
 }
 
-type AgentType = 'fiscal' | 'margin' | 'compliance' | null;
+type AgentType = 'entender' | 'precificar' | 'recuperar' | 'planejar' | 'comandar' | null;
 
 interface AgentSuggestion {
   agentType: AgentType;
@@ -622,72 +622,73 @@ interface AgentSuggestion {
   suggestedAction?: string;
 }
 
-interface PendingAction {
-  id: string;
-  action_type: string;
-  trigger_event: string;
-  priority: string;
-  agent_type: string;
-  created_at: string;
-}
-
 // Analisa mensagem para detectar qual agente deve atuar
 function analyzeMessageForAgent(message: string): AgentSuggestion | null {
   const lowerMessage = message.toLowerCase();
 
-  // Padrões para agente FISCAL
-  const fiscalPatterns = [
-    /imposto|tribut|icms|pis|cofins|ibs|cbs|ncm|cfop|xml|nota fiscal|crédito fiscal/i,
-    /reforma tributária|split payment|alíquota/i,
-    /simples nacional|lucro real|lucro presumido/i,
-    /recuper(ar|ação) crédit/i,
-    /soneg|elisão|evasão/i,
+  // Padrões para agente ENTENDER (DRE + Score + Comparativo)
+  const entenderPatterns = [
+    /dre|demonstra(tivo|ção)|resultado|faturamento|margem bruta|margem líquida/i,
+    /score|nota tribut|saúde tribut|diagnóstico/i,
+    /regime|comparativo|simples nacional|lucro real|lucro presumido/i,
+    /ebitda|receita bruta|receita líquida|despesa operacional/i,
   ];
 
-  // Padrões para agente MARGEM
-  const marginPatterns = [
-    /margem|lucro|prejuízo|receita|despesa|custo|dre|ebitda/i,
-    /preço|fornecedor|negociação|desconto/i,
-    /rentabilidade|lucratividade|break.?even|ponto de equilíbrio/i,
-    /fluxo de caixa|capital de giro/i,
+  // Padrões para agente PRECIFICAR (Margem Ativa + Preço)
+  const precificarPatterns = [
+    /preço|cobrar|markup|margem ativa|precific/i,
+    /alíquota no preço|carga no preço|imposto no preço/i,
+    /split payment.*preço|preço.*split/i,
+    /fornecedor|negociação|desconto|renegociar/i,
+    /custo.*venda|venda.*custo|ponto de equilíbrio|break.?even/i,
   ];
 
-  // Padrões para agente COMPLIANCE
-  const compliancePatterns = [
-    /prazo|obrigação|declaração|dctf|efd|sped|compliance/i,
-    /multa|penalidade|autuação|fiscalização/i,
-    /certidão|regularidade|débito/i,
-    /vencimento|entrega|obrigação acessória/i,
+  // Padrões para agente RECUPERAR (Radar de Créditos + XMLs)
+  const recuperarPatterns = [
+    /crédit(o|os)|recuper(ar|ação)|radar/i,
+    /xml|nota fiscal|nfe|nf-e|importar xml/i,
+    /pis.?cofins|icms.?st|ipi|crédito fiscal/i,
+    /prescrever|prescrição|compensação|per.?dcomp/i,
+    /sped|dctf|obrigação acessória/i,
   ];
 
-  if (fiscalPatterns.some(p => p.test(lowerMessage))) {
-    return {
-      agentType: 'fiscal',
-      reason: 'Pergunta sobre tributos, créditos ou reforma tributária',
-      priority: 'high',
-      suggestedAction: 'analyze_tax_opportunity',
-    };
-  }
+  // Padrões para agente PLANEJAR (Oportunidades + Planejamento)
+  const planejarPatterns = [
+    /oportunidade|benefício fiscal|incentivo/i,
+    /cisão|fusão|filial|holding/i,
+    /planejamento tribut|elisão/i,
+    /economia|economizar|reduzir imposto/i,
+    /2027|reforma.*impacto|impacto.*reforma|transição|ibs.*cbs/i,
+    /cenário|simulação|projeção/i,
+  ];
 
-  if (marginPatterns.some(p => p.test(lowerMessage))) {
-    return {
-      agentType: 'margin',
-      reason: 'Pergunta sobre margens, custos ou análise financeira',
-      priority: 'high',
-      suggestedAction: 'analyze_margin_impact',
-    };
-  }
+  // Padrões para agente COMANDAR (Resumos + Relatórios + KPIs)
+  const comandarPatterns = [
+    /resumo|relatório|pdf|exportar/i,
+    /alerta|notificação|kpi|indicador/i,
+    /executivo|contador|advogado|enviar/i,
+    /painel|dashboard|consolidado|visão geral/i,
+    /nexus|valuation/i,
+  ];
 
-  if (compliancePatterns.some(p => p.test(lowerMessage))) {
-    return {
-      agentType: 'compliance',
-      reason: 'Pergunta sobre prazos, obrigações ou conformidade',
-      priority: 'medium',
-      suggestedAction: 'check_deadlines',
-    };
-  }
+  // Score each agent
+  const scores: { agent: AgentType; score: number; reason: string; action: string }[] = [
+    { agent: 'entender', score: entenderPatterns.filter(p => p.test(lowerMessage)).length, reason: 'Diagnóstico financeiro e tributário', action: 'analyze_financial' },
+    { agent: 'precificar', score: precificarPatterns.filter(p => p.test(lowerMessage)).length, reason: 'Formação de preço com inteligência tributária', action: 'analyze_pricing' },
+    { agent: 'recuperar', score: recuperarPatterns.filter(p => p.test(lowerMessage)).length, reason: 'Recuperação de créditos tributários', action: 'analyze_credits' },
+    { agent: 'planejar', score: planejarPatterns.filter(p => p.test(lowerMessage)).length, reason: 'Planejamento tributário estratégico', action: 'plan_strategy' },
+    { agent: 'comandar', score: comandarPatterns.filter(p => p.test(lowerMessage)).length, reason: 'Visão executiva e relatórios', action: 'generate_report' },
+  ];
 
-  return null;
+  const best = scores.reduce((a, b) => a.score > b.score ? a : b);
+  if (best.score === 0) return null;
+
+  return {
+    agentType: best.agent,
+    reason: best.reason,
+    priority: best.score >= 2 ? 'high' : 'medium',
+    suggestedAction: best.action,
+  };
 }
 
 // Busca ações autônomas pendentes do usuário
@@ -757,12 +758,22 @@ function formatAgentContextForPrompt(
   lines.push('='.repeat(50));
   lines.push('');
 
-  // Agente ativo
+  // Agente ativo com system prompts especializados
   if (agentSuggestion) {
     const agentLabels: Record<string, string> = {
-      'fiscal': 'FISCAL - Especialista em tributação e créditos',
-      'margin': 'MARGEM - Especialista em análise financeira',
-      'compliance': 'COMPLIANCE - Especialista em conformidade e prazos',
+      'entender': '🎯 ENTENDER - Especialista em diagnóstico financeiro e tributário',
+      'precificar': '💰 PRECIFICAR - Especialista em formação de preço com carga tributária',
+      'recuperar': '🔍 RECUPERAR - Especialista em recuperação de créditos tributários',
+      'planejar': '💡 PLANEJAR - Especialista em planejamento tributário estratégico',
+      'comandar': '📊 COMANDAR - Especialista em visão executiva e relatórios',
+    };
+
+    const agentInstructions: Record<string, string> = {
+      'entender': 'Você é especialista em diagnóstico financeiro e tributário. Analise DRE, Score e regimes com dados reais do usuário. Explique indicadores de forma didática e sugira ações concretas para melhorar.',
+      'precificar': 'Você é especialista em formação de preço com carga tributária. Simule impacto de impostos no preço. Calcule markup correto considerando todos os tributos e projete impacto da Reforma 2027.',
+      'recuperar': 'Você é especialista em recuperação de créditos tributários. Priorize por valor e urgência de prescrição (5 anos). Oriente sobre PER/DCOMP e compensação. Alerte sobre créditos que vencem em breve.',
+      'planejar': 'Você é especialista em planejamento tributário estratégico. Projete cenários de economia, simule cisão/fusão/filial e calcule impacto da transição IBS/CBS (2026-2033). Recomende estratégias de elisão legal.',
+      'comandar': 'Você é especialista em visão executiva. Gere resumos cruzando dados de todos os módulos. Consolide KPIs, alertas e indicadores. Formate para envio a contadores e advogados.',
     };
 
     lines.push(`🎯 AGENTE ATIVO: ${agentLabels[agentSuggestion.agentType || ''] || agentSuggestion.agentType}`);
@@ -776,7 +787,7 @@ function formatAgentContextForPrompt(
       }
     }
     lines.push('');
-    lines.push('INSTRUÇÃO: Responda como especialista nesta área, usando linguagem técnica apropriada mas acessível.');
+    lines.push(`INSTRUÇÃO ESPECIALIZADA: ${agentInstructions[agentSuggestion.agentType || ''] || 'Responda como especialista nesta área.'}`);
     lines.push('');
   }
 
@@ -2460,6 +2471,18 @@ serve(async (req) => {
     // Para queries complexas, mantemos Claude Sonnet
     const useGemini = queryComplexity === 'simple' && !isGreeting;
     
+    // Temperature diferenciada por agente
+    const agentTemperature: Record<string, number> = {
+      'entender': 0.3,
+      'precificar': 0.3,
+      'recuperar': 0.2,
+      'planejar': 0.5,
+      'comandar': 0.2,
+    };
+    const temperature = agentSuggestion?.agentType 
+      ? agentTemperature[agentSuggestion.agentType] || 0.3 
+      : 0.3;
+    
     let assistantMessage: string;
     
     if (useGemini) {
@@ -2554,6 +2577,7 @@ serve(async (req) => {
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
           max_tokens: 2048,
+          temperature,
           system: systemPrompt,
           messages: messagesWithContext.map((msg: { role: string; content: string }) => ({
             role: msg.role === "assistant" ? "assistant" : "user",
@@ -2683,6 +2707,7 @@ serve(async (req) => {
       message: finalMessage,
       confidence_score: finalConfidence,
       confidence_factors: confidenceFactors,
+      agent: agentSuggestion?.agentType || null,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

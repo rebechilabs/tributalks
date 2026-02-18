@@ -63,51 +63,18 @@ export function useClaraAgentIntegration() {
   const analyzeMessageForAgent = useCallback((message: string): AgentSuggestion | null => {
     const lowerMessage = message.toLowerCase();
 
-    // Padrões para cada agente
-    const fiscalPatterns = [
-      /imposto|tribut|icms|pis|cofins|ibs|cbs|ncm|cfop|xml|nota fiscal|crédito fiscal/i,
-      /reforma tributária|split payment|alíquota/i,
-      /simples nacional|lucro real|lucro presumido/i,
+    const patterns: { agent: AgentType; patterns: RegExp[]; reason: string; action: string }[] = [
+      { agent: 'entender', patterns: [/dre|score|margem bruta|regime|comparativo|diagnóstico|faturamento|ebitda/i], reason: 'Diagnóstico financeiro e tributário', action: 'analyze_financial' },
+      { agent: 'precificar', patterns: [/preço|cobrar|markup|margem ativa|precific|fornecedor|desconto/i], reason: 'Formação de preço com inteligência tributária', action: 'analyze_pricing' },
+      { agent: 'recuperar', patterns: [/crédit|xml|nota fiscal|radar|pis|cofins|icms|ipi|recuperar|prescrição|compensação/i], reason: 'Recuperação de créditos tributários', action: 'analyze_credits' },
+      { agent: 'planejar', patterns: [/oportunidade|cisão|filial|planejamento|economia|2027|reforma.*impacto|cenário/i], reason: 'Planejamento tributário estratégico', action: 'plan_strategy' },
+      { agent: 'comandar', patterns: [/resumo|relatório|pdf|alerta|kpi|executivo|contador|nexus|painel/i], reason: 'Visão executiva e relatórios', action: 'generate_report' },
     ];
 
-    const marginPatterns = [
-      /margem|lucro|prejuízo|receita|despesa|custo|dre|ebitda/i,
-      /preço|fornecedor|negociação|desconto/i,
-      /rentabilidade|lucratividade|break.?even|ponto de equilíbrio/i,
-    ];
-
-    const compliancePatterns = [
-      /prazo|obrigação|declaração|dctf|efd|sped|compliance/i,
-      /multa|penalidade|autuação|fiscalização/i,
-      /certidão|regularidade|débito/i,
-    ];
-
-    // Verifica cada conjunto de padrões
-    if (fiscalPatterns.some(p => p.test(lowerMessage))) {
-      return {
-        agentType: 'fiscal',
-        reason: 'Pergunta relacionada a tributos, créditos ou reforma tributária',
-        priority: 'high',
-        suggestedAction: 'analyze_tax_opportunity',
-      };
-    }
-
-    if (marginPatterns.some(p => p.test(lowerMessage))) {
-      return {
-        agentType: 'margin',
-        reason: 'Pergunta sobre margens, custos ou análise financeira',
-        priority: 'high',
-        suggestedAction: 'analyze_margin_impact',
-      };
-    }
-
-    if (compliancePatterns.some(p => p.test(lowerMessage))) {
-      return {
-        agentType: 'compliance',
-        reason: 'Pergunta sobre prazos, obrigações ou conformidade',
-        priority: 'medium',
-        suggestedAction: 'check_deadlines',
-      };
+    for (const { agent, patterns: pats, reason, action } of patterns) {
+      if (pats.some(p => p.test(lowerMessage))) {
+        return { agentType: agent, reason, priority: 'high', suggestedAction: action };
+      }
     }
 
     return null;
@@ -158,7 +125,7 @@ export function useClaraAgentIntegration() {
     try {
       // Busca impactos de NCMs se o agente fiscal está ativo ou há NCMs
       const ncmImpacts: CascadeImpact[] = [];
-      if ((activeAgent === 'fiscal' || userNcms.length > 0) && userNcms.length > 0) {
+      if ((activeAgent === 'recuperar' || userNcms.length > 0) && userNcms.length > 0) {
         for (const ncm of userNcms.slice(0, 3)) {
           const impacts = await analyzeCascadeImpact(ncm, 'ncm', 2);
           ncmImpacts.push(...impacts);
@@ -222,11 +189,14 @@ export function useClaraAgentIntegration() {
     // Agente ativo
     if (context.activeAgent) {
       lines.push(`\n[AGENTE ATIVO: ${context.activeAgent.toUpperCase()}]`);
-      lines.push(`Você está atuando como especialista em ${
-        context.activeAgent === 'fiscal' ? 'tributação e créditos fiscais' :
-        context.activeAgent === 'margin' ? 'margens e análise financeira' :
-        'compliance e conformidade fiscal'
-      }.`);
+      const agentDescriptions: Record<string, string> = {
+        'entender': 'diagnóstico financeiro e tributário (DRE, Score, Comparativo)',
+        'precificar': 'formação de preço com inteligência tributária',
+        'recuperar': 'recuperação de créditos tributários',
+        'planejar': 'planejamento tributário estratégico',
+        'comandar': 'visão executiva e relatórios',
+      };
+      lines.push(`Você está atuando como especialista em ${agentDescriptions[context.activeAgent] || context.activeAgent}.`);
     }
 
     // Info do agente

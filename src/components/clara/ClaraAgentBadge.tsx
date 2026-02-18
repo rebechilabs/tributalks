@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { Bot, Calculator, Shield, Zap } from "lucide-react";
+import { Bot, Calculator, Shield, Zap, Lightbulb, BarChart3, Search } from "lucide-react";
 import { AgentType } from "@/hooks/clara";
 
 interface ClaraAgentBadgeProps {
@@ -20,23 +20,35 @@ const AGENT_CONFIG: Record<AgentType, {
     color: "text-primary",
     bgColor: "bg-primary/10",
   },
-  fiscal: {
-    label: "Fiscal",
-    icon: Calculator,
-    color: "text-blue-600 dark:text-blue-400",
-    bgColor: "bg-blue-100 dark:bg-blue-900/30",
-  },
-  margin: {
-    label: "Margem",
-    icon: Zap,
+  entender: {
+    label: "Entender",
+    icon: BarChart3,
     color: "text-amber-600 dark:text-amber-400",
     bgColor: "bg-amber-100 dark:bg-amber-900/30",
   },
-  compliance: {
-    label: "Compliance",
-    icon: Shield,
-    color: "text-emerald-600 dark:text-emerald-400",
-    bgColor: "bg-emerald-100 dark:bg-emerald-900/30",
+  precificar: {
+    label: "Precificar",
+    icon: Calculator,
+    color: "text-amber-600 dark:text-amber-400",
+    bgColor: "bg-amber-100 dark:bg-amber-900/30",
+  },
+  recuperar: {
+    label: "Recuperar",
+    icon: Search,
+    color: "text-amber-600 dark:text-amber-400",
+    bgColor: "bg-amber-100 dark:bg-amber-900/30",
+  },
+  planejar: {
+    label: "Planejar",
+    icon: Lightbulb,
+    color: "text-amber-600 dark:text-amber-400",
+    bgColor: "bg-amber-100 dark:bg-amber-900/30",
+  },
+  comandar: {
+    label: "Comandar",
+    icon: Zap,
+    color: "text-amber-600 dark:text-amber-400",
+    bgColor: "bg-amber-100 dark:bg-amber-900/30",
   },
 };
 
