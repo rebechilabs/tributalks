@@ -28,7 +28,7 @@ const benefits = [
 
 export function RTCCalculatorSection() {
   return (
-    <section className="py-16 md:py-20 bg-gradient-to-b from-background to-card/50 relative overflow-hidden">
+    <section className="py-16 md:py-20 bg-[#1A1A1A] relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/4 left-0 w-48 md:w-72 h-48 md:h-72 bg-primary/5 rounded-full blur-3xl" />
@@ -61,7 +61,7 @@ export function RTCCalculatorSection() {
           {benefits.map((benefit, index) => (
             <div
               key={benefit.title}
-              className="group bg-card/80 backdrop-blur rounded-xl p-4 md:p-6 border border-border hover:border-primary/50 transition-all duration-300"
+              className="group bg-[#1A1A1A] backdrop-blur rounded-xl p-4 md:p-6 border border-border hover:border-primary/50 transition-all duration-300"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-3 md:mb-4 group-hover:scale-110 transition-transform">
