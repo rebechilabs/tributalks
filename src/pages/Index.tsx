@@ -23,7 +23,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#1A1A1A]">
+    <div className="min-h-screen bg-[#111111]">
       <Header />
       <main>
         <NewHeroSection />
