@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,13 +77,33 @@ const SplitPayment = () => {
   // Modalidade de recolhimento — relevante apenas para Simples Nacional (LC 214/2025)
   const [modalidadeSimples, setModalidadeSimples] = useState<'por_dentro' | 'por_fora'>('por_dentro');
 
+  const faturamentoMensalInicial = currentCompany?.faturamento_anual
+    ? (currentCompany.faturamento_anual / 12).toString()
+    : profile?.faturamento_mensal?.toString() || "";
+
   const [formData, setFormData] = useState({
-    empresa: profile?.empresa || "",
-    faturamento_mensal: profile?.faturamento_mensal?.toString() || "",
-    regime: profile?.regime || "",
-    setor: profile?.setor || "",
+    empresa: currentCompany?.razao_social || profile?.empresa || "",
+    faturamento_mensal: faturamentoMensalInicial,
+    regime: currentCompany?.regime_tributario || profile?.regime || "",
+    setor: currentCompany?.setor || profile?.setor || "",
     percentual_vendas_pj: profile?.percentual_vendas_pj?.toString() || "0.80",
   });
+
+  useEffect(() => {
+    if (currentCompany) {
+      setFormData(prev => ({
+        ...prev,
+        empresa: currentCompany.razao_social || prev.empresa,
+        faturamento_mensal: currentCompany.faturamento_anual
+          ? (currentCompany.faturamento_anual / 12).toString()
+          : prev.faturamento_mensal,
+        regime: currentCompany.regime_tributario || prev.regime,
+        setor: currentCompany.setor || prev.setor,
+      }));
+      setResult(null);
+      setSaved(false);
+    }
+  }, [currentCompany?.id]);
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -275,11 +295,11 @@ const SplitPayment = () => {
 
   const handleReset = () => {
     setFormData({
-      empresa: profile?.empresa || "",
+      empresa: currentCompany?.razao_social || profile?.empresa || "",
       faturamento_mensal: "",
-      regime: "",
-      setor: "",
-      percentual_vendas_pj: "0.80",
+      regime: currentCompany?.regime_tributario || profile?.regime || "",
+      setor: currentCompany?.setor || profile?.setor || "",
+      percentual_vendas_pj: profile?.percentual_vendas_pj?.toString() || "0.80",
     });
     setResult(null);
     setSaved(false);
