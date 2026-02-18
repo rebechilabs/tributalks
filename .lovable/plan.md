@@ -1,49 +1,75 @@
 
-# Simplificar Layout do Split Payment
 
-## Objetivo
-Tornar a pagina Split Payment mais direta e focada no resultado numerico, removendo textos explicativos desnecessarios.
+# Corrigir Fonte de Dados do Split Payment
+
+## Problema
+O formulario usa dados da tabela `profiles` (perfil pessoal) em vez da `company_profile` (empresa selecionada). Ao trocar de empresa, os dados nao atualizam.
+
+## Descoberta importante durante a analise
+A tabela `company_profile` tem campos diferentes de `profiles`:
+- `faturamento_anual` (nao `faturamento_mensal`) -- sera dividido por 12
+- `regime_tributario` (nao `regime`)
+- `razao_social` (nao `empresa`)
+- **Nao tem** `percentual_vendas_pj` -- fallback para `profiles` sempre
 
 ## Mudancas (arquivo unico: `src/pages/calculadora/SplitPayment.tsx`)
 
-### 1. Subtitulo do header (linha 334-336)
-Substituir "Calcule a retencao de caixa com base nas aliquotas oficiais da LC 214/2025 e Manual RTC." por:
-**"Descubra quanto o Split Payment vai reter do seu faturamento a partir de 2027."**
+### 1. Adicionar import do useEffect
+Adicionar `useEffect` ao import do React (linha 1).
 
-### 2. Cenario de Simulacao (linhas 354-386)
-Remover o Card com icone AlertTriangle e texto explicativo. Substituir por dois botoes simples lado a lado com `mb-6`, sem card wrapper nem texto descritivo abaixo.
+### 2. Alterar inicializacao do formData (linhas 80-86)
+Priorizar `currentCompany`, com fallback para `profile`:
 
-### 3. Bloco Por Dentro vs Por Fora (linhas 388-431)
-Manter o label "Simples Nacional: como voce vai recolher IBS/CBS?" e os dois botoes de selecao. Remover:
-- O paragrafo explicativo "A LC 214/2025 permite duas formas..."
-- Os dois cards explicativos grid (linhas 421-428) com os textos "Por Dentro: IBS/CBS no DAS..." e "Por Fora (Hibrido): IBS/CBS separados..."
+```typescript
+const faturamentoMensalInicial = currentCompany?.faturamento_anual
+  ? (currentCompany.faturamento_anual / 12).toString()
+  : profile?.faturamento_mensal?.toString() || "";
 
-### 4. Secao "Seus Dados" (linhas 433-535)
-Envolver todo o conteudo do Card num Collapsible fechado por padrao:
-- Remover o Card/CardHeader/CardContent wrapper
-- Usar Collapsible com defaultOpen={false}
-- CollapsibleTrigger com icone ChevronDown e texto "Seus Dados (clique para ajustar)"
-- Manter formulario e botao Calcular dentro do CollapsibleContent
-- Mover o botao "Calcular Impacto" para **fora** do collapsible para que fique sempre visivel
+const [formData, setFormData] = useState({
+  empresa: currentCompany?.razao_social || profile?.empresa || "",
+  faturamento_mensal: faturamentoMensalInicial,
+  regime: currentCompany?.regime_tributario || profile?.regime || "",
+  setor: currentCompany?.setor || profile?.setor || "",
+  percentual_vendas_pj: profile?.percentual_vendas_pj?.toString() || "0.80",
+});
+```
 
-### 5. Imports
-- Adicionar: `Collapsible, CollapsibleTrigger, CollapsibleContent` de `@/components/ui/collapsible`
-- Adicionar: `ChevronDown` do lucide-react
+### 3. Adicionar useEffect para reagir a troca de empresa
+Logo apos a declaracao do `formData`, inserir:
 
-## Ordem visual resultante
+```typescript
+useEffect(() => {
+  if (currentCompany) {
+    setFormData(prev => ({
+      ...prev,
+      empresa: currentCompany.razao_social || prev.empresa,
+      faturamento_mensal: currentCompany.faturamento_anual
+        ? (currentCompany.faturamento_anual / 12).toString()
+        : prev.faturamento_mensal,
+      regime: currentCompany.regime_tributario || prev.regime,
+      setor: currentCompany.setor || prev.setor,
+    }));
+    setResult(null);
+    setSaved(false);
+  }
+}, [currentCompany?.id]);
+```
 
-1. Titulo + subtitulo curto
-2. Toggle de cenario (2026 / 2027+) — botoes simples
-3. Seletor Por Dentro / Por Fora (so botoes, sem cards) — visivel apenas para Simples
-4. Botao Calcular (sempre visivel)
-5. Resultado em destaque (quando calculado)
-6. "Seus Dados" colapsado (accordion fechado)
+Nota: `percentual_vendas_pj` nao e atualizado no useEffect porque esse campo nao existe na `company_profile` -- mantem o valor do `profiles`.
 
-## O que NAO muda
+### O que NAO muda
+- Logica de calculo (`calcularSplitPayment`)
+- Layout / componentes visuais
+- Fluxo de save da simulacao
+- Nenhum outro arquivo
 
-- Logica de calculo (funcao `calcularSplitPayment`)
-- Auto-save de simulacao
-- Secao de resultado
-- CTA Professional
-- Toast contextual
-- TaxDisclaimer
+## Mapeamento de campos
+
+| formData field | company_profile | profiles (fallback) |
+|---|---|---|
+| empresa | razao_social | empresa |
+| faturamento_mensal | faturamento_anual / 12 | faturamento_mensal |
+| regime | regime_tributario | regime |
+| setor | setor | setor |
+| percentual_vendas_pj | (nao existe) | percentual_vendas_pj |
+
