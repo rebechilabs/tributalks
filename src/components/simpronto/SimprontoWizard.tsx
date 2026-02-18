@@ -43,6 +43,7 @@ export function SimprontoWizard({ onSubmit, isLoading }: SimprontoWizardProps) {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<SimprontoFormData>(initialFormData);
   const [showPrefillBanner, setShowPrefillBanner] = useState(false);
+  const [showErrors, setShowErrors] = useState(false);
 
   // Buscar dados do DRE para autopreenchimento
   const { data: dreData } = useQuery({
@@ -91,6 +92,9 @@ export function SimprontoWizard({ onSubmit, isLoading }: SimprontoWizardProps) {
   const handleCurrencyChange = (field: keyof SimprontoFormData, value: string) => {
     const apenasNumeros = value.replace(/\D/g, '');
     setFormData(prev => ({ ...prev, [field]: apenasNumeros }));
+    if (showErrors && apenasNumeros && parseInt(apenasNumeros) > 0) {
+      // Don't clear showErrors globally, just let the field-level check pass
+    }
   };
 
   // Validação do passo 1
@@ -173,9 +177,12 @@ export function SimprontoWizard({ onSubmit, isLoading }: SimprontoWizardProps) {
                   placeholder="0"
                   value={formatarParaExibicao(formData.faturamento_anual)}
                   onChange={(e) => handleCurrencyChange('faturamento_anual', e.target.value)}
-                  className="pl-10"
+                  className={`pl-10 ${showErrors && !(parseInt(formData.faturamento_anual) > 0) ? 'border-destructive' : ''}`}
                 />
               </div>
+              {showErrors && !(parseInt(formData.faturamento_anual) > 0) && (
+                <p className="text-xs text-destructive">Este campo é obrigatório</p>
+              )}
               <p className="text-xs text-muted-foreground">
                 Informe a receita bruta total estimada para os próximos 12 meses
               </p>
@@ -195,9 +202,12 @@ export function SimprontoWizard({ onSubmit, isLoading }: SimprontoWizardProps) {
                   placeholder="0"
                   value={formatarParaExibicao(formData.folha_pagamento)}
                   onChange={(e) => handleCurrencyChange('folha_pagamento', e.target.value)}
-                  className="pl-10"
+                  className={`pl-10 ${showErrors && !(parseInt(formData.folha_pagamento) > 0) ? 'border-destructive' : ''}`}
                 />
               </div>
+              {showErrors && !(parseInt(formData.folha_pagamento) > 0) && (
+                <p className="text-xs text-destructive">Este campo é obrigatório</p>
+              )}
               <p className="text-xs text-muted-foreground">
                 Inclua salários, pró-labore e encargos (INSS, FGTS)
               </p>
@@ -222,8 +232,16 @@ export function SimprontoWizard({ onSubmit, isLoading }: SimprontoWizardProps) {
 
             <div className="flex justify-end pt-4">
               <Button 
-                onClick={() => setStep(2)} 
-                disabled={!isStep1Valid()}
+                onClick={() => {
+                  if (isStep1Valid()) {
+                    setShowErrors(false);
+                    setStep(2);
+                  } else {
+                    setShowErrors(true);
+                    const firstInvalid = !(parseInt(formData.faturamento_anual) > 0) ? 'faturamento_anual' : 'folha_pagamento';
+                    document.getElementById(firstInvalid)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
+                }}
                 className="gap-2"
               >
                 Próximo
