@@ -285,7 +285,7 @@ serve(async (req) => {
       gestao += 10;
     }
     
-    const scoreGestao = Math.min(Math.round(gestao / 1), 100);
+    const scoreGestao = Math.min(Math.round(gestao / 1.5), 100);
 
     // 3. CALCULAR SCORE TOTAL (soma ponderada normalizada para 0-100)
     const scoreTotal = Math.round(
@@ -315,7 +315,7 @@ serve(async (req) => {
     const faturamentoAnual = (dre?.calc_receita_bruta || profile?.faturamento_mensal || 50000) * 12;
     
     const economiaRegime = (!comparativoCount || comparativoCount === 0) && dre 
-      ? (dre.calc_deducoes_receita || faturamentoAnual * 0.15) * 0.15 // 15% economia potencial
+      ? (dre.calc_receita_bruta || faturamentoAnual) * 0.03
       : 0;
     
     const creditosNaoAproveitados = creditosPotencial;
