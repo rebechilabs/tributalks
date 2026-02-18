@@ -148,6 +148,22 @@ export default function PerfilEmpresa() {
             cursos_livres: data.cursos_livres || false,
             fins_lucrativos: data.fins_lucrativos !== null ? (data.fins_lucrativos ?? true) : true,
             investe_tecnologia_educacional: data.investe_tecnologia_educacional || false,
+            // Artesanato (Produção)
+            tem_carteira_artesao: data.tem_carteira_artesao || false,
+            artesanato_regional: data.artesanato_regional || false,
+            mei_artesao: data.mei_artesao || false,
+            venda_direta_consumidor: data.venda_direta_consumidor || false,
+            participa_feiras: data.participa_feiras || false,
+            exporta_artesanato: data.exporta_artesanato || false,
+            usa_insumos_naturais: data.usa_insumos_naturais || false,
+            // Comércio de Artesanato
+            compra_artesao_local: data.compra_artesao_local || false,
+            compra_cooperativas: data.compra_cooperativas || false,
+            revende_artesanato_regional: data.revende_artesanato_regional || false,
+            loja_fisica_artesanato: data.loja_fisica_artesanato || false,
+            vende_turistas: data.vende_turistas || false,
+            exporta_revenda_artesanato: data.exporta_revenda_artesanato || false,
+            participa_feiras_revenda: data.participa_feiras_revenda || false,
           });
           if (data.etapa_atual && data.etapa_atual > 1) {
             setCurrentStep(data.etapa_atual);
@@ -258,6 +274,22 @@ export default function PerfilEmpresa() {
         cursos_livres: formData.cursos_livres,
         fins_lucrativos: formData.fins_lucrativos,
         investe_tecnologia_educacional: formData.investe_tecnologia_educacional,
+        // Artesanato (Produção)
+        tem_carteira_artesao: formData.tem_carteira_artesao,
+        artesanato_regional: formData.artesanato_regional,
+        mei_artesao: formData.mei_artesao,
+        venda_direta_consumidor: formData.venda_direta_consumidor,
+        participa_feiras: formData.participa_feiras,
+        exporta_artesanato: formData.exporta_artesanato,
+        usa_insumos_naturais: formData.usa_insumos_naturais,
+        // Comércio de Artesanato
+        compra_artesao_local: formData.compra_artesao_local,
+        compra_cooperativas: formData.compra_cooperativas,
+        revende_artesanato_regional: formData.revende_artesanato_regional,
+        loja_fisica_artesanato: formData.loja_fisica_artesanato,
+        vende_turistas: formData.vende_turistas,
+        exporta_revenda_artesanato: formData.exporta_revenda_artesanato,
+        participa_feiras_revenda: formData.participa_feiras_revenda,
         etapa_atual: step,
         perfil_completo: complete,
         updated_at: new Date().toISOString(),
