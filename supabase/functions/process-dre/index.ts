@@ -139,8 +139,8 @@ serve(async (req) => {
     const dreData = {
       user_id: userId,
       period_type: period?.type || 'monthly',
-      period_month: period?.month || new Date().getMonth() + 1,
-      period_year: period?.year || new Date().getFullYear(),
+      period_month: period?.month ?? new Date().getMonth() + 1,
+      period_year: period?.year ?? new Date().getFullYear(),
       // Inputs
       input_vendas_produtos: inputs.vendas_produtos || 0,
       input_vendas_servicos: inputs.vendas_servicos || 0,
