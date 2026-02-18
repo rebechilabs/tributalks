@@ -3,7 +3,7 @@ import {
   Clock, Settings, Lock, Sparkles, Newspaper, Mail,
   Calculator, Target, BarChart3, Trophy, Lightbulb, LayoutDashboard,
   MapPin, Briefcase, ClipboardCheck, Plug, Gift, Route, FileSearch,
-  ArrowUp, Command, Shield, TrendingUp
+  ArrowUp, Command, Shield, TrendingUp, Handshake
 } from "lucide-react";
 
 export type PlanType = 'STARTER' | 'NAVIGATOR' | 'PROFESSIONAL' | 'ENTERPRISE';
@@ -100,6 +100,7 @@ export const MENU_STARTER: MenuElement[] = [
     title: '',
     items: [
       { label: 'Notícias', href: '/noticias', icon: Newspaper, description: 'Reforma Tributária' },
+      { label: 'Conexão & Negócios', href: '/dashboard/conexao', icon: Handshake, description: 'Comunidade e networking' },
       { label: 'Indique e Ganhe', href: '/indicar', icon: Gift, badge: 'Até 20%', badgeVariant: 'success', description: 'Ganhe desconto indicando' },
       { label: 'Integrações', href: '/dashboard/integracoes', icon: Plug },
       { label: 'Configurações', href: '/configuracoes', icon: Settings },
@@ -190,6 +191,7 @@ export const MENU_NAVIGATOR: MenuElement[] = [
     title: '',
     items: [
       { label: 'Notícias', href: '/noticias', icon: Newspaper, description: 'Reforma Tributária' },
+      { label: 'Conexão & Negócios', href: '/dashboard/conexao', icon: Handshake, description: 'Comunidade e networking' },
       { label: 'Indique e Ganhe', href: '/indicar', icon: Gift, badge: 'Até 20%', badgeVariant: 'success', description: 'Ganhe desconto indicando' },
       { label: 'Integrações', href: '/dashboard/integracoes', icon: Plug },
       { label: 'Configurações', href: '/configuracoes', icon: Settings },
@@ -275,6 +277,7 @@ export const MENU_PROFESSIONAL_V2: MenuElement[] = [
     title: '',
     items: [
       { label: 'Notícias', href: '/noticias', icon: Newspaper, description: 'Reforma Tributária' },
+      { label: 'Conexão & Negócios', href: '/dashboard/conexao', icon: Handshake, description: 'Comunidade e networking' },
       { label: 'Indique e Ganhe', href: '/indicar', icon: Gift, badge: 'Até 20%', badgeVariant: 'success', description: 'Ganhe desconto indicando' },
       { label: 'Integrações', href: '/dashboard/integracoes', icon: Plug },
       { label: 'Configurações', href: '/configuracoes', icon: Settings },
