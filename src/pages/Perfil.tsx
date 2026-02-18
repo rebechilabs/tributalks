@@ -102,6 +102,22 @@ const Perfil = () => {
 
       if (error) throw error;
 
+      // Sync regime to company_profile if changed
+      if (formData.regime && currentCompany) {
+        const regimeMap: Record<string, string> = {
+          SIMPLES: "simples",
+          PRESUMIDO: "presumido",
+          REAL: "real",
+        };
+        const companyRegime = regimeMap[formData.regime];
+        if (companyRegime && companyRegime !== currentCompany.regime_tributario) {
+          await supabase
+            .from("company_profile")
+            .update({ regime_tributario: companyRegime })
+            .eq("id", currentCompany.id);
+        }
+      }
+
       await refreshProfile();
       
       toast({
