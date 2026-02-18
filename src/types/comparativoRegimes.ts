@@ -7,7 +7,7 @@ export type RegimeType =
   | 'SIMPLES_2027_DENTRO'
   | 'SIMPLES_2027_FORA';
 
-export interface SimprontoFormData {
+export interface ComparativoRegimesFormData {
   // Passo 1
   faturamento_anual: string;
   folha_pagamento: string;
@@ -32,7 +32,7 @@ export interface RegimeCalculation {
   motivo_inelegibilidade?: string;
 }
 
-export interface SimprontoResult {
+export interface ComparativoRegimesResult {
   regimes: RegimeCalculation[];
   recomendado: RegimeType;
   economia_vs_segundo: number;
@@ -40,7 +40,7 @@ export interface SimprontoResult {
   disclaimer: string;
 }
 
-export interface SimprontoInput {
+export interface ComparativoRegimesInput {
   faturamento_anual: number;
   folha_pagamento: number;
   cnae_principal: string;

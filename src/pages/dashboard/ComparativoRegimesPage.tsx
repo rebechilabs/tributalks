@@ -3,9 +3,9 @@ import { MotivationalBanner } from "@/components/common/MotivationalBanner";
 import { useMutation } from "@tanstack/react-query";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { FeatureGate } from "@/components/FeatureGate";
-import { SimprontoWizard, SimprontoResults } from "@/components/simpronto";
-import { SimprontoInput, SimprontoResult } from "@/types/simpronto";
-import { calcularSimpronto } from "@/utils/simprontoCalculations";
+import { ComparativoRegimesWizard, ComparativoRegimesResults } from "@/components/comparativo-regimes";
+import { ComparativoRegimesInput, ComparativoRegimesResult } from "@/types/comparativoRegimes";
+import { calcularComparativoRegimes } from "@/utils/comparativoRegimesCalculations";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -13,14 +13,13 @@ import { Button } from "@/components/ui/button";
 import { HelpButton } from "@/components/common/HelpButton";
 import { Trash2, Calculator } from "lucide-react";
 
-export default function SimprontoPage() {
+export default function ComparativoRegimesPage() {
   const { user } = useAuth();
-  const [result, setResult] = useState<SimprontoResult | null>(null);
-  const [currentInput, setCurrentInput] = useState<SimprontoInput | null>(null);
+  const [result, setResult] = useState<ComparativoRegimesResult | null>(null);
+  const [currentInput, setCurrentInput] = useState<ComparativoRegimesInput | null>(null);
 
-  // Mutation para salvar simulação
   const saveSimulation = useMutation({
-    mutationFn: async ({ input, result }: { input: SimprontoInput; result: SimprontoResult }) => {
+    mutationFn: async ({ input, result }: { input: ComparativoRegimesInput; result: ComparativoRegimesResult }) => {
       if (!user?.id) return;
       
       const { error } = await supabase
@@ -43,26 +42,17 @@ export default function SimprontoPage() {
     },
     onError: (error) => {
       console.error('Erro ao salvar simulação:', error);
-      // Não mostra erro ao usuário, apenas loga
     },
   });
 
-  // Handler de submit do wizard
-  const handleSubmit = (input: SimprontoInput) => {
-    // Calcular resultado
-    const resultado = calcularSimpronto(input);
-    
-    // Salvar no state
+  const handleSubmit = (input: ComparativoRegimesInput) => {
+    const resultado = calcularComparativoRegimes(input);
     setCurrentInput(input);
     setResult(resultado);
-    
-    // Salvar no banco (async, não bloqueia UI)
     saveSimulation.mutate({ input, result: resultado });
-    
     toast.success('Simulação concluída!');
   };
 
-  // Reset para nova simulação
   const handleReset = () => {
     setResult(null);
     setCurrentInput(null);
@@ -71,8 +61,7 @@ export default function SimprontoPage() {
   return (
     <DashboardLayout title="Comparativo de Regimes">
       <div className="container mx-auto px-4 py-6">
-        <FeatureGate feature="simpronto">
-          {/* Header */}
+        <FeatureGate feature="comparativo_regimes">
           <div className="mb-8 max-w-2xl mx-auto">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -108,12 +97,12 @@ export default function SimprontoPage() {
           />
 
           {!result ? (
-            <SimprontoWizard 
+            <ComparativoRegimesWizard 
               onSubmit={handleSubmit} 
               isLoading={saveSimulation.isPending}
             />
           ) : (
-            <SimprontoResults 
+            <ComparativoRegimesResults 
               result={result} 
               input={currentInput!}
               onReset={handleReset} 

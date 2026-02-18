@@ -23,10 +23,10 @@ const tools = [
   {
     title: "Comparativo de Regimes Tributários",
     description: "Compare 5 regimes tributários incluindo Simples 2027.",
-    href: "/dashboard/entender/simpronto",
+    href: "/dashboard/entender/comparativo",
     icon: Scale,
     stepNumber: 3,
-    statusKey: 'simpronto' as const,
+    statusKey: 'comparativo' as const,
   },
 ];
 
@@ -39,8 +39,7 @@ export default function EntenderPage() {
         return homeState.dreData ? 'completed' : 'pending';
       case 'score':
         return homeState.scoreData ? 'completed' : 'pending';
-      case 'simpronto':
-        // Simpronto requires DRE to be completed
+      case 'comparativo':
         return homeState.dreData ? 'pending' : 'pending';
       default:
         return 'pending';

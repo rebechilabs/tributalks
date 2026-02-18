@@ -1,25 +1,16 @@
 import { useMemo } from "react";
 import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  Cell,
-  LabelList
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3 } from "lucide-react";
-import { SimprontoResult } from "@/types/simpronto";
-import { formatarMoeda, NOMES_REGIMES } from "@/utils/simprontoCalculations";
+import { ComparativoRegimesResult } from "@/types/comparativoRegimes";
+import { formatarMoeda, NOMES_REGIMES } from "@/utils/comparativoRegimesCalculations";
 
 interface ComparisonChartProps {
-  result: SimprontoResult;
+  result: ComparativoRegimesResult;
 }
 
-// Nomes curtos para o gráfico
 const NOMES_CURTOS: Record<string, string> = {
   'SIMPLES_NACIONAL': 'Simples',
   'LUCRO_PRESUMIDO': 'Presumido',
@@ -31,7 +22,6 @@ const NOMES_CURTOS: Record<string, string> = {
 export function ComparisonChart({ result }: ComparisonChartProps) {
   const { regimes, recomendado } = result;
   
-  // Preparar dados para o gráfico
   const chartData = useMemo(() => {
     return regimes
       .filter(r => r.is_elegivel)
@@ -44,12 +34,10 @@ export function ComparisonChart({ result }: ComparisonChartProps) {
       .sort((a, b) => a.imposto - b.imposto);
   }, [regimes, recomendado]);
 
-  // Cores
   const getBarColor = (isRecomendado: boolean) => {
     return isRecomendado ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))';
   };
 
-  // Formatar tooltip
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
@@ -68,14 +56,9 @@ export function ComparisonChart({ result }: ComparisonChartProps) {
     return null;
   };
 
-  // Formatar eixo Y
   const formatYAxis = (value: number) => {
-    if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(1)}M`;
-    }
-    if (value >= 1000) {
-      return `${(value / 1000).toFixed(0)}k`;
-    }
+    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
     return value.toString();
   };
 
@@ -90,51 +73,20 @@ export function ComparisonChart({ result }: ComparisonChartProps) {
       <CardContent>
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={chartData}
-              layout="vertical"
-              margin={{ top: 5, right: 60, left: 80, bottom: 5 }}
-            >
+            <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 60, left: 80, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} opacity={0.3} />
-              <XAxis 
-                type="number" 
-                tickFormatter={formatYAxis}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis 
-                type="category" 
-                dataKey="nome" 
-                width={75}
-                axisLine={false}
-                tickLine={false}
-                tick={{ fontSize: 12 }}
-              />
+              <XAxis type="number" tickFormatter={formatYAxis} axisLine={false} tickLine={false} />
+              <YAxis type="category" dataKey="nome" width={75} axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar 
-                dataKey="imposto" 
-                radius={[0, 4, 4, 0]}
-                maxBarSize={40}
-              >
+              <Bar dataKey="imposto" radius={[0, 4, 4, 0]} maxBarSize={40}>
                 {chartData.map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={getBarColor(entry.isRecomendado)}
-                    opacity={entry.isRecomendado ? 1 : 0.6}
-                  />
+                  <Cell key={`cell-${index}`} fill={getBarColor(entry.isRecomendado)} opacity={entry.isRecomendado ? 1 : 0.6} />
                 ))}
-                <LabelList 
-                  dataKey="imposto" 
-                  position="right" 
-                  formatter={(value: number) => formatarMoeda(value)}
-                  style={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                />
+                <LabelList dataKey="imposto" position="right" formatter={(value: number) => formatarMoeda(value)} style={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
-        
-        {/* Legenda */}
         <div className="flex items-center justify-center gap-6 mt-4 text-sm">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-sm bg-primary" />

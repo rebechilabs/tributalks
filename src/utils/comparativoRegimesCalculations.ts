@@ -1,10 +1,10 @@
 import { 
-  SimprontoInput, 
-  SimprontoResult, 
+  ComparativoRegimesInput, 
+  ComparativoRegimesResult, 
   RegimeCalculation, 
   RegimeType, 
   PerfilClientes 
-} from "@/types/simpronto";
+} from "@/types/comparativoRegimes";
 
 // Constantes de cálculo
 export const ALIQUOTA_CBS_IBS = 0.265; // 26.5% estimado
@@ -35,19 +35,14 @@ function determinarSetor(cnae: string): 'comercio' | 'industria' | 'servicos' {
   const codigoPrincipal = cnae.replace(/\D/g, '').slice(0, 2);
   const codigoNum = parseInt(codigoPrincipal);
   
-  // Indústria: 10-33
   if (codigoNum >= 10 && codigoNum <= 33) return 'industria';
-  
-  // Comércio: 45-47
   if (codigoNum >= 45 && codigoNum <= 47) return 'comercio';
   
-  // Serviços: resto
   return 'servicos';
 }
 
-// Calcula alíquota efetiva do Simples Nacional
 function calcularAliquotaSimples(faturamento: number, setor: 'comercio' | 'industria' | 'servicos', folha: number): number {
-  if (faturamento > LIMITE_SIMPLES) return 0; // Não elegível
+  if (faturamento > LIMITE_SIMPLES) return 0;
   
   const aliquotas = ALIQUOTAS_SIMPLES[setor];
   let faixaIndex = 0;
@@ -62,11 +57,9 @@ function calcularAliquotaSimples(faturamento: number, setor: 'comercio' | 'indus
   
   let aliquota = aliquotas[faixaIndex];
   
-  // Fator R para serviços (se folha >= 28% do faturamento, anexo III)
   if (setor === 'servicos' && faturamento > 0) {
     const fatorR = folha / faturamento;
     if (fatorR >= 0.28) {
-      // Anexo III (mais favorável)
       aliquota = aliquota * 0.85;
     }
   }
@@ -74,8 +67,7 @@ function calcularAliquotaSimples(faturamento: number, setor: 'comercio' | 'indus
   return aliquota;
 }
 
-// Calcula Simples Nacional tradicional
-function calcularSimplesNacional(input: SimprontoInput): RegimeCalculation {
+function calcularSimplesNacional(input: ComparativoRegimesInput): RegimeCalculation {
   const setor = determinarSetor(input.cnae_principal);
   const aliquota = calcularAliquotaSimples(input.faturamento_anual, setor, input.folha_pagamento);
   const imposto = input.faturamento_anual * aliquota;
@@ -93,26 +85,18 @@ function calcularSimplesNacional(input: SimprontoInput): RegimeCalculation {
   };
 }
 
-// Calcula Lucro Presumido
-function calcularLucroPresumido(input: SimprontoInput): RegimeCalculation {
+function calcularLucroPresumido(input: ComparativoRegimesInput): RegimeCalculation {
   const setor = determinarSetor(input.cnae_principal);
   const presuncao = PRESUNCAO_LUCRO[setor];
-  
-  // Base de cálculo presumida
   const basePresumida = input.faturamento_anual * presuncao;
   
-  // IRPJ: 15% + adicional de 10% sobre excedente de R$ 60k/trimestre (R$ 240k/ano)
   let irpj = basePresumida * 0.15;
   if (basePresumida > 240000) {
     irpj += (basePresumida - 240000) * 0.10;
   }
   
-  // CSLL: 9%
   const csll = basePresumida * 0.09;
-  
-  // PIS/COFINS cumulativo: 3,65%
   const pisCofins = input.faturamento_anual * 0.0365;
-  
   const impostoTotal = irpj + csll + pisCofins;
   const aliquotaEfetiva = (impostoTotal / input.faturamento_anual) * 100;
   
@@ -127,38 +111,23 @@ function calcularLucroPresumido(input: SimprontoInput): RegimeCalculation {
   };
 }
 
-// Calcula Lucro Real
-function calcularLucroReal(input: SimprontoInput): RegimeCalculation {
-  // Lucro = Faturamento - Custos - Folha - Despesas
+function calcularLucroReal(input: ComparativoRegimesInput): RegimeCalculation {
   const custosMercadorias = input.compras_insumos;
   const despesasOperacionais = input.despesas_operacionais || 0;
   const lucroOperacional = input.faturamento_anual - custosMercadorias - input.folha_pagamento - despesasOperacionais;
   const lucroAjustado = Math.max(0, lucroOperacional);
   
-  // IRPJ: 15% + adicional de 10% sobre excedente de R$ 240k/ano
   let irpj = lucroAjustado * 0.15;
   if (lucroAjustado > 240000) {
     irpj += (lucroAjustado - 240000) * 0.10;
   }
   
-  // CSLL: 9%
   const csll = lucroAjustado * 0.09;
-  
-  // PIS/COFINS não-cumulativo: 9,25% sobre faturamento
   const pisCofinsDebito = input.faturamento_anual * 0.0925;
-  
-  // Créditos de PIS/COFINS: 9,25% sobre insumos
   const pisCofinsCredito = input.compras_insumos * 0.0925;
-  
-  // Créditos de PIS/COFINS sobre despesas operacionais
-  // Fator de 50% (conservador) refletindo a subjetividade da essencialidade
   const FATOR_ESSENCIALIDADE = 0.50;
   const pisCofinsCredDespesas = despesasOperacionais * 0.0925 * FATOR_ESSENCIALIDADE;
-  
-  // Total de créditos
   const totalCreditos = pisCofinsCredito + pisCofinsCredDespesas;
-  
-  // PIS/COFINS líquido
   const pisCofinsLiquido = Math.max(0, pisCofinsDebito - totalCreditos);
   
   const impostoTotal = irpj + csll + pisCofinsLiquido;
@@ -179,8 +148,7 @@ function calcularLucroReal(input: SimprontoInput): RegimeCalculation {
   };
 }
 
-// Calcula Simples 2027 "Por Dentro" (tradicional com ajuste)
-function calcularSimples2027Dentro(input: SimprontoInput): RegimeCalculation {
+function calcularSimples2027Dentro(input: ComparativoRegimesInput): RegimeCalculation {
   const setor = determinarSetor(input.cnae_principal);
   const aliquota = calcularAliquotaSimples(input.faturamento_anual, setor, input.folha_pagamento);
   const imposto = input.faturamento_anual * aliquota;
@@ -198,8 +166,7 @@ function calcularSimples2027Dentro(input: SimprontoInput): RegimeCalculation {
   };
 }
 
-// Calcula Simples 2027 "Por Fora" (híbrido com geração de créditos)
-function calcularSimples2027Fora(input: SimprontoInput): RegimeCalculation {
+function calcularSimples2027Fora(input: ComparativoRegimesInput): RegimeCalculation {
   const setor = determinarSetor(input.cnae_principal);
   const aliquotaSimples = calcularAliquotaSimples(input.faturamento_anual, setor, input.folha_pagamento);
   const isElegivel = input.faturamento_anual <= LIMITE_SIMPLES;
@@ -217,16 +184,9 @@ function calcularSimples2027Fora(input: SimprontoInput): RegimeCalculation {
     };
   }
   
-  // DAS reduzido (estimativa: 30% de redução para cobrir IBS/CBS)
   const dasReduzido = input.faturamento_anual * aliquotaSimples * (1 - REDUCAO_DAS_POR_FORA);
-  
-  // IBS/CBS sobre faturamento
   const ibsCbsDevido = input.faturamento_anual * ALIQUOTA_CBS_IBS;
-  
-  // Créditos de IBS/CBS sobre insumos
   const ibsCbsCredito = input.compras_insumos * ALIQUOTA_CBS_IBS;
-  
-  // IBS/CBS líquido (não pode ser negativo para fins de cálculo)
   const ibsCbsLiquido = Math.max(0, ibsCbsDevido - ibsCbsCredito);
   
   const impostoTotal = dasReduzido + ibsCbsLiquido;
@@ -245,7 +205,6 @@ function calcularSimples2027Fora(input: SimprontoInput): RegimeCalculation {
   };
 }
 
-// Gera justificativa para a recomendação
 function gerarJustificativa(recomendado: RegimeType, perfil: PerfilClientes, regimes: RegimeCalculation[]): string {
   const justificativas: Record<RegimeType, string> = {
     'SIMPLES_2027_FORA': perfil === 'B2B' 
@@ -261,8 +220,7 @@ function gerarJustificativa(recomendado: RegimeType, perfil: PerfilClientes, reg
 }
 
 // Função principal de cálculo
-export function calcularSimpronto(input: SimprontoInput): SimprontoResult {
-  // Calcula todos os regimes
+export function calcularComparativoRegimes(input: ComparativoRegimesInput): ComparativoRegimesResult {
   const regimes: RegimeCalculation[] = [
     calcularSimplesNacional(input),
     calcularLucroPresumido(input),
@@ -271,22 +229,16 @@ export function calcularSimpronto(input: SimprontoInput): SimprontoResult {
     calcularSimples2027Fora(input),
   ];
   
-  // Filtra apenas os elegíveis para comparação
   const regimesElegiveis = regimes.filter(r => r.is_elegivel);
-  
-  // Ordena por imposto (menor primeiro)
   const ordenados = [...regimesElegiveis].sort((a, b) => a.imposto_anual - b.imposto_anual);
   
-  // Determina recomendação
   const recomendado = ordenados[0]?.tipo || 'SIMPLES_NACIONAL';
   const segundoMelhor = ordenados[1];
   
-  // Calcula economia
   const economiaVsSegundo = segundoMelhor 
     ? segundoMelhor.imposto_anual - ordenados[0].imposto_anual 
     : 0;
   
-  // Gera justificativa
   const justificativa = gerarJustificativa(recomendado, input.perfil_clientes, regimes);
   
   return {

@@ -40,7 +40,6 @@ export type FeatureKey =
   | 'score_tributario'      // ILIMITADO para todos
   | 'split_payment'         // ILIMITADO para todos
   | 'comparativo_regimes'   // ILIMITADO para todos
-  | 'simpronto'             // STARTER+ (simulação 2027)
   | 'calculadora_rtc'       // STARTER+
   | 'calculadora_nbs'       // NAVIGATOR+
   // Notícias
@@ -79,7 +78,6 @@ export const FEATURE_CONFIG: Record<FeatureKey, FeatureConfig> = {
   score_tributario: { minPlan: 'STARTER', limit: 'unlimited' },
   split_payment: { minPlan: 'STARTER', limit: 'unlimited' },
   comparativo_regimes: { minPlan: 'STARTER', limit: 'unlimited' },
-  simpronto: { minPlan: 'STARTER', limit: 'unlimited' },  // Starter+
   
   // Calculadoras - níveis diferentes
   calculadora_rtc: { minPlan: 'STARTER' },
@@ -140,8 +138,7 @@ export const CLARA_TOOL_SCOPE: Record<UserPlan, string[]> = {
     'comparativo_regimes', 
     'calculadora_rtc', 
     'timeline_reforma',
-    'dre_inteligente',
-    'simpronto'
+    'dre_inteligente'
   ],
   'NAVIGATOR': [
     'score_tributario', 
