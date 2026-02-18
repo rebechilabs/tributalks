@@ -244,27 +244,27 @@ const ROUTE_MAP: Record<string, RouteDefinition> = {
     icon: Scale
   },
   
-  // PIT (Reforma)
+  // Reforma Tributária
   '/dashboard/timeline-reforma': { 
     label: 'Timeline 2026-2033', 
-    group: 'pit',
-    groupLabel: 'PIT',
+    group: 'reforma',
+    groupLabel: 'Reforma Tributária',
     parent: '/dashboard',
     relatedPaths: ['/noticias', '/dashboard/checklist-reforma'],
     icon: MapPin
   },
   '/noticias': { 
     label: 'Notícias da Reforma', 
-    group: 'pit',
-    groupLabel: 'PIT',
+    group: 'reforma',
+    groupLabel: 'Reforma Tributária',
     parent: '/dashboard',
     relatedPaths: ['/dashboard/timeline-reforma', '/dashboard/checklist-reforma'],
     icon: Newspaper
   },
   '/dashboard/checklist-reforma': { 
     label: 'Checklist de Prontidão', 
-    group: 'pit',
-    groupLabel: 'PIT',
+    group: 'reforma',
+    groupLabel: 'Reforma Tributária',
     parent: '/dashboard',
     relatedPaths: ['/dashboard/timeline-reforma', '/noticias'],
     icon: ClipboardCheck
