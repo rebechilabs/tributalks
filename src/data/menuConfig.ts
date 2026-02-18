@@ -222,25 +222,6 @@ export const MENU_PROFESSIONAL_V2: MenuElement[] = [
       { label: 'Comparativo de Regimes Tributários', href: '/dashboard/entender/comparativo', icon: Scale, description: '5 regimes tributários', badge: '2027' },
     ]
   },
-  // Módulo RECUPERAR
-  {
-    title: 'RECUPERAR',
-    collapsible: true,
-    moduleHref: '/dashboard/recuperar',
-    items: [
-      { label: 'Radar de Créditos', href: '/dashboard/recuperar/radar', icon: FileText, description: 'Análise de XMLs' },
-    ]
-  },
-  // Módulo PLANEJAR
-  {
-    title: 'PLANEJAR',
-    collapsible: true,
-    moduleHref: '/dashboard/planejar',
-    items: [
-      { label: 'Oportunidades Tributárias', href: '/dashboard/planejar/oportunidades', icon: Lightbulb, badge: '61+' },
-      { label: 'Planejamento Tributário', href: '/dashboard/planejar/planejamento', icon: Route, badge: 'Em breve' },
-    ]
-  },
   // Módulo PRECIFICAR
   {
     title: 'PRECIFICAR',
@@ -250,6 +231,15 @@ export const MENU_PROFESSIONAL_V2: MenuElement[] = [
       { label: 'Margem Ativa', href: '/dashboard/precificacao/margem', icon: Target, description: 'Análise por NCM' },
       { label: 'Split Payment', href: '/dashboard/precificacao/split', icon: Wallet, description: 'Impacto 2026' },
       { label: 'PriceGuard', href: '/dashboard/precificacao/priceguard', icon: Shield, badge: 'Novo' },
+    ]
+  },
+  // Módulo RECUPERAR
+  {
+    title: 'RECUPERAR',
+    collapsible: true,
+    moduleHref: '/dashboard/recuperar',
+    items: [
+      { label: 'Radar de Créditos', href: '/dashboard/recuperar/radar', icon: FileText, description: 'Análise de XMLs' },
     ]
   },
   // Módulo COMANDAR
