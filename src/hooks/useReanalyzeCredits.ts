@@ -84,7 +84,7 @@ export function useReanalyzeCredits() {
           data_emissao: raw.data_emissao || raw.dataEmissao || '',
           cnpj_emitente: raw.cnpj_emitente || raw.cnpjEmitente || '',
           nome_emitente: raw.nome_emitente || raw.nomeEmitente || '',
-          itens: raw.itens || raw.items || [],
+          itens: raw.itens || raw.items || raw.produtos || [],
         };
       }).filter(Boolean);
 
