@@ -13,49 +13,59 @@ export function PWAUpdater() {
     updateServiceWorker,
   } = useRegisterSW({
     onRegisteredSW(swUrl, registration) {
-      console.log('[PWA] Service Worker registrado:', swUrl);
-      // Verifica atualizações a cada 30 segundos (mais responsivo)
+      // Check for updates every 15 seconds for faster detection
       if (registration) {
         setInterval(() => {
-          console.log('[PWA] Verificando atualizações...');
           registration.update();
-        }, 30 * 1000);
+        }, 15 * 1000);
       }
     },
     onNeedRefresh() {
-      console.log('[PWA] Nova versão disponível!');
       setShowNotification(true);
     },
   });
 
   useEffect(() => {
     if (needRefresh) {
-      console.log('[PWA] Exibindo notificação de atualização');
       setShowNotification(true);
     }
   }, [needRefresh]);
 
+  // Listen for SW controller change to auto-reload
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+
+    const handleControllerChange = () => {
+      // New SW took control — reload to get fresh content
+      window.location.reload();
+    };
+
+    navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
+    return () => {
+      navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
+    };
+  }, []);
+
   const handleUpdate = async () => {
     setIsUpdating(true);
-    console.log('[PWA] Iniciando atualização...');
     
     try {
       await updateServiceWorker(true);
-      // A página será recarregada automaticamente
+      // controllerchange listener will handle the reload
     } catch (error) {
-      console.error('[PWA] Erro ao atualizar:', error);
-      setIsUpdating(false);
+      // Fallback: force reload if SW update fails
+      window.location.reload();
     }
   };
 
   const handleDismiss = () => {
     setShowNotification(false);
-    // Ainda mantém needRefresh true para que o banner reapareça em 5 minutos
+    // Re-show after 5 minutes if still needed
     setTimeout(() => {
       if (needRefresh) {
         setShowNotification(true);
       }
-    }, 5 * 60 * 1000); // Lembrete a cada 5 minutos
+    }, 5 * 60 * 1000);
   };
 
   return (
@@ -69,12 +79,10 @@ export function PWAUpdater() {
           className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] w-[95%] max-w-lg"
         >
           <div className="relative bg-gradient-to-r from-primary/95 via-primary to-primary/95 text-primary-foreground rounded-xl shadow-2xl border border-primary-foreground/20 overflow-hidden">
-            {/* Efeito de brilho animado */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer" />
             
             <div className="relative p-4">
               <div className="flex items-start gap-4">
-                {/* Ícone animado */}
                 <div className="flex-shrink-0">
                   <motion.div
                     animate={{ rotate: [0, 360] }}
@@ -85,7 +93,6 @@ export function PWAUpdater() {
                   </motion.div>
                 </div>
 
-                {/* Conteúdo */}
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-lg mb-1">
                     Nova versão disponível! 🚀
@@ -95,7 +102,6 @@ export function PWAUpdater() {
                     Atualize agora para ter a melhor experiência.
                   </p>
 
-                  {/* Botões */}
                   <div className="flex items-center gap-2">
                     <Button
                       onClick={handleUpdate}
@@ -126,7 +132,6 @@ export function PWAUpdater() {
                   </div>
                 </div>
 
-                {/* Botão fechar */}
                 <button
                   onClick={handleDismiss}
                   className="flex-shrink-0 p-1 rounded-full hover:bg-primary-foreground/10 transition-colors"
@@ -137,7 +142,6 @@ export function PWAUpdater() {
               </div>
             </div>
 
-            {/* Barra de progresso sutil */}
             {isUpdating && (
               <motion.div
                 initial={{ width: '0%' }}

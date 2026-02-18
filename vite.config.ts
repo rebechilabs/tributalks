@@ -67,7 +67,9 @@ export default defineConfig(({ mode }) => ({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        globIgnores: ["**/version.json"],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB limit
+        navigateFallbackDenylist: [/^\/version\.json/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -82,6 +84,10 @@ export default defineConfig(({ mode }) => ({
                 statuses: [0, 200],
               },
             },
+          },
+          {
+            urlPattern: /\/version\.json$/,
+            handler: "NetworkOnly",
           },
         ],
       },
