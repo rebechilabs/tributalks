@@ -62,7 +62,7 @@ const tourSteps: Step[] = [
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Newspaper className="h-5 w-5 text-primary" />
-          <span className="font-semibold">PIT</span>
+          <span className="font-semibold">Reforma Tributária</span>
         </div>
         <p className="text-sm text-muted-foreground">
           Plataforma de Inteligência Tributária. Fique por dentro das notícias e prazos 

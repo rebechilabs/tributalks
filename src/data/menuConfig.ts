@@ -77,9 +77,9 @@ export const MENU_STARTER: MenuElement[] = [
       { label: 'Comparativo de Regimes Tributários', href: '/dashboard/entender/comparativo', icon: Scale, description: '5 regimes tributários', badge: '2027' },
     ]
   },
-  // PIT - Prazos Importantes Tributários
+  // Reforma Tributária
   {
-    title: 'PIT',
+    title: 'Reforma Tributária',
     collapsible: true,
     items: [
       { label: 'Timeline 2026-2033', href: '/dashboard/timeline-reforma', icon: MapPin },
@@ -164,9 +164,9 @@ export const MENU_NAVIGATOR: MenuElement[] = [
       { label: 'Planejamento Tributário', href: '/dashboard/planejar/planejamento', icon: Route, badge: 'Em breve' },
     ]
   },
-  // PIT - Prazos Importantes Tributários
+  // Reforma Tributária
   {
-    title: 'PIT',
+    title: 'Reforma Tributária',
     collapsible: true,
     items: [
       { label: 'Timeline 2026-2033', href: '/dashboard/timeline-reforma', icon: MapPin },

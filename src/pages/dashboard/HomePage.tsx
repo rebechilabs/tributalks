@@ -65,8 +65,8 @@ const ALL_MODULES: ModuleInfo[] = [
     ],
   },
   {
-    title: 'PIT',
-    description: 'Prazos Importantes Tributários — acompanhe a Reforma Tributária e prepare sua empresa.',
+    title: 'Reforma Tributária',
+    description: 'Acompanhe os prazos da Reforma Tributária e prepare sua empresa para a transição.',
     items: [
       { label: 'Timeline 2026-2033', description: 'Calendário visual com todos os marcos da transição tributária.', href: '/dashboard/timeline-reforma', icon: MapPin, minPlan: 'STARTER' },
       { label: 'Checklist de Prontidão', description: 'Lista de verificação para garantir que sua empresa está preparada.', href: '/dashboard/checklist-reforma', icon: ClipboardCheck, minPlan: 'NAVIGATOR' },

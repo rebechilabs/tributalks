@@ -154,7 +154,7 @@ const ROUTE_CONTEXTS: Record<string, ClaraContextConfig> = {
     variant: 'default'
   },
   
-  // PIT (Reforma) - Clara informa
+  // Reforma Tributária - Clara informa
   '/dashboard/timeline-reforma': {
     intent: 'explain',
     headline: 'Te guio pelos prazos importantes',

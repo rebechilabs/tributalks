@@ -32,7 +32,7 @@ const GROUP_TITLE_TO_KEY: Record<string, string> = {
   'Diagnóstico': 'diagnostico',
   'Comando': 'comando',
   'Simuladores': 'simuladores',
-  'PIT': 'pit',
+  'Reforma Tributária': 'reforma',
   'Central Inteligente': 'central',
   'Diagnóstico Avançado': 'avancado',
   'Integrações': 'integracoes',
