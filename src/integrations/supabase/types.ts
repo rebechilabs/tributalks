@@ -3496,8 +3496,8 @@ export type Database = {
           created_at: string | null
           erro_mensagem: string | null
           id: string
-          periodo_fim: string
-          periodo_inicio: string
+          periodo_fim: string | null
+          periodo_inicio: string | null
           razao_social: string | null
           regime_apuracao: string | null
           registros_processados: number | null
@@ -3519,8 +3519,8 @@ export type Database = {
           created_at?: string | null
           erro_mensagem?: string | null
           id?: string
-          periodo_fim: string
-          periodo_inicio: string
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
           razao_social?: string | null
           regime_apuracao?: string | null
           registros_processados?: number | null
@@ -3542,8 +3542,8 @@ export type Database = {
           created_at?: string | null
           erro_mensagem?: string | null
           id?: string
-          periodo_fim?: string
-          periodo_inicio?: string
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
           razao_social?: string | null
           regime_apuracao?: string | null
           registros_processados?: number | null
