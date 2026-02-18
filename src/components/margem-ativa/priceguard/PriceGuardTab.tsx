@@ -125,6 +125,17 @@ export function PriceGuardTab() {
           </div>
         </CardHeader>
         <CardContent>
+          {simulations.length === 0 && !loading && (
+            <div className="text-center py-12 space-y-3 text-muted-foreground">
+              <p className="text-base font-medium">Nenhuma simulação ainda.</p>
+              <p className="text-sm">
+                Clique em <strong>"Nova Simulação"</strong> para calcular o preço necessário dos seus produtos após a reforma tributária de 2027.
+              </p>
+              <p className="text-xs">
+                💡 Dica: tenha em mãos o NCM do produto e o custo unitário atual para um cálculo preciso.
+              </p>
+            </div>
+          )}
           <PriceSimulationTable 
             simulations={simulations}
             loading={loading}

@@ -44,7 +44,7 @@ export function PriceGuardForm({ onSubmit, onCancel }: PriceGuardFormProps) {
   const [precoAtual, setPrecoAtual] = useState("");
   const [custoUnitario, setCustoUnitario] = useState("");
   const [despesaProporcional, setDespesaProporcional] = useState("");
-  const [margemAtualPercent, setMargemAtualPercent] = useState("18");
+  const [margemAtualPercent, setMargemAtualPercent] = useState("");
   const [aliquotaPisCofins, setAliquotaPisCofins] = useState("9.25");
   const [aliquotaIcms, setAliquotaIcms] = useState("18");
   const [creditoInsumo, setCreditoInsumo] = useState("");
@@ -125,8 +125,24 @@ export function PriceGuardForm({ onSubmit, onCancel }: PriceGuardFormProps) {
   }, [ncmCode, municipioIbge]);
 
   const handleCalculate = async () => {
-    if (!productName || !precoAtual || !custoUnitario) {
-      toast.error("Preencha os campos obrigatórios");
+    const erros = [];
+    if (!productName) erros.push("Nome do Produto");
+    if (!precoAtual) erros.push("Preço de Venda Atual");
+    if (!custoUnitario) erros.push("Custo Unitário");
+    if (!margemAtualPercent) erros.push("Margem Desejada");
+
+    if (erros.length > 0) {
+      toast.error(`Preencha os campos obrigatórios: ${erros.join(", ")}`);
+      return;
+    }
+
+    if (parseFloat(custoUnitario) >= parseFloat(precoAtual)) {
+      toast.error("O custo unitário não pode ser maior ou igual ao preço de venda. Verifique os valores.");
+      return;
+    }
+
+    if (parseFloat(margemAtualPercent) <= 0 || parseFloat(margemAtualPercent) >= 100) {
+      toast.error("A margem deve estar entre 0% e 100%.");
       return;
     }
 
@@ -136,21 +152,55 @@ export function PriceGuardForm({ onSubmit, onCancel }: PriceGuardFormProps) {
       const aliquotaCBS = rtcRates?.cbs || 8.8;
       const aliquotaIBSUf = rtcRates?.ibsUf || 8.85;
       const aliquotaIBSMun = rtcRates?.ibsMun || 8.85;
+      // IS: usar valor da API RTC quando disponível.
+      // Se não disponível, manter 0% mas alertar o usuário caso o NCM seja de produto seletivo.
       const aliquotaIS = rtcRates?.is || 0;
+      const ncmSeletivo = ncmCode && [
+        '22', // Bebidas
+        '24', // Tabaco
+        '27', // Combustíveis
+        '87', // Veículos
+        '88', // Aeronaves
+        '89', // Embarcações
+      ].some(prefix => ncmCode.startsWith(prefix));
+
+      if (ncmSeletivo && !rtcRates) {
+        toast.warning(
+          "Produto possivelmente sujeito ao Imposto Seletivo (IS). Busque as alíquotas RTC para um cálculo preciso.",
+          { duration: 6000 }
+        );
+      }
+
       const aliquotaTotal = aliquotaCBS + aliquotaIBSUf + aliquotaIBSMun + aliquotaIS;
 
       const preco = parseFloat(precoAtual) || 0;
       const custo = parseFloat(custoUnitario) || 0;
       const despesa = parseFloat(despesaProporcional) || 0;
       const credito = parseFloat(creditoInsumo) || 0;
-      const margem = parseFloat(margemAtualPercent) || 18;
+      const margem = parseFloat(margemAtualPercent) || 0;
       const concorrente = parseFloat(precoConcorrente) || 0;
 
-      // Gross-up reverso formula
-      // Preço 2027 = (Custo + Despesa - Crédito) / (1 - Alíquota) / (1 - Margem)
-      const custoLiquido = custo + despesa - credito;
+      // Fórmula de gross-up reverso com neutralização do regime atual
+      // Passo 1: Calcular a carga tributária atual total
+      const aliquotaAtualTotal = (parseFloat(aliquotaPisCofins) + parseFloat(aliquotaIcms)) / 100;
+
+      // Passo 2: Neutralizar os impostos atuais do custo informado
+      const custoSemImpostoAtual = aliquotaAtualTotal < 1 
+        ? custo / (1 - aliquotaAtualTotal) 
+        : custo;
+
+      // Passo 3: Base de cálculo limpa = custo neutralizado + despesas - créditos de insumo
+      const custoLiquido = custoSemImpostoAtual + despesa - credito;
+
+      // Passo 4: Aplicar novo regime (CBS + IBS) e margem desejada
       const fatorTributario = 1 - (aliquotaTotal / 100);
-      const fatorMargem = 1 - margem / 100;
+      const fatorMargem = 1 - (margem / 100);
+
+      if (fatorTributario <= 0 || fatorMargem <= 0) {
+        toast.error("Alíquota ou margem inválida — verifique os valores informados.");
+        setCalculating(false);
+        return;
+      }
 
       const preco2027 = custoLiquido / fatorTributario / fatorMargem;
       const variacaoPercent = ((preco2027 - preco) / preco) * 100;
@@ -166,6 +216,24 @@ export function PriceGuardForm({ onSubmit, onCancel }: PriceGuardFormProps) {
         aliquotaTotal,
         gapCompetitivo
       });
+
+      // Feedback contextual para o usuário
+      if (variacaoPercent > 15) {
+        toast.warning(
+          `Atenção: para manter sua margem, o preço precisará subir ${variacaoPercent.toFixed(1)}%. Avalie o impacto competitivo antes de repassar ao cliente.`,
+          { duration: 8000 }
+        );
+      } else if (variacaoPercent < 0) {
+        toast.success(
+          `Boa notícia: com a reforma, seu preço pode reduzir ${Math.abs(variacaoPercent).toFixed(1)}% mantendo a mesma margem, graças aos créditos de IBS/CBS.`,
+          { duration: 8000 }
+        );
+      } else {
+        toast.info(
+          `Ajuste de ${variacaoPercent.toFixed(1)}% necessário para manter sua margem na reforma tributária.`,
+          { duration: 6000 }
+        );
+      }
 
     } catch (error) {
       console.error('Erro no cálculo:', error);
@@ -315,19 +383,24 @@ export function PriceGuardForm({ onSubmit, onCancel }: PriceGuardFormProps) {
           </div>
           <div className="space-y-2">
             <Label>&nbsp;</Label>
-            <Button 
-              onClick={fetchRtcRates}
-              disabled={fetchingRtc || !ncmCode || ncmCode.length < 8 || !municipioIbge}
-              variant="outline"
-              className="w-full"
-            >
-              {fetchingRtc ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Search className="w-4 h-4 mr-2" />
-              )}
-              Buscar Alíquota RTC
-            </Button>
+            <div className="space-y-1">
+              <Button 
+                onClick={fetchRtcRates}
+                disabled={fetchingRtc || !ncmCode || ncmCode.length < 8 || !municipioIbge}
+                variant="outline"
+                className="w-full"
+              >
+                {fetchingRtc ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Search className="w-4 h-4 mr-2" />
+                )}
+                Buscar Alíquota RTC
+              </Button>
+              <p className="text-xs text-muted-foreground text-center">
+                Alíquotas oficiais da Receita Federal para seu produto e município
+              </p>
+            </div>
           </div>
         </div>
         
@@ -377,7 +450,9 @@ export function PriceGuardForm({ onSubmit, onCancel }: PriceGuardFormProps) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="custoUnitario">Custo Unitário (R$) *</Label>
+            <Label htmlFor="custoUnitario">
+              Custo Unitário (R$) *
+            </Label>
             <Input 
               id="custoUnitario"
               type="number"
@@ -387,6 +462,9 @@ export function PriceGuardForm({ onSubmit, onCancel }: PriceGuardFormProps) {
               placeholder="0,00"
               required
             />
+            <p className="text-xs text-muted-foreground mt-1">
+              Informe o custo conforme sua nota fiscal ou contabilidade (com impostos incluídos). O sistema neutraliza automaticamente os tributos do regime atual.
+            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="despesaProporcional">Despesa Proporcional (R$)</Label>
@@ -400,14 +478,19 @@ export function PriceGuardForm({ onSubmit, onCancel }: PriceGuardFormProps) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="margemAtualPercent">Margem Desejada (%)</Label>
+            <Label htmlFor="margemAtualPercent">
+              Margem Desejada (%)
+              <span className="ml-1 text-xs text-muted-foreground font-normal">
+                — use sua margem atual real
+              </span>
+            </Label>
             <Input 
               id="margemAtualPercent"
               type="number"
               step="0.1"
               value={margemAtualPercent}
               onChange={(e) => setMargemAtualPercent(e.target.value)}
-              placeholder="18"
+              placeholder="Ex: comércio 10-15%, serviços 20-40%"
             />
           </div>
           <div className="space-y-2">
