@@ -232,8 +232,7 @@ export const MENU_PROFESSIONAL_V2: MenuElement[] = [
     collapsible: true,
     moduleHref: '/dashboard/precificacao',
     items: [
-      { label: 'Margem Ativa', href: '/dashboard/precificacao/margem', icon: Target, description: 'Análise por NCM' },
-      { label: 'PriceGuard', href: '/dashboard/precificacao/priceguard', icon: Shield, badge: 'Novo' },
+      { label: 'Margem Ativa', href: '/dashboard/precificacao/margem', icon: Target, description: 'OMC-AI + PriceGuard' },
       { label: 'Split Payment', href: '/dashboard/precificacao/split', icon: Wallet, description: 'Impacto 2026' },
     ]
   },
