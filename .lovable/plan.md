@@ -1,178 +1,83 @@
 
-# Evolucao: Clara AI Multi-Agente Inteligente
+# Widget de Noticias da Reforma Tributaria na Home
 
 ## Situacao Atual
 
-A Clara ja possui uma arquitetura sofisticada com:
-- Edge Function `clara-assistant` (2699 linhas) com orquestracao, RAG, cache, agentes (fiscal/margin/compliance), knowledge graph
-- Roteamento por keywords no backend (`analyzeMessageForAgent`)
-- Contexto completo do usuario (DRE, Score, creditos, oportunidades, integracoes)
-- Frontend: `FloatingAssistant.tsx` como popup/card lateral com chat basico
-- Hooks: `useClaraAgents`, `useClaraAgentIntegration`, `useSemanticSearch`, `useKnowledgeGraph`
-- Modelos: Claude Sonnet 4 (complexo) + Gemini Flash (simples)
+A Home (`HomePage.tsx`) ja exibe um `LatestNewsSection` basico que lista 5 noticias da tabela `noticias_tributarias`. A tabela ja possui dados reais com campos `categoria`, `relevancia`, `tributos_relacionados`, `resumo_executivo`, etc. A pagina completa de noticias (`/noticias`) ja existe em `NoticiasReforma.tsx`.
 
 ## O Que Muda
 
-A evolucao foca em 3 pilares: (1) expandir agentes de 3 para 5, (2) transformar o chat de popup em painel lateral, (3) adicionar sugestoes contextuais e badge de agente.
+### 1. Reformular o widget `LatestNewsSection`
 
----
+Substituir o widget atual por uma versao mais rica:
 
-## Fase 1: Expandir Agentes no Backend
+- Titulo: "Ultimas da Reforma Tributaria" com icone de jornal
+- Subtitulo: "Acompanhe as mudancas que impactam seu negocio"
+- Cards compactos com: data formatada, titulo (1 linha truncada), tags de tributos relacionados (IBS/CBS, Split Payment, etc.), indicador de impacto com emoji (Alto/Medio/Baixo)
+- Borda dourada sutil no widget
+- Hover effect nos cards
+- Rodape com dois links: "Ver todas as noticias" e "Configurar alertas por email"
+- O link de alertas mostra badge de upgrade para planos abaixo de Professional
 
-### 1.1 Novos agentes no roteamento (`clara-assistant/index.ts`)
+### 2. Expandir o hook `useLatestNews`
 
-Atualizar `analyzeMessageForAgent()` para 5 agentes em vez de 3:
+Adicionar campos `categoria`, `tributos_relacionados` e `fonte_url` a query para alimentar as tags e o link externo.
 
-| Agente | Antigo | Novo |
-|---|---|---|
-| ENTENDER | `fiscal` (parcial) | `entender` - DRE, Score, Comparativo |
-| PRECIFICAR | `margin` (parcial) | `precificar` - Preco, margem tributaria |
-| RECUPERAR | `fiscal` (parcial) | `recuperar` - Creditos, XMLs, Radar |
-| PLANEJAR | -- | `planejar` - Oportunidades, cenarios |
-| COMANDAR | -- | `comandar` - Resumos, relatorios, KPIs |
+### 3. Adicionar link "Perguntar a Clara" na pagina completa
 
-A logica de roteamento sera por regex patterns expandidos:
+No `NoticiasReforma.tsx`, adicionar um botao em cada noticia expandida que abre o chat da Clara com a pergunta pre-preenchida sobre aquela noticia.
 
-- `entender`: dre, score, margem bruta, regime, comparativo, diagnostico, faturamento
-- `precificar`: preco, cobrar, markup, margem ativa, aliquota no preco, split payment
-- `recuperar`: credito, xml, radar, pis/cofins, recuperar, prescrever, compensacao
-- `planejar`: oportunidade, cisao, filial, planejamento, economia, 2027, reforma impacto
-- `comandar`: resumo, relatorio, pdf, alerta, kpi, executivo, contador
+### 4. Inserir noticias de exemplo (mock data)
 
-### 1.2 System prompts especializados por agente
+Como a tabela ja tem dados reais, vamos inserir 5 noticias adicionais com `tributos_relacionados` preenchidos para demonstrar as tags de categoria (IBS/CBS, Split Payment, Simples Nacional, Lucro Real, Regulamentacao). As noticias existentes tem `tributos_relacionados` possivelmente nulo.
 
-Adicionar ao `formatAgentContextForPrompt()` instrucoes especificas:
+## O que NAO muda
 
-- **Entender**: "Voce e especialista em diagnostico financeiro e tributario. Analise DRE, Score e regimes com dados reais."
-- **Precificar**: "Voce e especialista em formacao de preco com carga tributaria. Simule impacto de impostos no preco."
-- **Recuperar**: "Voce e especialista em recuperacao de creditos tributarios. Priorize por valor e urgencia de prescricao."
-- **Planejar**: "Voce e especialista em planejamento tributario estrategico. Projete cenarios e calcule economia."
-- **Comandar**: "Voce e especialista em visao executiva. Gere resumos cruzando dados de todos os modulos."
-
-### 1.3 Temperature diferenciada por agente
-
-No momento de chamar a API Claude/Gemini, ajustar temperature:
-
-- `entender`: 0.3 (preciso)
-- `precificar`: 0.3 (preciso)
-- `recuperar`: 0.2 (factual)
-- `planejar`: 0.5 (criativo para cenarios)
-- `comandar`: 0.2 (relatorios factuais)
-
----
-
-## Fase 2: Interface - Painel Lateral em vez de Popup
-
-### 2.1 Novo componente `ClaraSidePanel.tsx`
-
-Substituir o popup card do `FloatingAssistant.tsx` por um painel lateral deslizante:
-
-- Ocupa ~380px de largura a direita (responsivo: 100% em mobile)
-- Usa `framer-motion` (ja instalado) para animacao de slide-in/slide-out
-- Dashboard continua visivel ao lado
-- Botao flutuante permanece no canto inferior direito
-
-### 2.2 Sugestoes contextuais no topo do chat
-
-Baseado na rota atual (`ROUTE_TO_TOOL`), mostrar 2-3 chips de sugestao:
-
-| Pagina | Sugestoes |
-|---|---|
-| DRE | "Como esta minha margem?" / "O que posso melhorar?" |
-| Score | "Como melhorar meu score?" / "O que significa cada dimensao?" |
-| Radar | "Encontrou creditos?" / "Tem algo prestes a prescrever?" |
-| Oportunidades | "Quais oportunidades tenho?" / "Quanto posso economizar?" |
-| Home | "Me da um resumo" / "Por onde comecar?" |
-
-### 2.3 Badge de agente nas respostas
-
-Quando a resposta vem de um agente especifico, mostrar um badge discreto acima da mensagem:
-
-```
-[Entender] ou [Precificar] ou [Recuperar] etc.
-```
-
-Cores: todas em amber/dourado para consistencia com os module tags da Home.
-
-### 2.4 Botoes de acao inline nas respostas
-
-Detectar padroes na resposta da Clara e renderizar botoes clicaveis:
-
-- `[Ver no Comparativo]` -> navega para `/dashboard/entender/comparativo`
-- `[Gerar Relatorio PDF]` -> dispara comando `/resumo`
-- `[Ver Radar de Creditos]` -> navega para `/dashboard/recuperar/radar`
-- `[Simular cenario]` -> navega para calculadora relevante
-
-Pattern matching no markdown da resposta para converter links especiais em botoes.
-
----
-
-## Fase 3: Atualizacoes de Escopo por Plano
-
-### 3.1 CLARA_TOOL_SCOPE - Novos agentes por plano
-
-Atualizar `PLAN_TOOL_SCOPE` no backend e `useFeatureAccess.ts` no frontend:
-
-| Agente | STARTER | NAVIGATOR | PROFESSIONAL | ENTERPRISE |
-|---|---|---|---|---|
-| Entender | Basico (Score+Comparativo) | Completo | Completo | Completo |
-| Precificar | -- | Basico | Completo | Completo |
-| Recuperar | -- | -- | Completo | Completo |
-| Planejar | -- | Parcial | Completo | Completo |
-| Comandar | -- | -- | Parcial | Completo |
-
-### 3.2 Respostas fora de escopo educativas
-
-Quando usuario pergunta algo de um agente fora do plano, Clara responde educadamente explicando o que faz e indicando upgrade.
-
----
-
-## Fase 4: Proatividade (preparacao)
-
-### 4.1 Sugestoes proativas no painel
-
-Quando o chat abre, alem da saudacao, Clara pode incluir 1 alerta proativo baseado no contexto:
-
-- Score caiu > 10 pontos: "Seu Score caiu X pontos. Quer entender o motivo?"
-- Creditos proximos de prescrever: "Identifiquei X creditos que vencem em Y meses."
-- DRE com margem critica: "Sua margem esta em X%. Posso sugerir ajustes?"
-
-Isso ja e possivel com os dados de `buildUserContext()` - basta adicionar logica no greeting.
-
----
-
-## Secao Tecnica
-
-### Arquivos a criar
-- `src/components/common/ClaraSidePanel.tsx` - Novo painel lateral (substitui popup do FloatingAssistant)
-- `src/components/common/ClaraAgentTag.tsx` - Badge de agente com emoji e nome
-- `src/components/common/ClaraContextualSuggestions.tsx` - Chips de sugestao por pagina
-- `src/components/common/ClaraActionButton.tsx` - Botoes de acao inline nas respostas
-
-### Arquivos a editar
-- `supabase/functions/clara-assistant/index.ts` - Expandir agentes, system prompts, temperature
-- `src/components/common/FloatingAssistant.tsx` - Refatorar para usar ClaraSidePanel
-- `src/hooks/clara/useClaraAgents.ts` - Atualizar tipos de agentes (5 em vez de 3)
-- `src/hooks/clara/useClaraAgentIntegration.ts` - Atualizar patterns de roteamento
-
-### Modelo de IA
-- Manter Claude Sonnet 4 para queries complexas (ja configurado)
-- Manter Gemini Flash para queries simples (ja configurado)
-- Temperature variavel por agente (novo)
-- NAO criar Edge Functions separadas por agente (desnecessario - o roteamento e via prompt)
-
-### O que NAO muda
 - Botoes da landing page
 - Configuracoes do Stripe
 - Logica de trial de 7 dias
-- Limites diarios por plano (CLARA_DAILY_LIMITS)
-- RAG semantico e Knowledge Graph (ja funcionam)
-- Cache de respostas (ja funciona)
-- Rate limiting (ja funciona)
+- Tabela `noticias_tributarias` (estrutura) -- ja possui todos os campos necessarios
+- Pagina `/noticias` (layout geral) -- apenas adicao do botao Clara
+- Feature gate `news_email_alerts` (ja existe como PROFESSIONAL+)
 
-### Ordem de implementacao
-1. Backend: expandir agentes e prompts na Edge Function
-2. Frontend: criar ClaraSidePanel e componentes auxiliares
-3. Frontend: integrar sugestoes contextuais e badges
-4. Frontend: adicionar botoes de acao inline
-5. Testes e ajustes
+## Secao tecnica
+
+### Arquivos editados
+- `src/components/home/LatestNewsSection.tsx` -- Reformulacao completa do widget: novo layout com borda dourada, tags de tributos, indicador de impacto com emoji, subtitulo, links de rodape (noticias + alertas com gating)
+- `src/hooks/useLatestNews.ts` -- Adicionar `categoria`, `tributos_relacionados`, `fonte_url` ao select da query
+- `src/pages/NoticiasReforma.tsx` -- Adicionar botao "Perguntar a Clara sobre isso" em cada noticia expandida
+
+### Dados inseridos
+- 5 noticias de exemplo na tabela `noticias_tributarias` com `tributos_relacionados` preenchidos para demonstrar tags visuais
+
+### Mapeamento de dados existentes
+
+| Campo no banco | Uso no widget |
+|---|---|
+| `data_publicacao` | Data formatada (ex: "17 Fev 2026") |
+| `titulo_original` | Titulo truncado em 1 linha |
+| `tributos_relacionados` | Tags coloridas (IBS/CBS, ICMS, etc.) |
+| `relevancia` (ALTA/MEDIA/BAIXA) | Emoji de impacto (vermelho/amarelo/verde) |
+| `resumo_executivo` | Texto de preview no hover ou segunda linha |
+| `fonte_url` | Link externo na pagina completa |
+
+### Visual do widget
+
+```text
++--------------------------------------------+
+| Ultimas da Reforma Tributaria              |
+| Acompanhe as mudancas que impactam...      |
+|--------------------------------------------|
+| 17 Fev 2026                                |
+| Comite Gestor define aliquota de           |
+| referencia do IBS em 17,7%                 |
+| [IBS/CBS]  Alto impacto                    |
+|--------------------------------------------|
+| 16 Fev 2026                                |
+| Split Payment obrigatorio para...          |
+| [Split Payment]  Medio impacto             |
+|--------------------------------------------|
+| Ver todas as noticias ->                   |
+| Configurar alertas por email               |
++--------------------------------------------+
+```
