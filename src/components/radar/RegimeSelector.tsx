@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import { ArrowRight } from 'lucide-react';
 import { REGIME_CONFIGS, type RegimeType } from './regimeConfig';
+import { useSharedCompanyData } from '@/hooks/useSharedCompanyData';
+import { DataSourceBadge } from '@/components/common/DataSourceBadge';
 
 interface RegimeSelectorProps {
   selectedRegime: RegimeType | null;
@@ -15,67 +15,27 @@ interface RegimeSelectorProps {
 
 const REGIME_LIST: RegimeType[] = ['simples', 'presumido', 'real'];
 
+const REGIME_MAP: Record<string, RegimeType> = {
+  simples_nacional: 'simples',
+  simples: 'simples',
+  lucro_presumido: 'presumido',
+  presumido: 'presumido',
+  lucro_real: 'real',
+  real: 'real',
+};
+
 export function RegimeSelector({ selectedRegime, onSelect, onNext }: RegimeSelectorProps) {
-  const { user } = useAuth();
+  const shared = useSharedCompanyData();
   const [autoDetected, setAutoDetected] = useState(false);
 
-  // Auto-detect regime from DRE / company_profile
   useEffect(() => {
-    if (!user || selectedRegime) return;
-
-    const detect = async () => {
-      // Try company_profile first
-      const { data: profile } = await supabase
-        .from('company_profile')
-        .select('regime_tributario')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (profile?.regime_tributario) {
-        const map: Record<string, RegimeType> = {
-          simples_nacional: 'simples',
-          simples: 'simples',
-          lucro_presumido: 'presumido',
-          presumido: 'presumido',
-          lucro_real: 'real',
-          real: 'real',
-        };
-        const mapped = map[profile.regime_tributario.toLowerCase()];
-        if (mapped) {
-          onSelect(mapped);
-          setAutoDetected(true);
-          return;
-        }
-      }
-
-      // Try company_dre
-      const { data: dre } = await supabase
-        .from('company_dre')
-        .select('input_regime_tributario')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (dre?.input_regime_tributario) {
-        const map: Record<string, RegimeType> = {
-          simples_nacional: 'simples',
-          simples: 'simples',
-          lucro_presumido: 'presumido',
-          presumido: 'presumido',
-          lucro_real: 'real',
-          real: 'real',
-        };
-        const mapped = map[dre.input_regime_tributario.toLowerCase()];
-        if (mapped) {
-          onSelect(mapped);
-          setAutoDetected(true);
-        }
-      }
-    };
-
-    detect();
-  }, [user]);
+    if (selectedRegime || shared.isLoading || !shared.regime_tributario) return;
+    const mapped = REGIME_MAP[shared.regime_tributario.toLowerCase()];
+    if (mapped) {
+      onSelect(mapped);
+      setAutoDetected(true);
+    }
+  }, [shared.isLoading, shared.regime_tributario]);
 
   return (
     <div className="space-y-6">
@@ -84,10 +44,11 @@ export function RegimeSelector({ selectedRegime, onSelect, onNext }: RegimeSelec
         <p className="text-muted-foreground text-sm">
           Selecione o regime para personalizar a análise de créditos
         </p>
-        {autoDetected && (
-          <p className="text-xs text-primary">
-            ✓ Regime detectado automaticamente a partir dos seus dados
-          </p>
+         {autoDetected && (
+          <div className="flex items-center justify-center gap-2">
+            <p className="text-xs text-primary">✓ Regime detectado automaticamente</p>
+            <DataSourceBadge origem={shared.origem} />
+          </div>
         )}
       </div>
 

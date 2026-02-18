@@ -18,6 +18,14 @@ export interface Company {
   porte: string | null;
   num_funcionarios: number | null;
   faturamento_anual: number | null;
+  cnae_principal: string | null;
+  folha_mensal: number | null;
+  receita_liquida_mensal: number | null;
+  margem_bruta_percentual: number | null;
+  compras_insumos_mensal: number | null;
+  prolabore_mensal: number | null;
+  dados_financeiros_origem: string | null;
+  dados_financeiros_atualizados_em: string | null;
   created_at?: string;
 }
 
@@ -54,7 +62,7 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
       
       const { data, error } = await supabase
         .from('company_profile')
-        .select('id, user_id, cnpj_principal, razao_social, nome_fantasia, regime_tributario, uf_sede, municipio_sede, setor, segmento, porte, num_funcionarios, faturamento_anual, created_at')
+        .select('id, user_id, cnpj_principal, razao_social, nome_fantasia, regime_tributario, uf_sede, municipio_sede, setor, segmento, porte, num_funcionarios, faturamento_anual, cnae_principal, folha_mensal, receita_liquida_mensal, margem_bruta_percentual, compras_insumos_mensal, prolabore_mensal, dados_financeiros_origem, dados_financeiros_atualizados_em, created_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: true });
 

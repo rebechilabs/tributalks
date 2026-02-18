@@ -1124,8 +1124,11 @@ export type Database = {
           compra_equipamento_solar: boolean | null
           compra_equipamentos_medicos: boolean | null
           compra_insumos_agricolas: boolean | null
+          compras_insumos_mensal: number | null
           created_at: string | null
           cursos_livres: boolean | null
+          dados_financeiros_atualizados_em: string | null
+          dados_financeiros_origem: string | null
           descricao_atividade: string | null
           email_ceo: string | null
           email_cfo: string | null
@@ -1158,6 +1161,7 @@ export type Database = {
           investe_tecnologia_educacional: boolean | null
           is_active: boolean | null
           laboratorio: boolean | null
+          margem_bruta_percentual: number | null
           municipio_sede: string | null
           nome_fantasia: string | null
           num_funcionarios: number | null
@@ -1181,10 +1185,12 @@ export type Database = {
           producao_rural: boolean | null
           programa_mcmv: boolean | null
           projeto_infraestrutura_energia: boolean | null
+          prolabore_mensal: number | null
           qtd_cnpjs: number | null
           qtd_filiais: number | null
           razao_social: string | null
           recebe_gorjetas: boolean | null
+          receita_liquida_mensal: number | null
           regime_tributario: string | null
           regimes_no_grupo: string[] | null
           segmento: string | null
@@ -1248,8 +1254,11 @@ export type Database = {
           compra_equipamento_solar?: boolean | null
           compra_equipamentos_medicos?: boolean | null
           compra_insumos_agricolas?: boolean | null
+          compras_insumos_mensal?: number | null
           created_at?: string | null
           cursos_livres?: boolean | null
+          dados_financeiros_atualizados_em?: string | null
+          dados_financeiros_origem?: string | null
           descricao_atividade?: string | null
           email_ceo?: string | null
           email_cfo?: string | null
@@ -1282,6 +1291,7 @@ export type Database = {
           investe_tecnologia_educacional?: boolean | null
           is_active?: boolean | null
           laboratorio?: boolean | null
+          margem_bruta_percentual?: number | null
           municipio_sede?: string | null
           nome_fantasia?: string | null
           num_funcionarios?: number | null
@@ -1305,10 +1315,12 @@ export type Database = {
           producao_rural?: boolean | null
           programa_mcmv?: boolean | null
           projeto_infraestrutura_energia?: boolean | null
+          prolabore_mensal?: number | null
           qtd_cnpjs?: number | null
           qtd_filiais?: number | null
           razao_social?: string | null
           recebe_gorjetas?: boolean | null
+          receita_liquida_mensal?: number | null
           regime_tributario?: string | null
           regimes_no_grupo?: string[] | null
           segmento?: string | null
@@ -1372,8 +1384,11 @@ export type Database = {
           compra_equipamento_solar?: boolean | null
           compra_equipamentos_medicos?: boolean | null
           compra_insumos_agricolas?: boolean | null
+          compras_insumos_mensal?: number | null
           created_at?: string | null
           cursos_livres?: boolean | null
+          dados_financeiros_atualizados_em?: string | null
+          dados_financeiros_origem?: string | null
           descricao_atividade?: string | null
           email_ceo?: string | null
           email_cfo?: string | null
@@ -1406,6 +1421,7 @@ export type Database = {
           investe_tecnologia_educacional?: boolean | null
           is_active?: boolean | null
           laboratorio?: boolean | null
+          margem_bruta_percentual?: number | null
           municipio_sede?: string | null
           nome_fantasia?: string | null
           num_funcionarios?: number | null
@@ -1429,10 +1445,12 @@ export type Database = {
           producao_rural?: boolean | null
           programa_mcmv?: boolean | null
           projeto_infraestrutura_energia?: boolean | null
+          prolabore_mensal?: number | null
           qtd_cnpjs?: number | null
           qtd_filiais?: number | null
           razao_social?: string | null
           recebe_gorjetas?: boolean | null
+          receita_liquida_mensal?: number | null
           regime_tributario?: string | null
           regimes_no_grupo?: string[] | null
           segmento?: string | null

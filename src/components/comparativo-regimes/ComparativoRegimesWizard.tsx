@@ -1,7 +1,4 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +18,8 @@ import {
 } from "lucide-react";
 import { ComparativoRegimesFormData, PerfilClientes, ComparativoRegimesInput } from "@/types/comparativoRegimes";
 import { DespesasOperacionaisSelector } from "./DespesasOperacionaisSelector";
+import { useSharedCompanyData } from "@/hooks/useSharedCompanyData";
+import { DataSourceBadge } from "@/components/common/DataSourceBadge";
 
 interface ComparativoRegimesWizardProps {
   onSubmit: (data: ComparativoRegimesInput) => void;
@@ -39,46 +38,40 @@ const initialFormData: ComparativoRegimesFormData = {
 };
 
 export function ComparativoRegimesWizard({ onSubmit, isLoading }: ComparativoRegimesWizardProps) {
-  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<ComparativoRegimesFormData>(initialFormData);
   const [showPrefillBanner, setShowPrefillBanner] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
+  const shared = useSharedCompanyData();
 
-  // Buscar dados do DRE para autopreenchimento
-  const { data: dreData } = useQuery({
-    queryKey: ['dre-prefill-comparativo-regimes', user?.id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('company_dre')
-        .select('calc_receita_bruta, input_custo_mercadorias, input_custo_materiais, input_salarios_encargos')
-        .eq('user_id', user!.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return data;
-    },
-    enabled: !!user?.id,
-  });
-
-  // Autopreenchimento com dados do DRE
+  // Pre-fill from shared company data (company_profile)
   useEffect(() => {
-    if (dreData && !formData.faturamento_anual) {
-      const receitaMensal = dreData.calc_receita_bruta || 0;
-      const custosMensais = (dreData.input_custo_mercadorias || 0) + (dreData.input_custo_materiais || 0);
-      const folhaMensal = dreData.input_salarios_encargos || 0;
-      
-      if (receitaMensal > 0) {
-        setFormData(prev => ({
-          ...prev,
-          faturamento_anual: (receitaMensal * 12).toString(),
-          compras_insumos: (custosMensais * 12).toString(),
-          folha_pagamento: (folhaMensal * 12).toString(),
-        }));
-        setShowPrefillBanner(true);
+    if (shared.isLoading) return;
+    let filled = false;
+
+    setFormData(prev => {
+      const next = { ...prev };
+      if (!prev.faturamento_anual && shared.faturamento_anual) {
+        next.faturamento_anual = Math.round(shared.faturamento_anual).toString();
+        filled = true;
       }
-    }
-  }, [dreData]);
+      if (!prev.folha_pagamento && shared.folha_anual) {
+        next.folha_pagamento = Math.round(shared.folha_anual).toString();
+        filled = true;
+      }
+      if (!prev.compras_insumos && shared.compras_insumos_anual) {
+        next.compras_insumos = Math.round(shared.compras_insumos_anual).toString();
+        filled = true;
+      }
+      if (!prev.cnae_principal && shared.cnae_principal) {
+        next.cnae_principal = shared.cnae_principal;
+        filled = true;
+      }
+      return next;
+    });
+
+    if (filled) setShowPrefillBanner(true);
+  }, [shared.isLoading, shared.faturamento_anual, shared.folha_anual, shared.compras_insumos_anual, shared.cnae_principal]);
 
   const formatarParaExibicao = (valor: string): string => {
     if (!valor) return '';
@@ -136,8 +129,10 @@ export function ComparativoRegimesWizard({ onSubmit, isLoading }: ComparativoReg
       {showPrefillBanner && step === 1 && (
         <Alert className="mb-4 border-yellow-500/50 bg-yellow-500/10">
           <Sparkles className="h-4 w-4 text-yellow-500" />
-          <AlertDescription className="text-yellow-600 dark:text-yellow-400">
-            Dados do DRE detectados! Os campos foram preenchidos automaticamente. Ajuste se necessário.
+          <AlertDescription className="text-yellow-600 dark:text-yellow-400 flex items-center gap-2">
+            Campos preenchidos automaticamente.
+            <DataSourceBadge origem={shared.origem} />
+            Ajuste se necessário.
           </AlertDescription>
         </Alert>
       )}
