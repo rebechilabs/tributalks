@@ -12,7 +12,7 @@ import { PublicRoute } from "@/components/PublicRoute";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { PresenceTrackerWrapper } from "./components/PresenceTrackerWrapper";
-import { AppVersionChecker } from "./components/AppVersionChecker";
+
 import { GlobalShortcutsProvider } from "./components/GlobalShortcutsProvider";
 
 // Helper: retry dynamic imports to handle stale Vite HMR cache
@@ -137,7 +137,7 @@ const App = () => (
           <CompanyProvider>
           <GlobalShortcutsProvider>
           <ConnectionStatus />
-          <AppVersionChecker />
+          
           <PresenceTrackerWrapper />
           <Toaster />
           <Sonner />
