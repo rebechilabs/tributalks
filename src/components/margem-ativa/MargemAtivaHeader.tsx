@@ -68,7 +68,7 @@ export function MargemAtivaHeader() {
       {/* Title */}
       <div>
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
-          🛡️ Suíte Margem Ativa 2026
+          🛡️ Suíte Margem Ativa 2026: OMC-AI + PriceGuard
         </h1>
         <p className="text-muted-foreground mt-1">
           Proteja sua margem na transição da Reforma Tributária
