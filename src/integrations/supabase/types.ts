@@ -829,7 +829,7 @@ export type Database = {
           input_vendas_produtos: number | null
           input_vendas_servicos: number | null
           input_viagens_refeicoes: number | null
-          period_month: number | null
+          period_month: number
           period_quarter: number | null
           period_type: string
           period_year: number
@@ -893,7 +893,7 @@ export type Database = {
           input_vendas_produtos?: number | null
           input_vendas_servicos?: number | null
           input_viagens_refeicoes?: number | null
-          period_month?: number | null
+          period_month?: number
           period_quarter?: number | null
           period_type?: string
           period_year: number
@@ -957,7 +957,7 @@ export type Database = {
           input_vendas_produtos?: number | null
           input_vendas_servicos?: number | null
           input_viagens_refeicoes?: number | null
-          period_month?: number | null
+          period_month?: number
           period_quarter?: number | null
           period_type?: string
           period_year?: number
