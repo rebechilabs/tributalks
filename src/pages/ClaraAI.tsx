@@ -144,6 +144,7 @@ const ClaraAI = () => {
           })),
           sessionId: getSessionId(),
           conversationHistory: historyContext,
+          screenContext: window.location.pathname,
         }),
       });
 
