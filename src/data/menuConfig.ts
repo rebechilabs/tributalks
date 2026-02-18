@@ -99,6 +99,7 @@ export const MENU_STARTER: MenuElement[] = [
   {
     title: '',
     items: [
+      { label: 'Indique e Ganhe', href: '/indicar', icon: Gift, badge: 'Até 20%', badgeVariant: 'success', description: 'Ganhe desconto indicando' },
       { label: 'Configurações', href: '/configuracoes', icon: Settings },
     ]
   },
@@ -186,6 +187,7 @@ export const MENU_NAVIGATOR: MenuElement[] = [
   {
     title: '',
     items: [
+      { label: 'Indique e Ganhe', href: '/indicar', icon: Gift, badge: 'Até 20%', badgeVariant: 'success', description: 'Ganhe desconto indicando' },
       { label: 'Configurações', href: '/configuracoes', icon: Settings },
     ]
   },
@@ -258,6 +260,7 @@ export const MENU_PROFESSIONAL_V2: MenuElement[] = [
   {
     title: '',
     items: [
+      { label: 'Indique e Ganhe', href: '/indicar', icon: Gift, badge: 'Até 20%', badgeVariant: 'success', description: 'Ganhe desconto indicando' },
       { label: 'Integrações', href: '/dashboard/integracoes', icon: Plug },
       { label: 'Configurações', href: '/configuracoes', icon: Settings },
     ]
