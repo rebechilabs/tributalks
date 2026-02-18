@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wallet, Info, TrendingDown, Calendar, RefreshCw, FileDown, Loader2, CheckCircle, Calculator, AlertTriangle, Trash2, Search, BarChart3, DollarSign as DollarSignIcon } from "lucide-react";
+import { Wallet, Info, TrendingDown, Calendar, RefreshCw, FileDown, Loader2, CheckCircle, Calculator, AlertTriangle, Trash2, Search, BarChart3, DollarSign as DollarSignIcon, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -332,7 +333,7 @@ const SplitPayment = () => {
               <div>
                 <h1 className="text-2xl font-bold text-foreground">Impacto do Split Payment</h1>
                 <p className="text-muted-foreground">
-                  Calcule a retenção de caixa com base nas alíquotas oficiais da LC 214/2025 e Manual RTC.
+                  Descubra quanto o Split Payment vai reter do seu faturamento a partir de 2027.
                 </p>
               </div>
             </div>
@@ -352,187 +353,149 @@ const SplitPayment = () => {
         </div>
 
         {/* Cenário Selector */}
-        <Card className="mb-6 border-primary/20 bg-primary/5">
-          <CardContent className="py-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-primary" />
-                <span className="font-medium text-foreground">Cenário de Simulação</span>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant={cenario === 'TESTE_2026' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => { setCenario('TESTE_2026'); setResult(null); }}
-                >
-                  2026 (Teste: 1%)
-                </Button>
-                <Button
-                  variant={cenario === 'PADRAO_2027' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => { setCenario('PADRAO_2027'); setResult(null); }}
-                >
-                  2027+ (Ref: 26,5%)
-                </Button>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              {cenario === 'TESTE_2026' 
-                ? "Em 2026, as alíquotas são simbólicas (CBS 0,9% + IBS 0,1%) e compensadas com PIS/COFINS."
-                : "A partir de 2027, entram as alíquotas de referência (CBS 8,8% + IBS 17,7% = 26,5%)."
-              }
-            </p>
-          </CardContent>
-        </Card>
+        <div className="flex gap-2 mb-6">
+          <Button
+            variant={cenario === 'TESTE_2026' ? 'default' : 'outline'}
+            onClick={() => { setCenario('TESTE_2026'); setResult(null); }}
+          >
+            2026 — Teste (1%)
+          </Button>
+          <Button
+            variant={cenario === 'PADRAO_2027' ? 'default' : 'outline'}
+            onClick={() => { setCenario('PADRAO_2027'); setResult(null); }}
+          >
+            2027+ — Referência (26,5%)
+          </Button>
+        </div>
 
         {/* Modalidade Simples Nacional */}
         {formData.regime === 'SIMPLES' && (
-          <Card className="mb-6 border-warning/20 bg-warning/5">
-            <CardContent className="py-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <AlertTriangle className="w-5 h-5 text-warning" />
-                    <span className="font-medium text-foreground">
-                      Simples Nacional: como você vai recolher IBS/CBS?
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    A LC 214/2025 permite duas formas a partir de 2027. A escolha impacta o split payment e a competitividade com clientes PJ.
-                  </p>
-                </div>
-                <div className="flex gap-2 shrink-0">
-                  <Button
-                    variant={modalidadeSimples === 'por_dentro' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => { setModalidadeSimples('por_dentro'); setResult(null); }}
-                  >
-                    Por Dentro do DAS
-                  </Button>
-                  <Button
-                    variant={modalidadeSimples === 'por_fora' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => { setModalidadeSimples('por_fora'); setResult(null); }}
-                  >
-                    Por Fora (Híbrido)
-                  </Button>
-                </div>
-              </div>
-              <div className="mt-3 grid sm:grid-cols-2 gap-3 text-xs text-muted-foreground">
-                <div className={`p-2 rounded border ${modalidadeSimples === 'por_dentro' ? 'border-primary bg-primary/5' : 'border-border'}`}>
-                  <strong>Por Dentro:</strong> IBS/CBS no DAS, alíquota reduzida (~40% menor), sem crédito para seu cliente PJ. Ideal para quem vende ao consumidor final (B2C).
-                </div>
-                <div className={`p-2 rounded border ${modalidadeSimples === 'por_fora' ? 'border-primary bg-primary/5' : 'border-border'}`}>
-                  <strong>Por Fora (Híbrido):</strong> IBS/CBS separados com alíquota cheia, gera crédito integral para seu cliente. Essencial para quem vende para outras empresas (B2B).
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="mb-6">
+            <p className="text-sm font-medium text-foreground mb-2">
+              Simples Nacional: como você vai recolher IBS/CBS?
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant={modalidadeSimples === 'por_dentro' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => { setModalidadeSimples('por_dentro'); setResult(null); }}
+              >
+                Por Dentro do DAS
+              </Button>
+              <Button
+                variant={modalidadeSimples === 'por_fora' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => { setModalidadeSimples('por_fora'); setResult(null); }}
+              >
+                Por Fora (Híbrido)
+              </Button>
+            </div>
+          </div>
         )}
 
-        {/* Form */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Info className="w-5 h-5 text-primary" />
-              Seus Dados
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Esses dados vêm do seu perfil. Você pode ajustá-los para simular cenários diferentes.
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="empresa">Empresa</Label>
-                <Input
-                  id="empresa"
-                  value={formData.empresa}
-                  onChange={(e) => handleChange("empresa", e.target.value)}
-                  placeholder="Nome da empresa"
-                  className="h-12"
-                />
-              </div>
+        {/* Calculate Button - always visible */}
+        <Button 
+          onClick={handleCalculate} 
+          size="lg" 
+          className="w-full mb-6"
+          disabled={isCalculating || !formData.faturamento_mensal}
+        >
+          {isCalculating ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Calculando...
+            </>
+          ) : (
+            <>
+              <Calculator className="w-4 h-4 mr-2" />
+              Calcular Impacto
+            </>
+          )}
+        </Button>
 
-              <div className="space-y-2">
-                <Label htmlFor="faturamento">Faturamento mensal</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
-                  <Input
-                    id="faturamento"
-                    value={formatInputCurrency(formData.faturamento_mensal)}
-                    onChange={handleFaturamentoChange}
-                    placeholder="0"
-                    className="h-12 pl-10"
-                  />
+        {/* Form - Collapsible */}
+        <Collapsible defaultOpen={false} className="mb-8">
+          <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-3 cursor-pointer">
+            <ChevronDown className="w-4 h-4" />
+            Seus Dados (clique para ajustar)
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <Card>
+              <CardContent className="pt-6 space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="empresa">Empresa</Label>
+                    <Input
+                      id="empresa"
+                      value={formData.empresa}
+                      onChange={(e) => handleChange("empresa", e.target.value)}
+                      placeholder="Nome da empresa"
+                      className="h-12"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="faturamento">Faturamento mensal</Label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
+                      <Input
+                        id="faturamento"
+                        value={formatInputCurrency(formData.faturamento_mensal)}
+                        onChange={handleFaturamentoChange}
+                        placeholder="0"
+                        className="h-12 pl-10"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Regime tributário</Label>
+                    <Select value={formData.regime} onValueChange={(v) => handleChange("regime", v)}>
+                      <SelectTrigger className="h-12">
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="SIMPLES">Simples Nacional</SelectItem>
+                        <SelectItem value="PRESUMIDO">Lucro Presumido</SelectItem>
+                        <SelectItem value="REAL">Lucro Real</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Setor</Label>
+                    <Select value={formData.setor} onValueChange={(v) => handleChange("setor", v)}>
+                      <SelectTrigger className="h-12">
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="industria">Indústria</SelectItem>
+                        <SelectItem value="comercio">Comércio</SelectItem>
+                        <SelectItem value="servicos">Serviços</SelectItem>
+                        <SelectItem value="tecnologia">Tecnologia</SelectItem>
+                        <SelectItem value="outro">Outro</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>% das vendas para PJ</Label>
+                    <Select value={formData.percentual_vendas_pj} onValueChange={(v) => handleChange("percentual_vendas_pj", v)}>
+                      <SelectTrigger className="h-12">
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PERCENTUAIS_PJ.map((p) => (
+                          <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Regime tributário</Label>
-                <Select value={formData.regime} onValueChange={(v) => handleChange("regime", v)}>
-                  <SelectTrigger className="h-12">
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="SIMPLES">Simples Nacional</SelectItem>
-                    <SelectItem value="PRESUMIDO">Lucro Presumido</SelectItem>
-                    <SelectItem value="REAL">Lucro Real</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Setor</Label>
-                <Select value={formData.setor} onValueChange={(v) => handleChange("setor", v)}>
-                  <SelectTrigger className="h-12">
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="industria">Indústria</SelectItem>
-                    <SelectItem value="comercio">Comércio</SelectItem>
-                    <SelectItem value="servicos">Serviços</SelectItem>
-                    <SelectItem value="tecnologia">Tecnologia</SelectItem>
-                    <SelectItem value="outro">Outro</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2 md:col-span-2">
-                <Label>% das vendas para PJ</Label>
-                <Select value={formData.percentual_vendas_pj} onValueChange={(v) => handleChange("percentual_vendas_pj", v)}>
-                  <SelectTrigger className="h-12">
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PERCENTUAIS_PJ.map((p) => (
-                      <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <Button 
-              onClick={handleCalculate} 
-              size="lg" 
-              className="w-full"
-              disabled={isCalculating || !formData.faturamento_mensal}
-            >
-              {isCalculating ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Calculando...
-                </>
-              ) : (
-                <>
-                  <Calculator className="w-4 h-4 mr-2" />
-                  Calcular Impacto
-                </>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </CollapsibleContent>
+        </Collapsible>
 
         {/* Result */}
         {result && (
