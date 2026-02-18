@@ -222,7 +222,7 @@ export function NewPricingSection() {
                           {plan.recommended && (
                             <Badge className="bg-primary text-primary-foreground text-[10px] font-bold">
                               <Star className="w-3 h-3 mr-1" fill="currentColor" />
-                              RECOMENDADO
+                              MAIS POPULAR
                             </Badge>
                           )}
                           <h3 className="text-lg font-bold text-white">{plan.name}</h3>
@@ -323,7 +323,7 @@ export function NewPricingSection() {
                   <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                     <Badge className="bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1">
                       <Star className="w-3 h-3 mr-1" fill="currentColor" />
-                      RECOMENDADO
+                      MAIS POPULAR
                     </Badge>
                   </div>
                 )}
