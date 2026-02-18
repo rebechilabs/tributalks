@@ -43,7 +43,7 @@ export function ScoreGauge({
   const config = sizeConfig[size];
   
   // Calculate percentage for the circular progress
-  const percentage = Math.min(score / 1000, 1);
+  const percentage = Math.min(score / 100, 1);
   const circumference = 2 * Math.PI * 45; // radius = 45
   const strokeDashoffset = circumference - (percentage * circumference);
 
@@ -101,7 +101,7 @@ export function ScoreGauge({
             {statusLabels[status] || status}
           </p>
           <p className="text-xs text-muted-foreground">
-            de 1000 pontos
+            de 100 pontos
           </p>
         </div>
       )}

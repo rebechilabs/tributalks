@@ -138,7 +138,7 @@ export function NoDRECard({ hasERP }: { hasERP: boolean }) {
             step={2}
             icon={Trophy}
             title="Score Tributário"
-            description="Um panorama da situação tributária atual da empresa em uma escala de 0 a 1000 pontos."
+            description="Um panorama da situação tributária atual da empresa em uma escala de 0 a 100 pontos."
             moduleTag="ENTENDER"
           />
           <UpcomingStepCard 
@@ -207,7 +207,7 @@ export function NoScoreCard({ dreData }: { dreData: NonNullable<HomeStateData['d
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
             O <strong>Score Tributário</strong> apresenta um panorama completo da situação tributária 
-            atual da sua empresa em uma escala de <strong>0 a 1000 pontos</strong>, indicando riscos 
+            atual da sua empresa em uma escala de <strong>0 a 100 pontos</strong>, indicando riscos 
             e oportunidades de melhoria.
           </p>
           <Button asChild className="w-full sm:w-auto">

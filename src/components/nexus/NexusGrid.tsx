@@ -147,7 +147,7 @@ export function NexusGrid({ data, loading }: NexusGridProps) {
         value: `Nível ${data.riscoFiscal.nivel}`,
       },
       status: data.riscoFiscal.status,
-      tooltip: 'Saúde tributária de 0 a 1000',
+      tooltip: 'Saúde tributária de 0 a 100',
       action: {
         label: 'Ver Score',
         href: '/dashboard/score-tributario',

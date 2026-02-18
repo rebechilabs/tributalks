@@ -264,7 +264,7 @@ export default function ScoreTributario() {
         <MotivationalBanner
           id="score"
           icon="trophy"
-          text="Responda 11 perguntas e descubra sua nota fiscal de 0 a 1000. Compare com empresas do seu setor e receba recomendações personalizadas da Clara AI para melhorar seu score."
+          text="Responda 11 perguntas e descubra sua nota fiscal de 0 a 100. Compare com empresas do seu setor e receba recomendações personalizadas da Clara AI para melhorar seu score."
         />
 
         {/* Clara AI Card */}

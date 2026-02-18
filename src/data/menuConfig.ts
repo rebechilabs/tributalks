@@ -73,7 +73,7 @@ export const MENU_STARTER: MenuElement[] = [
     moduleHref: '/dashboard/entender',
     items: [
       { label: 'DRE Inteligente', href: '/dashboard/entender/dre', icon: BarChart3, description: 'Base para análises' },
-      { label: 'Score Tributário', href: '/dashboard/entender/score', icon: Trophy, description: 'Diagnóstico 0-1000' },
+      { label: 'Score Tributário', href: '/dashboard/entender/score', icon: Trophy, description: 'Diagnóstico 0-100' },
       { label: 'Comparativo de Regimes Tributários', href: '/dashboard/entender/comparativo', icon: Scale, description: '5 regimes tributários', badge: '2027' },
     ]
   },
@@ -141,7 +141,7 @@ export const MENU_NAVIGATOR: MenuElement[] = [
     moduleHref: '/dashboard/entender',
     items: [
       { label: 'DRE Inteligente', href: '/dashboard/entender/dre', icon: BarChart3, description: 'Base para análises' },
-      { label: 'Score Tributário', href: '/dashboard/entender/score', icon: Trophy, description: 'Diagnóstico 0-1000' },
+      { label: 'Score Tributário', href: '/dashboard/entender/score', icon: Trophy, description: 'Diagnóstico 0-100' },
       { label: 'Comparativo de Regimes Tributários', href: '/dashboard/entender/comparativo', icon: Scale, description: '5 regimes tributários', badge: '2027' },
     ]
   },
@@ -222,7 +222,7 @@ export const MENU_PROFESSIONAL_V2: MenuElement[] = [
     moduleHref: '/dashboard/entender',
     items: [
       { label: 'DRE Inteligente', href: '/dashboard/entender/dre', icon: BarChart3, description: 'Base para análises' },
-      { label: 'Score Tributário', href: '/dashboard/entender/score', icon: Trophy, description: 'Diagnóstico 0-1000' },
+      { label: 'Score Tributário', href: '/dashboard/entender/score', icon: Trophy, description: 'Diagnóstico 0-100' },
       { label: 'Comparativo de Regimes Tributários', href: '/dashboard/entender/comparativo', icon: Scale, description: '5 regimes tributários', badge: '2027' },
     ]
   },

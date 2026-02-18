@@ -128,7 +128,7 @@ function calculateDCF(
   return presentValue + discountedTerminal;
 }
 
-// Compliance adjustment based on tax score (0-1000)
+// Compliance adjustment based on tax score (0-100)
 function getComplianceAdjustment(score: number | null): { multiplier: number; percentual: number } {
   if (score === null) return { multiplier: 1.0, percentual: 0 };
   
