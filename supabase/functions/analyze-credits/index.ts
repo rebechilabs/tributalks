@@ -524,9 +524,7 @@ serve(async (req) => {
           continue
         }
 
-        // [CORREÇÃO #1] fatTotalRef = receita_bruta do PGDAS do mês (faturamento total declarado),
-        // NÃO a soma dos XMLs processados (que são apenas uma amostra das NF-e)
-        const fatTotalRef = pgdasMes.receita_bruta > 0 ? pgdasMes.receita_bruta : faturamentoTotal
+        const fatTotalRef = faturamentoTotal
 
         const baseIndevidaPisCofins = faturamentoMonofasico + faturamentoST
         if (baseIndevidaPisCofins <= 0 && faturamentoST <= 0) continue
