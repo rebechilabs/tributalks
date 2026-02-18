@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { EnterpriseModal } from "@/components/landing/EnterpriseModal";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,6 +74,7 @@ const SplitPayment = () => {
   const [result, setResult] = useState<SplitPaymentResult | null>(null);
   const [saved, setSaved] = useState(false);
   const [cenario, setCenario] = useState<'TESTE_2026' | 'PADRAO_2027'>('PADRAO_2027');
+  const [enterpriseModalOpen, setEnterpriseModalOpen] = useState(false);
 
   // Modalidade de recolhimento — relevante apenas para Simples Nacional (LC 214/2025)
   const [modalidadeSimples, setModalidadeSimples] = useState<'por_dentro' | 'por_fora'>('por_dentro');
@@ -648,43 +650,43 @@ const SplitPayment = () => {
                 </Button>
               </div>
 
-              {/* CTA Professional */}
+              {/* CTA Enterprise */}
               <div className="bg-primary/5 border border-primary/20 rounded-xl p-6">
                 <div className="text-center mb-4">
                   <p className="text-foreground font-semibold text-lg mb-2">
                     Quer reduzir esse impacto no seu caixa?
                   </p>
                   <p className="text-muted-foreground text-sm">
-                    O Plano Professional identifica oportunidades de economia que podem compensar o efeito do Split Payment.
+                    O Plano Enterprise oferece consultoria personalizada para compensar o efeito do Split Payment na sua operação.
                   </p>
                 </div>
                 
                 <div className="grid sm:grid-cols-3 gap-3 mb-4">
                   <div className="bg-card border border-border rounded-lg p-3 text-center shadow-sm">
                     <Search className="w-6 h-6 text-primary mx-auto" />
-                    <p className="text-xs text-foreground mt-1">Análise de XMLs para identificar créditos perdidos</p>
+                    <p className="text-xs text-foreground mt-1">Consultoria personalizada com especialistas tributários</p>
                   </div>
                   <div className="bg-card border border-border rounded-lg p-3 text-center shadow-sm">
                     <BarChart3 className="w-6 h-6 text-primary mx-auto" />
-                    <p className="text-xs text-foreground mt-1">DRE Inteligente com impacto da reforma</p>
+                    <p className="text-xs text-foreground mt-1">Palestras sobre Reforma Tributária</p>
                   </div>
                   <div className="bg-card border border-border rounded-lg p-3 text-center shadow-sm">
                     <DollarSignIcon className="w-6 h-6 text-primary mx-auto" />
-                    <p className="text-xs text-foreground mt-1">Radar de 57 oportunidades tributárias</p>
+                    <p className="text-xs text-foreground mt-1">White Label e parcerias estratégicas</p>
                   </div>
                 </div>
 
                 <div className="text-center">
-                  <Button variant="default" size="lg" asChild>
-                    <Link to="/#planos">
-                      Conhecer Plano Professional
-                    </Link>
+                  <Button variant="default" size="lg" onClick={() => setEnterpriseModalOpen(true)}>
+                    Conhecer Plano Enterprise
                   </Button>
                   <p className="text-xs text-muted-foreground mt-2">
                     Empresas que usam o diagnóstico completo economizam em média 15% a 40% em tributos
                   </p>
                 </div>
               </div>
+
+              <EnterpriseModal open={enterpriseModalOpen} onOpenChange={setEnterpriseModalOpen} />
 
               {/* Save Status */}
               {saved && (
