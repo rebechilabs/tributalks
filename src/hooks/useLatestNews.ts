@@ -8,6 +8,9 @@ export interface LatestNews {
   relevancia: string;
   data_publicacao: string;
   fonte: string;
+  categoria: string | null;
+  tributos_relacionados: string[] | null;
+  fonte_url: string | null;
 }
 
 export function useLatestNews(limit: number = 5) {
@@ -16,7 +19,7 @@ export function useLatestNews(limit: number = 5) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('noticias_tributarias')
-        .select('id, titulo_original, resumo_executivo, relevancia, data_publicacao, fonte')
+        .select('id, titulo_original, resumo_executivo, relevancia, data_publicacao, fonte, categoria, tributos_relacionados, fonte_url')
         .eq('publicado', true)
         .order('data_publicacao', { ascending: false })
         .limit(limit);
@@ -28,6 +31,6 @@ export function useLatestNews(limit: number = 5) {
       
       return (data || []) as LatestNews[];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 5 * 60 * 1000,
   });
 }
