@@ -1,51 +1,38 @@
 
-# Adicionar FAQ e Otimizar Mobile na Landing Page
 
-## 1. Adicionar secao FAQ
+# Plano: Corrigir erro de importacao dinamica e DRE zerada
 
-O componente `FAQSection` ja existe mas nao esta na pagina. Vou inclui-lo e adaptar o visual ao tema escuro.
+## Problema identificado
 
-### `src/pages/Index.tsx`
-- Importar `FAQSection`
-- Adicionar `<FAQSection />` entre `<SecuritySection />` e `<NewFooter />`
+Ha dois problemas ocorrendo simultaneamente:
 
-### `src/components/landing/FAQSection.tsx`
-- Trocar `bg-background` da section por `bg-[#1A1A1A]`
-- Trocar `bg-card border-border` dos AccordionItems por `bg-[#222222] border-white/10`
-- Trocar `data-[state=open]:bg-secondary` por `data-[state=open]:bg-[#2A2A2A]`
-- Trocar `text-foreground` por `text-white`
-- Trocar `text-muted-foreground` por `text-white/60` e `text-white/70`
-- Trocar link "Fale conosco" do rodape por `text-primary`
+1. **Erro de importacao dinamica do HomePage.tsx**: O Vite nao consegue recarregar o modulo apos edicicoes recentes (HMR corrompido). O codigo do arquivo esta correto, mas o cache esta obsoleto.
 
----
+2. **Receita Bruta mostrando R$ 0,00**: Os valores visiveis na tela ("150.000", "80.000", "5.000", "3.000", "2.000") correspondem exatamente aos textos de exemplo (placeholders) dos campos. Quando o Vite recarrega o componente via HMR, o estado React e reinicializado para zero, mas o texto exibido nos campos pode permanecer, causando confusao.
 
-## 2. Otimizacao Mobile
+## Solucao
 
-### `src/components/landing/ClaraSection.tsx`
-- Orbe central: `w-48 h-48 md:w-80 md:h-80` (menor no mobile)
-- Raio dos agentes orbitantes: usar `radius` responsivo via classe condicional (100px mobile, 140px desktop) -- implementado via hook `useIsMobile`
-- Icones dos agentes: `w-11 h-11 md:w-16 md:h-16`
+### 1. Adicionar mecanismo de retry no carregamento dinamico de paginas
 
-### `src/components/landing/SecuritySection.tsx`
-- Grid de seguranca: `grid-cols-1 sm:grid-cols-2` (empilha no mobile)
+Modificar o `LazyRoute` no `App.tsx` para tentar recarregar o modulo automaticamente caso o primeiro carregamento falhe, eliminando o erro de "Failed to fetch dynamically imported module".
 
-### `src/components/landing/NewFooter.tsx`
-- Bloco inferior (powered by, badges, copyright, social): trocar `flex-col md:flex-row` por layout que empilha melhor com `gap-6` e centraliza tudo no mobile
+### 2. Melhorar a experiencia visual do DRE Wizard
 
-### `src/components/landing/NewPricingSection.tsx`
-- Padding dos cards: `p-5 md:p-8`
+Tornar os placeholders mais distintos dos valores reais para evitar confusao:
+- Alterar os placeholders para incluir formato mais claro (ex: "0,00" em vez de "150.000")
+- Ou remover os placeholders numericos que confundem com valores reais
 
----
+## Detalhes tecnicos
 
-## Resumo
+### Arquivo: `src/App.tsx`
+- Criar uma funcao `lazyWithRetry` que envolve `React.lazy()` com logica de retry (ate 3 tentativas com recarga forcada do modulo)
+- Aplicar essa funcao a todos os imports dinamicos de paginas
 
-| Arquivo | Alteracao |
-|---------|-----------|
-| `src/pages/Index.tsx` | Importar e adicionar FAQSection |
-| `src/components/landing/FAQSection.tsx` | Adaptar cores para tema escuro |
-| `src/components/landing/ClaraSection.tsx` | Orbe e agentes menores no mobile |
-| `src/components/landing/SecuritySection.tsx` | Grid responsivo nos cards de seguranca |
-| `src/components/landing/NewFooter.tsx` | Layout mobile do rodape |
-| `src/components/landing/NewPricingSection.tsx` | Padding responsivo nos cards |
+### Arquivo: `src/components/dre/VoiceCurrencyInput.tsx`
+- Alterar os placeholders para "0,00" (padrao) para nao confundir com valores reais
+- Ja esta correto como `placeholder = '0,00'` no componente, mas os chamadores em `DREWizard.tsx` estao passando valores como "150.000"
 
-Total: 6 arquivos editados.
+### Arquivo: `src/components/dre/DREWizard.tsx`
+- Remover os props `placeholder` customizados dos campos de vendas e deducoes que estao causando confusao visual ("150.000", "80.000", "5.000", "3.000", "2.000")
+- Os campos usarao o placeholder padrao "0,00" do componente VoiceCurrencyInput
+
