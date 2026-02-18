@@ -26,7 +26,7 @@ export function Header() {
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled
-            ? "bg-[#0A0A0A]/95 backdrop-blur-md border-b border-white/10"
+            ? "bg-[#1A1A1A]/95 backdrop-blur-md border-b border-white/10"
             : "bg-transparent"
         }`}
       >
@@ -98,7 +98,7 @@ export function Header() {
 
           {/* Mobile Menu */}
           {mobileMenuOpen && (
-            <div className="md:hidden py-4 border-t border-white/10 animate-fade-in bg-[#0A0A0A]/95 backdrop-blur-md">
+            <div className="md:hidden py-4 border-t border-white/10 animate-fade-in bg-[#1A1A1A]/95 backdrop-blur-md">
               <div className="flex flex-col gap-3">
                 <a 
                   href="#planos" 

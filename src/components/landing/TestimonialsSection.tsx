@@ -24,7 +24,7 @@
  
  export function TestimonialsSection() {
    return (
-     <section className="py-16 md:py-20 bg-[#111111]">
+     <section className="py-16 md:py-20 bg-[#1A1A1A]">
        <div className="container mx-auto px-4 md:px-8">
          {/* Section Header */}
          <motion.div
@@ -48,7 +48,7 @@
                whileInView={{ opacity: 1, y: 0 }}
                viewport={{ once: true }}
                transition={{ duration: 0.6, delay: index * 0.1 }}
-               className="bg-[#0A0A0A] rounded-2xl p-6 md:p-8 border border-white/10"
+               className="bg-[#222222] rounded-2xl p-6 md:p-8 border border-white/10"
              >
                {/* Quote icon */}
                <Quote className="w-10 h-10 text-primary/30 mb-4" />

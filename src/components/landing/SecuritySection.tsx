@@ -19,7 +19,7 @@
  
  export function SecuritySection() {
    return (
-     <section className="py-16 md:py-20 bg-[#0A0A0A]">
+     <section className="py-16 md:py-20 bg-[#1A1A1A]">
        <div className="container mx-auto px-4 md:px-8">
          {/* Section Header */}
          <motion.div
@@ -41,7 +41,7 @@
              whileInView={{ opacity: 1, x: 0 }}
              viewport={{ once: true }}
              transition={{ duration: 0.6 }}
-             className="bg-[#111111] rounded-2xl p-8 border border-white/10"
+              className="bg-[#222222] rounded-2xl p-8 border border-white/10"
            >
              <h3 className="text-xl font-bold text-white mb-6">Segurança</h3>
              <div className="grid grid-cols-2 gap-4">
@@ -60,7 +60,7 @@
              whileInView={{ opacity: 1, x: 0 }}
              viewport={{ once: true }}
              transition={{ duration: 0.6, delay: 0.1 }}
-             className="bg-[#111111] rounded-2xl p-8 border border-white/10"
+             className="bg-[#222222] rounded-2xl p-8 border border-white/10"
            >
              <h3 className="text-xl font-bold text-white mb-6">Integrações ERP</h3>
              <div className="grid grid-cols-3 gap-4">

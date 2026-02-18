@@ -19,7 +19,7 @@ const agents = [
  
  export function ClaraSection() {
    return (
-     <section className="py-16 md:py-20 bg-[#0A0A0A] overflow-hidden">
+     <section className="py-16 md:py-20 bg-[#1A1A1A] overflow-hidden">
        <div className="container mx-auto px-4 md:px-8">
          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
            {/* Left: Content */}
@@ -96,7 +96,7 @@ const agents = [
                           repeat: Infinity,
                           ease: "linear",
                         }}
-                        className="w-14 h-14 md:w-16 md:h-16 rounded-xl bg-[#111111] border border-white/10 flex flex-col items-center justify-center shadow-lg gap-0.5"
+                        className="w-14 h-14 md:w-16 md:h-16 rounded-xl bg-[#222222] border border-white/10 flex flex-col items-center justify-center shadow-lg gap-0.5"
                       >
                         <agent.icon className="w-5 h-5 md:w-6 md:h-6 text-primary" />
                         <span className="text-[9px] text-white/60 font-medium">{agent.label}</span>
