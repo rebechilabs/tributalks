@@ -1,78 +1,104 @@
 
 
-# Atualizar Documentacao Completa TribuTalks
+# Correcao do Motor de Calculo do Radar de Creditos (Simples Nacional)
 
-## Objetivo
-Atualizar o arquivo `docs/TRIBUTALKS_DOCUMENTATION.md` para refletir o estado atual da plataforma (Fevereiro 2026).
+## Problema Identificado
 
-## Mudancas Identificadas
+O calculo atual na Edge Function `analyze-credits` esta incorreto por dois motivos:
 
-### 1. Cabecalho e Data
-- Atualizar "Ultima atualizacao" de 5 de Fevereiro para **18 de Fevereiro de 2026**
+1. **PIS e COFINS sao calculados juntos** (como um unico credito "PIS/COFINS") em vez de serem separados
+2. **A base indevida de PIS/COFINS inclui apenas produtos monofasicos**, mas deveria incluir tambem produtos com ST (ambos ja tiveram PIS/COFINS recolhidos anteriormente na cadeia)
+3. **O calculo e feito item a item** (`valorItem * aliquotaEfetiva * parcelaPisCofins`), em vez de usar a formula proporcional correta baseada nos valores absolutos do PGDAS
 
-### 2. Estrutura de Rotas (Secao 6)
-- Remover rota standalone `/priceguard` — PriceGuard agora e aba dentro de Margem Ativa
-- Atualizar estrutura do modulo PRECIFICACAO para mostrar apenas 2 paginas:
-  - Suite Margem Ativa (OMC-AI + PriceGuard)
-  - Split Payment
-- Adicionar modulo PLANEJAR nas rotas (Oportunidades + Planejamento Tributario)
-- Corrigir redirects legados (adicionar os novos como `/dashboard/importar-xml`, `/dashboard/radar-creditos`, `/dashboard/recuperar/oportunidades`)
+### Formula Correta (confirmada com os dados do banco)
 
-### 3. Suite Margem Ativa (Secao 7.5)
-- Atualizar titulo para "Suite Margem Ativa 2026: OMC-AI + PriceGuard"
-- Documentar as 3 formas de entrada do PriceGuard: Importar XMLs, Importar Planilha (em breve), Inserir Manualmente
-- Notar que PriceGuard nao tem pagina propria, e uma aba dentro da pagina Margem Ativa
+Os dados de reparticao no PGDAS ja estao em valores absolutos (R$):
+- PIS_pago = R$ 538,75 | COFINS_pago = R$ 2.486,85 | ICMS_pago = R$ 6.636,80
 
-### 4. Menu/Sidebar (Secao 5 e 6)
-- Documentar que no plano Professional, PRECIFICAR tem apenas 2 itens no sidebar
-- Remover referencia ao PriceGuard como item separado no menu Navigator (era item locked de preview)
+```text
+PIS indevido    = PIS_pago    x (fat_mono + fat_ST) / fat_total
+COFINS indevido = COFINS_pago x (fat_mono + fat_ST) / fat_total
+ICMS-ST indevido = ICMS_pago  x fat_ST / fat_total
+```
 
-### 5. Edge Functions (Secao 13)
-- Atualizar contagem de ~48 para **50 funcoes**
-- Adicionar funcoes novas identificadas:
-  - `analyze-ncm-from-xmls`
-  - `analyze-suppliers`
-  - `check-expiring-benefits`
-  - `check-platform-inactivity`
-  - `check-score-recalculation`
-  - `execute-autonomous-action`
-  - `generate-roadmap`
-  - `invite-to-circle`
-  - `memory-decay`
-  - `notify-new-subscriber`
-  - `populate-embeddings`
-  - `process-autonomous-cron`
-  - `process-dre`
-  - `process-news`
-  - `process-referral-rewards`
-  - `search-news`
-  - `send-contact-email`
-  - `send-daily-metrics`
-  - `stripe-webhook`
-  - `subscribe-newsletter`
-  - `track-presence`
-  - `trigger-autonomous-actions`
-- Organizar em categorias atualizadas
+## O que sera alterado
 
-### 6. Banco de Dados (Secao 12)
-- Notar que `sped_contribuicoes.periodo_inicio` e `periodo_fim` agora sao nullable
-- Adicionar tabela `price_simulations` na listagem
+Apenas 2 arquivos. Nenhuma mudanca visual, de layout ou fluxo de upload.
 
-### 7. Changelog
-- Adicionar entradas para Fevereiro 2026:
-  - PriceGuard consolidado como aba dentro de Margem Ativa (sem pagina separada)
-  - Sidebar PRECIFICAR simplificado para 2 paginas
-  - Titulo atualizado: "Suite Margem Ativa 2026: OMC-AI + PriceGuard"
-  - 3 metodos de entrada no PriceGuard (XMLs, Planilha, Manual)
-  - Campos periodo_inicio/periodo_fim tornados nullable no SPED
-  - Edge functions expandidas para 50+
+### 1. Edge Function `analyze-credits` (supabase/functions/analyze-credits/index.ts)
 
-### 8. URL de Producao (Secao 17)
-- Atualizar de `tributechai.lovable.app` para `tributalks.lovable.app`
+**Secao Simples Nacional (linhas ~414-520)** — substituir a logica item-a-item pela logica agregada:
+
+- Manter o loop de XMLs, mas apenas para **somar** `faturamentoMonofasico` e `faturamentoST` (sem criar creditos individuais por item)
+- Apos o loop, buscar os dados de PGDAS do periodo (reparticao em R$, receita_bruta)
+- Se houver multiplos PGDAS (multiplos meses), agrupar os XMLs por mes e calcular por periodo
+- Aplicar a formula proporcional para gerar **3 creditos separados** por periodo:
+  - Credito PIS (rule_id: SIMPLES_MONO_001, product_description explicita "PIS")
+  - Credito COFINS (rule_id: SIMPLES_MONO_001, product_description explicita "COFINS")
+  - Credito ICMS-ST (rule_id: SIMPLES_ICMS_ST_001)
+- Threshold de R$ 0,01 para evitar creditos insignificantes
+
+### 2. Logica frontend `src/lib/simples-nacional-rules.ts`
+
+Atualizar para alinhar com a nova formula (este arquivo e usado para calculos rapidos no frontend):
+- Separar PIS e COFINS em creditos distintos
+- Incluir faturamento ST na base indevida de PIS/COFINS
+- Usar a mesma formula proporcional
 
 ## Detalhes Tecnicos
 
-**Arquivo a editar:** `docs/TRIBUTALKS_DOCUMENTATION.md`
+### Pseudocodigo da nova logica no analyze-credits
 
-Todas as alteracoes serao feitas neste unico arquivo, atualizando secoes existentes e adicionando novas entradas ao changelog. Nenhuma mudanca de codigo funcional — apenas documentacao.
+```text
+// 1. Iterar XMLs apenas para somar receitas
+faturamentoMonofasico = 0
+faturamentoST = 0
+faturamentoTotal = 0
+
+para cada xml em parsed_xmls:
+  para cada item em xml.itens:
+    se nao e operacao de saida: pular
+    faturamentoTotal += item.valor_item
+    se item e monofasico (NCM ou CST): faturamentoMonofasico += item.valor_item
+    se item e ST (CSOSN 500 ou CFOP 5405/6405/5403/6403): faturamentoST += item.valor_item
+
+// 2. Buscar dados PGDAS (ja disponivel: latestPgdas)
+reparticao = pgdas.dados_completos.reparticao  // valores em R$
+fatTotal = pgdas.receita_bruta OU faturamentoTotal (fallback)
+
+// 3. Guardar: evitar divisao por zero
+se fatTotal == 0: retornar []
+
+// 4. Calcular creditos proporcionais
+baseIndevidaPisCofins = faturamentoMonofasico + faturamentoST
+
+pisIndevido    = reparticao.pis    * (baseIndevidaPisCofins / fatTotal)
+cofinsIndevido = reparticao.cofins * (baseIndevidaPisCofins / fatTotal)
+icmsStIndevido = reparticao.icms   * (faturamentoST / fatTotal)
+
+// 5. Inserir 3 creditos (se > 0.01)
+```
+
+### Tratamento multi-periodo
+
+Quando ha PGDAS de multiplos meses, os XMLs serao somados como um unico periodo (ja que o batch de XMLs geralmente corresponde a um mes ou trimestre). O `faturamentoTotal` dos XMLs sera comparado com o `receita_bruta` do PGDAS para validacao.
+
+Se houver multiplos PGDAS, usar o mais recente (comportamento atual mantido).
+
+### Tabela de validacao integrada
+
+Os valores esperados serao verificados contra:
+- Out/24: PIS R$ 184,03 | COFINS R$ 849,47 | ICMS-ST R$ 308,62
+- Nov/24: PIS R$ 289,90 | COFINS R$ 1.338,15 | ICMS-ST R$ 134,11
+- Dez/24: PIS R$ 344,47 | COFINS R$ 1.590,04 | ICMS-ST R$ 196,88
+- Total 3 meses: R$ 5.235,67
+
+### Nao sera alterado
+
+- Fluxo de upload de arquivos
+- Layout/componentes visuais
+- Logica de Lucro Real/Presumido (secao separada no analyze-credits)
+- Parsing do PGDAS (process-pgdas)
+- Tabelas do banco de dados (schema)
+- Sistema de batch processing e append_mode
 
