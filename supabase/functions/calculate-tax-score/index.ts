@@ -46,20 +46,20 @@ interface ScoreAction {
 }
 
 function calculateGrade(score: number): string {
-  if (score >= 900) return 'A+';
-  if (score >= 800) return 'A';
-  if (score >= 700) return 'B+';
-  if (score >= 600) return 'B';
-  if (score >= 500) return 'C';
-  if (score >= 400) return 'D';
+  if (score >= 90) return 'A+';
+  if (score >= 80) return 'A';
+  if (score >= 70) return 'B+';
+  if (score >= 60) return 'B';
+  if (score >= 50) return 'C';
+  if (score >= 40) return 'D';
   return 'E';
 }
 
 function calculateStatus(score: number): string {
-  if (score >= 800) return 'excellent';
-  if (score >= 600) return 'good';
-  if (score >= 400) return 'regular';
-  if (score >= 200) return 'attention';
+  if (score >= 80) return 'excellent';
+  if (score >= 60) return 'good';
+  if (score >= 40) return 'regular';
+  if (score >= 20) return 'attention';
   return 'critical';
 }
 
@@ -287,13 +287,13 @@ serve(async (req) => {
     
     const scoreGestao = Math.min(Math.round(gestao / 1), 100);
 
-    // 3. CALCULAR SCORE TOTAL (soma ponderada)
+    // 3. CALCULAR SCORE TOTAL (soma ponderada normalizada para 0-100)
     const scoreTotal = Math.round(
-      scoreConformidade * 2.5 +
+      (scoreConformidade * 2.5 +
       scoreEficiencia * 2.5 +
       scoreRisco * 2.0 +
       scoreDocumentacao * 1.5 +
-      scoreGestao * 1.5
+      scoreGestao * 1.5) / 10
     );
 
     // 4. DETERMINAR GRADE E STATUS
