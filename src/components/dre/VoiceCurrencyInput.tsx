@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { HelpCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,6 +27,16 @@ export function VoiceCurrencyInput({
   });
   const isFocusedRef = useRef(false);
 
+  // Sync localValue when external value changes (e.g. ERP data, reset)
+  useEffect(() => {
+    if (isFocusedRef.current) return;
+    if (value === 0) {
+      setLocalValue('');
+    } else {
+      setLocalValue(value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    }
+  }, [value]);
+
   function parseCurrency(str: string): number {
     const cleaned = str.replace(/[^\d,.-]/g, '');
     const normalized = cleaned.replace(/\./g, '').replace(',', '.');
@@ -35,7 +45,6 @@ export function VoiceCurrencyInput({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value;
-    // Permite digitação livre de números, vírgula e ponto
     setLocalValue(rawValue);
     
     const numValue = parseCurrency(rawValue);

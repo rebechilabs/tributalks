@@ -85,17 +85,16 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     )
 
-    const token = authHeader.replace('Bearer ', '')
-    const { data: claimsData, error: claimsError } = await supabaseUser.auth.getClaims(token)
+    const { data: userData, error: userError } = await supabaseUser.auth.getUser()
     
-    if (claimsError || !claimsData?.claims) {
+    if (userError || !userData?.user) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    const userId = claimsData.claims.sub as string
+    const userId = userData.user.id
     const { inputs, cnae_code, period, dre_id } = await req.json()
 
     // 1. BUSCAR BENCHMARKS
@@ -214,7 +213,7 @@ serve(async (req) => {
     } else {
       const { data, error } = await supabaseAdmin
         .from('company_dre')
-        .insert(dreData)
+        .upsert(dreData, { onConflict: 'user_id,period_type,period_year,period_month' })
         .select()
         .single()
       

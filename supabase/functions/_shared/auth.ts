@@ -35,20 +35,18 @@ export async function validateAuth(
     { global: { headers: { Authorization: authHeader } } }
   );
 
-  const token = authHeader.replace('Bearer ', '');
-  
   try {
-    const { data, error } = await supabase.auth.getClaims(token);
+    const { data, error } = await supabase.auth.getUser();
     
-    if (error || !data?.claims) {
+    if (error || !data?.user) {
       console.error('Auth validation failed:', error);
       return { error: 'Invalid or expired token', status: 401 };
     }
 
     return {
-      userId: data.claims.sub as string,
-      email: data.claims.email as string | undefined,
-      role: data.claims.role as string | undefined,
+      userId: data.user.id,
+      email: data.user.email,
+      role: data.user.role,
       supabase,
     };
   } catch (err) {
