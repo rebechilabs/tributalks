@@ -1,141 +1,83 @@
 
-# Dados Compartilhados Entre Ferramentas por CNPJ
+# Seletor de Regime Tributario no Header Global
 
-## Problema
+## Resumo
 
-Hoje cada ferramenta busca dados de forma isolada. O usuario preenche faturamento, folha de pagamento e regime na DRE, mas precisa digitar tudo novamente no Comparativo de Regimes e no Radar de Creditos.
+Adicionar um badge clicavel com o regime tributario atual ao lado do seletor de empresa, permitindo troca rapida com propagacao automatica para todas as ferramentas. Tambem sincronizar o campo de regime na pagina de Perfil com o `company_profile`.
 
-## Solucao
+## O que sera feito
 
-Usar a tabela `company_profile` (que ja possui campos como `faturamento_anual`, `folha_mensal`, `regime_tributario`, `cnae_principal`) como hub central de dados compartilhados. Quando a DRE for salva, os dados-chave serao gravados automaticamente no perfil da empresa. Todas as ferramentas consultam o perfil primeiro para pre-preencher campos.
+### 1. Novo componente `RegimeBadgeSelector` (`src/components/company/RegimeBadgeSelector.tsx`)
 
-## Mudancas necessarias
+Badge clicavel exibido ao lado do seletor de empresa na barra do `CompanySelector`:
 
-### 1. Adicionar colunas ao `company_profile` (migracao SQL)
+- Icone de balanca (Scale do lucide-react) + texto do regime atual ("Simples Nacional" / "Lucro Presumido" / "Lucro Real")
+- Estilo: fundo escuro (`bg-card`), borda dourada sutil (`border-yellow-500/30`), texto branco
+- Hover: borda dourada mais forte (`border-yellow-500/60`)
+- Se nenhum regime definido: exibe "Definir regime" em texto muted
 
-Adicionar campos derivados da DRE que ainda nao existem:
+Ao clicar, abre dropdown com 3 opcoes:
+- Simples Nacional
+- Lucro Presumido
+- Lucro Real
+- Opcao selecionada com icone Check
 
-- `receita_liquida_mensal` (numeric) — calculado pela DRE
-- `margem_bruta_percentual` (numeric) — calculado pela DRE
-- `compras_insumos_mensal` (numeric) — custo_mercadorias + custo_materiais da DRE
-- `prolabore_mensal` (numeric) — pro-labore dos socios
-- `dados_financeiros_origem` (text) — 'dre' | 'manual' | 'erp'
-- `dados_financeiros_atualizados_em` (timestamptz) — quando foi atualizado
+Ao selecionar um regime diferente do atual:
+- Exibir `AlertDialog` de confirmacao: "Alterar regime para X? Isso afetara os calculos de todas as ferramentas."
+- Ao confirmar: chamar `updateCompany(currentCompany.id, { regime_tributario: novoRegime })` do CompanyContext
+- Invalidar queries relevantes (dre, tax-score, credits, comparativo) via queryClient
+- Exibir toast de sucesso: "Regime atualizado para X"
 
-### 2. Atualizar Edge Function `process-dre/index.ts`
+### 2. Integrar no `CompanySelector.tsx`
 
-Apos salvar a DRE (linha ~222), adicionar bloco que atualiza o `company_profile` do usuario:
-
-```
-// Apos savedDre
-await supabaseAdmin.from('company_profile').update({
-  faturamento_anual: dre.receita_bruta * 12,
-  faturamento_mensal_medio: dre.receita_bruta,
-  folha_mensal: (inputs.salarios_encargos || 0) + (inputs.prolabore || 0),
-  regime_tributario: inputs.regime_tributario,
-  receita_liquida_mensal: dre.receita_liquida,
-  margem_bruta_percentual: dre.margem_bruta,
-  compras_insumos_mensal: (inputs.custo_mercadorias || 0) + (inputs.custo_materiais || 0),
-  prolabore_mensal: inputs.prolabore || 0,
-  dados_financeiros_origem: 'dre',
-  dados_financeiros_atualizados_em: new Date().toISOString(),
-}).eq('user_id', userId)
-```
-
-Se o usuario tiver multiplas empresas, usara `.limit(1)` na empresa ativa (ou primeira).
-
-### 3. Criar hook `useSharedCompanyData`
-
-Novo arquivo: `src/hooks/useSharedCompanyData.ts`
-
-Hook que retorna dados financeiros da empresa ativa a partir do `CompanyContext`:
-
-```typescript
-interface SharedCompanyData {
-  regime_tributario: string | null;
-  faturamento_anual: number | null;
-  folha_anual: number | null;        // folha_mensal * 12
-  cnae_principal: string | null;
-  setor: string | null;
-  receita_liquida_mensal: number | null;
-  margem_bruta_percentual: number | null;
-  compras_insumos_anual: number | null; // compras_insumos_mensal * 12
-  origem: string | null;              // 'dre' | 'manual' | 'erp'
-  atualizado_em: string | null;
-}
-```
-
-O hook buscara diretamente do `company_profile` via query (expandindo os campos ja carregados no CompanyContext).
-
-### 4. Atualizar `CompanyContext.tsx`
-
-Expandir a query SELECT para incluir os novos campos: `receita_liquida_mensal`, `margem_bruta_percentual`, `compras_insumos_mensal`, `prolabore_mensal`, `dados_financeiros_origem`, `dados_financeiros_atualizados_em`.
-
-Atualizar a interface `Company` com esses campos opcionais.
-
-### 5. Atualizar `ComparativoRegimesWizard.tsx`
-
-Substituir a query direta ao `company_dre` pelo hook `useSharedCompanyData`:
-
-- `faturamento_anual` pre-preenchido do perfil (se existir)
-- `folha_pagamento` pre-preenchido do perfil
-- `compras_insumos` pre-preenchido do perfil
-- `cnae_principal` pre-preenchido do perfil
-
-Adicionar badge visual nos campos pre-preenchidos:
+Adicionar o `RegimeBadgeSelector` dentro da barra existente do CompanySelector, apos o dropdown de empresa e antes do botao "Adicionar CNPJ":
 
 ```
-<Badge variant="outline" className="text-yellow-500 border-yellow-500/50">
-  icone 📊 Importado da DRE
-</Badge>
+[Building2 icon] Empresa: [INDUSTRIA DE PAES... v] [Scale icon Lucro Presumido v] [+ Adicionar CNPJ]
 ```
 
-Campos continuam editaveis — apenas indicam a origem.
+O componente so aparece quando `currentCompany` existe e o plano e Navigator+ (mesma condicao do CompanySelector).
 
-### 6. Atualizar `RegimeSelector.tsx` (Radar de Creditos)
+### 3. Sincronizar Perfil (`src/pages/Perfil.tsx`)
 
-Simplificar: usar `useSharedCompanyData` em vez de duas queries separadas (company_profile + company_dre). Mostrar badge "Do cadastro" ou "Importado da DRE" quando auto-detectado.
+O campo "Regime tributario" na secao "Informacoes Tributarias" (linha 300-310) salva em `profiles.regime` (tabela de perfil do usuario). Isso e separado de `company_profile.regime_tributario`.
 
-### 7. Componente visual `DataSourceBadge`
+Adicionar logica para que ao salvar o perfil, se o valor de regime mudou, tambem atualizar o `company_profile.regime_tributario` da empresa ativa via `updateCompany`. Isso garante sincronizacao bidirecional.
 
-Novo componente reutilizavel: `src/components/common/DataSourceBadge.tsx`
+### 4. Invalidacao de queries ao trocar regime
 
-Exibe badges como:
-- "📊 Importado da DRE" (origem = 'dre')
-- "👤 Do cadastro" (origem = 'manual')
-- "🔗 Do ERP" (origem = 'erp')
+Quando o regime e alterado via `updateCompany`, o `CompanyContext.refetch()` ja e chamado. Adicionalmente, o `RegimeBadgeSelector` invalidara:
+- `home-state`
+- `dre`
+- `tax-score`
+- `credits`
+- `comparativo-regimes`
 
-Estilo: badge dourado/amarelo, pequeno, ao lado do label do campo.
+Isso faz com que DRE, Score, Radar e Comparativo recarreguem com o novo regime.
 
-## Fluxo de dados
+## Secao tecnica
 
-```text
-DRE Wizard (usuario preenche) 
-  --> process-dre Edge Function (salva DRE + atualiza company_profile)
-    --> company_profile (hub central)
-      --> Comparativo de Regimes (le faturamento, folha, CNAE)
-      --> Radar de Creditos (le regime tributario)
-      --> Score Tributario (le regime, setor)
-      --> Margem Ativa (le receita liquida, margem bruta)
-```
+### Arquivos novos
+- `src/components/company/RegimeBadgeSelector.tsx` - Componente de badge + dropdown + dialog de confirmacao
 
-## O que NAO muda
+### Arquivos editados
+- `src/components/company/CompanySelector.tsx` - Inserir RegimeBadgeSelector na barra
+- `src/pages/Perfil.tsx` - Sincronizar campo regime com company_profile ao salvar
 
+### Mapeamento de valores
+O `company_profile.regime_tributario` armazena: `'simples'`, `'presumido'`, `'real'`
+O `profiles.regime` armazena: `'SIMPLES'`, `'PRESUMIDO'`, `'REAL'`
+O `RegimeBadgeSelector` usara os valores do company_profile (lowercase) e fara a conversao quando necessario.
+
+Labels de exibicao:
+- `simples` -> "Simples Nacional"
+- `presumido` -> "Lucro Presumido"
+- `real` -> "Lucro Real"
+
+### O que NAO muda
 - Botoes da landing page
 - Configuracoes do Stripe
 - Logica de trial de 7 dias
-- Tabelas existentes (apenas colunas novas adicionadas)
-- Dados ja digitados pelo usuario (pre-preenchimento so ocorre em campos vazios)
-- Backend de analise do Radar de Creditos
-
-## Secao tecnica: Ordem de execucao
-
-1. Migracao SQL: adicionar 6 colunas ao company_profile
-2. Atualizar Edge Function process-dre para gravar dados compartilhados
-3. Criar componente DataSourceBadge
-4. Criar hook useSharedCompanyData
-5. Atualizar CompanyContext (interface + query)
-6. Atualizar ComparativoRegimesWizard (usar hook + badges)
-7. Atualizar RegimeSelector (usar hook + badges)
-
-Total: 1 migracao, 1 edge function editada, 2 novos arquivos, 4 arquivos editados
+- Tabelas do banco (nenhuma migracao necessaria)
+- Edge Functions
+- Componentes existentes de DRE, Radar, Comparativo (ja leem regime_tributario do company_profile)
