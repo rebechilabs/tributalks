@@ -19,15 +19,15 @@ import {
   Sparkles,
   AlertTriangle
 } from "lucide-react";
-import { SimprontoFormData, PerfilClientes, SimprontoInput } from "@/types/simpronto";
+import { ComparativoRegimesFormData, PerfilClientes, ComparativoRegimesInput } from "@/types/comparativoRegimes";
 import { DespesasOperacionaisSelector } from "./DespesasOperacionaisSelector";
 
-interface SimprontoWizardProps {
-  onSubmit: (data: SimprontoInput) => void;
+interface ComparativoRegimesWizardProps {
+  onSubmit: (data: ComparativoRegimesInput) => void;
   isLoading?: boolean;
 }
 
-const initialFormData: SimprontoFormData = {
+const initialFormData: ComparativoRegimesFormData = {
   faturamento_anual: '',
   folha_pagamento: '',
   cnae_principal: '',
@@ -38,16 +38,16 @@ const initialFormData: SimprontoFormData = {
   perfil_clientes: '',
 };
 
-export function SimprontoWizard({ onSubmit, isLoading }: SimprontoWizardProps) {
+export function ComparativoRegimesWizard({ onSubmit, isLoading }: ComparativoRegimesWizardProps) {
   const { user } = useAuth();
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState<SimprontoFormData>(initialFormData);
+  const [formData, setFormData] = useState<ComparativoRegimesFormData>(initialFormData);
   const [showPrefillBanner, setShowPrefillBanner] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
 
   // Buscar dados do DRE para autopreenchimento
   const { data: dreData } = useQuery({
-    queryKey: ['dre-prefill-simpronto', user?.id],
+    queryKey: ['dre-prefill-comparativo-regimes', user?.id],
     queryFn: async () => {
       const { data } = await supabase
         .from('company_dre')
@@ -80,7 +80,6 @@ export function SimprontoWizard({ onSubmit, isLoading }: SimprontoWizardProps) {
     }
   }, [dreData]);
 
-  // Formatar valor para exibição
   const formatarParaExibicao = (valor: string): string => {
     if (!valor) return '';
     const numero = valor.replace(/\D/g, '');
@@ -88,31 +87,24 @@ export function SimprontoWizard({ onSubmit, isLoading }: SimprontoWizardProps) {
     return new Intl.NumberFormat('pt-BR').format(parseInt(numero));
   };
 
-  // Handler de mudança de input numérico
-  const handleCurrencyChange = (field: keyof SimprontoFormData, value: string) => {
+  const handleCurrencyChange = (field: keyof ComparativoRegimesFormData, value: string) => {
     const apenasNumeros = value.replace(/\D/g, '');
     setFormData(prev => ({ ...prev, [field]: apenasNumeros }));
-    if (showErrors && apenasNumeros && parseInt(apenasNumeros) > 0) {
-      // Don't clear showErrors globally, just let the field-level check pass
-    }
   };
 
-  // Validação do passo 1
   const isStep1Valid = () => {
     const faturamento = parseInt(formData.faturamento_anual) || 0;
     return faturamento > 0;
   };
 
-  // Validação do passo 2
   const isStep2Valid = () => {
     return formData.perfil_clientes !== '';
   };
 
-  // Submit do formulário
   const handleSubmit = () => {
     if (!isStep2Valid()) return;
 
-    const input: SimprontoInput = {
+    const input: ComparativoRegimesInput = {
       faturamento_anual: parseInt(formData.faturamento_anual) || 0,
       folha_pagamento: parseInt(formData.folha_pagamento) || 0,
       cnae_principal: formData.cnae_principal,
@@ -163,7 +155,6 @@ export function SimprontoWizard({ onSubmit, isLoading }: SimprontoWizardProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Faturamento Anual */}
             <div className="space-y-2">
               <Label htmlFor="faturamento_anual">
                 Faturamento Anual Estimado <span className="text-destructive">*</span>
@@ -188,7 +179,6 @@ export function SimprontoWizard({ onSubmit, isLoading }: SimprontoWizardProps) {
               </p>
             </div>
 
-            {/* Folha de Pagamento */}
             <div className="space-y-2">
               <Label htmlFor="folha_pagamento">
                 Gasto Anual com Folha de Pagamento <span className="text-destructive">*</span>
@@ -213,7 +203,6 @@ export function SimprontoWizard({ onSubmit, isLoading }: SimprontoWizardProps) {
               </p>
             </div>
 
-            {/* CNAE Principal */}
             <div className="space-y-2">
               <Label htmlFor="cnae_principal">
                 Atividade Principal (CNAE)
@@ -266,7 +255,6 @@ export function SimprontoWizard({ onSubmit, isLoading }: SimprontoWizardProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Compras e Insumos */}
             <div className="space-y-2">
               <Label htmlFor="compras_insumos">
                 Gasto Anual com Compras e Insumos <span className="text-destructive">*</span>
@@ -288,7 +276,6 @@ export function SimprontoWizard({ onSubmit, isLoading }: SimprontoWizardProps) {
               </p>
             </div>
 
-            {/* Despesas Operacionais - Seletor Categorizado */}
             <DespesasOperacionaisSelector
               valores={formData.despesas_detalhadas || {}}
               onChange={(novosValores) => {
@@ -301,7 +288,6 @@ export function SimprontoWizard({ onSubmit, isLoading }: SimprontoWizardProps) {
               }}
             />
 
-            {/* Margem de Lucro */}
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <Label>Margem de Lucro Estimada</Label>
@@ -322,7 +308,6 @@ export function SimprontoWizard({ onSubmit, isLoading }: SimprontoWizardProps) {
               </div>
             </div>
 
-            {/* Perfil de Clientes */}
             <div className="space-y-4">
               <Label>
                 Qual o perfil principal dos seus clientes? <span className="text-destructive">*</span>
@@ -362,7 +347,6 @@ export function SimprontoWizard({ onSubmit, isLoading }: SimprontoWizardProps) {
               </RadioGroup>
             </div>
 
-            {/* Alerta informativo */}
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>

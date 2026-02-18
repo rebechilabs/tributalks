@@ -1,11 +1,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, TrendingUp, AlertTriangle } from "lucide-react";
-import { SimprontoResult, RegimeType } from "@/types/simpronto";
-import { NOMES_REGIMES, formatarMoeda } from "@/utils/simprontoCalculations";
+import { ComparativoRegimesResult, RegimeType } from "@/types/comparativoRegimes";
+import { NOMES_REGIMES, formatarMoeda } from "@/utils/comparativoRegimesCalculations";
 
 interface RecommendationCardProps {
-  result: SimprontoResult;
+  result: ComparativoRegimesResult;
 }
 
 export function RecommendationCard({ result }: RecommendationCardProps) {
@@ -28,7 +28,6 @@ export function RecommendationCard({ result }: RecommendationCardProps) {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Regime recomendado */}
         <div className="space-y-1">
           <p className="text-sm text-muted-foreground">O regime mais econômico para você é:</p>
           <p className="text-2xl font-bold text-primary">
@@ -36,7 +35,6 @@ export function RecommendationCard({ result }: RecommendationCardProps) {
           </p>
         </div>
         
-        {/* Economia estimada */}
         {result.economia_vs_segundo > 0 && (
           <div className="flex items-center gap-2 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
             <TrendingUp className="h-5 w-5 text-green-500" />
@@ -52,7 +50,6 @@ export function RecommendationCard({ result }: RecommendationCardProps) {
           </div>
         )}
         
-        {/* Imposto do regime recomendado */}
         {regimeRecomendado && (
           <div className="grid grid-cols-2 gap-4 p-3 rounded-lg bg-muted/50">
             <div>
@@ -66,14 +63,12 @@ export function RecommendationCard({ result }: RecommendationCardProps) {
           </div>
         )}
         
-        {/* Justificativa */}
         <div className="space-y-2 pt-2">
           <p className="text-sm text-muted-foreground leading-relaxed">
             {result.justificativa}
           </p>
         </div>
         
-        {/* Disclaimer */}
         {is2027 && (
           <div className="flex items-start gap-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 mt-4">
             <AlertTriangle className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />

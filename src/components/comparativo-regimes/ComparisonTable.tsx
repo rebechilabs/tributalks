@@ -1,30 +1,19 @@
 import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Check, X, Star, Info } from "lucide-react";
-import { SimprontoResult, RegimeType } from "@/types/simpronto";
-import { formatarMoeda, formatarPercentual } from "@/utils/simprontoCalculations";
+import { ComparativoRegimesResult, RegimeType } from "@/types/comparativoRegimes";
+import { formatarMoeda, formatarPercentual } from "@/utils/comparativoRegimesCalculations";
 
 interface ComparisonTableProps {
-  result: SimprontoResult;
+  result: ComparativoRegimesResult;
 }
 
 export function ComparisonTable({ result }: ComparisonTableProps) {
   const { regimes, recomendado } = result;
   
-  // Ordenar por imposto (menor primeiro)
   const regimesOrdenados = [...regimes].sort((a, b) => {
     if (!a.is_elegivel) return 1;
     if (!b.is_elegivel) return -1;

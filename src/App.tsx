@@ -71,7 +71,7 @@ const NewsletterPage = lazy(() => import("./pages/NewsletterPage"));
 const SplitPayment = lazy(() => import("./pages/calculadora/SplitPayment"));
 const ComparativoRegimes = lazy(() => import("./pages/calculadora/ComparativoRegimes"));
 const CalculadoraRTC = lazy(() => import("./pages/calculadora/CalculadoraRTC"));
-const SimprontoPage = lazy(() => import("./pages/dashboard/SimprontoPage"));
+const ComparativoRegimesPage = lazy(() => import("./pages/dashboard/ComparativoRegimesPage"));
 const CalculadoraNBS = lazy(() => import("./pages/calculadora/CalculadoraNBS"));
 
 // Painel Executivo
@@ -271,7 +271,7 @@ const App = () => (
               path="/dashboard/entender/comparativo" 
               element={
                 <ProtectedRoute>
-                  <LazyRoute><SimprontoPage /></LazyRoute>
+                  <LazyRoute><ComparativoRegimesPage /></LazyRoute>
                 </ProtectedRoute>
               } 
             />

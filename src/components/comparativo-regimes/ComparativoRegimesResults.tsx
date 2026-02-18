@@ -1,21 +1,20 @@
 import { Button } from "@/components/ui/button";
-import { RotateCcw, Download, Share2 } from "lucide-react";
-import { SimprontoResult, SimprontoInput } from "@/types/simpronto";
+import { RotateCcw } from "lucide-react";
+import { ComparativoRegimesResult, ComparativoRegimesInput } from "@/types/comparativoRegimes";
 import { RecommendationCard } from "./RecommendationCard";
 import { ComparisonTable } from "./ComparisonTable";
 import { ComparisonChart } from "./ComparisonChart";
-import { formatarMoeda } from "@/utils/simprontoCalculations";
+import { formatarMoeda } from "@/utils/comparativoRegimesCalculations";
 
-interface SimprontoResultsProps {
-  result: SimprontoResult;
-  input: SimprontoInput;
+interface ComparativoRegimesResultsProps {
+  result: ComparativoRegimesResult;
+  input: ComparativoRegimesInput;
   onReset: () => void;
 }
 
-export function SimprontoResults({ result, input, onReset }: SimprontoResultsProps) {
+export function ComparativoRegimesResults({ result, input, onReset }: ComparativoRegimesResultsProps) {
   return (
     <div className="space-y-6">
-      {/* Header com ações */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold">Resultado da Simulação</h2>
@@ -32,22 +31,16 @@ export function SimprontoResults({ result, input, onReset }: SimprontoResultsPro
         </div>
       </div>
       
-      {/* Grid principal */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Card de recomendação */}
         <RecommendationCard result={result} />
-        
-        {/* Gráfico comparativo */}
         <ComparisonChart result={result} />
       </div>
       
-      {/* Tabela detalhada */}
       <div>
         <h3 className="text-lg font-medium mb-4">Comparativo Detalhado</h3>
         <ComparisonTable result={result} />
       </div>
       
-      {/* Notas importantes */}
       <div className="rounded-lg border border-muted bg-muted/30 p-4">
         <h4 className="font-medium mb-2">📌 Notas Importantes</h4>
         <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
