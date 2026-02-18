@@ -126,12 +126,21 @@ const ROUTE_CONTEXTS: Record<string, ClaraContextConfig> = {
     proactiveQuestion: 'Qual sua principal preocupação hoje: reduzir impostos ou melhorar margem de lucro?',
     variant: 'default'
   },
+  '/dashboard/planejar/oportunidades': {
+    intent: 'suggest',
+    headline: 'Priorizei as oportunidades para você',
+    description: 'Das 37+ oportunidades mapeadas, posso indicar as mais relevantes para seu perfil.',
+    ctaLabel: 'Ver prioritárias',
+    ctaQuestion: 'Considerando meu perfil de empresa, quais oportunidades tributárias eu deveria priorizar? Ordene por impacto e facilidade de implementação.',
+    proactiveQuestion: 'Você já usa algum benefício fiscal hoje? Muitas empresas deixam dinheiro na mesa sem saber.',
+    variant: 'prominent'
+  },
   '/dashboard/oportunidades': {
     intent: 'suggest',
     headline: 'Priorizei as oportunidades para você',
     description: 'Das 37+ oportunidades mapeadas, posso indicar as mais relevantes para seu perfil.',
     ctaLabel: 'Ver prioritárias',
-    ctaQuestion: 'Considerando meu perfil de empresa, quais oportunidades fiscais eu deveria priorizar? Ordene por impacto e facilidade de implementação.',
+    ctaQuestion: 'Considerando meu perfil de empresa, quais oportunidades tributárias eu deveria priorizar? Ordene por impacto e facilidade de implementação.',
     proactiveQuestion: 'Você já usa algum benefício fiscal hoje? Muitas empresas deixam dinheiro na mesa sem saber.',
     variant: 'prominent'
   },

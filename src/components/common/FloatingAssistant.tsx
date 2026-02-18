@@ -39,6 +39,7 @@ const ROUTE_TO_TOOL: Record<string, string> = {
   "/dashboard/radar-creditos": "radar-creditos",
   "/dashboard/dre": "dre",
   "/dashboard/oportunidades": "oportunidades",
+  "/dashboard/planejar/oportunidades": "oportunidades",
   "/clara-ai": "clara_ai",
   "/dashboard/noticias": "noticias",
   "/dashboard/timeline": "timeline",

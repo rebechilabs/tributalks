@@ -64,11 +64,11 @@ const ONBOARDING_TIPS: OnboardingTip[] = [
     delayMs: 1500
   },
   {
-    route: '/dashboard/oportunidades',
-    title: '37+ Oportunidades Fiscais',
+    route: '/dashboard/planejar/oportunidades',
+    title: '37+ Oportunidades Tributárias',
     message: 'Mapeamos dezenas de benefícios fiscais. Preencha seu perfil para ver quais se aplicam a você.',
     ctaLabel: 'Ver melhores',
-    ctaQuestion: 'Quais são as oportunidades fiscais mais comuns que empresas deixam de aproveitar?',
+    ctaQuestion: 'Quais são as oportunidades tributárias mais comuns que empresas deixam de aproveitar?',
     showOnce: true,
     delayMs: 1500
   },

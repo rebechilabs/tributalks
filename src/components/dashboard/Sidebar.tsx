@@ -39,11 +39,11 @@ const GROUP_TITLE_TO_KEY: Record<string, string> = {
   'Integrações': 'integracoes',
   'Ferramentas Pro': 'avancado',
   // New V2 module groups
-  'ENTENDER MEU NEGÓCIO': 'entender',
-  'RECUPERAR CRÉDITOS': 'recuperar',
-  'PRECIFICAÇÃO': 'precificacao',
+  'ENTENDER': 'entender',
+  'RECUPERAR': 'recuperar',
+  'PLANEJAR': 'planejar',
+  'PRECIFICAR': 'precificacao',
   'COMANDAR': 'comandar',
-  'CONEXÃO & COMUNICAÇÃO': 'conexao',
 };
 
 export function Sidebar() {
@@ -98,7 +98,7 @@ export function Sidebar() {
   const getUnreadForRoute = (href: string): number => {
     if (href === '/noticias') return unreadCounts.reforma;
     if (href === '/indicar') return unreadCounts.indicacao;
-    if (href === '/dashboard/oportunidades' || href === '/dashboard/recuperar/oportunidades') return unreadCounts.geral;
+    if (href === '/dashboard/oportunidades' || href === '/dashboard/recuperar/oportunidades' || href === '/dashboard/planejar/oportunidades') return unreadCounts.geral;
     return 0;
   };
 

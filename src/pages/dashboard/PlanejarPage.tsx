@@ -1,38 +1,41 @@
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { ModuleToolCard, ToolStatus } from "@/components/home/ModuleToolCard";
-import { FileText } from "lucide-react";
-import { useHomeState } from "@/hooks/useHomeState";
+import { Lightbulb, Route } from "lucide-react";
 
 const tools = [
   {
-    title: "Radar de Créditos",
-    description: "Faça upload de XMLs, SPED e DCTF para identificar créditos tributários automaticamente.",
-    href: "/dashboard/recuperar/radar",
-    icon: FileText,
+    title: "Oportunidades Tributárias",
+    description: "Mais de 61 oportunidades de economia baseadas no seu perfil.",
+    href: "/dashboard/planejar/oportunidades",
+    icon: Lightbulb,
     stepNumber: 1,
-    statusKey: 'radar' as const,
+    statusKey: 'oportunidades' as const,
+    badge: "61+",
+  },
+  {
+    title: "Planejamento Tributário",
+    description: "Monte seu plano tributário estratégico personalizado.",
+    href: "/dashboard/planejar/planejamento",
+    icon: Route,
+    stepNumber: 2,
+    statusKey: 'planejamento' as const,
+    badge: "Em breve",
   },
 ];
 
-export default function RecuperarPage() {
-  const homeState = useHomeState();
-
+export default function PlanejarPage() {
   const getToolStatus = (statusKey: string): ToolStatus => {
-    switch (statusKey) {
-      case 'radar':
-        return homeState.creditsData ? 'completed' : 'pending';
-      default:
-        return 'pending';
-    }
+    if (statusKey === 'planejamento') return 'pending';
+    return 'pending';
   };
 
   return (
-    <DashboardLayout title="Recuperar">
+    <DashboardLayout title="Planejar">
       <div className="container mx-auto px-4 py-6">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold mb-2">Recuperar</h1>
+          <h1 className="text-2xl font-bold mb-2">Planejar</h1>
           <p className="text-muted-foreground">
-            Identifique créditos tributários não aproveitados
+            Planeje sua estratégia tributária com inteligência
           </p>
         </div>
 
@@ -46,6 +49,7 @@ export default function RecuperarPage() {
               icon={tool.icon}
               status={getToolStatus(tool.statusKey)}
               stepNumber={tool.stepNumber}
+              badge={tool.badge}
             />
           ))}
         </div>

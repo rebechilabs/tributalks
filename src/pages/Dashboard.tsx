@@ -131,9 +131,9 @@ const toolGroups: ToolGroup[] = [
         requiredPlan: 'PROFESSIONAL'
       },
       { 
-        name: 'Oportunidades', 
-        description: 'Descubra economia tributária',
-        href: '/dashboard/oportunidades', 
+      name: 'Oportunidades Tributárias', 
+      description: 'Descubra economia tributária',
+      href: '/dashboard/planejar/oportunidades', 
         icon: Lightbulb,
         requiredPlan: 'PROFESSIONAL'
       },

@@ -66,15 +66,15 @@ export const MENU_STARTER: MenuElement[] = [
       { label: 'Home', href: '/dashboard/home', icon: Home },
     ]
   },
-  // Módulo ENTENDER - mesmo layout do Professional
+  // Módulo ENTENDER
   {
-    title: 'ENTENDER MEU NEGÓCIO',
+    title: 'ENTENDER',
     collapsible: true,
     moduleHref: '/dashboard/entender',
     items: [
       { label: 'DRE Inteligente', href: '/dashboard/entender/dre', icon: BarChart3, description: 'Base para análises' },
       { label: 'Score Tributário', href: '/dashboard/entender/score', icon: Trophy, description: 'Diagnóstico 0-1000' },
-      { label: 'Comparativo de Regimes', href: '/dashboard/entender/comparativo', icon: Scale, description: '5 regimes tributários', badge: '2027' },
+      { label: 'Comparativo de Regimes Tributários', href: '/dashboard/entender/comparativo', icon: Scale, description: '5 regimes tributários', badge: '2027' },
     ]
   },
   // PIT - Prazos Importantes Tributários
@@ -132,25 +132,34 @@ export const MENU_NAVIGATOR: MenuElement[] = [
       { label: 'Home', href: '/dashboard/home', icon: Home },
     ]
   },
-  // Módulo ENTENDER - igual ao Professional
+  // Módulo ENTENDER
   {
-    title: 'ENTENDER MEU NEGÓCIO',
+    title: 'ENTENDER',
     collapsible: true,
     moduleHref: '/dashboard/entender',
     items: [
       { label: 'DRE Inteligente', href: '/dashboard/entender/dre', icon: BarChart3, description: 'Base para análises' },
       { label: 'Score Tributário', href: '/dashboard/entender/score', icon: Trophy, description: 'Diagnóstico 0-1000' },
-      { label: 'Comparativo de Regimes', href: '/dashboard/entender/comparativo', icon: Scale, description: '5 regimes tributários', badge: '2027' },
+      { label: 'Comparativo de Regimes Tributários', href: '/dashboard/entender/comparativo', icon: Scale, description: '5 regimes tributários', badge: '2027' },
     ]
   },
-  // Módulo RECUPERAR - igual ao Professional
+  // Módulo RECUPERAR
   {
-    title: 'RECUPERAR CRÉDITOS',
+    title: 'RECUPERAR',
     collapsible: true,
     moduleHref: '/dashboard/recuperar',
     items: [
       { label: 'Radar de Créditos', href: '/dashboard/recuperar/radar', icon: FileText, description: 'Análise de XMLs' },
-      { label: 'Oportunidades Fiscais', href: '/dashboard/recuperar/oportunidades', icon: Lightbulb, badge: '61+' },
+    ]
+  },
+  // Módulo PLANEJAR
+  {
+    title: 'PLANEJAR',
+    collapsible: true,
+    moduleHref: '/dashboard/planejar',
+    items: [
+      { label: 'Oportunidades Tributárias', href: '/dashboard/planejar/oportunidades', icon: Lightbulb, badge: '61+' },
+      { label: 'Planejamento Tributário', href: '/dashboard/planejar/planejamento', icon: Route, badge: 'Em breve' },
     ]
   },
   // PIT - Prazos Importantes Tributários
@@ -170,18 +179,6 @@ export const MENU_NAVIGATOR: MenuElement[] = [
       { label: 'NEXUS', href: '/upgrade?feature=nexus', icon: LayoutDashboard, locked: true, description: 'Centro de Comando' },
       { label: 'Margem Ativa', href: '/upgrade?feature=margem', icon: Target, locked: true, description: 'Precificação inteligente' },
       { label: 'PriceGuard', href: '/upgrade?feature=priceguard', icon: Shield, locked: true, description: 'Proteção de preços' },
-    ]
-  },
-  // Módulo CONEXÃO & COMUNICAÇÃO
-  {
-    title: 'CONEXÃO & COMUNICAÇÃO',
-    collapsible: true,
-    moduleHref: '/dashboard/conexao',
-    items: [
-      { label: 'Notícias', href: '/noticias', icon: Newspaper, description: 'Toda terça às 07h07', featured: true },
-      { label: 'TribuTalks News', href: '/newsletter', icon: Mail, description: 'Newsletter semanal', featured: true },
-      { label: 'Comunidade', href: '/comunidade', icon: Users, description: 'Conexões e negócios', featured: true },
-      { label: 'Indique e Ganhe', href: '/indicar', icon: Gift, description: 'Ganhe até 20% de desconto', featured: true, badge: 'Novo' },
     ]
   },
   { type: 'divider' as const },
@@ -216,28 +213,37 @@ export const MENU_PROFESSIONAL_V2: MenuElement[] = [
   },
   // Módulo ENTENDER
   {
-    title: 'ENTENDER MEU NEGÓCIO',
+    title: 'ENTENDER',
     collapsible: true,
     moduleHref: '/dashboard/entender',
     items: [
       { label: 'DRE Inteligente', href: '/dashboard/entender/dre', icon: BarChart3, description: 'Base para análises' },
       { label: 'Score Tributário', href: '/dashboard/entender/score', icon: Trophy, description: 'Diagnóstico 0-1000' },
-      { label: 'Comparativo de Regimes', href: '/dashboard/entender/comparativo', icon: Scale, description: '5 regimes tributários', badge: '2027' },
+      { label: 'Comparativo de Regimes Tributários', href: '/dashboard/entender/comparativo', icon: Scale, description: '5 regimes tributários', badge: '2027' },
     ]
   },
   // Módulo RECUPERAR
   {
-    title: 'RECUPERAR CRÉDITOS',
+    title: 'RECUPERAR',
     collapsible: true,
     moduleHref: '/dashboard/recuperar',
     items: [
       { label: 'Radar de Créditos', href: '/dashboard/recuperar/radar', icon: FileText, description: 'Análise de XMLs' },
-      { label: 'Oportunidades Fiscais', href: '/dashboard/recuperar/oportunidades', icon: Lightbulb, badge: '61+' },
     ]
   },
-  // Módulo PRECIFICAÇÃO
+  // Módulo PLANEJAR
   {
-    title: 'PRECIFICAÇÃO',
+    title: 'PLANEJAR',
+    collapsible: true,
+    moduleHref: '/dashboard/planejar',
+    items: [
+      { label: 'Oportunidades Tributárias', href: '/dashboard/planejar/oportunidades', icon: Lightbulb, badge: '61+' },
+      { label: 'Planejamento Tributário', href: '/dashboard/planejar/planejamento', icon: Route, badge: 'Em breve' },
+    ]
+  },
+  // Módulo PRECIFICAR
+  {
+    title: 'PRECIFICAR',
     collapsible: true,
     moduleHref: '/dashboard/precificacao',
     items: [
@@ -255,18 +261,6 @@ export const MENU_PROFESSIONAL_V2: MenuElement[] = [
       { label: 'NEXUS', href: '/dashboard/comandar/nexus', icon: LayoutDashboard, featured: true, badge: '8 KPIs' },
       { label: 'Valuation', href: '/dashboard/comandar/valuation', icon: TrendingUp, description: 'Estimativa de valor', badge: '3 métodos' },
       { label: 'Relatórios PDF', href: '/dashboard/comandar/relatorios', icon: FileText },
-    ]
-  },
-  // Módulo CONEXÃO & COMUNICAÇÃO
-  {
-    title: 'CONEXÃO & COMUNICAÇÃO',
-    collapsible: true,
-    moduleHref: '/dashboard/conexao',
-    items: [
-      { label: 'Notícias', href: '/noticias', icon: Newspaper, description: 'Toda terça às 07h07', featured: true },
-      { label: 'TribuTalks News', href: '/newsletter', icon: Mail, description: 'Newsletter semanal', featured: true },
-      { label: 'Comunidade', href: '/comunidade', icon: Users, description: 'Conexões e negócios', featured: true },
-      { label: 'Indique e Ganhe', href: '/indicar', icon: Gift, description: 'Ganhe até 20% de desconto', featured: true, badge: 'Novo' },
     ]
   },
   { type: 'divider' as const },

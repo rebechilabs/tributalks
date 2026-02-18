@@ -24,8 +24,12 @@ const ROUTE_SUGGESTIONS: Record<string, {
     question: "Posso analisar seus indicadores financeiros e sugerir otimizações tributárias baseadas no seu DRE. Quer começar?",
     shortText: "Analiso seus indicadores?",
   },
+  "/dashboard/planejar/oportunidades": {
+    question: "Encontrei oportunidades tributárias para sua empresa. Quer que eu explique cada uma e como implementar?",
+    shortText: "Explico as oportunidades?",
+  },
   "/dashboard/oportunidades": {
-    question: "Encontrei oportunidades fiscais para sua empresa. Quer que eu explique cada uma e como implementar?",
+    question: "Encontrei oportunidades tributárias para sua empresa. Quer que eu explique cada uma e como implementar?",
     shortText: "Explico as oportunidades?",
   },
   "/calculadora/rtc": {

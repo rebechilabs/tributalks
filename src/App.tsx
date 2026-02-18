@@ -86,6 +86,7 @@ const MargemAtiva = lazy(() => import("./pages/dashboard/MargemAtiva"));
 const HomePage = lazy(() => import("./pages/dashboard/HomePage"));
 const EntenderPage = lazy(() => import("./pages/dashboard/EntenderPage"));
 const RecuperarPage = lazy(() => import("./pages/dashboard/RecuperarPage"));
+const PlanejarPage = lazy(() => import("./pages/dashboard/PlanejarPage"));
 const PrecificacaoPage = lazy(() => import("./pages/dashboard/PrecificacaoPage"));
 const ComandarPage = lazy(() => import("./pages/dashboard/ComandarPage"));
 const ConexaoPage = lazy(() => import("./pages/dashboard/ConexaoPage"));
@@ -233,6 +234,14 @@ const App = () => (
               } 
             />
             <Route 
+              path="/dashboard/planejar" 
+              element={
+                <ProtectedRoute>
+                  <LazyRoute><PlanejarPage /></LazyRoute>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/dashboard/conexao" 
               element={
                 <ProtectedRoute>
@@ -282,7 +291,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/dashboard/recuperar/oportunidades" 
+              path="/dashboard/planejar/oportunidades" 
               element={
                 <ProtectedRoute>
                   <LazyRoute><Oportunidades /></LazyRoute>
@@ -350,7 +359,8 @@ const App = () => (
             <Route path="/dashboard/analise-notas" element={<Navigate to="/dashboard/recuperar/radar" replace />} />
             <Route path="/dashboard/importar-xml" element={<Navigate to="/dashboard/recuperar/radar" replace />} />
             <Route path="/dashboard/radar-creditos" element={<Navigate to="/dashboard/recuperar/radar" replace />} />
-            <Route path="/dashboard/oportunidades" element={<Navigate to="/dashboard/recuperar/oportunidades" replace />} />
+            <Route path="/dashboard/oportunidades" element={<Navigate to="/dashboard/planejar/oportunidades" replace />} />
+            <Route path="/dashboard/recuperar/oportunidades" element={<Navigate to="/dashboard/planejar/oportunidades" replace />} />
             <Route path="/dashboard/margem-ativa" element={<Navigate to="/dashboard/precificacao/margem" replace />} />
             <Route path="/calculadora/split-payment" element={<Navigate to="/dashboard/precificacao/split" replace />} />
             <Route path="/dashboard/nexus" element={<Navigate to="/dashboard/comandar/nexus" replace />} />

@@ -60,23 +60,30 @@ const ROUTE_MAP: Record<string, RouteDefinition> = {
   
   // NEW: Module pages
   '/dashboard/entender': { 
-    label: 'Entender Meu Negócio', 
+    label: 'Entender', 
     group: 'entender',
     groupLabel: 'Entender',
     parent: '/dashboard/home',
     icon: BarChart3 
   },
   '/dashboard/recuperar': { 
-    label: 'Recuperar Créditos', 
+    label: 'Recuperar', 
     group: 'recuperar',
     groupLabel: 'Recuperar',
     parent: '/dashboard/home',
     icon: FileText 
   },
+  '/dashboard/planejar': { 
+    label: 'Planejar', 
+    group: 'planejar',
+    groupLabel: 'Planejar',
+    parent: '/dashboard/home',
+    icon: Lightbulb 
+  },
   '/dashboard/precificacao': { 
-    label: 'Precificação', 
+    label: 'Precificar', 
     group: 'precificacao',
-    groupLabel: 'Precificação',
+    groupLabel: 'Precificar',
     parent: '/dashboard/home',
     icon: Target 
   },
@@ -92,7 +99,7 @@ const ROUTE_MAP: Record<string, RouteDefinition> = {
   '/dashboard/entender/dre': { 
     label: 'DRE Inteligente', 
     group: 'entender',
-    groupLabel: 'Entender Meu Negócio',
+    groupLabel: 'Entender',
     parent: '/dashboard/entender',
     relatedPaths: ['/dashboard/entender/score', '/dashboard/entender/comparativo'],
     icon: BarChart3
@@ -100,15 +107,15 @@ const ROUTE_MAP: Record<string, RouteDefinition> = {
   '/dashboard/entender/score': { 
     label: 'Score Tributário', 
     group: 'entender',
-    groupLabel: 'Entender Meu Negócio',
+    groupLabel: 'Entender',
     parent: '/dashboard/entender',
     relatedPaths: ['/dashboard/entender/dre', '/dashboard/entender/comparativo'],
     icon: Trophy
   },
   '/dashboard/entender/comparativo': { 
-    label: 'Comparativo de Regimes', 
+    label: 'Comparativo de Regimes Tributários', 
     group: 'entender',
-    groupLabel: 'Entender Meu Negócio',
+    groupLabel: 'Entender',
     parent: '/dashboard/entender',
     relatedPaths: ['/dashboard/entender/dre', '/dashboard/entender/score'],
     icon: Scale
@@ -118,25 +125,34 @@ const ROUTE_MAP: Record<string, RouteDefinition> = {
   '/dashboard/recuperar/radar': { 
     label: 'Radar de Créditos', 
     group: 'recuperar',
-    groupLabel: 'Recuperar Créditos',
+    groupLabel: 'Recuperar',
     parent: '/dashboard/recuperar',
-    relatedPaths: ['/dashboard/recuperar/oportunidades'],
     icon: FileText
   },
-  '/dashboard/recuperar/oportunidades': { 
-    label: 'Oportunidades Fiscais', 
-    group: 'recuperar',
-    groupLabel: 'Recuperar Créditos',
-    parent: '/dashboard/recuperar',
-    relatedPaths: ['/dashboard/recuperar/radar'],
+  
+  // Tools under PLANEJAR module
+  '/dashboard/planejar/oportunidades': { 
+    label: 'Oportunidades Tributárias', 
+    group: 'planejar',
+    groupLabel: 'Planejar',
+    parent: '/dashboard/planejar',
+    relatedPaths: ['/dashboard/planejar/planejamento'],
     icon: Lightbulb
+  },
+  '/dashboard/planejar/planejamento': { 
+    label: 'Planejamento Tributário', 
+    group: 'planejar',
+    groupLabel: 'Planejar',
+    parent: '/dashboard/planejar',
+    relatedPaths: ['/dashboard/planejar/oportunidades'],
+    icon: Route
   },
   
   // NEW: Tools under PRECIFICACAO module
   '/dashboard/precificacao/margem': { 
     label: 'Margem Ativa', 
     group: 'precificacao',
-    groupLabel: 'Precificação',
+    groupLabel: 'Precificar',
     parent: '/dashboard/precificacao',
     relatedPaths: ['/dashboard/precificacao/split', '/dashboard/precificacao/priceguard'],
     icon: Target
@@ -144,7 +160,7 @@ const ROUTE_MAP: Record<string, RouteDefinition> = {
   '/dashboard/precificacao/split': { 
     label: 'Split Payment', 
     group: 'precificacao',
-    groupLabel: 'Precificação',
+    groupLabel: 'Precificar',
     parent: '/dashboard/precificacao',
     relatedPaths: ['/dashboard/precificacao/margem', '/dashboard/precificacao/priceguard'],
     icon: Wallet
@@ -152,7 +168,7 @@ const ROUTE_MAP: Record<string, RouteDefinition> = {
   '/dashboard/precificacao/priceguard': { 
     label: 'PriceGuard', 
     group: 'precificacao',
-    groupLabel: 'Precificação',
+    groupLabel: 'Precificar',
     parent: '/dashboard/precificacao',
     relatedPaths: ['/dashboard/precificacao/margem', '/dashboard/precificacao/split'],
     icon: Shield
@@ -305,7 +321,7 @@ const ROUTE_MAP: Record<string, RouteDefinition> = {
     icon: BarChart3
   },
   '/dashboard/oportunidades': { 
-    label: 'Oportunidades Fiscais', 
+    label: 'Oportunidades Tributárias', 
     group: 'avancado',
     groupLabel: 'Diagnóstico Avançado',
     parent: '/dashboard',
@@ -406,7 +422,8 @@ const ROUTE_MAP: Record<string, RouteDefinition> = {
 export const GROUP_PATHS: Record<string, string[]> = {
   home: ['/dashboard/home'],
   entender: ['/dashboard/entender', '/dashboard/entender/dre', '/dashboard/entender/score', '/dashboard/entender/comparativo'],
-  recuperar: ['/dashboard/recuperar', '/dashboard/recuperar/radar', '/dashboard/recuperar/oportunidades'],
+  recuperar: ['/dashboard/recuperar', '/dashboard/recuperar/radar'],
+  planejar: ['/dashboard/planejar', '/dashboard/planejar/oportunidades', '/dashboard/planejar/planejamento'],
   precificacao: ['/dashboard/precificacao', '/dashboard/precificacao/margem', '/dashboard/precificacao/split', '/dashboard/precificacao/priceguard'],
   comandar: ['/dashboard/comandar', '/dashboard/comandar/nexus', '/dashboard/comandar/relatorios'],
   diagnostico: ['/dashboard', '/dashboard/score-tributario'],
