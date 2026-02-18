@@ -13,7 +13,7 @@ import {
   MapPin, ClipboardCheck
 } from "lucide-react";
 import { PLAN_LABELS, PLAN_HIERARCHY, type UserPlan } from "@/hooks/useFeatureAccess";
-import { LEGACY_PLAN_MAP } from "@/data/menuConfig";
+
 
 interface ModuleInfo {
   title: string;
