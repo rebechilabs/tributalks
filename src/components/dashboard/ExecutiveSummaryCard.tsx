@@ -22,17 +22,17 @@ interface ExecutiveSummaryCardProps {
 
 // Mapeamento de planos para acesso ao Painel Executivo
 const PLAN_HIERARCHY: Record<string, number> = {
-  'FREE': 0,
+  'STARTER': 0,
   'NAVIGATOR': 1,
   'PROFESSIONAL': 2,
   'ENTERPRISE': 3,
 };
 
 const LEGACY_PLAN_MAP: Record<string, string> = {
-  'FREE': 'FREE',
   'BASICO': 'NAVIGATOR',
   'PROFISSIONAL': 'PROFESSIONAL',
   'PREMIUM': 'ENTERPRISE',
+  'STARTER': 'STARTER',
   'NAVIGATOR': 'NAVIGATOR',
   'PROFESSIONAL': 'PROFESSIONAL',
   'ENTERPRISE': 'ENTERPRISE',
@@ -92,7 +92,7 @@ function getRiskLabel(nivel: 'baixo' | 'medio' | 'alto' | null): string {
 export function ExecutiveSummaryCard({ thermometerData, scoreActions, loading, userPlan }: ExecutiveSummaryCardProps) {
   const [pdfLoading, setPdfLoading] = useState(false);
   
-  const normalizedPlan = LEGACY_PLAN_MAP[userPlan] || 'FREE';
+  const normalizedPlan = LEGACY_PLAN_MAP[userPlan] || 'STARTER';
   const canAccessExecutive = (PLAN_HIERARCHY[normalizedPlan] || 0) >= PLAN_HIERARCHY['PROFESSIONAL'];
   
   const scoreColors = getScoreColor(thermometerData?.scoreGrade || null);

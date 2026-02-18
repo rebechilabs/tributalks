@@ -35,7 +35,7 @@ const Historico = () => {
   const [selectedSimulation, setSelectedSimulation] = useState<Simulation | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
 
-  const canGeneratePDF = PLAN_CAN_PDF.includes(profile?.plano || 'FREE');
+  const canGeneratePDF = PLAN_CAN_PDF.includes(profile?.plano || 'STARTER');
 
   useEffect(() => {
     const fetchSimulations = async () => {

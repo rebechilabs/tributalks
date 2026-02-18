@@ -94,8 +94,8 @@ export async function getUserPlan(
       .eq('user_id', userId)
       .single();
     
-    return data?.plano || 'FREE';
+    return data?.plano || 'STARTER';
   } catch {
-    return 'FREE';
+    return 'STARTER';
   }
 }

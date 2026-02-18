@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
 
     // Calculate metrics
     const planCounts: Record<string, number> = {
-      FREE: 0,
+      STARTER: 0,
       NAVIGATOR: 0,
       PROFESSIONAL: 0,
       ENTERPRISE: 0,
@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     const totalUsers = profiles?.length || 0;
 
     profiles?.forEach((profile) => {
-      const plan = profile.plano?.toUpperCase() || "FREE";
+      const plan = profile.plano?.toUpperCase() || "STARTER";
       planCounts[plan] = (planCounts[plan] || 0) + 1;
 
       if (profile.subscription_status === "active") {
@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
     .plan-table th, .plan-table td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
     .plan-table th { color: #888; font-weight: normal; font-size: 12px; }
     .plan-table td { font-weight: 500; }
-    .plan-free { color: #888; }
+    .plan-starter { color: #10b981; }
     .plan-navigator { color: #3b82f6; }
     .plan-professional { color: #8b5cf6; }
     .plan-enterprise { color: #f59e0b; }
@@ -139,9 +139,9 @@ Deno.serve(async (req) => {
         <th>% do Total</th>
       </tr>
       <tr>
-        <td class="plan-free">FREE</td>
-        <td>${planCounts.FREE}</td>
-        <td>${totalUsers ? ((planCounts.FREE / totalUsers) * 100).toFixed(1) : 0}%</td>
+        <td class="plan-starter">STARTER</td>
+        <td>${planCounts.STARTER}</td>
+        <td>${totalUsers ? ((planCounts.STARTER / totalUsers) * 100).toFixed(1) : 0}%</td>
       </tr>
       <tr>
         <td class="plan-navigator">NAVIGATOR</td>

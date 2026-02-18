@@ -164,16 +164,15 @@ export function useAdminMetrics(days: number = 7): AdminMetrics {
           enterprise: 0,
           navigator: 0,
           starter: 0,
-          free: 0,
+          free: 0, // kept for backward compat in UI
         };
 
         profiles.forEach(p => {
-          const plan = (p.plano || 'FREE').toUpperCase();
+          const plan = (p.plano || 'STARTER').toUpperCase();
           if (plan === 'PROFESSIONAL' || plan === 'PROFISSIONAL') planCounts.professional++;
           else if (plan === 'ENTERPRISE' || plan === 'PREMIUM') planCounts.enterprise++;
           else if (plan === 'NAVIGATOR' || plan === 'BASICO') planCounts.navigator++;
-          else if (plan === 'STARTER') planCounts.starter++;
-          else planCounts.free++;
+          else planCounts.starter++;
         });
 
         setUserPlans({

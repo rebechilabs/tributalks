@@ -1,10 +1,9 @@
 import { useAuth } from "@/hooks/useAuth";
 
-export type UserPlan = 'FREE' | 'STARTER' | 'NAVIGATOR' | 'PROFESSIONAL' | 'ENTERPRISE';
+export type UserPlan = 'STARTER' | 'NAVIGATOR' | 'PROFESSIONAL' | 'ENTERPRISE';
 
 // Mapeamento de planos legados para novos
 const LEGACY_PLAN_MAP: Record<string, UserPlan> = {
-  'FREE': 'FREE',
   'BASICO': 'STARTER',
   'PROFISSIONAL': 'PROFESSIONAL',
   'PREMIUM': 'ENTERPRISE',
@@ -15,15 +14,13 @@ const LEGACY_PLAN_MAP: Record<string, UserPlan> = {
 };
 
 export const PLAN_HIERARCHY: Record<UserPlan, number> = {
-  'FREE': 0,
-  'STARTER': 1,
-  'NAVIGATOR': 2,
-  'PROFESSIONAL': 3,
-  'ENTERPRISE': 4,
+  'STARTER': 0,
+  'NAVIGATOR': 1,
+  'PROFESSIONAL': 2,
+  'ENTERPRISE': 3,
 };
 
 export const PLAN_LABELS: Record<UserPlan, string> = {
-  'FREE': 'Grátis',
   'STARTER': 'Starter',
   'NAVIGATOR': 'Navigator',
   'PROFESSIONAL': 'Professional',
@@ -31,10 +28,9 @@ export const PLAN_LABELS: Record<UserPlan, string> = {
 };
 
 export const PLAN_PRICES: Record<UserPlan, string> = {
-  'FREE': 'R$ 0',
-  'STARTER': 'R$ 297/mês',
-  'NAVIGATOR': 'R$ 697/mês',
-  'PROFESSIONAL': 'R$ 1.997/mês',
+  'STARTER': 'R$ 297/mês (7 dias grátis)',
+  'NAVIGATOR': 'R$ 697/mês (7 dias grátis)',
+  'PROFESSIONAL': 'R$ 1.997/mês (7 dias grátis)',
   'ENTERPRISE': 'Sob consulta',
 };
 
@@ -80,9 +76,9 @@ interface FeatureConfig {
 
 export const FEATURE_CONFIG: Record<FeatureKey, FeatureConfig> = {
   // Calculadoras CORE - ILIMITADO para todos (porta de entrada)
-  score_tributario: { minPlan: 'FREE', limit: 'unlimited' },
-  split_payment: { minPlan: 'FREE', limit: 'unlimited' },
-  comparativo_regimes: { minPlan: 'FREE', limit: 'unlimited' },
+  score_tributario: { minPlan: 'STARTER', limit: 'unlimited' },
+  split_payment: { minPlan: 'STARTER', limit: 'unlimited' },
+  comparativo_regimes: { minPlan: 'STARTER', limit: 'unlimited' },
   simpronto: { minPlan: 'STARTER', limit: 'unlimited' },  // Starter+
   
   // Calculadoras - níveis diferentes
@@ -122,7 +118,6 @@ export const FEATURE_CONFIG: Record<FeatureKey, FeatureConfig> = {
 
 // Limite de CNPJs por plano
 export const CNPJ_LIMITS: Record<UserPlan, number | 'unlimited'> = {
-  'FREE': 1,
   'STARTER': 1,
   'NAVIGATOR': 2,
   'PROFESSIONAL': 4,   // Updated: 4 CNPJs for Professional
@@ -131,7 +126,6 @@ export const CNPJ_LIMITS: Record<UserPlan, number | 'unlimited'> = {
 
 // Limite de mensagens Clara AI por plano (diário)
 export const CLARA_DAILY_LIMITS: Record<UserPlan, number | 'unlimited'> = {
-  'FREE': 0,           // FREE não tem acesso
   'STARTER': 30,       // 30 mensagens/dia
   'NAVIGATOR': 100,    // 100 mensagens/dia
   'PROFESSIONAL': 'unlimited',
@@ -140,7 +134,6 @@ export const CLARA_DAILY_LIMITS: Record<UserPlan, number | 'unlimited'> = {
 
 // Escopo de ferramentas que a Clara pode responder por plano
 export const CLARA_TOOL_SCOPE: Record<UserPlan, string[]> = {
-  'FREE': [],
   'STARTER': [
     'score_tributario', 
     'split_payment', 
@@ -222,8 +215,8 @@ export function useFeatureAccess(feature: FeatureKey, usageCount?: number): Feat
   const { profile } = useAuth();
   
   // Normaliza plano (legado → novo)
-  const rawPlan = profile?.plano || 'FREE';
-  const currentPlan: UserPlan = LEGACY_PLAN_MAP[rawPlan] || 'FREE';
+  const rawPlan = profile?.plano || 'STARTER';
+  const currentPlan: UserPlan = LEGACY_PLAN_MAP[rawPlan] || 'STARTER';
   
   const config = FEATURE_CONFIG[feature];
   const userLevel = PLAN_HIERARCHY[currentPlan];
@@ -277,8 +270,8 @@ export function useFeatureAccess(feature: FeatureKey, usageCount?: number): Feat
 export function usePlanAccess() {
   const { profile } = useAuth();
   
-  const rawPlan = profile?.plano || 'FREE';
-  const currentPlan: UserPlan = LEGACY_PLAN_MAP[rawPlan] || 'FREE';
+  const rawPlan = profile?.plano || 'STARTER';
+  const currentPlan: UserPlan = LEGACY_PLAN_MAP[rawPlan] || 'STARTER';
   const userLevel = PLAN_HIERARCHY[currentPlan];
   
   const hasAccess = (minPlan: UserPlan): boolean => {

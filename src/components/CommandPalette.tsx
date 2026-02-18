@@ -16,7 +16,6 @@ const isEmoji = (str: string): boolean => {
 
 // Legacy plan mapping
 const LEGACY_PLAN_MAP: Record<string, string> = {
-  'FREE': 'starter',
   'STARTER': 'starter',
   'NAVIGATOR': 'navigator',
   'BASICO': 'navigator',
@@ -36,7 +35,7 @@ export function CommandPalette() {
   const listRef = useRef<HTMLDivElement>(null);
 
   // Normalize user plan
-  const userPlan = LEGACY_PLAN_MAP[profile?.plano?.toUpperCase() || 'FREE'] || 'starter';
+  const userPlan = LEGACY_PLAN_MAP[profile?.plano?.toUpperCase() || 'STARTER'] || 'starter';
 
   // Filter tools based on search
   const filteredTools = filterTools(ALL_TOOLS, search);

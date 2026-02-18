@@ -148,7 +148,6 @@ export const RATE_LIMITS = {
     requests: 30,
     windowMs: 60 * 1000, // 30 req/min
     tierMultipliers: {
-      FREE: 0.5,       // 15 req/min
       STARTER: 1,      // 30 req/min
       NAVIGATOR: 1.5,  // 45 req/min
       PROFESSIONAL: 2, // 60 req/min
@@ -161,7 +160,6 @@ export const RATE_LIMITS = {
     requests: 100,
     windowMs: 60 * 1000, // 100 req/min
     tierMultipliers: {
-      FREE: 0.5,       // 50 req/min
       STARTER: 1,      // 100 req/min
       NAVIGATOR: 1.5,  // 150 req/min
       PROFESSIONAL: 2, // 200 req/min
@@ -174,7 +172,6 @@ export const RATE_LIMITS = {
     requests: 10,
     windowMs: 60 * 1000, // 10 req/min
     tierMultipliers: {
-      FREE: 0.5,       // 5 req/min
       STARTER: 1,      // 10 req/min
       NAVIGATOR: 2,    // 20 req/min
       PROFESSIONAL: 3, // 30 req/min

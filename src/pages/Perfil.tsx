@@ -47,10 +47,10 @@ const PERCENTUAL_PJ_OPTIONS = [
 ];
 
 const PLANO_INFO: Record<string, { label: string; preco: string; cor: string }> = {
-  FREE: { label: 'Gratuito', preco: 'R$ 0', cor: 'text-muted-foreground' },
-  BASICO: { label: 'Básico', preco: 'R$ 99/mês', cor: 'text-blue-400' },
-  PROFISSIONAL: { label: 'Profissional', preco: 'R$ 197/mês', cor: 'text-primary' },
-  PREMIUM: { label: 'Premium', preco: 'R$ 500/mês', cor: 'text-yellow-400' },
+  STARTER: { label: 'Starter', preco: 'R$ 297/mês', cor: 'text-green-400' },
+  NAVIGATOR: { label: 'Navigator', preco: 'R$ 697/mês', cor: 'text-blue-400' },
+  PROFESSIONAL: { label: 'Professional', preco: 'R$ 1.997/mês', cor: 'text-primary' },
+  ENTERPRISE: { label: 'Enterprise', preco: 'Sob consulta', cor: 'text-yellow-400' },
 };
 
 const Perfil = () => {
@@ -142,8 +142,8 @@ const Perfil = () => {
     }
   };
 
-  const planoAtual = profile?.plano || 'FREE';
-  const planoInfo = PLANO_INFO[planoAtual] || PLANO_INFO.FREE;
+  const planoAtual = profile?.plano || 'STARTER';
+  const planoInfo = PLANO_INFO[planoAtual] || PLANO_INFO.STARTER;
 
   return (
     <DashboardLayout title="Meu Perfil">
@@ -495,7 +495,7 @@ const Perfil = () => {
             </div>
             
             <div className="flex flex-wrap gap-3">
-              {planoAtual !== 'FREE' && (
+              {planoAtual !== 'STARTER' && (
                 <Button variant="outline" asChild className="gap-2">
                   <a href="https://billing.stripe.com/p/login/test_PLACEHOLDER" target="_blank" rel="noopener noreferrer">
                     <CreditCard className="w-4 h-4" />
