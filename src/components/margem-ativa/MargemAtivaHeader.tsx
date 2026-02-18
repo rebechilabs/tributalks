@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { TrendingDown, TrendingUp, DollarSign, AlertTriangle } from "lucide-react";
+import { TrendingDown, TrendingUp, DollarSign, AlertTriangle, Target } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMarginDashboard } from "@/hooks/useMarginDashboard";
 
@@ -76,7 +76,7 @@ export function MargemAtivaHeader() {
         <div className="flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/10 p-3 mt-3">
           <AlertTriangle className="shrink-0 w-5 h-5 text-warning mt-0.5" />
           <p className="text-sm text-muted-foreground">
-            Para analisar seus fornecedores e calcular o impacto da Reforma Tributária na sua margem, precisamos das suas notas fiscais de compra em formato XML. É simples: importe os XMLs uma vez e tudo aparece automaticamente aqui. 🎯
+            Para analisar seus fornecedores e calcular o impacto da Reforma Tributária na sua margem, precisamos das suas notas fiscais de compra em formato XML. É simples: importe os XMLs uma vez e tudo aparece automaticamente aqui. <Target className="shrink-0 w-4 h-4 text-warning inline-block ml-1" />
           </p>
         </div>
       </div>
