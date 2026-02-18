@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Upload, Download, Tag, TrendingUp, AlertTriangle } from "lucide-react";
+import { Plus, Upload, Download, Tag, TrendingUp, AlertTriangle, FileSpreadsheet, FileText } from "lucide-react";
 import { PriceGuardForm } from "./PriceGuardForm";
 import { PriceSimulationTable } from "./PriceSimulationTable";
 import { usePriceGuard } from "@/hooks/usePriceGuard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useNavigate } from "react-router-dom";
 
 export function PriceGuardTab() {
   const [showForm, setShowForm] = useState(false);
   const { simulations, loading, refetch, saveSimulation, deleteSimulation } = usePriceGuard();
+  const navigate = useNavigate();
 
   // Calculate summary metrics
   const totalSkus = simulations.length;
@@ -29,6 +31,34 @@ export function PriceGuardTab() {
     setShowForm(false);
     refetch();
   };
+
+  const inputOptions = [
+    {
+      icon: FileText,
+      title: "Importar XMLs",
+      description: "Use as notas fiscais já importadas para popular automaticamente seus produtos com NCM e custos reais.",
+      action: () => navigate("/dashboard/analise-notas"),
+      buttonLabel: "Ir para XMLs",
+      variant: "default" as const,
+    },
+    {
+      icon: FileSpreadsheet,
+      title: "Importar Planilha",
+      description: "Faça upload de uma planilha CSV ou Excel com seus produtos em lote.",
+      action: () => {},
+      buttonLabel: "Em breve",
+      variant: "outline" as const,
+      disabled: true,
+    },
+    {
+      icon: Plus,
+      title: "Inserir Manualmente",
+      description: "Adicione produtos um a um informando NCM, custo e margem desejada.",
+      action: () => setShowForm(true),
+      buttonLabel: "Nova Simulação",
+      variant: "outline" as const,
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -94,15 +124,15 @@ export function PriceGuardTab() {
         <CardHeader className="pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <CardTitle className="text-lg">Simulador de Preços 2026</CardTitle>
+              <CardTitle className="text-lg">Simulador de Preços 2027</CardTitle>
               <CardDescription>
                 Calcule o preço de venda necessário para manter sua margem após a Reforma
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" disabled>
+              <Button variant="outline" size="sm" onClick={() => navigate("/dashboard/analise-notas")}>
                 <Upload className="w-4 h-4 mr-2" />
-                Importar NCMs
+                Importar via XMLs
               </Button>
               <Dialog open={showForm} onOpenChange={setShowForm}>
                 <DialogTrigger asChild>
@@ -126,14 +156,38 @@ export function PriceGuardTab() {
         </CardHeader>
         <CardContent>
           {simulations.length === 0 && !loading && (
-            <div className="text-center py-12 space-y-3 text-muted-foreground">
-              <p className="text-base font-medium">Nenhuma simulação ainda.</p>
-              <p className="text-sm">
-                Clique em <strong>"Nova Simulação"</strong> para calcular o preço necessário dos seus produtos após a reforma tributária de 2027.
-              </p>
-              <p className="text-xs">
-                💡 Dica: tenha em mãos o NCM do produto e o custo unitário atual para um cálculo preciso.
-              </p>
+            <div className="space-y-6 py-6">
+              <div className="text-center space-y-2">
+                <p className="text-base font-medium text-foreground">Como você quer alimentar o PriceGuard?</p>
+                <p className="text-sm text-muted-foreground">
+                  Escolha a forma mais prática para carregar seus produtos e simular os preços de 2027.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {inputOptions.map((opt) => {
+                  const Icon = opt.icon;
+                  return (
+                    <Card key={opt.title} className="border-dashed hover:border-primary/50 transition-colors">
+                      <CardContent className="p-5 flex flex-col items-center text-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                          <Icon className="w-6 h-6 text-primary" />
+                        </div>
+                        <h3 className="font-semibold text-sm">{opt.title}</h3>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{opt.description}</p>
+                        <Button 
+                          variant={opt.variant} 
+                          size="sm" 
+                          className="mt-auto w-full"
+                          onClick={opt.action}
+                          disabled={opt.disabled}
+                        >
+                          {opt.buttonLabel}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
             </div>
           )}
           <PriceSimulationTable 
@@ -147,7 +201,7 @@ export function PriceGuardTab() {
             <div className="mt-4 flex justify-end">
               <Button variant="outline" size="sm">
                 <Download className="w-4 h-4 mr-2" />
-                Exportar Tabela de Preços 2026
+                Exportar Tabela de Preços 2027
               </Button>
             </div>
           )}
