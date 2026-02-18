@@ -17,7 +17,7 @@
  
  export function ClaraSection() {
    return (
-     <section className="py-20 md:py-32 bg-[#0A0A0A] overflow-hidden">
+     <section className="py-16 md:py-20 bg-[#0A0A0A] overflow-hidden">
        <div className="container mx-auto px-4 md:px-8">
          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
            {/* Left: Content */}

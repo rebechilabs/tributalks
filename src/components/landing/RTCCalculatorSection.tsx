@@ -28,7 +28,7 @@ const benefits = [
 
 export function RTCCalculatorSection() {
   return (
-    <section className="py-16 md:py-24 bg-gradient-to-b from-background to-card/50 relative overflow-hidden">
+    <section className="py-16 md:py-20 bg-gradient-to-b from-background to-card/50 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/4 left-0 w-48 md:w-72 h-48 md:h-72 bg-primary/5 rounded-full blur-3xl" />

@@ -87,7 +87,7 @@
    const [enterpriseModalOpen, setEnterpriseModalOpen] = useState(false);
  
    return (
-     <section id="planos" className="py-20 md:py-32 bg-[#0A0A0A]">
+     <section id="planos" className="py-16 md:py-20 bg-[#0A0A0A]">
        <div className="container mx-auto px-4 md:px-8">
          {/* Section Header */}
          <motion.div

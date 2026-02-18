@@ -16,7 +16,7 @@ import { ArrowRight, Linkedin, Instagram, Youtube, Scale, Shield, Cloud } from "
    return (
      <footer className="bg-[#0A0A0A] border-t border-white/10">
        {/* Final CTA */}
-       <div className="py-16 md:py-24 border-b border-white/10">
+       <div className="py-12 md:py-16 border-b border-white/10">
          <div className="container mx-auto px-4 md:px-8 text-center">
            <h2 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-white mb-6 max-w-3xl mx-auto">
              Transforme a Reforma Tributária em sua maior{" "}
