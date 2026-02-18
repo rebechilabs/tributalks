@@ -35,7 +35,7 @@ const agents = [
              </div>
              
              <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white mb-6 leading-tight">
-               Sua Copilota Tributária Pessoal.
+               Sua Inteligência Tributária.
              </h2>
              
               <p className="text-lg text-white/70 mb-8 leading-relaxed">
