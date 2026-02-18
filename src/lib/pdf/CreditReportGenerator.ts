@@ -463,7 +463,7 @@ function drawNextStepsAndDisclaimer(doc: jsPDF, startY: number): void {
   doc.setTextColor(...TRIBUTALKS_PDF_COLORS.warning);
   doc.setFontSize(FONT_SIZES.heading3);
   doc.setFont('helvetica', 'bold');
-  doc.text('⚠️ AVISO LEGAL', PAGE.marginLeft + 5, y + 10);
+  doc.text('AVISO LEGAL', PAGE.marginLeft + 5, y + 10);
   
   doc.setTextColor(...TRIBUTALKS_PDF_COLORS.textSecondary);
   doc.setFontSize(FONT_SIZES.tiny);
@@ -494,9 +494,9 @@ function drawNextStepsAndDisclaimer(doc: jsPDF, startY: number): void {
   doc.setTextColor(...TRIBUTALKS_PDF_COLORS.textSecondary);
   doc.setFontSize(FONT_SIZES.tiny);
   doc.setFont('helvetica', 'normal');
-  doc.text('📧 suporte@tributalks.com.br', PAGE.marginLeft, y);
-  doc.text('📱 WhatsApp: +55 11 91452-3971', PAGE.marginLeft + 60, y);
-  doc.text('🌐 tributalks.com.br', PAGE.marginLeft + 120, y);
+  doc.text('suporte@tributalks.com.br', PAGE.marginLeft, y);
+  doc.text('WhatsApp: +55 11 91452-3971', PAGE.marginLeft + 60, y);
+  doc.text('tributalks.com.br', PAGE.marginLeft + 120, y);
 }
 
 // Helper functions

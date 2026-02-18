@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Link } from 'react-router-dom';
-import { BarChart3, Trophy, AlertCircle } from 'lucide-react';
+import { BarChart3, Trophy, AlertCircle, Rocket } from 'lucide-react';
 import { QuickDiagnosticModal } from '@/components/onboarding';
 
 export default function Nexus() {
@@ -81,8 +81,9 @@ export default function Nexus() {
                 <BarChart3 className="w-6 h-6 text-primary" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-foreground text-lg">
-                  🚀 Esta é uma das ferramentas mais importantes da plataforma
+                <h3 className="font-semibold text-foreground text-lg flex items-center gap-2">
+                  <Rocket className="w-5 h-5 text-primary" />
+                  Esta é uma das ferramentas mais importantes da plataforma
                 </h3>
                 <p className="text-sm text-muted-foreground mt-1.5 mb-4">
                   Para desbloquear insights personalizados e identificar oportunidades de economia 

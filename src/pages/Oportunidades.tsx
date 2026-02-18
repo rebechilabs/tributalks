@@ -321,7 +321,7 @@ export default function Oportunidades() {
         <div className="space-y-8">
         <MotivationalBanner
           id="oportunidades"
-          icon="💡"
+          icon="lightbulb"
           text="Com base no perfil da sua empresa, nossa IA cruzou mais de 200 cenários e encontrou oportunidades de economia tributária específicas para o seu negócio."
         />
         {/* ============ HEADER COM IMPACTO TOTAL ============ */}

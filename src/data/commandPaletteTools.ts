@@ -5,12 +5,14 @@
 
 export type PlanLevel = 'starter' | 'navigator' | 'professional' | 'enterprise';
 
+import type { IconKey } from '@/lib/iconMap';
+
 export interface CommandTool {
   id: string;
   name: string;
   path?: string;
   action?: 'openClara';
-  icon: string;
+  icon: IconKey;
   plan: PlanLevel;
   keywords: string[];
   description: string;
@@ -22,7 +24,7 @@ export const ALL_TOOLS: CommandTool[] = [
     id: 'nexus',
     name: 'NEXUS Command Center', 
     path: '/dashboard/nexus', 
-    icon: '🎛️',
+    icon: 'sliders',
     plan: 'professional',
     keywords: ['nexus', 'kpi', 'comando', 'centro', 'painel', 'executivo'],
     description: '8 KPIs executivos em tempo real'
@@ -31,7 +33,7 @@ export const ALL_TOOLS: CommandTool[] = [
     id: 'radar',
     name: 'Radar de Créditos', 
     path: '/creditos-tributarios', 
-    icon: '🔍',
+    icon: 'search',
     plan: 'professional',
     keywords: ['radar', 'creditos', 'xml', 'nota fiscal', 'recuperacao'],
     description: 'Identifique créditos tributários automaticamente'
@@ -40,7 +42,7 @@ export const ALL_TOOLS: CommandTool[] = [
     id: 'dre',
     name: 'DRE Inteligente', 
     path: '/dre', 
-    icon: '💼',
+    icon: 'briefcase',
     plan: 'professional',
     keywords: ['dre', 'demonstrativo', 'margem', 'lucro', 'resultado'],
     description: 'Impacto da Reforma na sua margem'
@@ -49,7 +51,7 @@ export const ALL_TOOLS: CommandTool[] = [
     id: 'margem-ativa',
     name: 'Margem Ativa',
     path: '/dashboard/margem-ativa',
-    icon: '📈',
+    icon: 'trendingUp',
     plan: 'professional',
     keywords: ['margem', 'ativa', 'fornecedores', 'omc', 'price guard'],
     description: 'Suite de proteção de margem'
@@ -58,7 +60,7 @@ export const ALL_TOOLS: CommandTool[] = [
     id: 'erp',
     name: 'Conectar ERP',
     path: '/integracoes',
-    icon: '🔗',
+    icon: 'link',
     plan: 'professional',
     keywords: ['erp', 'integrar', 'conectar', 'omie', 'bling', 'totvs'],
     description: 'Sincronize Omie, Bling, TOTVS...'
@@ -67,7 +69,7 @@ export const ALL_TOOLS: CommandTool[] = [
     id: 'oportunidades',
     name: 'Oportunidades Tributárias',
     path: '/oportunidades',
-    icon: '📊',
+    icon: 'barChart',
     plan: 'professional',
     keywords: ['oportunidades', 'incentivos', 'beneficios', 'economia'],
     description: '61+ incentivos fiscais mapeados'
@@ -78,7 +80,7 @@ export const ALL_TOOLS: CommandTool[] = [
     id: 'noticias',
     name: 'Notícias da Reforma', 
     path: '/gps-reforma/noticias', 
-    icon: '📰',
+    icon: 'newspaper',
     plan: 'navigator',
     keywords: ['noticias', 'reforma', 'atualizacoes', 'pilulas'],
     description: 'Feed diário com pílulas tributárias'
@@ -87,7 +89,7 @@ export const ALL_TOOLS: CommandTool[] = [
     id: 'comunidade',
     name: 'TribuTalks Connect', 
     path: '/comunidade', 
-    icon: '👥',
+    icon: 'users',
     plan: 'navigator',
     keywords: ['comunidade', 'circle', 'forum', 'rede', 'network', 'tributalks', 'connect'],
     description: 'Comunidade exclusiva Professional+'
@@ -96,7 +98,7 @@ export const ALL_TOOLS: CommandTool[] = [
     id: 'checklist',
     name: 'Checklist de Prontidão',
     path: '/checklist-reforma',
-    icon: '✅',
+    icon: 'checkCircle',
     plan: 'navigator',
     keywords: ['checklist', 'prontidao', '2026', 'preparacao'],
     description: 'Autoavaliação para a Reforma'
@@ -105,7 +107,7 @@ export const ALL_TOOLS: CommandTool[] = [
     id: 'nbs',
     name: 'Calculadora NBS (Serviços)',
     path: '/calculadora/nbs',
-    icon: '🧮',
+    icon: 'calculator',
     plan: 'navigator',
     keywords: ['calculadora', 'nbs', 'servicos', 'cbs', 'ibs'],
     description: 'CBS + IBS para serviços'
@@ -114,7 +116,7 @@ export const ALL_TOOLS: CommandTool[] = [
     id: 'analisador',
     name: 'Analisador de Documentos',
     path: '/analisador-documentos',
-    icon: '📄',
+    icon: 'fileText',
     plan: 'navigator',
     keywords: ['analisador', 'documentos', 'pdf', 'contrato'],
     description: 'Análise inteligente de documentos fiscais'
@@ -123,7 +125,7 @@ export const ALL_TOOLS: CommandTool[] = [
     id: 'workflows',
     name: 'Workflows Guiados',
     path: '/workflows-guiados',
-    icon: '🔄',
+    icon: 'refreshCw',
     plan: 'navigator',
     keywords: ['workflows', 'guiados', 'passo', 'wizard'],
     description: 'Processos passo a passo'
@@ -134,7 +136,7 @@ export const ALL_TOOLS: CommandTool[] = [
     id: 'score',
     name: 'Score Tributário', 
     path: '/dashboard/score-tributario', 
-    icon: '🎯',
+    icon: 'target',
     plan: 'starter',
     keywords: ['score', 'avaliacao', 'saude', 'fiscal', 'nota'],
     description: 'Avaliação da saúde fiscal em 5 dimensões'
@@ -143,7 +145,7 @@ export const ALL_TOOLS: CommandTool[] = [
     id: 'rtc',
     name: 'Calculadora RTC', 
     path: '/calculadora/rtc', 
-    icon: '🧮',
+    icon: 'calculator',
     plan: 'starter',
     keywords: ['calculadora', 'rtc', 'cbs', 'ibs', 'produtos', 'ncm'],
     description: 'CBS + IBS + IS por NCM'
@@ -152,7 +154,7 @@ export const ALL_TOOLS: CommandTool[] = [
     id: 'split',
     name: 'Simulador Split Payment', 
     path: '/calculadora/split', 
-    icon: '💳',
+    icon: 'creditCard',
     plan: 'starter',
     keywords: ['split', 'payment', 'caixa', 'retencao', 'fluxo'],
     description: 'Impacto no fluxo de caixa'
@@ -161,7 +163,7 @@ export const ALL_TOOLS: CommandTool[] = [
     id: 'regimes',
     name: 'Comparativo de Regimes Tributários',
     path: '/calculadora/regimes',
-    icon: '⚖️',
+    icon: 'scale',
     plan: 'starter',
     keywords: ['comparativo', 'regimes', 'simples', 'presumido', 'real'],
     description: 'Simples vs Presumido vs Real'
@@ -170,7 +172,7 @@ export const ALL_TOOLS: CommandTool[] = [
     id: 'timeline',
     name: 'Timeline 2026-2033', 
     path: '/gps-reforma', 
-    icon: '📅',
+    icon: 'calendar',
     plan: 'starter',
     keywords: ['timeline', 'reforma', 'cronograma', 'marcos', 'calendario'],
     description: 'Marcos da transição tributária'
@@ -179,7 +181,7 @@ export const ALL_TOOLS: CommandTool[] = [
     id: 'dashboard',
     name: 'Dashboard',
     path: '/dashboard',
-    icon: '🏠',
+    icon: 'home',
     plan: 'starter',
     keywords: ['dashboard', 'inicio', 'home', 'painel'],
     description: 'Visão geral da sua jornada'
@@ -190,7 +192,7 @@ export const ALL_TOOLS: CommandTool[] = [
     id: 'clara',
     name: 'Abrir Clara AI',
     action: 'openClara',
-    icon: '🤖',
+    icon: 'bot',
     plan: 'starter',
     keywords: ['clara', 'ia', 'assistente', 'chat', 'ajuda', 'copiloto'],
     description: 'Copiloto tributário 24/7'
@@ -199,7 +201,7 @@ export const ALL_TOOLS: CommandTool[] = [
     id: 'perfil',
     name: 'Meu Perfil',
     path: '/perfil',
-    icon: '👤',
+    icon: 'user',
     plan: 'starter',
     keywords: ['perfil', 'conta', 'usuario', 'configuracoes'],
     description: 'Gerenciar minha conta'
@@ -208,7 +210,7 @@ export const ALL_TOOLS: CommandTool[] = [
     id: 'indicar',
     name: 'Indique e Ganhe',
     path: '/indicar',
-    icon: '🎁',
+    icon: 'gift',
     plan: 'starter',
     keywords: ['indicar', 'referral', 'indicacao', 'desconto'],
     description: 'Ganhe 20% de desconto indicando'
@@ -217,7 +219,7 @@ export const ALL_TOOLS: CommandTool[] = [
     id: 'ajuda',
     name: 'Central de Ajuda',
     path: '/ajuda',
-    icon: '❓',
+    icon: 'helpCircle',
     plan: 'starter',
     keywords: ['ajuda', 'suporte', 'faq', 'duvidas'],
     description: 'FAQ e tutoriais'

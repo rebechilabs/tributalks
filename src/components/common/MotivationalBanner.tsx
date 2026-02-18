@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { X } from "lucide-react";
+import { ICON_MAP, type IconKey } from "@/lib/iconMap";
 
 interface MotivationalBannerProps {
   id: string;
-  icon: string;
+  icon: IconKey;
   text: string;
 }
 
@@ -20,9 +21,13 @@ export function MotivationalBanner({ id, icon, text }: MotivationalBannerProps) 
     setDismissed(true);
   };
 
+  const IconComponent = ICON_MAP[icon];
+
   return (
     <div className="relative flex items-start gap-3 rounded-lg border border-primary/20 bg-muted/30 p-4 mb-6">
-      <span className="text-2xl leading-none shrink-0" aria-hidden="true">{icon}</span>
+      <span className="shrink-0 mt-0.5" aria-hidden="true">
+        {IconComponent ? <IconComponent className="h-5 w-5 text-primary" /> : null}
+      </span>
       <p className="text-sm text-muted-foreground pr-6">{text}</p>
       <button
         onClick={handleDismiss}

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Bot, User, ArrowRight } from "lucide-react";
+import { Bot, User, ArrowRight, DollarSign, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ClaraAgentTag } from "@/components/common/ClaraAgentTag";
 
@@ -133,11 +133,11 @@ export function DemoStepClara() {
             transition={{ duration: 0.4 }}
           >
             <div className="flex items-center gap-1.5 bg-muted/80 border border-border/50 rounded-full px-3 py-1.5 text-xs text-muted-foreground">
-              💰 Quanto cobrar?
+              <DollarSign className="w-3 h-3" /> Quanto cobrar?
               <ClaraAgentTag agent="precificar" />
             </div>
             <div className="flex items-center gap-1.5 bg-muted/80 border border-border/50 rounded-full px-3 py-1.5 text-xs text-muted-foreground">
-              🔍 Encontrou créditos?
+              <Search className="w-3 h-3" /> Encontrou créditos?
               <ClaraAgentTag agent="recuperar" />
             </div>
           </motion.div>

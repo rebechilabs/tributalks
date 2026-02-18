@@ -19,7 +19,10 @@ import {
   Clock,
   DollarSign,
   Check,
-  Info
+  Info,
+  Lightbulb,
+  User,
+  Building2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -306,7 +309,10 @@ export default function PerfilEmpresa() {
               </Button>
 
               <p className="text-center text-sm text-muted-foreground">
-                💡 Suas informações são confidenciais e usadas apenas para identificar oportunidades
+                <p className="text-center text-sm text-muted-foreground flex items-center justify-center gap-1.5">
+                  <Lightbulb className="w-4 h-4 text-primary" />
+                  Suas informações são confidenciais e usadas apenas para identificar oportunidades
+                </p>
               </p>
             </CardContent>
           </Card>
@@ -398,8 +404,9 @@ export default function PerfilEmpresa() {
                     </button>
                   ))}
                 </div>
-                <p className="text-sm text-muted-foreground text-center">
-                  💡 Não se preocupe, essa informação é confidencial
+                <p className="text-sm text-muted-foreground text-center flex items-center justify-center gap-1.5">
+                  <Lightbulb className="w-4 h-4 text-primary" />
+                  Não se preocupe, essa informação é confidencial
                 </p>
               </div>
             )}
@@ -462,8 +469,9 @@ export default function PerfilEmpresa() {
                           ))}
                         </div>
                       </div>
-                      <p className="text-sm text-muted-foreground bg-accent/50 p-3 rounded-lg">
-                        💡 Esses produtos têm regras especiais de tributação que podem te beneficiar
+                      <p className="text-sm text-muted-foreground bg-accent/50 p-3 rounded-lg flex items-center gap-1.5">
+                        <Lightbulb className="w-4 h-4 text-primary shrink-0" />
+                        Esses produtos têm regras especiais de tributação que podem te beneficiar
                       </p>
                     </>
                   )}
@@ -486,7 +494,7 @@ export default function PerfilEmpresa() {
                       onCheckedChange={(checked) => updateFormData('vende_pf', !!checked)}
                     />
                     <label htmlFor="pf" className="flex-1 cursor-pointer">
-                      <span className="font-medium">👤 Pessoas físicas (consumidor final)</span>
+                      <span className="font-medium"><User className="w-4 h-4 inline mr-1" />Pessoas físicas (consumidor final)</span>
                     </label>
                   </div>
                   <div className="flex items-center space-x-3 p-3 rounded-lg border">
@@ -496,7 +504,7 @@ export default function PerfilEmpresa() {
                       onCheckedChange={(checked) => updateFormData('vende_pj', !!checked)}
                     />
                     <label htmlFor="pj" className="flex-1 cursor-pointer">
-                      <span className="font-medium">🏢 Outras empresas (B2B)</span>
+                      <span className="font-medium"><Building2 className="w-4 h-4 inline mr-1" />Outras empresas (B2B)</span>
                     </label>
                   </div>
 
@@ -504,7 +512,7 @@ export default function PerfilEmpresa() {
                     <div className="p-4 border rounded-lg space-y-3">
                       <p className="text-sm font-medium">Proporção aproximada:</p>
                       <div className="flex items-center gap-4">
-                        <span className="text-sm">👤 {formData.percentual_pf}%</span>
+                        <span className="text-sm"><User className="w-3 h-3 inline mr-0.5" /> {formData.percentual_pf}%</span>
                         <Slider 
                           value={[formData.percentual_pf]}
                           onValueChange={([val]) => {
@@ -515,7 +523,7 @@ export default function PerfilEmpresa() {
                           step={10}
                           className="flex-1"
                         />
-                        <span className="text-sm">🏢 {formData.percentual_pj}%</span>
+                        <span className="text-sm"><Building2 className="w-3 h-3 inline mr-0.5" /> {formData.percentual_pj}%</span>
                       </div>
                     </div>
                   )}

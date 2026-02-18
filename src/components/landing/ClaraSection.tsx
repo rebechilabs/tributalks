@@ -10,11 +10,11 @@ import {
 } from "lucide-react";
  
 const agents = [
-  { icon: BarChart3, label: "Entender", emoji: "🎯" },
-  { icon: Calculator, label: "Precificar", emoji: "💰" },
-  { icon: FileSearch, label: "Recuperar", emoji: "🔍" },
-  { icon: Target, label: "Planejar", emoji: "💡" },
-  { icon: LayoutDashboard, label: "Comandar", emoji: "📊" },
+  { icon: BarChart3, label: "Entender" },
+  { icon: Calculator, label: "Precificar" },
+  { icon: FileSearch, label: "Recuperar" },
+  { icon: Target, label: "Planejar" },
+  { icon: LayoutDashboard, label: "Comandar" },
 ];
  
  export function ClaraSection() {

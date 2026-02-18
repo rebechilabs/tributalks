@@ -8,10 +8,12 @@ import { Link } from "react-router-dom";
 import { formatBrasilia } from "@/lib/dateUtils";
 import { usePlanAccess } from "@/hooks/useFeatureAccess";
 
-const impactConfig: Record<string, { emoji: string; label: string; className: string }> = {
-  ALTA: { emoji: "🔴", label: "Alto impacto", className: "text-destructive" },
-  MEDIA: { emoji: "🟡", label: "Médio impacto", className: "text-yellow-500" },
-  BAIXA: { emoji: "🟢", label: "Baixo impacto", className: "text-green-500" },
+import { CircleAlert, CircleMinus, CircleCheck, type LucideIcon } from "lucide-react";
+
+const impactConfig: Record<string, { icon: LucideIcon; label: string; className: string }> = {
+  ALTA: { icon: CircleAlert, label: "Alto impacto", className: "text-destructive" },
+  MEDIA: { icon: CircleMinus, label: "Médio impacto", className: "text-yellow-500" },
+  BAIXA: { icon: CircleCheck, label: "Baixo impacto", className: "text-green-500" },
 };
 
 const tagColors: Record<string, string> = {
@@ -101,8 +103,9 @@ export function LatestNewsSection() {
                           {tag}
                         </span>
                       ))}
-                      <span className={`text-xs ${impact.className}`}>
-                        {impact.emoji} {impact.label}
+                      <span className={`text-xs flex items-center gap-1 ${impact.className}`}>
+                        <impact.icon className="w-3 h-3" />
+                        {impact.label}
                       </span>
                     </div>
                   </Link>
