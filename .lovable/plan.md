@@ -1,38 +1,36 @@
 
 
-# Plano: Corrigir erro de importacao dinamica e DRE zerada
+## Inserção de 7 registros na Knowledge Base + Atualização de status
 
-## Problema identificado
+### O que será feito
 
-Ha dois problemas ocorrendo simultaneamente:
+**Operação 1 — INSERT de 7 novos registros (todos com status `published`):**
 
-1. **Erro de importacao dinamica do HomePage.tsx**: O Vite nao consegue recarregar o modulo apos edicicoes recentes (HMR corrompido). O codigo do arquivo esta correto, mas o cache esta obsoleto.
+| # | Slug | Prioridade | Tema |
+|---|------|-----------|------|
+| 1 | `per-dcomp-compensacao` | 9 | PER/DCOMP — Restituição e Compensação |
+| 2 | `simples-nacional-faixas-fator-r` | 9 | Simples Nacional — Faixas, Anexos e Fator R |
+| 3 | `icms-st-substituicao-tributaria` | 8 | ICMS-ST — Substituição Tributária |
+| 4 | `regimes-monofasicos-pis-cofins` | 7 | PIS/COFINS Monofásico |
+| 5 | `irpj-csll-lucro-presumido` | 8 | IRPJ e CSLL no Lucro Presumido |
+| 6 | `beneficios-fiscais-estaduais` | 6 | Benefícios Fiscais Estaduais |
+| 7 | `ibs-cbs-nao-cumulatividade` | 10 | IBS/CBS — Não-Cumulatividade Plena |
 
-2. **Receita Bruta mostrando R$ 0,00**: Os valores visiveis na tela ("150.000", "80.000", "5.000", "3.000", "2.000") correspondem exatamente aos textos de exemplo (placeholders) dos campos. Quando o Vite recarrega o componente via HMR, o estado React e reinicializado para zero, mas o texto exibido nos campos pode permanecer, causando confusao.
+Todos na categoria `legislacao`, com `trigger_keywords`, `must_say` e `must_not_say` preenchidos conforme especificado.
 
-## Solucao
+**Operacao 2 — UPDATE dos 9 registros com status `active` para `published`:**
 
-### 1. Adicionar mecanismo de retry no carregamento dinamico de paginas
+Isso corrige o problema identificado anteriormente onde 9 registros estavam invisíveis para o RAG/busca semântica.
 
-Modificar o `LazyRoute` no `App.tsx` para tentar recarregar o modulo automaticamente caso o primeiro carregamento falhe, eliminando o erro de "Failed to fetch dynamically imported module".
+### Resultado esperado
 
-### 2. Melhorar a experiencia visual do DRE Wizard
+- De 15 registros totais (6 published + 9 active) para **22 registros, todos published**
+- Nenhum registro existente será alterado em conteúdo — apenas o campo `status` dos 9 ativos
 
-Tornar os placeholders mais distintos dos valores reais para evitar confusao:
-- Alterar os placeholders para incluir formato mais claro (ex: "0,00" em vez de "150.000")
-- Ou remover os placeholders numericos que confundem com valores reais
+### Detalhes técnicos
 
-## Detalhes tecnicos
-
-### Arquivo: `src/App.tsx`
-- Criar uma funcao `lazyWithRetry` que envolve `React.lazy()` com logica de retry (ate 3 tentativas com recarga forcada do modulo)
-- Aplicar essa funcao a todos os imports dinamicos de paginas
-
-### Arquivo: `src/components/dre/VoiceCurrencyInput.tsx`
-- Alterar os placeholders para "0,00" (padrao) para nao confundir com valores reais
-- Ja esta correto como `placeholder = '0,00'` no componente, mas os chamadores em `DREWizard.tsx` estao passando valores como "150.000"
-
-### Arquivo: `src/components/dre/DREWizard.tsx`
-- Remover os props `placeholder` customizados dos campos de vendas e deducoes que estao causando confusao visual ("150.000", "80.000", "5.000", "3.000", "2.000")
-- Os campos usarao o placeholder padrao "0,00" do componente VoiceCurrencyInput
+- Execução via SQL direto usando a ferramenta de migração de dados do backend
+- Os 7 novos registros já entram como `published` (sem necessidade de atualização posterior)
+- O UPDATE afeta apenas registros com `status = 'active'`, sem tocar nos já `published`
+- Nenhuma alteração de schema — apenas dados
 
