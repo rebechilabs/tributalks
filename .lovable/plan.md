@@ -1,37 +1,103 @@
 
+# Eliminacao Completa do Nome "Simpronto"
 
-# Quadro Motivacional no Topo de Cada Ferramenta
+## Escopo
 
-## Resumo
+Renomear todas as ocorrencias de "Simpronto"/"simpronto" no codigo, mantendo rotas/URLs existentes e sem alterar landing page, Stripe ou trial.
 
-Criar um componente reutilizavel `MotivationalBanner` e inseri-lo em 6 paginas do dashboard, entre o titulo e o conteudo principal.
+## Arquivos a alterar (12 arquivos)
 
-## Componente novo: `src/components/common/MotivationalBanner.tsx`
+### 1. Tipos e Utilitarios
 
-Card com:
-- Fundo `bg-muted/30` com borda `border-primary/20` (sutil, dourada)
-- Layout: icone (emoji) a esquerda, texto a direita
-- Botao "X" discreto no canto superior direito
-- Fecha e salva preferencia em `localStorage` com chave `motivational_banner_dismissed_{id}`
-- Props: `id` (string unica), `icon` (emoji string), `text` (string)
-- Fonte menor (`text-sm`), cor `text-muted-foreground`
+**`src/types/simpronto.ts`** - Renomear arquivo para `src/types/comparativoRegimes.ts`
+- `SimprontoFormData` -> `ComparativoRegimesFormData`
+- `SimprontoResult` -> `ComparativoRegimesResult`
+- `SimprontoInput` -> `ComparativoRegimesInput`
 
-## Insercoes nas paginas
+**`src/utils/simprontoCalculations.ts`** - Renomear arquivo para `src/utils/comparativoRegimesCalculations.ts`
+- `calcularSimpronto()` -> `calcularComparativoRegimes()`
+- Atualizar imports de tipos
 
-| Pagina | Arquivo | Onde inserir | ID | Icone | Texto |
-|---|---|---|---|---|---|
-| DRE Inteligente | `src/pages/DRE.tsx` | Antes do `<DREWizard />` | `dre` | clipboard | "Ao preencher sua DRE, voce recebera: diagnostico completo com Receita Liquida, Margem Bruta, EBITDA, Lucro Liquido e comparacao automatica com empresas do seu setor." |
-| Score Tributario | `src/pages/ScoreTributario.tsx` | Apos o header (linha 261), antes do ClaraContextualCard | `score` | trophy | "Responda 11 perguntas e descubra sua nota fiscal de 0 a 1000. Compare com empresas do seu setor e receba recomendacoes personalizadas da Clara AI para melhorar seu score." |
-| Comparativo de Regimes | `src/pages/dashboard/SimprontoPage.tsx` | Apos o header (linha 101), antes do wizard/results | `comparativo` | scales | "Informe seus dados e veja lado a lado qual regime tributario gera mais economia: Simples Nacional, Lucro Presumido, Lucro Real e as novas opcoes IBS/CBS 2027." |
-| Margem Ativa | `src/pages/dashboard/MargemAtiva.tsx` | Apos o header (linha 34), antes das Tabs | `margem` | moneybag | "Descubra o impacto tributario real na sua margem de lucro e receba sugestoes de precificacao otimizada considerando a Reforma Tributaria 2027." |
-| Radar de Creditos | `src/pages/AnaliseNotasFiscais.tsx` | No inicio do conteudo, apos header da pagina | `radar` | mag | "Faca upload dos seus documentos fiscais e nossa IA identificara automaticamente creditos tributarios nao aproveitados, pagamentos em duplicidade e aliquotas incorretas." |
-| Oportunidades Tributarias | `src/pages/Oportunidades.tsx` | No inicio do conteudo principal (antes do header card, linha 322) | `oportunidades` | bulb | "Com base no perfil da sua empresa, nossa IA cruzou mais de 200 cenarios e encontrou oportunidades de economia tributaria especificas para o seu negocio." |
+### 2. Componentes (pasta `src/components/simpronto/` -> `src/components/comparativo-regimes/`)
 
-## O que NAO sera alterado
+Renomear a pasta e os arquivos internos:
 
+**`index.ts`**
+- `SimprontoWizard` -> `ComparativoRegimesWizard`
+- `SimprontoResults` -> `ComparativoRegimesResults`
+
+**`SimprontoWizard.tsx` -> `ComparativoRegimesWizard.tsx`**
+- Renomear interface `SimprontoWizardProps` -> `ComparativoRegimesWizardProps`
+- Renomear funcao `SimprontoWizard` -> `ComparativoRegimesWizard`
+- Atualizar queryKey `'dre-prefill-simpronto'` -> `'dre-prefill-comparativo-regimes'`
+- Atualizar todos os imports de tipos
+
+**`SimprontoResults.tsx` -> `ComparativoRegimesResults.tsx`**
+- Renomear interface e funcao
+- Atualizar imports
+
+**`ComparisonChart.tsx`** - Atualizar imports de tipos
+**`ComparisonTable.tsx`** - Atualizar imports de tipos
+**`RecommendationCard.tsx`** - Atualizar imports de tipos
+**`DespesasOperacionaisSelector.tsx`** - Sem mudancas (nao usa "simpronto")
+
+### 3. Pagina Principal
+
+**`src/pages/dashboard/SimprontoPage.tsx`** - Renomear para `ComparativoRegimesPage.tsx`
+- Atualizar imports dos componentes e tipos
+- `calcularSimpronto` -> `calcularComparativoRegimes`
+- `simpronto_simulations` (tabela DB) - MANTER como esta (nao renomear tabela)
+- `FeatureGate feature="simpronto"` -> `FeatureGate feature="comparativo_regimes"`
+
+### 4. Hook de Feature Access
+
+**`src/hooks/useFeatureAccess.ts`**
+- Remover `'simpronto'` do type `FeatureKey` (ja existe `'comparativo_regimes'`)
+- Remover `simpronto: { minPlan: 'STARTER' }` do `FEATURE_CONFIG` (ja existe `comparativo_regimes`)
+- Em `CLARA_TOOL_SCOPE.STARTER`: trocar `'simpronto'` por `'comparativo_regimes'`
+
+### 5. Router
+
+**`src/App.tsx`**
+- Renomear import `SimprontoPage` -> `ComparativoRegimesPage`
+- Atualizar path do lazy import
+- Atualizar `<SimprontoPage />` -> `<ComparativoRegimesPage />`
+- Manter redirect de `/dashboard/entender/simpronto` -> `/dashboard/entender/comparativo`
+
+### 6. Pagina Entender
+
+**`src/pages/dashboard/EntenderPage.tsx`**
+- `statusKey: 'simpronto'` -> `statusKey: 'comparativo'`
+- `case 'simpronto':` -> `case 'comparativo':`
+- Remover comentario "Simpronto requires DRE"
+
+### 7. Landing Page (MUDANCA MINIMA)
+
+**`src/components/landing/PricingSection.tsx`**
+- Linha 51: `"Simpronto 2027"` -> `"Comparativo 2027"` (apenas o texto visivel, NAO altera botoes)
+
+## Tabela do banco de dados
+
+A tabela `simpronto_simulations` no banco permanece com o nome atual. Renomear tabelas em producao e algo arriscado e desnecessario - o nome e interno. Apenas o codigo referencia o nome da tabela via string, que sera mantida.
+
+## O que NAO muda
+
+- Rotas/URLs existentes (mantidas)
+- Redirect legado `/dashboard/entender/simpronto` (mantido)
+- Tabela `simpronto_simulations` no banco (mantida)
 - Botoes da landing page
 - Configuracoes do Stripe
 - Logica de trial de 7 dias
-- Logica interna dos modulos
-- Rotas existentes
+- Logica interna de calculo (apenas nomes)
+- `src/integrations/supabase/types.ts` (auto-gerado, nao editavel)
 
+## Secao tecnica: Ordem de execucao
+
+1. Criar novos arquivos (tipos, utils, componentes) com nomes novos
+2. Atualizar imports em todos os consumidores
+3. Atualizar useFeatureAccess (remover key duplicada)
+4. Atualizar App.tsx e EntenderPage.tsx
+5. Atualizar PricingSection.tsx (texto visivel)
+6. Remover arquivos antigos (implicitamente ao reescrever)
+
+Total: ~12 arquivos alterados, 0 mudancas no banco de dados.
