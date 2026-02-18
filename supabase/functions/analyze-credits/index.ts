@@ -292,8 +292,8 @@ serve(async (req) => {
       .eq('user_id', userId)
       .maybeSingle()
 
-    // Fetch latest PGDAS record (no date filter) for reparticao data
-    const { data: latestPgdasRecord } = await supabaseAdmin
+    // Fetch ALL PGDAS records with reparticao data (for per-month matching)
+    const { data: allPgdasWithReparticao } = await supabaseAdmin
       .from('pgdas_arquivos')
       .select('aliquota_efetiva, dados_completos, periodo_apuracao, anexo_simples, receita_bruta')
       .eq('user_id', userId)
@@ -301,8 +301,9 @@ serve(async (req) => {
       .gt('receita_bruta', 0)
       .order('periodo_apuracao', { ascending: false })
       .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
+
+    // latestPgdasRecord = first record (most recent) for fallback/context
+    const latestPgdasRecord = allPgdasWithReparticao?.[0] || null
 
     // Fetch PGDAS from last 60 months for RBT12 calculation
     const sixtyMonthsAgo = new Date()
@@ -427,137 +428,187 @@ serve(async (req) => {
     // 2. Analyze each XML
     if (isSimplesNacional) {
       // ========== SIMPLES NACIONAL ANALYSIS ==========
-      // Uses proportional formula based on PGDAS absolute R$ values
-      // PIS indevido    = PIS_pago    × (fat_mono + fat_ST) / fat_total
-      // COFINS indevido = COFINS_pago × (fat_mono + fat_ST) / fat_total
-      // ICMS-ST indevido = ICMS_pago  × fat_ST / fat_total
+      // [CORREÇÃO] Processa mês a mês, cruzando XMLs com a repartição do PGDAS do mesmo período
+      // Fórmula por mês:
+      //   PIS indevido    = PIS_pago_mes    × (fat_mono_mes + fat_ST_mes) / fat_total_mes
+      //   COFINS indevido = COFINS_pago_mes × (fat_mono_mes + fat_ST_mes) / fat_total_mes
+      //   ICMS-ST indevido = ICMS_pago_mes  × fat_ST_mes / fat_total_mes
 
-      // Find Simples-specific rules
       const simplesMonoRule = applicableRules.find((r: CreditRule) => r.rule_code === 'SIMPLES_MONO_001')
       const simplesIcmsStRule = applicableRules.find((r: CreditRule) => r.rule_code === 'SIMPLES_ICMS_ST_001')
 
-      // Step 1: Aggregate revenue from XMLs (exit operations only)
-      let faturamentoTotal = 0
-      let faturamentoMonofasico = 0
-      let faturamentoST = 0
-      const ncmsEncontrados: Set<string> = new Set()
-
-      for (const xml of parsed_xmls as ParsedXml[]) {
-        const items = xml.itens || xml.items || xml.produtos || []
-        for (const item of items) {
-          const cfop = item.cfop || ''
-          const ncm = item.ncm || ''
-          const cstPis = item.cst_pis || item.cstPis || ''
-          const csosn = item.csosn || item.cst_icms || item.cstIcms || ''
-          const valorItem = item.valor_item || item.valorTotal || item.valor_total || 0
-
-          // Only analyze exit operations for Simples segregation
-          if (!isExitOperation(cfop)) continue
-          if (valorItem <= 0) continue
-
-          faturamentoTotal += valorItem
-
-          // Check monophasic (NCM from DB list or CST 04/05/06)
-          const monoMatch = isMonophasicNCMFromList(ncm, monophasicNcms)
-          const isMonoCST = isMonophasicCST(cstPis)
-          if (monoMatch || isMonoCST) {
-            faturamentoMonofasico += valorItem
-            ncmsEncontrados.add(ncm)
-          }
-
-          // Check ST (CSOSN 500 or specific CFOPs)
-          const isST = csosn === '500' || ['5405', '6405', '5403', '6403'].includes(cfop)
-          if (isST) {
-            faturamentoST += valorItem
+      // Build PGDAS reparticao index by YYYY-MM
+      const pgdasByMonth: Record<string, { pis: number, cofins: number, icms: number, periodo: string }> = {}
+      if (allPgdasWithReparticao) {
+        for (const pgdas of allPgdasWithReparticao) {
+          const dc = pgdas.dados_completos as Record<string, unknown>
+          const rep = dc?.reparticao as Record<string, number> | null
+          if (!rep) continue
+          // periodo_apuracao can be "2024-01-01" or "2024-01" — normalize to YYYY-MM
+          const periodo = (pgdas.periodo_apuracao || '').substring(0, 7)
+          if (!periodo || pgdasByMonth[periodo]) continue // keep first (most recent created_at)
+          pgdasByMonth[periodo] = {
+            pis: rep.pis || 0,
+            cofins: rep.cofins || 0,
+            icms: rep.icms || 0,
+            periodo,
           }
         }
       }
+      console.log(`[analyze-credits] PGDAS reparticao months available: ${Object.keys(pgdasByMonth).join(', ')}`)
 
-      console.log(`[analyze-credits] Simples aggregated: fatTotal=${faturamentoTotal}, fatMono=${faturamentoMonofasico}, fatST=${faturamentoST}, NCMs=${Array.from(ncmsEncontrados).join(',')}`)
+      // Group XML items by month (from NF-e emission date)
+      const xmlItemsByMonth: Record<string, Array<{ ncm: string, cfop: string, cstPis: string, csosn: string, valorItem: number }>> = {}
+      for (const xml of parsed_xmls as ParsedXml[]) {
+        const items = xml.itens || (xml as any).items || (xml as any).produtos || []
+        const dataEmissao = xml.data_emissao || ''
+        const mes = dataEmissao.substring(0, 7) // YYYY-MM
 
-      // Step 2: Get PGDAS reparticao (absolute R$ values)
-      const reparticao = (latestPgdas?.dados_completos as Record<string, unknown>)?.reparticao as Record<string, number> | null
-      const pgdasReceita = latestPgdas?.receita_bruta as number || 0
+        for (const item of items) {
+          const cfop = item.cfop || ''
+          const ncm = item.ncm || ''
+          const cstPis = item.cst_pis || (item as any).cstPis || ''
+          const csosn = item.csosn || item.cst_icms || (item as any).cstIcms || ''
+          const valorItem = item.valor_item || (item as any).valorTotal || (item as any).valor_total || 0
 
-      // Use PGDAS receita_bruta as fatTotal reference (more reliable), fallback to XML sum
-      const fatTotalRef = pgdasReceita > 0 ? pgdasReceita : faturamentoTotal
+          if (!isExitOperation(cfop)) continue
+          if (valorItem <= 0) continue
 
-      if (reparticao && fatTotalRef > 0) {
-        const pisPago = reparticao.pis || 0
-        const cofinsPago = reparticao.cofins || 0
-        const icmsPago = reparticao.icms || 0
+          const monthKey = mes || 'unknown'
+          if (!xmlItemsByMonth[monthKey]) xmlItemsByMonth[monthKey] = []
+          xmlItemsByMonth[monthKey].push({ ncm, cfop, cstPis, csosn, valorItem })
+        }
+      }
+
+      console.log(`[analyze-credits] XML months found: ${Object.keys(xmlItemsByMonth).join(', ')}`)
+
+      // Accumulate credits across all months
+      let totalPisIndevido = 0
+      let totalCofinsIndevido = 0
+      let totalIcmsStIndevido = 0
+      const allNcmsEncontrados: Set<string> = new Set()
+      let mesesProcessados = 0
+
+      // For each month with XMLs, find matching PGDAS repartição
+      for (const [mes, items] of Object.entries(xmlItemsByMonth)) {
+        let faturamentoTotal = 0
+        let faturamentoMonofasico = 0
+        let faturamentoST = 0
+        const ncmsMes: Set<string> = new Set()
+
+        for (const item of items) {
+          faturamentoTotal += item.valorItem
+
+          // Check monophasic
+          const monoMatch = isMonophasicNCMFromList(item.ncm, monophasicNcms)
+          const isMonoCST = isMonophasicCST(item.cstPis)
+          if (monoMatch || isMonoCST) {
+            faturamentoMonofasico += item.valorItem
+            ncmsMes.add(item.ncm)
+          }
+
+          // Check ST
+          const isST = item.csosn === '500' || ['5405', '6405', '5403', '6403'].includes(item.cfop)
+          if (isST) {
+            faturamentoST += item.valorItem
+          }
+        }
+
+        if (faturamentoTotal <= 0) continue
+
+        // [CORREÇÃO #1] fatTotalRef = soma dos XMLs do mês, NÃO receita_bruta do PGDAS
+        const fatTotalRef = faturamentoTotal
+
+        // Find PGDAS repartição for this month
+        const pgdasMes = pgdasByMonth[mes]
+        if (!pgdasMes) {
+          console.warn(`[analyze-credits] Mês ${mes}: sem PGDAS repartição. Pulando. fatTotal=${faturamentoTotal}, fatMono=${faturamentoMonofasico}, fatST=${faturamentoST}`)
+          continue
+        }
 
         const baseIndevidaPisCofins = faturamentoMonofasico + faturamentoST
+        if (baseIndevidaPisCofins <= 0 && faturamentoST <= 0) continue
+
         const proporcaoPisCofins = baseIndevidaPisCofins / fatTotalRef
         const proporcaoST = faturamentoST / fatTotalRef
 
-        const pisIndevido = Math.round(pisPago * proporcaoPisCofins * 100) / 100
-        const cofinsIndevido = Math.round(cofinsPago * proporcaoPisCofins * 100) / 100
-        const icmsStIndevido = Math.round(icmsPago * proporcaoST * 100) / 100
+        const pisIndevido = Math.round(pgdasMes.pis * proporcaoPisCofins * 100) / 100
+        const cofinsIndevido = Math.round(pgdasMes.cofins * proporcaoPisCofins * 100) / 100
+        const icmsStIndevido = Math.round(pgdasMes.icms * proporcaoST * 100) / 100
 
-        console.log(`[analyze-credits] Simples credits: PIS=${pisIndevido}, COFINS=${cofinsIndevido}, ICMS-ST=${icmsStIndevido} (propPisCofins=${proporcaoPisCofins.toFixed(4)}, propST=${proporcaoST.toFixed(4)})`)
+        console.log(`[analyze-credits] Mês ${mes}: fatTotal=${faturamentoTotal.toFixed(2)}, fatMono=${faturamentoMonofasico.toFixed(2)}, fatST=${faturamentoST.toFixed(2)}, propPisCofins=${proporcaoPisCofins.toFixed(4)}, propST=${proporcaoST.toFixed(4)}, PIS=${pisIndevido}, COFINS=${cofinsIndevido}, ICMS-ST=${icmsStIndevido}`)
 
-        // Credit 1: PIS indevido
-        if (simplesMonoRule && pisIndevido > 0.01) {
-          identifiedCredits.push({
-            rule_id: simplesMonoRule.id,
-            original_tax_value: pisPago,
-            potential_recovery: pisIndevido,
-            ncm_code: Array.from(ncmsEncontrados).join(','),
-            cfop: '',
-            cst: '04',
-            confidence_level: 'high',
-            confidence_score: 92,
-            product_description: `PIS recolhido indevidamente no DAS sobre receita de produtos monofásicos e com ST — Art. 2º, §1º-A da Lei 10.637/2002`,
-            nfe_key: '',
-            nfe_number: '',
-            nfe_date: latestPgdas?.periodo_apuracao || new Date().toISOString().split('T')[0],
-            supplier_cnpj: '',
-            supplier_name: '',
-          })
-        }
+        totalPisIndevido += pisIndevido
+        totalCofinsIndevido += cofinsIndevido
+        totalIcmsStIndevido += icmsStIndevido
+        ncmsMes.forEach(n => allNcmsEncontrados.add(n))
+        mesesProcessados++
+      }
 
-        // Credit 2: COFINS indevido
-        if (simplesMonoRule && cofinsIndevido > 0.01) {
-          identifiedCredits.push({
-            rule_id: simplesMonoRule.id,
-            original_tax_value: cofinsPago,
-            potential_recovery: cofinsIndevido,
-            ncm_code: Array.from(ncmsEncontrados).join(','),
-            cfop: '',
-            cst: '04',
-            confidence_level: 'high',
-            confidence_score: 92,
-            product_description: `COFINS recolhido indevidamente no DAS sobre receita de produtos monofásicos e com ST — Art. 2º, §1º-A da Lei 10.833/2003`,
-            nfe_key: '',
-            nfe_number: '',
-            nfe_date: latestPgdas?.periodo_apuracao || new Date().toISOString().split('T')[0],
-            supplier_cnpj: '',
-            supplier_name: '',
-          })
-        }
+      console.log(`[analyze-credits] Simples TOTAL: meses=${mesesProcessados}, PIS=${totalPisIndevido.toFixed(2)}, COFINS=${totalCofinsIndevido.toFixed(2)}, ICMS-ST=${totalIcmsStIndevido.toFixed(2)}`)
 
-        // Credit 3: ICMS-ST indevido
-        if (simplesIcmsStRule && icmsStIndevido > 0.01) {
-          identifiedCredits.push({
-            rule_id: simplesIcmsStRule.id,
-            original_tax_value: icmsPago,
-            potential_recovery: icmsStIndevido,
-            ncm_code: '',
-            cfop: '5405',
-            cst: '500',
-            confidence_level: 'high',
-            confidence_score: 90,
-            product_description: `ICMS recolhido indevidamente no DAS sobre receita de produtos com ST — Art. 13, §1º, XIII da LC 123/2006`,
-            nfe_key: '',
-            nfe_number: '',
-            nfe_date: latestPgdas?.periodo_apuracao || new Date().toISOString().split('T')[0],
-            supplier_cnpj: '',
-            supplier_name: '',
-          })
-        }
-      } else {
-        console.warn(`[analyze-credits] Simples: sem dados de repartição no PGDAS ou faturamento zero. reparticao=${!!reparticao}, fatTotalRef=${fatTotalRef}`)
+      // Push aggregated credits
+      const latestPeriodo = latestPgdas?.periodo_apuracao || new Date().toISOString().split('T')[0]
+
+      if (simplesMonoRule && totalPisIndevido > 0.01) {
+        identifiedCredits.push({
+          rule_id: simplesMonoRule.id,
+          original_tax_value: totalPisIndevido, // valor total recuperável
+          potential_recovery: Math.round(totalPisIndevido * 100) / 100,
+          ncm_code: Array.from(allNcmsEncontrados).join(','),
+          cfop: '',
+          cst: '04',
+          confidence_level: 'high',
+          confidence_score: 92,
+          product_description: `PIS recolhido indevidamente no DAS sobre receita de produtos monofásicos e com ST (${mesesProcessados} meses) — Art. 2º, §1º-A da Lei 10.637/2002`,
+          nfe_key: '',
+          nfe_number: '',
+          nfe_date: latestPeriodo,
+          supplier_cnpj: '',
+          supplier_name: '',
+        })
+      }
+
+      if (simplesMonoRule && totalCofinsIndevido > 0.01) {
+        identifiedCredits.push({
+          rule_id: simplesMonoRule.id,
+          original_tax_value: totalCofinsIndevido,
+          potential_recovery: Math.round(totalCofinsIndevido * 100) / 100,
+          ncm_code: Array.from(allNcmsEncontrados).join(','),
+          cfop: '',
+          cst: '04',
+          confidence_level: 'high',
+          confidence_score: 92,
+          product_description: `COFINS recolhido indevidamente no DAS sobre receita de produtos monofásicos e com ST (${mesesProcessados} meses) — Art. 2º, §1º-A da Lei 10.833/2003`,
+          nfe_key: '',
+          nfe_number: '',
+          nfe_date: latestPeriodo,
+          supplier_cnpj: '',
+          supplier_name: '',
+        })
+      }
+
+      if (simplesIcmsStRule && totalIcmsStIndevido > 0.01) {
+        identifiedCredits.push({
+          rule_id: simplesIcmsStRule.id,
+          original_tax_value: totalIcmsStIndevido,
+          potential_recovery: Math.round(totalIcmsStIndevido * 100) / 100,
+          ncm_code: '',
+          cfop: '5405',
+          cst: '500',
+          confidence_level: 'high',
+          confidence_score: 90,
+          product_description: `ICMS recolhido indevidamente no DAS sobre receita de produtos com ST (${mesesProcessados} meses) — Art. 13, §1º, XIII da LC 123/2006`,
+          nfe_key: '',
+          nfe_number: '',
+          nfe_date: latestPeriodo,
+          supplier_cnpj: '',
+          supplier_name: '',
+        })
+      }
+
+      if (mesesProcessados === 0) {
+        console.warn(`[analyze-credits] Simples: nenhum mês processado. Verifique se os XMLs têm data_emissao compatível com os períodos do PGDAS.`)
       }
     } else {
       // ========== LUCRO REAL / PRESUMIDO ANALYSIS ==========
