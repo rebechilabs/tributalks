@@ -323,8 +323,8 @@ function calculateDRE(inputs: DREInputs) {
       impostos_lucro = 0 // Já incluso no DAS
     } else if (inputs.regime_tributario === 'presumido') {
       // Presunção de 8% para comércio, 32% para serviços
-      const base_irpj = resultado_antes_ir * 0.08
-      const base_csll = resultado_antes_ir * 0.12
+      const base_irpj = receita_bruta * 0.08
+      const base_csll = receita_bruta * 0.12
       impostos_lucro = (base_irpj * 0.15) + (base_csll * 0.09)
     } else {
       // Lucro Real
@@ -340,7 +340,7 @@ function calculateDRE(inputs: DREInputs) {
   const ebitda_margin = receita_liquida > 0 ? (ebitda / receita_liquida) * 100 : 0
 
   // PONTO DE EQUILÍBRIO
-  const custos_fixos = despesas_total + (inputs.aluguel || 0)
+  const custos_fixos = despesas_total
   const margem_contribuicao = margem_bruta / 100
   const ponto_equilibrio = margem_contribuicao > 0 ? custos_fixos / margem_contribuicao : 0
 
@@ -581,22 +581,30 @@ function generateRecommendations(diagnostics: Diagnostic[], dre: ReturnType<type
 }
 
 function simulateReforma(inputs: DREInputs, dre: ReturnType<typeof calculateDRE>) {
-  // Impostos atuais (PIS, COFINS, ISS, ICMS aproximados)
+  const receita_bruta = (inputs.vendas_produtos || 0) + (inputs.vendas_servicos || 0)
   const impostos_atuais = dre.impostos_vendas
 
-  // Simulação com IBS + CBS (alíquota aproximada 26.5%)
-  // Porém com créditos ampliados
-  const receita_bruta = (inputs.vendas_produtos || 0) + (inputs.vendas_servicos || 0)
-  const creditos_atuais = dre.cpv * 0.0925 // PIS/COFINS sobre compras
-  const creditos_reforma = dre.cpv * 0.265 // IBS/CBS sobre compras
-  
-  const impostos_reforma_bruto = receita_bruta * 0.265
-  const impostos_novos = Math.max(0, impostos_reforma_bruto - creditos_reforma)
-  const impostos_atuais_liquido = Math.max(0, impostos_atuais - creditos_atuais)
+  let impostos_novos: number
+  let creditos_reforma: number
+  let creditos_atuais: number
 
+  if (inputs.regime_tributario === 'simples') {
+    // Simples: estimativa de redução de ~20% no DAS por absorção parcial do IBS/CBS
+    impostos_novos = impostos_atuais * 0.80
+    creditos_atuais = 0
+    creditos_reforma = 0
+  } else {
+    // Presumido e Real: IBS/CBS com créditos ampliados
+    creditos_atuais = dre.cpv * 0.0925
+    creditos_reforma = dre.cpv * 0.265
+    const impostos_reforma_bruto = receita_bruta * 0.265
+    impostos_novos = Math.max(0, impostos_reforma_bruto - creditos_reforma)
+  }
+
+  const impostos_atuais_liquido = Math.max(0, impostos_atuais - creditos_atuais)
   const impacto_lucro = impostos_atuais_liquido - impostos_novos
-  const impacto_percentual = impostos_atuais_liquido > 0 
-    ? ((impacto_lucro / impostos_atuais_liquido) * 100) 
+  const impacto_percentual = impostos_atuais_liquido > 0
+    ? ((impacto_lucro / impostos_atuais_liquido) * 100)
     : 0
 
   return {

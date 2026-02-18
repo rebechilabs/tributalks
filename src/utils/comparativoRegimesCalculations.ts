@@ -45,17 +45,9 @@ function calcularAliquotaSimples(faturamento: number, setor: 'comercio' | 'indus
   if (faturamento > LIMITE_SIMPLES) return 0;
   
   const aliquotas = ALIQUOTAS_SIMPLES[setor];
-  let faixaIndex = 0;
-  
-  for (let i = 0; i < FAIXAS_SIMPLES.length; i++) {
-    if (faturamento <= FAIXAS_SIMPLES[i]) {
-      faixaIndex = i;
-      break;
-    }
-    faixaIndex = i;
-  }
-  
-  let aliquota = aliquotas[faixaIndex];
+  const faixaIndex = FAIXAS_SIMPLES.findIndex(limite => faturamento <= limite);
+  const indice = faixaIndex === -1 ? FAIXAS_SIMPLES.length - 1 : faixaIndex;
+  let aliquota = aliquotas[indice];
   
   if (setor === 'servicos' && faturamento > 0) {
     const fatorR = folha / faturamento;
@@ -97,7 +89,8 @@ function calcularLucroPresumido(input: ComparativoRegimesInput): RegimeCalculati
   
   const csll = basePresumida * 0.09;
   const pisCofins = input.faturamento_anual * 0.0365;
-  const impostoTotal = irpj + csll + pisCofins;
+  const iss = setor === 'servicos' ? input.faturamento_anual * 0.03 : 0;
+  const impostoTotal = irpj + csll + pisCofins + iss;
   const aliquotaEfetiva = (impostoTotal / input.faturamento_anual) * 100;
   
   return {
@@ -151,16 +144,18 @@ function calcularLucroReal(input: ComparativoRegimesInput): RegimeCalculation {
 function calcularSimples2027Dentro(input: ComparativoRegimesInput): RegimeCalculation {
   const setor = determinarSetor(input.cnae_principal);
   const aliquota = calcularAliquotaSimples(input.faturamento_anual, setor, input.folha_pagamento);
-  const imposto = input.faturamento_anual * aliquota;
+  // "Por dentro": alíquota do DAS sofre ajuste estimado de +2pp pela absorção do IBS/CBS
+  const aliquotaAjustada = aliquota + 0.02;
+  const imposto = input.faturamento_anual * aliquotaAjustada;
   const isElegivel = input.faturamento_anual <= LIMITE_SIMPLES;
-  
+
   return {
     tipo: 'SIMPLES_2027_DENTRO',
     nome: 'Simples 2027 ("Por Dentro")',
     imposto_anual: isElegivel ? imposto : 0,
-    aliquota_efetiva: isElegivel ? aliquota * 100 : 0,
+    aliquota_efetiva: isElegivel ? aliquotaAjustada * 100 : 0,
     creditos_gerados: 0,
-    vantagem: 'Simplicidade mantida',
+    vantagem: 'Simplicidade mantida (IBS/CBS incluso no DAS)',
     is_elegivel: isElegivel,
     motivo_inelegibilidade: !isElegivel ? 'Faturamento acima de R$ 4,8 milhões' : undefined,
   };
