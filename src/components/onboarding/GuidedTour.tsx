@@ -73,22 +73,6 @@ const tourSteps: Step[] = [
     placement: "right",
   },
   {
-    target: '[data-tour="conexao-group"]',
-    content: (
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <MessagesSquare className="h-5 w-5 text-primary" />
-          <span className="font-semibold">Conexão & Comunicação</span>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Fique por dentro das últimas notícias tributárias, conecte-se com a 
-          comunidade e ganhe descontos indicando amigos.
-        </p>
-      </div>
-    ),
-    placement: "right",
-  },
-  {
     target: '[data-tour="user-menu"]',
     content: (
       <div className="space-y-2">

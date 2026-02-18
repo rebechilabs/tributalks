@@ -273,8 +273,7 @@ export function Sidebar() {
 
     // Grupo colapsável (módulos V2)
     if (group.collapsible) {
-      // Add data-tour attribute for Conexão & Comunicação group
-      const tourAttribute = groupKey === 'conexao' ? { 'data-tour': 'conexao-group' } : {};
+      const tourAttribute: Record<string, string> = {};
       
       return (
         <Collapsible
