@@ -3,8 +3,8 @@ import { useLocation } from "react-router-dom";
 const ROUTE_SUGGESTIONS: Record<string, string[]> = {
   "/dashboard/dre": ["Calcular meu Score Tributário", "Como está minha margem?", "O que posso melhorar?"],
   "/dashboard/entender/dre": ["Calcular meu Score Tributário", "Como está minha margem?", "O que posso melhorar?"],
-  "/dashboard/score-tributario": ["Como melhorar meu score?", "O que significa cada dimensão?"],
-  "/dashboard/entender/score": ["Como melhorar meu score?", "O que significa cada dimensão?"],
+  "/dashboard/score-tributario": ["Comparar regimes tributários", "Como melhorar meu score?", "O que significa cada dimensão?"],
+  "/dashboard/entender/score": ["Comparar regimes tributários", "Como melhorar meu score?", "O que significa cada dimensão?"],
   "/dashboard/recuperar/radar": ["Encontrou créditos?", "Tem algo prestes a prescrever?"],
   "/dashboard/radar-creditos": ["Encontrou créditos?", "Tem algo prestes a prescrever?"],
   "/dashboard/planejar/oportunidades": ["Quais oportunidades tenho?", "Quanto posso economizar?"],

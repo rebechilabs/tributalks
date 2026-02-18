@@ -92,19 +92,28 @@ const ROUTE_CONTEXTS: Record<string, ClaraContextConfig> = {
   
   // Diagnóstico - Clara analisa dados
   '/dashboard/score-tributario': {
-    intent: 'diagnose',
-    headline: 'Posso interpretar seu Score',
-    description: 'Cada dimensão do Score indica uma área de atenção. Quer entender o que melhorar?',
-    ctaLabel: 'Interpretar resultado',
-    ctaQuestion: 'Me ajuda a entender meu Score Tributário: o que cada dimensão significa e como posso melhorar minha nota?',
-    secondaryCta: {
-      label: 'Ações prioritárias',
-      question: 'Quais são as 3 ações mais urgentes para melhorar meu Score Tributário?'
-    },
-    proactiveQuestion: 'Você já sabe sua nota no Receita Sintonia? É um indicador importante que afeta sua relação com a Receita Federal.',
+    intent: 'suggest',
+    headline: 'Próximo passo: Comparativo de Regimes',
+    description: 'Com seu Score calculado, descubra qual regime tributário é mais vantajoso para sua empresa.',
+    ctaLabel: 'Comparar Regimes',
+    ctaQuestion: 'Acabei de calcular meu Score Tributário. Qual regime tributário seria mais vantajoso para minha empresa?',
+    proactiveQuestion: '📊 Score calculado! Agora compare Simples Nacional, Lucro Presumido e Lucro Real para descobrir qual regime te faz pagar menos.',
     quickActions: [
-      { label: 'O que é Score?', question: 'O que é o Score Tributário e por que devo me preocupar com ele?' },
-      { label: 'Receita Sintonia', question: 'O que é o Receita Sintonia e como ele me afeta?' }
+      { label: 'Ir para o Comparativo', question: 'Quero comparar os regimes tributários agora.' },
+      { label: 'Interpretar Score', question: 'Me ajuda a entender meu Score Tributário: o que cada dimensão significa?' }
+    ],
+    variant: 'prominent'
+  },
+  '/dashboard/entender/score': {
+    intent: 'suggest',
+    headline: 'Próximo passo: Comparativo de Regimes',
+    description: 'Com seu Score calculado, descubra qual regime tributário é mais vantajoso para sua empresa.',
+    ctaLabel: 'Comparar Regimes',
+    ctaQuestion: 'Acabei de calcular meu Score Tributário. Qual regime tributário seria mais vantajoso para minha empresa?',
+    proactiveQuestion: '📊 Score calculado! Agora compare Simples Nacional, Lucro Presumido e Lucro Real para descobrir qual regime te faz pagar menos.',
+    quickActions: [
+      { label: 'Ir para o Comparativo', question: 'Quero comparar os regimes tributários agora.' },
+      { label: 'Interpretar Score', question: 'Me ajuda a entender meu Score Tributário: o que cada dimensão significa?' }
     ],
     variant: 'prominent'
   },
