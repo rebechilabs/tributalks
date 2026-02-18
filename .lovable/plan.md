@@ -1,109 +1,81 @@
 
+# Correcao: XMLs chegam com itens vazios ao motor de creditos
 
-# Correcao: Dados do PGDAS nao chegam ao motor de creditos
+## Causa raiz
 
-## Diagnostico real (diferente do que parecia)
+Dois problemas encadeados impedem o calculo:
 
-O problema NAO e que os dados do PGDAS nao sao enviados pelo hook. A edge function `analyze-credits` ja busca os dados do PGDAS diretamente do banco (linhas 296-304). O verdadeiro problema e um **filtro de data que exclui todos os registros**.
+### Problema 1 — Campo "produtos" nao e mapeado no hook
 
-### Evidencia dos logs
+O `raw_data` na tabela `xml_analysis` armazena os itens da NF-e no campo `produtos`. Porem o hook `useReanalyzeCredits.ts` (linha 87) tenta ler `raw.itens || raw.items`, que nao existem.
 
-```
-[analyze-credits] Regime raw: 'simples', normalized: 'simples', Simples: true, 
-  CNAE: 1091101, Aliquota: 0, RBT12: 0, Mistas: false
-
-[analyze-credits] Simples: sem dados de reparticao no PGDAS ou faturamento zero. 
-  reparticao=false, fatTotalRef=0
-```
-
-### Por que RBT12=0 e reparticao=false?
-
-A edge function faz:
-
-```typescript
-const twelveMonthsAgo = new Date()
-twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12)
-// Resultado: 2025-02-18
-
-const { data: pgdasRecords } = await supabaseAdmin
-  .from('pgdas_arquivos')
-  .select(...)
-  .eq('user_id', userId)
-  .gte('periodo_apuracao', twelveMonthsAgo.toISOString().split('T')[0])
-  // Filtra: periodo_apuracao >= '2025-02-18'
+Dado real no banco:
+```text
+raw_data.produtos = [
+  { ncm: "84181000", cfop: "1102", valorTotal: 15000, cst_pis: "01", ... },
+  { ncm: "84181000", cfop: "1102", valorTotal: 12000, cst_pis: "01", ... }
+]
 ```
 
-Mas os dados no banco sao de **2024** (periodo_apuracao: 2024-10, 2024-11, 2024-12). O filtro `>= 2025-02-18` exclui TODOS os registros, resultando em `latestPgdas = null`.
+O hook monta: `{ itens: [] }` — vazio.
 
-### Dados existem e estao corretos
+### Problema 2 — Nomes de campos incompativeis na edge function
 
-```
-pgdas_arquivos (ultimos 3 registros):
-- periodo: 2024-12, receita_bruta: 200000, reparticao: {pis: 538.75, cofins: 2486.85, icms: 6636.80, ...}
-- periodo: 2024-11, receita_bruta: 200000, reparticao: idem
-- periodo: 2024-10, receita_bruta: 200000, reparticao: idem
-```
+A edge function `analyze-credits` espera `item.valor_item`, mas o dado real e `valorTotal`. Tambem espera `item.cst_icms`, mas o dado e `cstIcms` (camelCase).
+
+| Edge function espera | Dado real no banco |
+|---|---|
+| `item.valor_item` | `valorTotal` |
+| `item.cst_pis` | `cst_pis` (ok) |
+| `item.cst_icms` | `cst_icms` (ok, mas tambem `cstIcms`) |
+| `item.csosn` | `csosn` (se existir) |
 
 ## Plano de correcao
 
-### Arquivo 1: `supabase/functions/analyze-credits/index.ts`
+### Arquivo 1: `src/hooks/useReanalyzeCredits.ts` (linha 87)
 
-**Correcao A** — Ampliar janela de busca do PGDAS de 12 para 60 meses. Se a empresa tem PGDAS de periodos anteriores, eles ainda sao validos para calcular a reparticao. A janela de 12 meses so faz sentido para RBT12, nao para encontrar o ultimo PGDAS disponivel.
-
-Linhas 296-304: Mudar a busca para usar uma janela mais ampla e, separadamente, buscar o PGDAS mais recente independente da data.
+Adicionar `raw.produtos` ao mapeamento:
 
 ```typescript
-// Buscar PGDAS mais recente (sem filtro de data) para reparticao
-const { data: latestPgdasRecord } = await supabaseAdmin
-  .from('pgdas_arquivos')
-  .select('aliquota_efetiva, dados_completos, periodo_apuracao, anexo_simples, receita_bruta')
-  .eq('user_id', userId)
-  .order('periodo_apuracao', { ascending: false })
-  .limit(1)
-  .maybeSingle()
-
-// Buscar PGDAS dos ultimos 60 meses para calculo de RBT12
-const sixtyMonthsAgo = new Date()
-sixtyMonthsAgo.setMonth(sixtyMonthsAgo.getMonth() - 60)
-
-const { data: pgdasRecords } = await supabaseAdmin
-  .from('pgdas_arquivos')
-  .select('aliquota_efetiva, dados_completos, periodo_apuracao, anexo_simples, receita_bruta')
-  .eq('user_id', userId)
-  .gte('periodo_apuracao', sixtyMonthsAgo.toISOString().split('T')[0])
-  .order('periodo_apuracao', { ascending: false })
+itens: raw.itens || raw.items || raw.produtos || [],
 ```
 
-Linha 306: Usar `latestPgdasRecord` ao inves de `pgdasRecords?.[0]`.
+### Arquivo 2: `supabase/functions/analyze-credits/index.ts` (linha 449)
 
-**Correcao B** — Tambem aceitar `pgdas_data` enviado pelo hook como override (para compatibilidade futura). Se o payload incluir `pgdas_data`, usar esses valores em vez de buscar no banco.
-
-### Arquivo 2: `src/hooks/useReanalyzeCredits.ts`
-
-**Correcao C** — Parar de engolir erros silenciosamente (linhas 121-125):
+Normalizar o campo de valor do item para aceitar ambos formatos:
 
 ```typescript
-// ANTES
-if (response.error) {
-  console.error(`Batch ${i / BATCH_SIZE + 1} error:`, response.error);
-}
-
-// DEPOIS
-if (response.error) {
-  console.error(`Batch ${i / BATCH_SIZE + 1} error:`, response.error);
-  toast.error(`Erro no lote ${i / BATCH_SIZE + 1}: ${response.error.message || 'Erro desconhecido'}`);
-  break;
-}
+const valorItem = item.valor_item || item.valorTotal || item.valor_total || 0
 ```
 
-## O que NAO precisa mudar
+Tambem normalizar CSOSN (linha 448):
 
-- O hook NAO precisa buscar `pgdas_imports` (essa tabela nao existe)
-- O hook NAO precisa enviar dados do PGDAS no payload — a edge function ja busca direto do banco, so precisa do filtro de data corrigido
-- A logica de calculo de creditos (proporcional por reparticao) ja esta correta
-- As regras SIMPLES_MONO_001 e SIMPLES_ICMS_ST_001 ja estao implementadas
+```typescript
+const csosn = item.csosn || item.cst_icms || item.cstIcms || ''
+```
+
+### Arquivo 2 (continuacao): Normalizar campo de itens na edge function (linha 443)
+
+Para robustez, aceitar ambos os nomes:
+
+```typescript
+const items = xml.itens || xml.items || xml.produtos || []
+```
+
+## O que NAO muda
+
+- Formula proporcional de calculo (ja esta correta)
+- Busca de PGDAS (ja corrigida anteriormente)
+- Estrutura das tabelas
+- Layout da UI
 
 ## Resultado esperado
 
-Com a janela de busca corrigida, a edge function vai encontrar os registros de 2024, extrair a reparticao (`pis: 538.75, cofins: 2486.85, icms: 6636.80`) e calcular os creditos proporcionais sobre a receita de produtos monofasicos e com ST.
+Com os campos mapeados corretamente, o motor vai:
+1. Ler os produtos de cada XML
+2. Classificar por NCM monofasico e CFOP com ST
+3. Calcular fat_mono, fat_ST e fat_total
+4. Aplicar a formula proporcional usando reparticao do PGDAS
+5. Gravar creditos em `identified_credits`
 
+Nota sobre o gabarito: Os valores finais dependem dos XMLs reais importados e dos NCMs que se encaixam na lista de monofasicos. O NCM 84181000 (geladeira) nao e monofasico, entao com os dados de teste atuais o resultado sera R$ 0. Para gerar os valores do gabarito (R$ 5.235,67), e necessario ter XMLs com NCMs monofasicos reais (ex: 22021000 bebidas, 30049099 medicamentos, 27101259 combustiveis).
