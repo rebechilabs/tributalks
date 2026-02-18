@@ -95,7 +95,7 @@ export function NewPricingSection() {
   const [enterpriseModalOpen, setEnterpriseModalOpen] = useState(false);
 
   return (
-    <section id="planos" className="py-16 md:py-20 bg-[#1A1A1A]">
+    <section id="planos" className="py-16 md:py-20 bg-[#111111]">
       <div className="container mx-auto px-4 md:px-8">
         {/* Section Header */}
         <motion.div
@@ -115,7 +115,7 @@ export function NewPricingSection() {
 
         {/* Billing Toggle */}
         <div className="flex items-center justify-center gap-4 mb-12">
-          <div className="inline-flex items-center bg-[#1A1A1A] rounded-full p-1 border border-white/10">
+          <div className="inline-flex items-center bg-[#111111] rounded-full p-1 border border-white/10">
             <button
               onClick={() => setBillingPeriod("mensal")}
               className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${

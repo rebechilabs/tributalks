@@ -14,7 +14,7 @@ import { ArrowRight, Linkedin, Instagram, Youtube, Scale, Shield, Cloud } from "
    };
  
    return (
-     <footer className="bg-[#1A1A1A] border-t border-white/10">
+     <footer className="bg-[#111111] border-t border-white/10">
        {/* Final CTA */}
        <div className="py-12 md:py-16 border-b border-white/10">
          <div className="container mx-auto px-4 md:px-8 text-center">
