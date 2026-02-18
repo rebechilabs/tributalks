@@ -89,7 +89,7 @@ A empresa recuperou R$ 847.000 em créditos que estavam "esquecidos" e passou a 
       role: "Sócia-Administradora",
     },
     timeline: "45 dias para análise e implementação",
-    toolsUsed: ["Comparativo de Regimes", "Score Tributário", "Oportunidades Fiscais"],
+    toolsUsed: ["Comparativo de Regimes Tributários", "Score Tributário", "Oportunidades Tributárias"],
     fullStory: `Uma clínica oftalmológica é referência em cirurgias refrativas e tratamento de catarata, com 15 anos de mercado.
 
 **O Desafio**
@@ -107,7 +107,7 @@ Através do Comparativo de Regimes, identificamos que:
 
 1. Análise completa com Score Tributário (nota inicial: D)
 2. Simulação de 4 cenários de regimes tributários
-3. Identificação de 5 oportunidades fiscais aplicáveis
+3. Identificação de 5 oportunidades tributárias aplicáveis
 4. Planejamento da transição para 2026
 
 **Os Resultados**

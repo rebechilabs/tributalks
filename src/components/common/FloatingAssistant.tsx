@@ -132,7 +132,7 @@ Você tem acesso a 4 Workflows Guiados - jornadas estruturadas que conectam dife
 
 **1. Diagnóstico Tributário Completo ⭐**
 Análise automática e profunda com importação ilimitada de XMLs.
-→ Importador de XMLs automatizado → Radar de Créditos → DRE Inteligente → Oportunidades Fiscais (37+)
+→ Importador de XMLs automatizado → Radar de Créditos → DRE Inteligente → Oportunidades Tributárias (37+)
 *Diferencial: Processamento ilimitado de notas fiscais e análise contínua*
 
 **2. Preparação para a Reforma**
@@ -154,7 +154,7 @@ Cálculo preciso com base nos seus XMLs reais de compra e venda.
 ✅ Importador de XMLs ilimitado
 ✅ Radar de Créditos Fiscais
 ✅ DRE Inteligente
-✅ 37+ Oportunidades Fiscais
+✅ 37+ Oportunidades Tributárias
 ✅ Relatórios PDF Profissionais
 ✅ Clara AI ilimitada
 ✅ Comunidade exclusiva
@@ -179,7 +179,7 @@ Por qual Workflow quer começar? Ou prefere que eu te ajude a importar seus XMLs
 ✅ **Você tem acesso a:**
 - Todos os 4 Workflows Guiados (versão completa)
 - Importador de XMLs, Radar de Créditos, DRE Inteligente
-- 37+ Oportunidades Fiscais mapeadas
+- 37+ Oportunidades Tributárias mapeadas
 - Clara AI ilimitada + Comunidade
 - Relatórios PDF Profissionais
 

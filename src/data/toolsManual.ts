@@ -406,8 +406,8 @@ São 24 regras legislativas programadas que detectam créditos de PIS/COFINS, IC
     icon: "Lightbulb",
     category: "diagnosticar",
     minPlan: "PROFESSIONAL",
-    shortDescription: "Descubra 61+ oportunidades fiscais personalizadas para seu perfil.",
-    fullDescription: `O Motor de Oportunidades cruza o perfil da sua empresa com uma base de 61+ estratégias fiscais, identificando quais se aplicam ao seu negócio.
+    shortDescription: "Descubra 61+ oportunidades tributárias personalizadas para seu perfil.",
+    fullDescription: `O Motor de Oportunidades cruza o perfil da sua empresa com uma base de 61+ estratégias tributárias, identificando quais se aplicam ao seu negócio.
 
 Cada oportunidade inclui economia estimada, complexidade de implementação e base legal (Lei do Bem, incentivos estaduais, regimes especiais, etc.).`,
     whenToUse: [

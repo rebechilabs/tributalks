@@ -25,7 +25,7 @@ Ideal para CFOs, Controllers e empresários que querem ter inteligência tribut�
 
 Seu contador cuida de compliance (apuração, DCTF, obrigações). TribuTalks cuida de inteligência estratégica (créditos, margens, planejamento).
 
-Na prática, TribuTalks ajuda você a fazer perguntas melhores pro seu contador e validar se ele está aproveitando todas as oportunidades fiscais.`,
+Na prática, TribuTalks ajuda você a fazer perguntas melhores pro seu contador e validar se ele está aproveitando todas as oportunidades tributárias.`,
   },
   {
     question: "Como funciona a integração com meu ERP?",

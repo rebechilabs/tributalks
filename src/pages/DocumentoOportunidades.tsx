@@ -20,7 +20,7 @@ const FEATURES = [
   {
     icon: Target,
     title: 'Matching Automático',
-    description: 'Algoritmo cruza perfil da empresa com 50+ oportunidades fiscais'
+    description: 'Algoritmo cruza perfil da empresa com 50+ oportunidades tributárias'
   },
   {
     icon: Layers,
