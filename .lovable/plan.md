@@ -1,83 +1,52 @@
 
-# Seletor de Regime Tributario no Header Global
+# Adicionar "Indique e Ganhe" no Sidebar e na Home
 
 ## Resumo
 
-Adicionar um badge clicavel com o regime tributario atual ao lado do seletor de empresa, permitindo troca rapida com propagacao automatica para todas as ferramentas. Tambem sincronizar o campo de regime na pagina de Perfil com o `company_profile`.
+Tornar o "Indique e Ganhe" acessivel diretamente pelo sidebar (em todos os planos) e como acao sugerida na Home do dashboard, sem depender do modulo Conexao.
 
-## O que sera feito
+## Mudancas
 
-### 1. Novo componente `RegimeBadgeSelector` (`src/components/company/RegimeBadgeSelector.tsx`)
+### 1. Sidebar - Adicionar item em `src/data/menuConfig.ts`
 
-Badge clicavel exibido ao lado do seletor de empresa na barra do `CompanySelector`:
+Adicionar "Indique e Ganhe" como item standalone (sem grupo) antes de "Configuracoes" em todos os 3 menus:
 
-- Icone de balanca (Scale do lucide-react) + texto do regime atual ("Simples Nacional" / "Lucro Presumido" / "Lucro Real")
-- Estilo: fundo escuro (`bg-card`), borda dourada sutil (`border-yellow-500/30`), texto branco
-- Hover: borda dourada mais forte (`border-yellow-500/60`)
-- Se nenhum regime definido: exibe "Definir regime" em texto muted
+- **MENU_STARTER** (linha ~99-104): Adicionar item `{ label: 'Indique e Ganhe', href: '/indicar', icon: Gift, badge: 'Até 20%', badgeVariant: 'success', description: 'Ganhe desconto indicando' }` antes de Configuracoes
+- **MENU_NAVIGATOR** (linha ~184-191): Mesmo item antes de Configuracoes
+- **MENU_PROFESSIONAL_V2** (linha ~256-264): Mesmo item antes de Configuracoes/Integracoes
 
-Ao clicar, abre dropdown com 3 opcoes:
-- Simples Nacional
-- Lucro Presumido
-- Lucro Real
-- Opcao selecionada com icone Check
+O item ficara visivel em todos os planos, sem precisar expandir nenhum modulo. O icone Gift (ja importado) com badge verde "Ate 20%" cria destaque visual.
 
-Ao selecionar um regime diferente do atual:
-- Exibir `AlertDialog` de confirmacao: "Alterar regime para X? Isso afetara os calculos de todas as ferramentas."
-- Ao confirmar: chamar `updateCompany(currentCompany.id, { regime_tributario: novoRegime })` do CompanyContext
-- Invalidar queries relevantes (dre, tax-score, credits, comparativo) via queryClient
-- Exibir toast de sucesso: "Regime atualizado para X"
+### 2. Home - Adicionar CTA na `CompleteCard` em `src/components/home/HomeStateCards.tsx`
 
-### 2. Integrar no `CompanySelector.tsx`
-
-Adicionar o `RegimeBadgeSelector` dentro da barra existente do CompanySelector, apos o dropdown de empresa e antes do botao "Adicionar CNPJ":
+Na secao "Acoes sugeridas" da CompleteCard (linha ~413-438), adicionar um terceiro link apos o Split Payment:
 
 ```
-[Building2 icon] Empresa: [INDUSTRIA DE PAES... v] [Scale icon Lucro Presumido v] [+ Adicionar CNPJ]
+<Link to="/indicar" ...>
+  <Gift className="w-5 h-5 text-green-500" />
+  <div>
+    <p>Indique e ganhe ate 20% de desconto</p>
+    <p>Convide empresarios para a plataforma</p>
+  </div>
+  <ArrowRight />
+</Link>
 ```
 
-O componente so aparece quando `currentCompany` existe e o plano e Navigator+ (mesma condicao do CompanySelector).
+Gift ja esta importado no arquivo.
 
-### 3. Sincronizar Perfil (`src/pages/Perfil.tsx`)
+### 3. Home - Adicionar CTA tambem nos estados intermediarios
 
-O campo "Regime tributario" na secao "Informacoes Tributarias" (linha 300-310) salva em `profiles.regime` (tabela de perfil do usuario). Isso e separado de `company_profile.regime_tributario`.
-
-Adicionar logica para que ao salvar o perfil, se o valor de regime mudou, tambem atualizar o `company_profile.regime_tributario` da empresa ativa via `updateCompany`. Isso garante sincronizacao bidirecional.
-
-### 4. Invalidacao de queries ao trocar regime
-
-Quando o regime e alterado via `updateCompany`, o `CompanyContext.refetch()` ja e chamado. Adicionalmente, o `RegimeBadgeSelector` invalidara:
-- `home-state`
-- `dre`
-- `tax-score`
-- `credits`
-- `comparativo-regimes`
-
-Isso faz com que DRE, Score, Radar e Comparativo recarreguem com o novo regime.
+Na `NoDRECard` e `NoScoreCard`, nao adicionar (usuario ainda esta no onboarding). Na `NoCreditsCard` (linha ~298), adicionar um card simples abaixo do resumo com link para /indicar.
 
 ## Secao tecnica
 
-### Arquivos novos
-- `src/components/company/RegimeBadgeSelector.tsx` - Componente de badge + dropdown + dialog de confirmacao
-
 ### Arquivos editados
-- `src/components/company/CompanySelector.tsx` - Inserir RegimeBadgeSelector na barra
-- `src/pages/Perfil.tsx` - Sincronizar campo regime com company_profile ao salvar
-
-### Mapeamento de valores
-O `company_profile.regime_tributario` armazena: `'simples'`, `'presumido'`, `'real'`
-O `profiles.regime` armazena: `'SIMPLES'`, `'PRESUMIDO'`, `'REAL'`
-O `RegimeBadgeSelector` usara os valores do company_profile (lowercase) e fara a conversao quando necessario.
-
-Labels de exibicao:
-- `simples` -> "Simples Nacional"
-- `presumido` -> "Lucro Presumido"
-- `real` -> "Lucro Real"
+- `src/data/menuConfig.ts` — Adicionar item Gift em MENU_STARTER, MENU_NAVIGATOR, MENU_PROFESSIONAL_V2
+- `src/components/home/HomeStateCards.tsx` — Adicionar link para /indicar nas acoes sugeridas da CompleteCard e NoCreditsCard
 
 ### O que NAO muda
+- Pagina /indicar (ja existe e funciona)
+- Modulo Conexao (continua tendo o card de Indique e Ganhe)
 - Botoes da landing page
 - Configuracoes do Stripe
 - Logica de trial de 7 dias
-- Tabelas do banco (nenhuma migracao necessaria)
-- Edge Functions
-- Componentes existentes de DRE, Radar, Comparativo (ja leem regime_tributario do company_profile)
