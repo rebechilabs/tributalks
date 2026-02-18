@@ -27,9 +27,14 @@ interface SplitPaymentResult {
   cbs_mensal: number;
   ibs_mensal: number;
   aliquota_total: number;
+  credito_estimado_mensal: number;
+  impacto_liquido_mensal: number;
+  percentual_credito_setor: number;
+  descricao_modalidade: string;
 }
 
-// Alíquotas oficiais conforme LC 214/2025 e Manual RTC (13/01/2026)
+// Alíquotas de referência conforme LC 214/2025 e Manual RTC (13/01/2026)
+// Alíquotas definitivas serão fixadas pelo Comitê Gestor e Receita Federal
 const ALIQUOTAS = {
   // 2026: Alíquotas-teste (fase piloto - compensadas com PIS/COFINS)
   TESTE_2026: {
@@ -38,12 +43,12 @@ const ALIQUOTAS = {
     TOTAL: 0.01, // 1%
     label: "2026 (Teste)",
   },
-  // 2027+: Alíquotas de referência estimadas
+  // 2027+: Alíquotas de referência conforme LC 214/2025 e Manual RTC (13/01/2026)
   PADRAO_2027: {
-    CBS: 0.093,   // 9,3%
-    IBS: 0.187,   // 18,7%
-    TOTAL: 0.28,  // 28%
-    label: "2027+ (Padrão)",
+    CBS: 0.088,   // 8,8% — CBS federal
+    IBS: 0.177,   // 17,7% — IBS estados + municípios
+    TOTAL: 0.265, // 26,5% — alíquota de referência total
+    label: "2027+ (Referência 26,5%)",
   },
 };
 
@@ -67,6 +72,9 @@ const SplitPayment = () => {
   const [result, setResult] = useState<SplitPaymentResult | null>(null);
   const [saved, setSaved] = useState(false);
   const [cenario, setCenario] = useState<'TESTE_2026' | 'PADRAO_2027'>('PADRAO_2027');
+
+  // Modalidade de recolhimento — relevante apenas para Simples Nacional (LC 214/2025)
+  const [modalidadeSimples, setModalidadeSimples] = useState<'por_dentro' | 'por_fora'>('por_dentro');
 
   const [formData, setFormData] = useState({
     empresa: profile?.empresa || "",
@@ -105,42 +113,93 @@ const SplitPayment = () => {
 
   const calcularSplitPayment = (faturamento_mensal: number, percentual_vendas_pj: number): SplitPaymentResult => {
     const aliquotas = ALIQUOTAS[cenario];
-    const RANGE_VARIANCE = 0.15;
-    
+    const isSimples = formData.regime === 'SIMPLES';
+    const isSimplesPorDentro = isSimples && modalidadeSimples === 'por_dentro';
+    const isSimplesPorFora = isSimples && modalidadeSimples === 'por_fora';
+
+    // IBS e CBS são calculados "por fora" (EC 132/2023, art. 156-A, IX)
+    // O split payment retém na fonte o valor correspondente ao tributo
     const baseCalculo = faturamento_mensal * percentual_vendas_pj;
-    
-    // Cálculo por tributo
-    const cbsMensal = baseCalculo * aliquotas.CBS;
-    const ibsMensal = baseCalculo * aliquotas.IBS;
-    const retencaoBase = cbsMensal + ibsMensal;
-    
-    const retencaoMin = retencaoBase * (1 - RANGE_VARIANCE);
-    const retencaoMax = retencaoBase * (1 + RANGE_VARIANCE);
-    
+
+    let cbsMensal: number;
+    let ibsMensal: number;
+    let descricaoModalidade: string;
+
+    if (isSimplesPorDentro) {
+      // Por dentro do DAS: IBS/CBS embutidos com alíquota reduzida (~40% da alíquota cheia)
+      // Sem destaque em nota fiscal → sem split payment separado → retenção menor
+      const FATOR_REDUCAO_DAS = 0.40;
+      cbsMensal = baseCalculo * aliquotas.CBS * FATOR_REDUCAO_DAS;
+      ibsMensal = baseCalculo * aliquotas.IBS * FATOR_REDUCAO_DAS;
+      descricaoModalidade = 'Simples Nacional — Por Dentro do DAS (alíquota reduzida, sem crédito para o comprador)';
+    } else if (isSimplesPorFora) {
+      // Por fora (Simples Híbrido): alíquota cheia, gera crédito integral para o comprador
+      cbsMensal = baseCalculo * aliquotas.CBS;
+      ibsMensal = baseCalculo * aliquotas.IBS;
+      descricaoModalidade = 'Simples Nacional — Por Fora / Híbrido (alíquota cheia, crédito integral para o comprador)';
+    } else {
+      // Lucro Presumido / Lucro Real: split payment padrão com alíquota cheia
+      cbsMensal = baseCalculo * aliquotas.CBS;
+      ibsMensal = baseCalculo * aliquotas.IBS;
+      descricaoModalidade = `${formData.regime === 'PRESUMIDO' ? 'Lucro Presumido' : 'Lucro Real'} — Split Payment padrão (alíquota cheia)`;
+    }
+
+    const retencaoBrutaMensal = cbsMensal + ibsMensal;
+
+    // Estimativa de créditos recuperáveis por setor
+    const CREDITOS_POR_SETOR: Record<string, number> = {
+      industria: 0.65,
+      comercio: 0.55,
+      servicos: 0.25,
+      tecnologia: 0.30,
+      outro: 0.40,
+    };
+
+    const percentualCreditoSetor = isSimplesPorDentro
+      ? 0
+      : (CREDITOS_POR_SETOR[formData.setor] || 0.40);
+
+    const creditoEstimadoMensal = retencaoBrutaMensal * percentualCreditoSetor;
+    const impactoLiquidoMensal = retencaoBrutaMensal - creditoEstimadoMensal;
+
+    const RANGE_VARIANCE = isSimplesPorDentro ? 0.10 : 0.15;
+
+    const retencaoMin = retencaoBrutaMensal * (1 - RANGE_VARIANCE);
+    const retencaoMax = retencaoBrutaMensal * (1 + RANGE_VARIANCE);
+
     return {
       mensal_min: retencaoMin,
       mensal_max: retencaoMax,
       anual_min: retencaoMin * 12,
       anual_max: retencaoMax * 12,
-      percentual_faturamento: (retencaoBase / faturamento_mensal) * 100,
+      percentual_faturamento: (retencaoBrutaMensal / faturamento_mensal) * 100,
       cbs_mensal: cbsMensal,
       ibs_mensal: ibsMensal,
-      aliquota_total: aliquotas.TOTAL * 100,
+      aliquota_total: (aliquotas.CBS + aliquotas.IBS) * 100 * (isSimplesPorDentro ? 0.40 : 1),
+      credito_estimado_mensal: creditoEstimadoMensal,
+      impacto_liquido_mensal: impactoLiquidoMensal,
+      percentual_credito_setor: percentualCreditoSetor * 100,
+      descricao_modalidade: descricaoModalidade,
     };
   };
 
   const handleCalculate = async () => {
-    const faturamento = parseFloat(formData.faturamento_mensal);
-    const percentual = parseFloat(formData.percentual_vendas_pj);
+    const erros: string[] = [];
+    if (!formData.faturamento_mensal) erros.push("Faturamento Mensal");
+    if (!formData.regime) erros.push("Regime Tributário");
+    if (!formData.setor) erros.push("Setor");
 
-    if (!faturamento || !percentual) {
+    if (erros.length > 0) {
       toast({
-        title: "Dados incompletos",
-        description: "Preencha o faturamento e o percentual de vendas PJ.",
+        title: "Campos obrigatórios não preenchidos",
+        description: `Preencha: ${erros.join(", ")}`,
         variant: "destructive",
       });
       return;
     }
+
+    const faturamento = parseFloat(formData.faturamento_mensal);
+    const percentual = parseFloat(formData.percentual_vendas_pj);
 
     setIsCalculating(true);
     
@@ -150,6 +209,34 @@ const SplitPayment = () => {
     const calculatedResult = calcularSplitPayment(faturamento, percentual);
     setResult(calculatedResult);
     setIsCalculating(false);
+
+    // Contextual feedback
+    const impactoLiquidoPercent = (calculatedResult.impacto_liquido_mensal / faturamento) * 100;
+    const isSimplesPorDentro = formData.regime === 'SIMPLES' && modalidadeSimples === 'por_dentro';
+    const isSimplesPorFora = formData.regime === 'SIMPLES' && modalidadeSimples === 'por_fora';
+
+    if (isSimplesPorDentro) {
+      toast({
+        title: "Simples por dentro — impacto reduzido",
+        description: `Retenção estimada em ~${impactoLiquidoPercent.toFixed(1)}% do faturamento. Atenção: seu cliente PJ não poderá se creditar de IBS/CBS nas compras feitas com você.`,
+      });
+    } else if (isSimplesPorFora) {
+      toast({
+        title: "Simples Híbrido — split payment com alíquota cheia",
+        description: `Retenção de ~${impactoLiquidoPercent.toFixed(1)}% do faturamento, mas seu cliente PJ recebe crédito integral — vantagem competitiva no B2B.`,
+      });
+    } else if (impactoLiquidoPercent > 10) {
+      toast({
+        title: "Atenção: impacto relevante no fluxo de caixa",
+        description: `O split payment pode comprometer ~${impactoLiquidoPercent.toFixed(1)}% do faturamento. Planeje reforço de capital de giro para 2027.`,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Simulação concluída",
+        description: `Impacto líquido estimado: ${impactoLiquidoPercent.toFixed(1)}% do faturamento após créditos de IBS/CBS.`,
+      });
+    }
 
     // Auto-save simulation
     if (user) {
@@ -166,11 +253,11 @@ const SplitPayment = () => {
             setor: formData.setor,
             percentual_vendas_pj: percentual,
             cenario: cenario,
+            modalidade_simples: modalidadeSimples,
           } as any,
           outputs: calculatedResult as any,
         }]);
         setSaved(true);
-        // Atualiza contagem para refletir nova simulação
         await refetchCount();
       } catch (error) {
         console.error('Error saving simulation:', error);
@@ -195,6 +282,7 @@ const SplitPayment = () => {
     });
     setResult(null);
     setSaved(false);
+    setModalidadeSimples('por_dentro');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -284,18 +372,63 @@ const SplitPayment = () => {
                   size="sm"
                   onClick={() => { setCenario('PADRAO_2027'); setResult(null); }}
                 >
-                  2027+ (Padrão: 28%)
+                  2027+ (Ref: 26,5%)
                 </Button>
               </div>
             </div>
             <p className="text-xs text-muted-foreground mt-2">
               {cenario === 'TESTE_2026' 
                 ? "Em 2026, as alíquotas são simbólicas (CBS 0,9% + IBS 0,1%) e compensadas com PIS/COFINS."
-                : "A partir de 2027, entram as alíquotas de referência (CBS 9,3% + IBS 18,7% = 28%)."
+                : "A partir de 2027, entram as alíquotas de referência (CBS 8,8% + IBS 17,7% = 26,5%)."
               }
             </p>
           </CardContent>
         </Card>
+
+        {/* Modalidade Simples Nacional */}
+        {formData.regime === 'SIMPLES' && (
+          <Card className="mb-6 border-warning/20 bg-warning/5">
+            <CardContent className="py-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <AlertTriangle className="w-5 h-5 text-warning" />
+                    <span className="font-medium text-foreground">
+                      Simples Nacional: como você vai recolher IBS/CBS?
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    A LC 214/2025 permite duas formas a partir de 2027. A escolha impacta o split payment e a competitividade com clientes PJ.
+                  </p>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <Button
+                    variant={modalidadeSimples === 'por_dentro' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => { setModalidadeSimples('por_dentro'); setResult(null); }}
+                  >
+                    Por Dentro do DAS
+                  </Button>
+                  <Button
+                    variant={modalidadeSimples === 'por_fora' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => { setModalidadeSimples('por_fora'); setResult(null); }}
+                  >
+                    Por Fora (Híbrido)
+                  </Button>
+                </div>
+              </div>
+              <div className="mt-3 grid sm:grid-cols-2 gap-3 text-xs text-muted-foreground">
+                <div className={`p-2 rounded border ${modalidadeSimples === 'por_dentro' ? 'border-primary bg-primary/5' : 'border-border'}`}>
+                  <strong>Por Dentro:</strong> IBS/CBS no DAS, alíquota reduzida (~40% menor), sem crédito para seu cliente PJ. Ideal para quem vende ao consumidor final (B2C).
+                </div>
+                <div className={`p-2 rounded border ${modalidadeSimples === 'por_fora' ? 'border-primary bg-primary/5' : 'border-border'}`}>
+                  <strong>Por Fora (Híbrido):</strong> IBS/CBS separados com alíquota cheia, gera crédito integral para seu cliente. Essencial para quem vende para outras empresas (B2B).
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Form */}
         <Card className="mb-8">
@@ -433,23 +566,54 @@ const SplitPayment = () => {
                   <p className="text-xs text-muted-foreground mb-1">CBS (Federal)</p>
                   <p className="text-lg font-semibold text-foreground">{formatCurrency(result.cbs_mensal)}</p>
                   <Badge variant="outline" className="mt-1 text-xs">
-                    {cenario === 'TESTE_2026' ? '0,9%' : '9,3%'}
+                    {cenario === 'TESTE_2026' ? '0,9%' : '8,8%'}
                   </Badge>
                 </div>
                 <div className="bg-card border border-border rounded-lg p-4 text-center shadow-sm">
                   <p className="text-xs text-muted-foreground mb-1">IBS (Est/Mun)</p>
                   <p className="text-lg font-semibold text-foreground">{formatCurrency(result.ibs_mensal)}</p>
                   <Badge variant="outline" className="mt-1 text-xs">
-                    {cenario === 'TESTE_2026' ? '0,1%' : '18,7%'}
+                    {cenario === 'TESTE_2026' ? '0,1%' : '17,7%'}
                   </Badge>
                 </div>
                 <div className="bg-card border-2 border-primary rounded-lg p-4 text-center shadow-sm">
                   <p className="text-xs text-muted-foreground mb-1">TOTAL IVA</p>
-                  <p className="text-lg font-semibold text-primary">{result.aliquota_total.toFixed(0)}%</p>
+                  <p className="text-lg font-semibold text-primary">{result.aliquota_total.toFixed(1)}%</p>
                   <Badge variant="default" className="mt-1 text-xs">
                     LC 214/2025
                   </Badge>
                 </div>
+              </div>
+
+              {/* Impacto Líquido com Créditos */}
+              {formData.setor && (
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="bg-success/5 border-2 border-success/30 rounded-xl p-5 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">CRÉDITO ESTIMADO/MÊS</p>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      {result.percentual_credito_setor > 0
+                        ? `~${result.percentual_credito_setor.toFixed(0)}% de recuperação (${getSetorLabel(formData.setor)})`
+                        : 'Simples por dentro não gera crédito para o comprador'}
+                    </p>
+                    <p className="text-xl font-bold text-success">
+                      {result.percentual_credito_setor > 0
+                        ? `+ ${formatCurrency(result.credito_estimado_mensal)}`
+                        : 'R$ 0'}
+                    </p>
+                  </div>
+                  <div className="bg-warning/5 border-2 border-warning/30 rounded-xl p-5 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">IMPACTO LÍQUIDO NO CAIXA/MÊS</p>
+                    <p className="text-xs text-muted-foreground mb-2">retenção bruta menos créditos recuperados</p>
+                    <p className="text-xl font-bold text-warning">
+                      {formatCurrency(result.impacto_liquido_mensal)}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Badge de modalidade */}
+              <div className="p-3 rounded-lg bg-muted/50 border border-border text-xs text-muted-foreground text-center">
+                📋 {result.descricao_modalidade}
               </div>
 
               {/* Explanation */}
