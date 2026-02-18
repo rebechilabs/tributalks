@@ -1,21 +1,23 @@
 
-# Correção: ICMS-ST no banco de dados
 
-## Situação atual
+# Correção: fatTotalRef na edge function analyze-credits
 
-A linha `baseIndevidaPisCofins = faturamentoMonofasico + faturamentoST` ja esta correta no codigo. Nenhuma alteracao no codigo e necessaria.
+## Problema
+Na linha 529, `fatTotalRef` usa condicionalmente `pgdasMes.receita_bruta` quando disponível, em vez de sempre usar `faturamentoTotal` (soma dos XMLs do mês). Isso distorce as proporções de cálculo.
 
-## Unica alteracao necessaria
+## Alteração
+Uma única linha na edge function `supabase/functions/analyze-credits/index.ts`:
 
-Executar UPDATE na tabela `credit_rules` para corrigir o `tax_type` da regra `SIMPLES_ICMS_ST_001` de `'ICMS'` para `'ICMS-ST'`.
-
+**Linha 527-529 (remover comentário e condicional):**
 ```text
-UPDATE credit_rules SET tax_type = 'ICMS-ST' WHERE rule_code = 'SIMPLES_ICMS_ST_001';
+// DE:
+// [CORREÇÃO #1] fatTotalRef = receita_bruta do PGDAS do mês (faturamento total declarado),
+// NÃO a soma dos XMLs processados (que são apenas uma amostra das NF-e)
+const fatTotalRef = pgdasMes.receita_bruta > 0 ? pgdasMes.receita_bruta : faturamentoTotal
+
+// PARA:
+const fatTotalRef = faturamentoTotal
 ```
 
-Depois, redeploy da edge function `analyze-credits` para garantir que esta atualizada.
+Nenhuma outra linha será alterada. Redeploy automático após a edição.
 
-## Resultado esperado
-
-- ICMS-ST passa a aparecer corretamente no dashboard (nao mais zerado)
-- PIS/COFINS permanece inalterado
