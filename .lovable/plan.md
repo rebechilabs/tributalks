@@ -1,61 +1,58 @@
 
+# Aplicar Suporte Multi-Empresa ao Wizard de Perfil
 
-# Melhorar Deteccao de Atualizacao
+## Resumo
 
-## Problema Identificado
+O arquivo enviado adiciona suporte para multiplas empresas no wizard de perfil (`PerfilEmpresa.tsx`), alem de incluir campos setoriais que faltavam no `loadProfile` e `saveProgress`. Porem, o arquivo tem alguns bugs que precisam ser corrigidos antes de aplicar.
 
-O sistema atual tem **dois mecanismos redundantes** de deteccao de atualizacao (`AppVersionChecker` + `PWAUpdater`), e ambos falham por motivos diferentes:
+## Problemas no Arquivo Enviado (que serao corrigidos)
 
-1. **`version.json` pode ser cacheado pelo Service Worker** - O Workbox cacheia arquivos estaticos, e mesmo com `cache: "no-store"` no fetch, o SW pode interceptar a requisicao antes.
-2. **Em producao, os `console.log` sao removidos** (`esbuild.drop: ["console"]`), dificultando debug.
-3. **O `AppVersionChecker` tem auto-reload agressivo** (5s countdown) que pode recarregar antes do usuario estar pronto.
+1. **`selectedCompany` nao existe** no `CompanyContext` — o nome correto e `currentCompany`
+2. **`selectedCompany.name` e `selectedCompany.cnpj`** nao existem na interface `Company` — os campos corretos sao `nome_fantasia` e `cnpj_principal`
+3. **`company_id` nao existe** na tabela `company_profile` — a propria coluna `id` da tabela e o identificador da empresa. O filtro correto para multi-empresa e `.eq('id', currentCompany.id)`
+4. **O `match-opportunities` nao aceita `company_id` no body** — ele usa o JWT para buscar o perfil. Para suporte multi-empresa, precisaria ser adaptado separadamente
 
-## Solucao
+## O Que Sera Implementado
 
-### 1. Excluir `version.json` do cache do Service Worker
+### 1. Corrigir imports e hooks
+- Trocar `selectedCompany` por `currentCompany` (do `useCompany()`)
 
-No `vite.config.ts`, adicionar `version.json` ao `navigateFallbackDenylist` e configurar o Workbox para nao cachear esse arquivo.
+### 2. Filtro multi-empresa com `getProfileFilter()`
+- Quando `currentCompany` existe, filtrar por `id = currentCompany.id`
+- Fallback para `user_id = user.id` quando nao ha empresa selecionada
 
-### 2. Unificar os mecanismos
+### 3. Banner da empresa selecionada
+- Mostrar qual empresa esta sendo configurada na tela intro
+- Usar `currentCompany.nome_fantasia || currentCompany.cnpj_principal`
 
-Remover o `AppVersionChecker` (baseado em polling do `version.json`) e confiar apenas no `PWAUpdater` que usa o Service Worker nativo para detectar mudancas. O SW ja verifica atualizacoes a cada 30 segundos.
+### 4. Campos setoriais no loadProfile e saveProgress
+- Adicionar todos os campos setor-especificos que o arquivo enviado inclui (artesanato, saude, construcao, transporte, etc.)
+- Garantir que o save e load cobrem os mesmos campos
 
-### 3. Melhorar o PWAUpdater
-
-- Reduzir o intervalo de verificacao de 30s para 15s
-- Adicionar `navigator.serviceWorker.addEventListener('controllerchange')` para detectar quando o novo SW assume controle
-- Fazer auto-reload apos o usuario aceitar a atualizacao
-
-### 4. Adicionar runtimeCaching para version.json com NetworkFirst
-
-Configurar o Workbox para sempre buscar `version.json` da rede, garantindo que nunca seja servido do cache.
+### 5. Dependencia do useEffect em `currentCompany.id`
+- Recarregar perfil ao trocar de empresa
 
 ## Detalhes Tecnicos
 
-### Arquivos a modificar:
+### Arquivo modificado:
+- `src/pages/PerfilEmpresa.tsx`
 
-1. **`vite.config.ts`** - Adicionar `version.json` ao `workbox.navigateFallbackDenylist` e excluir de `globPatterns`
-2. **`src/components/PWAUpdater.tsx`** - Melhorar com `controllerchange` listener e intervalo menor (15s)
-3. **`src/components/AppVersionChecker.tsx`** - Remover (redundante)
-4. **`src/hooks/useAppVersion.ts`** - Remover (redundante)
-5. **`src/main.tsx`** - Manter apenas `PWAUpdater`
-6. **`src/App.tsx`** - Remover referencia ao `AppVersionChecker` se existir
-
-### Mudanca no Workbox config:
-
+### Mapeamento de correcoes:
 ```text
-workbox: {
-  globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-  // Excluir version.json do pre-cache
-  globIgnores: ["**/version.json"],
-  navigateFallbackDenylist: [/^\/version\.json/],
-  ...
-}
+selectedCompany          →  currentCompany
+selectedCompany.name     →  currentCompany.nome_fantasia
+selectedCompany.cnpj     →  currentCompany.cnpj_principal
+company_id column        →  id (PK da tabela)
+{ column: "company_id" } →  { column: "id" }
 ```
 
-### Mudanca no PWAUpdater:
+### Logica do getProfileFilter:
+```text
+if currentCompany exists:
+  filter by id = currentCompany.id
+else:
+  filter by user_id = user.id
+```
 
-- Adicionar listener `controllerchange` para reload automatico quando novo SW ativa
-- Reduzir polling para 15 segundos
-- Manter a UI atual (banner com botao "Atualizar agora")
-
+### Nenhuma migracao de banco necessaria
+A tabela `company_profile` ja tem a coluna `id` como PK — nao precisa de `company_id`.
