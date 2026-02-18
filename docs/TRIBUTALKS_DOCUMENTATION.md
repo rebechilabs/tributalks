@@ -1,6 +1,6 @@
 # TribuTalks — Documentação Completa para Empresário/Dev
 
-> **Última atualização:** 5 de Fevereiro de 2026
+> **Última atualização:** 18 de Fevereiro de 2026
 
 ## Visão Geral
 
@@ -247,10 +247,12 @@ interface OnboardingProgress {
 /dashboard/recuperar       → Módulo RECUPERAR
   ├── /radar               → Radar de Créditos (XMLs, SPED, DCTF, PGDAS)
   └── /oportunidades       → Oportunidades Fiscais (61+ regras)
-/dashboard/precificacao    → Módulo PRECIFICAÇÃO
-  ├── /margem              → Suíte Margem Ativa (OMC-AI + PriceGuard)
-  ├── /split               → Calculadora Split Payment
-  └── /priceguard          → Redireciona para /margem?tab=priceguard
+/dashboard/precificacao    → Módulo PRECIFICAÇÃO (2 páginas no sidebar)
+  ├── /margem              → Suíte Margem Ativa 2026 (OMC-AI + PriceGuard)
+  └── /split               → Calculadora Split Payment
+/dashboard/planejar        → Módulo PLANEJAR
+  ├── /oportunidades       → Oportunidades Fiscais
+  └── /planejamento        → Planejamento Tributário
 /dashboard/comandar        → Módulo COMANDAR
   ├── /nexus               → Centro de Comando (4 KPIs)
   └── /valuation           → Valuation (3 metodologias)
@@ -270,6 +272,10 @@ interface OnboardingProgress {
 | `/dashboard/analise-notas` | `/dashboard/recuperar/radar` |
 | `/dashboard/margem-ativa` | `/dashboard/precificacao/margem` |
 | `/dashboard/nexus` | `/dashboard/comandar/nexus` |
+| `/dashboard/importar-xml` | `/dashboard/recuperar/radar` |
+| `/dashboard/radar-creditos` | `/dashboard/recuperar/radar` |
+| `/dashboard/recuperar/oportunidades` | `/dashboard/planejar/oportunidades` |
+| `/dashboard/priceguard` | `/dashboard/precificacao/margem?tab=priceguard` |
 
 ---
 
@@ -365,9 +371,11 @@ interface OnboardingProgress {
 - `identified_credits` - Créditos identificados
 - `credit_analysis_summary` - Resumo
 
-### 7.5 Suíte Margem Ativa
+### 7.5 Suíte Margem Ativa 2026: OMC-AI + PriceGuard
 
 **Arquivo:** `src/pages/dashboard/MargemAtiva.tsx`
+
+> **Nota:** PriceGuard **não possui página própria** — é uma aba dentro da página Margem Ativa (`/dashboard/precificacao/margem?tab=priceguard`).
 
 **3 abas:**
 
@@ -377,10 +385,19 @@ interface OnboardingProgress {
 | PriceGuard | Simulador de precificação 2027 |
 | Dashboard | Painel executivo de margens |
 
-**PriceGuard:**
-- Simulação de preço de venda
-- Cálculo de margem com CBS/IBS
+**PriceGuard — 3 formas de entrada de dados:**
+
+| Método | Descrição | Status |
+|--------|-----------|--------|
+| Importar XMLs | Extração automática de NCM, custo unitário e descrição a partir de XMLs de compra | ✅ Disponível |
+| Importar Planilha | Importação em lote via CSV/Excel | 🔜 Em breve |
+| Inserir Manualmente | Inserção manual para simulações pontuais | ✅ Disponível |
+
+**Funcionalidades PriceGuard:**
+- Simulação de preço de venda com CBS/IBS
+- Cálculo de margem projetada na transição tributária
 - Recomendação automática (Manter/Aumentar/Reduzir)
+- Suporte a inventários de grande escala (ex: supermercados com 50 mil itens)
 - Persistência em `price_simulations`
 
 ### 7.6 NEXUS (Centro de Comando)
@@ -551,9 +568,14 @@ Ao concluir: scroll para seção de preços.
 - `clara_knowledge_base` - Base de conhecimento
 - `tributbot_messages` - Mensagens (legado)
 
+**Precificação:**
+- `price_simulations` - Simulações PriceGuard
+
 **Integrações:**
 - `erp_connections` - Conexões ERP
 - `erp_sync_logs` - Logs de sincronização
+
+> **Nota:** Na tabela `sped_contribuicoes`, os campos `periodo_inicio` e `periodo_fim` são **nullable** (permitem valores nulos para arquivos não-SPED como PGDAS).
 
 **Engajamento:**
 - `user_achievements` - Conquistas
@@ -573,7 +595,7 @@ Todas as 77 tabelas possuem RLS ativado com políticas:
 
 ---
 
-## 13. Edge Functions (48 funções)
+## 13. Edge Functions (50+ funções)
 
 ### 13.1 Categorias
 
@@ -582,7 +604,10 @@ Todas as 77 tabelas possuem RLS ativado com políticas:
 - `process-sped-contribuicoes` - SPED
 - `process-dctf` - DCTF
 - `process-pgdas` - PGDAS
+- `process-dre` - Processamento de DRE
 - `analyze-document` - Documentos genéricos
+- `analyze-ncm-from-xmls` - Análise NCM a partir de XMLs
+- `analyze-suppliers` - Análise de fornecedores
 
 **Cálculos:**
 - `calculate-tax-score` - Score tributário
@@ -590,29 +615,52 @@ Todas as 77 tabelas possuem RLS ativado com políticas:
 - `analyze-credits` - Créditos tributários
 - `cross-analyze-fiscal` - Cruzamento fiscal
 - `match-opportunities` - Match de oportunidades
+- `check-score-recalculation` - Verificação de recálculo de score
 
 **IA:**
 - `clara-assistant` - Chat principal
 - `generate-clara-insights` - Insights
 - `generate-embeddings` - Vetores
+- `generate-roadmap` - Plano de ação personalizado
 - `semantic-search` - Busca semântica
+- `populate-embeddings` - Povoamento de embeddings
+- `memory-decay` - Decaimento de memórias antigas
 - `quick-diagnostic` - Diagnóstico rápido
+
+**Ações Autônomas:**
+- `trigger-autonomous-actions` - Motor de triggers automáticos
+- `execute-autonomous-action` - Execução de ações
+- `process-autonomous-cron` - Cron de processamento autônomo
+- `check-expiring-benefits` - Verificação de benefícios expirando
 
 **Relatórios:**
 - `generate-executive-report` - PDF executivo
 - `send-executive-report` - Envio por email
 - `send-batch-executive-reports` - Envio em lote
+- `send-daily-metrics` - Métricas diárias
 
 **Integrações:**
 - `erp-connection` - Conexão ERP
 - `erp-sync` - Sincronização
 - `contaazul-oauth` - OAuth ContaAzul
 - `gov-data-api` - API Receita Federal
+- `stripe-webhook` - Webhook Stripe
 
-**Notificações:**
+**Notificações e Comunicação:**
 - `send-news-alerts` - Alertas de notícias
 - `send-weekly-digest` - Resumo semanal
+- `send-contact-email` - Email de contato
 - `fetch-news` - Busca notícias
+- `process-news` - Processamento de notícias
+- `search-news` - Busca semântica de notícias
+- `notify-new-subscriber` - Notificação de novo assinante
+- `subscribe-newsletter` - Inscrição na newsletter
+- `check-platform-inactivity` - Verificação de inatividade
+
+**Comunidade e Engajamento:**
+- `invite-to-circle` - Convite para comunidade Circle
+- `process-referral-rewards` - Processamento de recompensas de indicação
+- `track-presence` - Rastreamento de presença
 
 ---
 
@@ -718,7 +766,7 @@ Conforme Termos de Uso, a plataforma TribuTalks é de natureza **EXCLUSIVAMENTE 
 | Recurso | Link |
 |---------|------|
 | Preview | https://id-preview--a0c5403f-32d5-4f40-a502-bb558f3296ac.lovable.app |
-| Produção | https://tributechai.lovable.app |
+| Produção | https://tributalks.lovable.app |
 | Suporte | suporte@tributalks.com.br |
 | WhatsApp | +55 11 91452-3971 |
 | Comunidade | https://tributalksconnect.circle.so |
@@ -742,3 +790,11 @@ Conforme Termos de Uso, a plataforma TribuTalks é de natureza **EXCLUSIVAMENTE 
 | 2026-02-05 | Fallback de dados no relatório PDF |
 | 2026-02-05 | Newsletter renomeada para "Notícias" |
 | 2026-02 | Stripe como gateway exclusivo (MercadoPago removido) |
+| 2026-02-18 | PriceGuard consolidado como aba dentro de Margem Ativa (sem página separada) |
+| 2026-02-18 | Sidebar PRECIFICAR simplificado para 2 páginas (Margem Ativa + Split Payment) |
+| 2026-02-18 | Título atualizado: "Suíte Margem Ativa 2026: OMC-AI + PriceGuard" |
+| 2026-02-18 | 3 métodos de entrada no PriceGuard (XMLs, Planilha, Manual) |
+| 2026-02-18 | Módulo PLANEJAR adicionado à estrutura de rotas |
+| 2026-02-18 | Campos `periodo_inicio`/`periodo_fim` tornados nullable no SPED |
+| 2026-02-18 | Edge functions expandidas para 50+ (ações autônomas, comunidade, métricas) |
+| 2026-02-18 | URL de produção atualizada para tributalks.lovable.app |
