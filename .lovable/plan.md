@@ -1,112 +1,51 @@
 
-# Reorganizacao dos Modulos do Sidebar
+# Melhorias de UX: DRE Inteligente e Comparativo de Regimes
 
-## Resumo das Alteracoes
+## Problema 1 -- Abas da DRE clicaveis
 
-1. **Renomear modulos** no sidebar (ENTENDER MEU NEGOCIO -> ENTENDER, RECUPERAR CREDITOS -> RECUPERAR, PRECIFICACAO -> PRECIFICAR)
-2. **Criar novo modulo PLANEJAR** entre RECUPERAR e PRECIFICAR
-3. **Mover "Oportunidades"** de RECUPERAR para PLANEJAR e renomear para "Oportunidades Tributarias"
-4. **Adicionar "Planejamento Tributario"** como placeholder "Em breve" dentro de PLANEJAR
-5. **Remover "CONEXAO & COMUNICACAO"** do sidebar (as paginas continuam acessiveis via URL)
-6. **Atualizar label "Comparativo de Regimes"** para "Comparativo de Regimes Tributarios"
+**Arquivo:** `src/components/dre/DREWizard.tsx` (linhas 362-373)
 
-## Detalhes Tecnicos
+Atualmente as abas (Suas Vendas, Custos, Despesas, Financeiro, Impostos, Produtos) sao apenas `div` sem interacao. A correcao:
 
-### 1. `src/data/menuConfig.ts` (arquivo principal)
+- Adicionar `onClick={() => setCurrentStep(step.id)}` em cada aba
+- Adicionar `cursor-pointer` na classe do container da aba
+- Adicionar efeito `hover:bg-muted/50` para feedback visual
+- Manter o check verde nas abas ja completadas (ja existe)
+- Botoes Proximo/Voltar continuam funcionando normalmente
 
-**MENU_STARTER:**
-- Renomear titulo 'ENTENDER MEU NEGOCIO' -> 'ENTENDER'
-- Atualizar label 'Comparativo de Regimes' -> 'Comparativo de Regimes Tributarios'
+**Mudanca no codigo:** Apenas a `div` da aba (linha 366) precisa de `onClick` e classes CSS extras. Nenhuma logica adicional necessaria -- o `setCurrentStep` ja existe e funciona.
 
-**MENU_NAVIGATOR:**
-- Renomear titulo 'ENTENDER MEU NEGOCIO' -> 'ENTENDER'
-- Atualizar label 'Comparativo de Regimes' -> 'Comparativo de Regimes Tributarios'
-- Renomear titulo 'RECUPERAR CREDITOS' -> 'RECUPERAR'
-- Remover "Oportunidades Fiscais" do grupo RECUPERAR (manter apenas Radar)
-- Adicionar novo grupo 'PLANEJAR' com moduleHref '/dashboard/planejar':
-  - Oportunidades Tributarias (href: `/dashboard/planejar/oportunidades`, icon: Lightbulb, badge: '61+')
-  - Planejamento Tributario (href: `/dashboard/planejar/planejamento`, icon: Route, badge: 'Em breve')
-- Remover grupo 'CONEXAO & COMUNICACAO' inteiro
+## Problema 2 -- Validacao visivel no Comparativo de Regimes
 
-**MENU_PROFESSIONAL_V2:**
-- Mesmas renomeacoes de ENTENDER, RECUPERAR
-- Adicionar grupo PLANEJAR
-- Renomear 'PRECIFICACAO' -> 'PRECIFICAR'
-- Remover 'CONEXAO & COMUNICACAO'
+**Arquivo:** `src/components/simpronto/SimprontoWizard.tsx`
 
-### 2. `src/components/dashboard/Sidebar.tsx`
+Atualmente o botao "Proximo" e desabilitado quando `faturamento_anual` esta zerado, mas nao ha mensagem explicativa. O usuario nao entende por que nao consegue avancar.
 
-- Atualizar `GROUP_TITLE_TO_KEY`:
-  - Adicionar 'ENTENDER': 'entender', 'RECUPERAR': 'recuperar', 'PRECIFICAR': 'precificacao', 'PLANEJAR': 'planejar'
-  - Remover entradas antigas ('ENTENDER MEU NEGOCIO', 'RECUPERAR CREDITOS', 'PRECIFICACAO', 'CONEXAO & COMUNICACAO')
+Correcoes:
 
-### 3. `src/components/dashboard/MobileNav.tsx`
+1. **Adicionar estado de validacao:** `const [showErrors, setShowErrors] = useState(false)`
 
-- Mesma atualizacao do `GROUP_TITLE_TO_KEY`
+2. **Trocar o comportamento do botao "Proximo":** Em vez de `disabled={!isStep1Valid()}`, o botao fica sempre habilitado. Ao clicar:
+   - Se valido: avanca para step 2
+   - Se invalido: seta `setShowErrors(true)` e faz scroll para o primeiro campo com erro
 
-### 4. `src/hooks/useRouteInfo.ts`
+3. **Mostrar mensagens de erro:** Abaixo dos campos obrigatorios (Faturamento Anual, Folha de Pagamento), quando `showErrors` e `true` e o valor e 0 ou vazio:
+   - Texto vermelho: "Este campo e obrigatorio"
+   - Borda vermelha no input: `border-destructive`
 
-- Adicionar rota '/dashboard/planejar' (modulo PLANEJAR)
-- Adicionar rota '/dashboard/planejar/oportunidades' (Oportunidades Tributarias)
-- Adicionar rota '/dashboard/planejar/planejamento' (Planejamento Tributario)
-- Atualizar labels de rotas existentes (Entender, Recuperar, Precificar)
-- Atualizar `GROUP_PATHS` com grupo 'planejar'
-- Atualizar redirect legado de `/dashboard/oportunidades` -> `/dashboard/planejar/oportunidades`
+4. **Scroll automatico:** Usar `document.getElementById('faturamento_anual')?.scrollIntoView({ behavior: 'smooth' })` para o primeiro campo invalido
 
-### 5. `src/App.tsx`
+5. **Limpar erros:** Quando o usuario digita em um campo com erro, a mensagem desaparece para aquele campo
 
-- Mover rota `/dashboard/recuperar/oportunidades` -> `/dashboard/planejar/oportunidades`
-- Adicionar rota `/dashboard/planejar/planejamento` (placeholder)
-- Adicionar rota `/dashboard/planejar` (pagina do modulo)
-- Adicionar redirect legado `/dashboard/recuperar/oportunidades` -> `/dashboard/planejar/oportunidades`
-- Atualizar redirect de `/dashboard/oportunidades` -> `/dashboard/planejar/oportunidades`
+## Resumo de arquivos alterados
 
-### 6. Criar `src/pages/dashboard/PlanejarPage.tsx` (novo)
-
-- Pagina do modulo PLANEJAR com 2 cards:
-  - Oportunidades Tributarias (link funcional)
-  - Planejamento Tributario (placeholder "Em breve")
-
-### 7. `src/pages/dashboard/RecuperarPage.tsx`
-
-- Remover card "Oportunidades Fiscais" (movido para PLANEJAR)
-- Atualizar titulo para "Recuperar"
-- Manter apenas Radar de Creditos
-
-### 8. `src/pages/dashboard/EntenderPage.tsx`
-
-- Atualizar titulo "Entender Meu Negocio" -> "Entender"
-- Atualizar label "Comparativo de Regimes Tributarios" no card
-
-### 9. `src/pages/dashboard/PrecificacaoPage.tsx`
-
-- Atualizar titulo "Precificacao" -> "Precificar"
-
-### 10. Arquivos com referencias a "Oportunidades Fiscais" (renomear para "Oportunidades Tributarias")
-
-- `src/hooks/useClaraContext.ts` (label da rota)
-- `src/components/common/ClaraProactive.tsx` (titulo do insight)
-- `src/components/common/ClaraContextualCard.tsx` (contexto da rota)
-- `src/components/common/ClaraContextualSuggestion.tsx` (rota)
-- `src/components/common/FloatingAssistant.tsx` (mapeamento de rota)
-
-### 11. Outros arquivos com links para `/dashboard/recuperar/oportunidades` ou `/dashboard/oportunidades`
-
-- `src/hooks/useDashboardData.ts` - atualizar link
-- `src/hooks/useUserProgress.ts` - atualizar link
-- `src/components/common/NextStepCta.tsx` - atualizar href
-- `src/components/dashboard/NextStepRecommendation.tsx` - atualizar href
-- `src/components/dashboard/ExpiringBenefitsAlert.tsx` - atualizar link
-- `src/components/executive/ExecutiveProjects.tsx` - atualizar link
-- `src/pages/PerfilEmpresa.tsx` - atualizar navigate
-- `src/pages/Dashboard.tsx` - atualizar href
+| Arquivo | Alteracao |
+|---|---|
+| `src/components/dre/DREWizard.tsx` | Adicionar onClick + cursor-pointer + hover nas abas |
+| `src/components/simpronto/SimprontoWizard.tsx` | Adicionar validacao visual com mensagens de erro |
 
 ## O que NAO sera alterado
-
-- Botoes da landing page (PricingSection, NewPricingSection)
+- Botoes da landing page
 - Configuracoes do Stripe
 - Logica de trial de 7 dias
-- Valuation
-- Estrutura de migrations
-- Paginas de Oportunidades em si (apenas o path muda)
-- Sidebar styling (icones dourados, fundo escuro, chevron)
+- Nenhum outro modulo
