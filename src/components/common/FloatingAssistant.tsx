@@ -1,15 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
-import { Sparkles, Send, Mic, MicOff, Volume2, VolumeX, X } from "lucide-react";
 import { useClaraShortcut } from "@/hooks/useKeyboardShortcuts";
 import { useClaraContext, formatContextForAPI } from "@/hooks/useClaraContext";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import ReactMarkdown from "react-markdown";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,10 +11,12 @@ import { ClaraFloatingButton } from "./ClaraFloatingButton";
 import { ClaraOnboardingTooltip } from "./ClaraProactive";
 import { ClaraActionsDrawer } from "@/components/clara/ClaraActionsDrawer";
 import { useClaraAutonomousActions } from "@/hooks/clara";
+import { ClaraSidePanel } from "./ClaraSidePanel";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  agent?: string | null;
 }
 
 interface ConversationStarter {
@@ -238,7 +234,6 @@ export function FloatingAssistant() {
   const [isGettingStarted, setIsGettingStarted] = useState(false);
   const [isProcessingCommand, setIsProcessingCommand] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const location = useLocation();
 
   // Global keyboard shortcut (Cmd+K / Ctrl+K)
@@ -362,23 +357,9 @@ export function FloatingAssistant() {
     }
   }, [isOpen, hasGreeted, messages.length, isGettingStarted]);
 
-  // Focus input after messages load
-  useEffect(() => {
-    if (isOpen && hasGreeted && !isLoading && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isOpen, hasGreeted, isLoading]);
+  // Focus and scroll are now handled by ClaraSidePanel
 
-  // Scroll to bottom on new messages
-  useEffect(() => {
-    if (scrollRef.current) {
-      // ScrollArea uses a viewport inside, need to scroll that
-      const viewport = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (viewport) {
-        viewport.scrollTop = viewport.scrollHeight;
-      }
-    }
-  }, [messages, isLoading]);
+  // Scroll handled by ClaraSidePanel
 
   // Auto-speak assistant messages
   useEffect(() => {
@@ -505,7 +486,7 @@ Você também pode me fazer qualquer pergunta sobre a Reforma Tributária!`;
         return;
       }
 
-      setMessages(prev => [...prev, { role: "assistant", content: data.message }]);
+      setMessages(prev => [...prev, { role: "assistant", content: data.message, agent: data.agent || null }]);
     } catch (error) {
       console.error("Message error:", error);
       toast.error("Erro ao enviar mensagem. Tente novamente.");
@@ -552,176 +533,34 @@ Você também pode me fazer qualquer pergunta sobre a Reforma Tributária!`;
     }
   };
 
-  const showStarters = messages.length === 1 && hasGreeted && !isLoading;
-  const hasVoiceSupport = isSpeechRecognitionSupported || isSpeechSynthesisSupported;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
-      {/* Chat Card */}
-      <div
-        className={`absolute bottom-20 right-0 w-80 md:w-[420px] transition-all duration-300 ease-out ${
-          isOpen 
-            ? "opacity-100 translate-y-0 scale-100 pointer-events-auto" 
-            : "opacity-0 translate-y-4 scale-95 pointer-events-none"
-        }`}
-      >
-        <Card className="shadow-2xl border-primary/20 overflow-hidden">
-          <CardHeader className="p-3 border-b border-border flex flex-row items-center gap-3 bg-gradient-to-r from-primary/5 to-transparent">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shrink-0 shadow-lg shadow-primary/30">
-              <Sparkles className={`w-5 h-5 text-primary-foreground transition-transform duration-500 ${isOpen ? 'rotate-0' : 'rotate-180'}`} />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-foreground text-sm">Clara</h3>
-              <p className="text-xs text-muted-foreground">Especialista em Reforma Tributária</p>
-            </div>
-            
-            {/* Voice controls */}
-            {hasVoiceSupport && (
-              <div className="flex gap-1">
-                {isSpeechSynthesisSupported && (
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className={`h-8 w-8 transition-colors duration-200 ${autoSpeak || isSpeaking ? 'text-primary' : 'text-muted-foreground'}`}
-                    onClick={handleSpeakToggle}
-                    title={isSpeaking ? "Parar leitura" : autoSpeak ? "Desativar leitura automática" : "Ativar leitura automática"}
-                  >
-                    {isSpeaking || autoSpeak ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-                  </Button>
-                )}
-              </div>
-            )}
-            
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8 hover:rotate-90 transition-transform duration-200" 
-              onClick={() => setIsOpen(false)}
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </CardHeader>
+    <>
+      {/* Side Panel */}
+      <ClaraSidePanel
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        messages={messages}
+        input={input}
+        onInputChange={setInput}
+        onSend={sendMessage}
+        onKeyPress={handleKeyPress}
+        isLoading={isLoading}
+        hasGreeted={hasGreeted}
+        isListening={isListening}
+        isSpeechRecognitionSupported={isSpeechRecognitionSupported}
+        isSpeechSynthesisSupported={isSpeechSynthesisSupported}
+        autoSpeak={autoSpeak}
+        isSpeaking={isSpeaking}
+        onVoiceToggle={handleVoiceToggle}
+        onSpeakToggle={handleSpeakToggle}
+        starters={starters}
+        onStarterClick={handleStarterClick}
+        isProcessingCommand={isProcessingCommand}
+        onCommand={(cmd) => handleSlashCommand(`/${cmd}`)}
+      />
 
-          <CardContent className="p-0">
-            {/* Messages Area */}
-            <ScrollArea className="h-80 p-3 [&_[data-radix-scroll-area-viewport]]:!overflow-y-auto" ref={scrollRef as React.RefObject<HTMLDivElement>}>
-              <div className="space-y-3">
-                {messages.length === 0 && !isLoading && (
-                  <div className="text-center text-muted-foreground text-sm py-8 animate-fade-in">
-                    <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-50 animate-pulse" />
-                    <p>Olá! Sou a Clara.</p>
-                    <p className="text-xs">Especialista em Reforma Tributária</p>
-                  </div>
-                )}
-                
-                {messages.map((msg, i) => (
-                  <div
-                    key={i}
-                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} animate-fade-in`}
-                    style={{ animationDelay: `${i * 50}ms` }}
-                  >
-                    <div
-                      className={`max-w-[85%] rounded-lg px-3 py-2 text-sm transition-all duration-200 hover:shadow-md ${
-                        msg.role === "user"
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-foreground"
-                      }`}
-                    >
-                      {msg.role === "assistant" ? (
-                        <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:my-1 [&>ul]:my-1 [&>ol]:my-1 [&_strong]:font-semibold">
-                          <ReactMarkdown skipHtml>{msg.content}</ReactMarkdown>
-                        </div>
-                      ) : (
-                        msg.content
-                      )}
-                    </div>
-                  </div>
-                ))}
-
-                {/* Conversation Starters */}
-                {showStarters && starters.length > 0 && (
-                  <div className="pt-2 animate-fade-in">
-                    <p className="text-xs text-muted-foreground mb-2">Perguntas frequentes:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {starters.map((starter, i) => (
-                        <button
-                          key={starter.id}
-                          onClick={() => handleStarterClick(starter)}
-                          className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 hover:scale-105 transition-all duration-200 text-left"
-                          style={{ animationDelay: `${i * 75}ms` }}
-                        >
-                          {starter.shortLabel}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {isLoading && (
-                  <div className="flex justify-start animate-fade-in">
-                    <div className="bg-muted rounded-lg px-4 py-3 flex items-center gap-2">
-                      <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
-
-            {/* Input Area */}
-            <div className="p-3 border-t border-border">
-              <div className="flex gap-2">
-                <Input
-                  ref={inputRef}
-                  placeholder={isListening ? "Escutando..." : "Pergunte ou use /ajuda..."}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  disabled={isLoading || isListening || isProcessingCommand}
-                  className={`text-sm transition-all duration-300 ${isListening ? 'border-primary ring-2 ring-primary/30' : ''}`}
-                />
-                
-                {/* Microphone button */}
-                {isSpeechRecognitionSupported && (
-                  <Button 
-                    size="icon" 
-                    variant={isListening ? "default" : "outline"}
-                    onClick={handleVoiceToggle}
-                    disabled={isLoading}
-                    className={`shrink-0 transition-all duration-200 ${isListening ? 'bg-destructive hover:bg-destructive/90 scale-110' : 'hover:scale-105'}`}
-                    title={isListening ? "Parar gravação" : "Falar com a Clara"}
-                  >
-                    {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                  </Button>
-                )}
-                
-                <Button 
-                  size="icon" 
-                  onClick={() => sendMessage()} 
-                  disabled={!input.trim() || isLoading}
-                  className="shrink-0 transition-transform duration-200 hover:scale-105 active:scale-95"
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
-              </div>
-              
-              {/* Voice status indicator */}
-              {isListening && (
-                <p className="text-xs text-primary mt-2 flex items-center gap-2 animate-fade-in">
-                  <span className="relative flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-destructive" />
-                  </span>
-                  Escutando... Fale sua pergunta
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Onboarding Tooltip - appears on first visit to each page */}
+      {/* Onboarding Tooltip */}
       <ClaraOnboardingTooltip />
 
       {/* Actions Drawer */}
@@ -731,12 +570,14 @@ Você também pode me fazer qualquer pergunta sobre a Reforma Tributária!`;
       />
 
       {/* Floating Button */}
-      <ClaraFloatingButton
-        isOpen={isOpen}
-        onClick={() => isOpen ? setIsOpen(false) : handleOpen()}
-        pendingActionsCount={pendingCount}
-        onActionsClick={() => setIsActionsDrawerOpen(true)}
-      />
-    </div>
+      <div className="fixed bottom-6 right-6 z-50">
+        <ClaraFloatingButton
+          isOpen={isOpen}
+          onClick={() => isOpen ? setIsOpen(false) : handleOpen()}
+          pendingActionsCount={pendingCount}
+          onActionsClick={() => setIsActionsDrawerOpen(true)}
+        />
+      </div>
+    </>
   );
 }

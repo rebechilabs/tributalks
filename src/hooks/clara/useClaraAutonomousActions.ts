@@ -37,10 +37,10 @@ export interface ActionTrigger {
 // ============================================
 
 export const AUTO_TRIGGERS: Record<string, ActionTrigger> = {
-  // Fiscal Agent Triggers
+  // Entender Agent Triggers
   'xml_imported': {
     event: 'xml_imported',
-    agentType: 'fiscal',
+    agentType: 'entender',
     actionType: 'analyze_credits',
     payload: { analysis_type: 'full' },
     requiresApproval: false,
@@ -48,7 +48,7 @@ export const AUTO_TRIGGERS: Record<string, ActionTrigger> = {
   },
   'score_below_60': {
     event: 'score_below_threshold',
-    agentType: 'fiscal',
+    agentType: 'entender',
     actionType: 'generate_compliance_alert',
     payload: { threshold: 60, severity: 'high' },
     requiresApproval: false,
@@ -56,17 +56,17 @@ export const AUTO_TRIGGERS: Record<string, ActionTrigger> = {
   },
   'dctf_gap_detected': {
     event: 'dctf_gap_detected',
-    agentType: 'fiscal',
+    agentType: 'recuperar',
     actionType: 'notify_gap',
     payload: { notification_type: 'gap_alert' },
     requiresApproval: false,
     priority: 'urgent',
   },
   
-  // Margin Agent Triggers
+  // Precificar Agent Triggers
   'margin_drop_5pp': {
     event: 'margin_drop_detected',
-    agentType: 'margin',
+    agentType: 'precificar',
     actionType: 'generate_margin_alert',
     payload: { drop_threshold: 5 },
     requiresApproval: false,
@@ -74,17 +74,17 @@ export const AUTO_TRIGGERS: Record<string, ActionTrigger> = {
   },
   'dre_updated': {
     event: 'dre_updated',
-    agentType: 'margin',
+    agentType: 'entender',
     actionType: 'recalculate_projections',
     payload: {},
     requiresApproval: false,
     priority: 'low',
   },
   
-  // Compliance Agent Triggers
+  // Planejar Agent Triggers
   'deadline_7_days': {
     event: 'deadline_approaching',
-    agentType: 'compliance',
+    agentType: 'planejar',
     actionType: 'send_deadline_reminder',
     payload: { days_before: 7 },
     requiresApproval: false,
@@ -92,7 +92,7 @@ export const AUTO_TRIGGERS: Record<string, ActionTrigger> = {
   },
   'benefit_expiring': {
     event: 'benefit_expiring',
-    agentType: 'compliance',
+    agentType: 'planejar',
     actionType: 'alert_benefit_expiration',
     payload: {},
     requiresApproval: false,

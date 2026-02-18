@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 // TIPOS DOS AGENTES ESPECIALIZADOS
 // ============================================
 
-export type AgentType = 'fiscal' | 'margin' | 'compliance' | 'orchestrator';
+export type AgentType = 'entender' | 'precificar' | 'recuperar' | 'planejar' | 'comandar' | 'orchestrator';
 
 export interface ClaraAgent {
   id: string;
@@ -116,46 +116,46 @@ export function useClaraAgents() {
     const lowerQuery = query.toLowerCase();
     
     // Keywords para cada agente
-    const fiscalKeywords = [
+    const entenderKeywords = [
+      'dre', 'score', 'margem bruta', 'margem líquida', 'regime', 'comparativo',
+      'diagnóstico', 'faturamento', 'receita', 'despesa', 'ebitda'
+    ];
+    const precificarKeywords = [
+      'preço', 'cobrar', 'markup', 'margem ativa', 'precific',
+      'fornecedor', 'negociação', 'desconto', 'ponto de equilíbrio'
+    ];
+    const recuperarKeywords = [
       'crédito', 'credito', 'ncm', 'cfop', 'icms', 'pis', 'cofins', 'ipi',
-      'xml', 'nota fiscal', 'dctf', 'sped', 'obrigação', 'compliance',
-      'autuação', 'fiscalização', 'restituição', 'compensação'
+      'xml', 'nota fiscal', 'radar', 'recuperar', 'prescrição', 'compensação'
     ];
-    
-    const marginKeywords = [
-      'margem', 'dre', 'lucro', 'receita', 'despesa', 'ebitda', 'custo',
-      'preço', 'pricing', 'fornecedor', 'compra', 'venda', 'markup',
-      'rentabilidade', 'fluxo de caixa', 'cashflow'
+    const planejarKeywords = [
+      'oportunidade', 'benefício', 'incentivo', 'cisão', 'filial',
+      'planejamento', 'economia', '2027', 'reforma', 'cenário'
     ];
-    
-    const complianceKeywords = [
-      'prazo', 'deadline', 'vencimento', 'obrigação', 'reforma',
-      'cronograma', 'timeline', 'vigência', 'lei', 'regulamento',
-      'adequação', 'checklist', 'certidão', 'regularidade'
+    const comandarKeywords = [
+      'resumo', 'relatório', 'pdf', 'alerta', 'kpi', 'executivo',
+      'contador', 'nexus', 'painel', 'indicador'
     ];
     
     // Conta matches
-    const fiscalScore = fiscalKeywords.filter(kw => lowerQuery.includes(kw)).length;
-    const marginScore = marginKeywords.filter(kw => lowerQuery.includes(kw)).length;
-    const complianceScore = complianceKeywords.filter(kw => lowerQuery.includes(kw)).length;
+    const scores = [
+      { type: 'entender' as AgentType, score: entenderKeywords.filter(kw => lowerQuery.includes(kw)).length },
+      { type: 'precificar' as AgentType, score: precificarKeywords.filter(kw => lowerQuery.includes(kw)).length },
+      { type: 'recuperar' as AgentType, score: recuperarKeywords.filter(kw => lowerQuery.includes(kw)).length },
+      { type: 'planejar' as AgentType, score: planejarKeywords.filter(kw => lowerQuery.includes(kw)).length },
+      { type: 'comandar' as AgentType, score: comandarKeywords.filter(kw => lowerQuery.includes(kw)).length },
+    ];
     
     // Contexto da tela também influencia
-    if (context.screen.includes('radar') || context.screen.includes('xml')) {
-      return 'fiscal';
-    }
-    if (context.screen.includes('dre') || context.screen.includes('margem')) {
-      return 'margin';
-    }
-    if (context.screen.includes('timeline') || context.screen.includes('checklist')) {
-      return 'compliance';
-    }
+    if (context.screen.includes('radar') || context.screen.includes('xml')) return 'recuperar';
+    if (context.screen.includes('dre') || context.screen.includes('score')) return 'entender';
+    if (context.screen.includes('margem') || context.screen.includes('precif')) return 'precificar';
+    if (context.screen.includes('oportunidade') || context.screen.includes('planejar')) return 'planejar';
+    if (context.screen.includes('nexus') || context.screen.includes('painel')) return 'comandar';
     
-    // Retorna baseado em scores
-    const maxScore = Math.max(fiscalScore, marginScore, complianceScore);
-    if (maxScore === 0) return 'orchestrator';
-    if (fiscalScore === maxScore) return 'fiscal';
-    if (marginScore === maxScore) return 'margin';
-    return 'compliance';
+    const best = scores.reduce((a, b) => a.score > b.score ? a : b);
+    if (best.score === 0) return 'orchestrator';
+    return best.type;
   }, []);
 
   // Aprova uma ação pendente
