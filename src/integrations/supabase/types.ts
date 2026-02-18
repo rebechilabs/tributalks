@@ -1111,6 +1111,7 @@ export type Database = {
         Row: {
           agricultura: boolean | null
           area_livre_comercio: boolean | null
+          artesanato_regional: boolean
           atividades_diferentes_tributacao: boolean | null
           centro_distribuicao_incentivado: boolean | null
           centro_distribuicao_zfm: boolean | null
@@ -1121,6 +1122,8 @@ export type Database = {
           cnpjs_grupo: string[] | null
           comercializa_commodities: boolean | null
           comercializa_medicamentos: boolean | null
+          compra_artesao_local: boolean
+          compra_cooperativas: boolean
           compra_equipamento_solar: boolean | null
           compra_equipamentos_medicos: boolean | null
           compra_insumos_agricolas: boolean | null
@@ -1137,7 +1140,9 @@ export type Database = {
           escola_regular: boolean | null
           estado_beneficio_icms: string | null
           etapa_atual: number | null
+          exporta_artesanato: boolean
           exporta_produtos: boolean | null
+          exporta_revenda_artesanato: boolean
           exporta_servicos: boolean | null
           faculdade: boolean | null
           fator_r_acima_28: boolean | null
@@ -1161,13 +1166,17 @@ export type Database = {
           investe_tecnologia_educacional: boolean | null
           is_active: boolean | null
           laboratorio: boolean | null
+          loja_fisica_artesanato: boolean
           margem_bruta_percentual: number | null
+          mei_artesao: boolean
           municipio_sede: string | null
           nome_fantasia: string | null
           num_funcionarios: number | null
           opera_outros_estados: boolean | null
           opera_todo_brasil: boolean | null
           operacao_interestadual: boolean | null
+          participa_feiras: boolean
+          participa_feiras_revenda: boolean
           patrimonio_afetacao: boolean | null
           pecuaria: boolean | null
           percentual_exportacao: number | null
@@ -1193,12 +1202,14 @@ export type Database = {
           receita_liquida_mensal: number | null
           regime_tributario: string | null
           regimes_no_grupo: string[] | null
+          revende_artesanato_regional: boolean
           segmento: string | null
           setor: string | null
           tem_area_preservacao: boolean | null
           tem_atividade_pd: boolean | null
           tem_atividades_mistas: boolean | null
           tem_bar: boolean | null
+          tem_carteira_artesao: boolean
           tem_ecommerce: boolean | null
           tem_filiais: boolean | null
           tem_geracao_solar: boolean | null
@@ -1218,8 +1229,10 @@ export type Database = {
           uf_sede: string | null
           ufs_operacao: string[] | null
           updated_at: string | null
+          usa_insumos_naturais: boolean
           usa_plataformas_delivery: boolean | null
           user_id: string
+          venda_direta_consumidor: boolean
           vende_automoveis: boolean | null
           vende_autopecas: boolean | null
           vende_bebidas: boolean | null
@@ -1234,6 +1247,7 @@ export type Database = {
           vende_pneus: boolean | null
           vende_produtos: boolean | null
           vende_servicos: boolean | null
+          vende_turistas: boolean
           vende_whatsapp_social: boolean | null
           zona_especial: string | null
           zona_franca: boolean | null
@@ -1241,6 +1255,7 @@ export type Database = {
         Insert: {
           agricultura?: boolean | null
           area_livre_comercio?: boolean | null
+          artesanato_regional?: boolean
           atividades_diferentes_tributacao?: boolean | null
           centro_distribuicao_incentivado?: boolean | null
           centro_distribuicao_zfm?: boolean | null
@@ -1251,6 +1266,8 @@ export type Database = {
           cnpjs_grupo?: string[] | null
           comercializa_commodities?: boolean | null
           comercializa_medicamentos?: boolean | null
+          compra_artesao_local?: boolean
+          compra_cooperativas?: boolean
           compra_equipamento_solar?: boolean | null
           compra_equipamentos_medicos?: boolean | null
           compra_insumos_agricolas?: boolean | null
@@ -1267,7 +1284,9 @@ export type Database = {
           escola_regular?: boolean | null
           estado_beneficio_icms?: string | null
           etapa_atual?: number | null
+          exporta_artesanato?: boolean
           exporta_produtos?: boolean | null
+          exporta_revenda_artesanato?: boolean
           exporta_servicos?: boolean | null
           faculdade?: boolean | null
           fator_r_acima_28?: boolean | null
@@ -1291,13 +1310,17 @@ export type Database = {
           investe_tecnologia_educacional?: boolean | null
           is_active?: boolean | null
           laboratorio?: boolean | null
+          loja_fisica_artesanato?: boolean
           margem_bruta_percentual?: number | null
+          mei_artesao?: boolean
           municipio_sede?: string | null
           nome_fantasia?: string | null
           num_funcionarios?: number | null
           opera_outros_estados?: boolean | null
           opera_todo_brasil?: boolean | null
           operacao_interestadual?: boolean | null
+          participa_feiras?: boolean
+          participa_feiras_revenda?: boolean
           patrimonio_afetacao?: boolean | null
           pecuaria?: boolean | null
           percentual_exportacao?: number | null
@@ -1323,12 +1346,14 @@ export type Database = {
           receita_liquida_mensal?: number | null
           regime_tributario?: string | null
           regimes_no_grupo?: string[] | null
+          revende_artesanato_regional?: boolean
           segmento?: string | null
           setor?: string | null
           tem_area_preservacao?: boolean | null
           tem_atividade_pd?: boolean | null
           tem_atividades_mistas?: boolean | null
           tem_bar?: boolean | null
+          tem_carteira_artesao?: boolean
           tem_ecommerce?: boolean | null
           tem_filiais?: boolean | null
           tem_geracao_solar?: boolean | null
@@ -1348,8 +1373,10 @@ export type Database = {
           uf_sede?: string | null
           ufs_operacao?: string[] | null
           updated_at?: string | null
+          usa_insumos_naturais?: boolean
           usa_plataformas_delivery?: boolean | null
           user_id: string
+          venda_direta_consumidor?: boolean
           vende_automoveis?: boolean | null
           vende_autopecas?: boolean | null
           vende_bebidas?: boolean | null
@@ -1364,6 +1391,7 @@ export type Database = {
           vende_pneus?: boolean | null
           vende_produtos?: boolean | null
           vende_servicos?: boolean | null
+          vende_turistas?: boolean
           vende_whatsapp_social?: boolean | null
           zona_especial?: string | null
           zona_franca?: boolean | null
@@ -1371,6 +1399,7 @@ export type Database = {
         Update: {
           agricultura?: boolean | null
           area_livre_comercio?: boolean | null
+          artesanato_regional?: boolean
           atividades_diferentes_tributacao?: boolean | null
           centro_distribuicao_incentivado?: boolean | null
           centro_distribuicao_zfm?: boolean | null
@@ -1381,6 +1410,8 @@ export type Database = {
           cnpjs_grupo?: string[] | null
           comercializa_commodities?: boolean | null
           comercializa_medicamentos?: boolean | null
+          compra_artesao_local?: boolean
+          compra_cooperativas?: boolean
           compra_equipamento_solar?: boolean | null
           compra_equipamentos_medicos?: boolean | null
           compra_insumos_agricolas?: boolean | null
@@ -1397,7 +1428,9 @@ export type Database = {
           escola_regular?: boolean | null
           estado_beneficio_icms?: string | null
           etapa_atual?: number | null
+          exporta_artesanato?: boolean
           exporta_produtos?: boolean | null
+          exporta_revenda_artesanato?: boolean
           exporta_servicos?: boolean | null
           faculdade?: boolean | null
           fator_r_acima_28?: boolean | null
@@ -1421,13 +1454,17 @@ export type Database = {
           investe_tecnologia_educacional?: boolean | null
           is_active?: boolean | null
           laboratorio?: boolean | null
+          loja_fisica_artesanato?: boolean
           margem_bruta_percentual?: number | null
+          mei_artesao?: boolean
           municipio_sede?: string | null
           nome_fantasia?: string | null
           num_funcionarios?: number | null
           opera_outros_estados?: boolean | null
           opera_todo_brasil?: boolean | null
           operacao_interestadual?: boolean | null
+          participa_feiras?: boolean
+          participa_feiras_revenda?: boolean
           patrimonio_afetacao?: boolean | null
           pecuaria?: boolean | null
           percentual_exportacao?: number | null
@@ -1453,12 +1490,14 @@ export type Database = {
           receita_liquida_mensal?: number | null
           regime_tributario?: string | null
           regimes_no_grupo?: string[] | null
+          revende_artesanato_regional?: boolean
           segmento?: string | null
           setor?: string | null
           tem_area_preservacao?: boolean | null
           tem_atividade_pd?: boolean | null
           tem_atividades_mistas?: boolean | null
           tem_bar?: boolean | null
+          tem_carteira_artesao?: boolean
           tem_ecommerce?: boolean | null
           tem_filiais?: boolean | null
           tem_geracao_solar?: boolean | null
@@ -1478,8 +1517,10 @@ export type Database = {
           uf_sede?: string | null
           ufs_operacao?: string[] | null
           updated_at?: string | null
+          usa_insumos_naturais?: boolean
           usa_plataformas_delivery?: boolean | null
           user_id?: string
+          venda_direta_consumidor?: boolean
           vende_automoveis?: boolean | null
           vende_autopecas?: boolean | null
           vende_bebidas?: boolean | null
@@ -1494,6 +1535,7 @@ export type Database = {
           vende_pneus?: boolean | null
           vende_produtos?: boolean | null
           vende_servicos?: boolean | null
+          vende_turistas?: boolean
           vende_whatsapp_social?: boolean | null
           zona_especial?: string | null
           zona_franca?: boolean | null
