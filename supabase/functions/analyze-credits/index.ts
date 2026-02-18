@@ -438,7 +438,7 @@ serve(async (req) => {
       const simplesIcmsStRule = applicableRules.find((r: CreditRule) => r.rule_code === 'SIMPLES_ICMS_ST_001')
 
       // Build PGDAS reparticao index by YYYY-MM
-      const pgdasByMonth: Record<string, { pis: number, cofins: number, icms: number, periodo: string }> = {}
+      const pgdasByMonth: Record<string, { pis: number, cofins: number, icms: number, receita_bruta: number, periodo: string }> = {}
       if (allPgdasWithReparticao) {
         for (const pgdas of allPgdasWithReparticao) {
           const dc = pgdas.dados_completos as Record<string, unknown>
@@ -451,6 +451,7 @@ serve(async (req) => {
             pis: rep.pis || 0,
             cofins: rep.cofins || 0,
             icms: rep.icms || 0,
+            receita_bruta: pgdas.receita_bruta || (dc?.receita_bruta as number) || 0,
             periodo,
           }
         }
@@ -516,15 +517,16 @@ serve(async (req) => {
 
         if (faturamentoTotal <= 0) continue
 
-        // [CORREÇÃO #1] fatTotalRef = soma dos XMLs do mês, NÃO receita_bruta do PGDAS
-        const fatTotalRef = faturamentoTotal
-
         // Find PGDAS repartição for this month
         const pgdasMes = pgdasByMonth[mes]
         if (!pgdasMes) {
           console.warn(`[analyze-credits] Mês ${mes}: sem PGDAS repartição. Pulando. fatTotal=${faturamentoTotal}, fatMono=${faturamentoMonofasico}, fatST=${faturamentoST}`)
           continue
         }
+
+        // [CORREÇÃO #1] fatTotalRef = receita_bruta do PGDAS do mês (faturamento total declarado),
+        // NÃO a soma dos XMLs processados (que são apenas uma amostra das NF-e)
+        const fatTotalRef = pgdasMes.receita_bruta > 0 ? pgdasMes.receita_bruta : faturamentoTotal
 
         const baseIndevidaPisCofins = faturamentoMonofasico + faturamentoST
         if (baseIndevidaPisCofins <= 0 && faturamentoST <= 0) continue
