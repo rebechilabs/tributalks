@@ -1,58 +1,51 @@
 
-# Correcao: Datas Duplicadas no Grafico de Evolucao do Score
+# Correcao Visual: Espacamento Excessivo na Landing Page
 
 ## Problema
 
-O eixo X do grafico usa formato "dd/MM", causando labels repetidos quando ha multiplas avaliacoes no mesmo dia (ex: "23/01, 23/01, 26/01, 26/01").
+A landing page tem dois problemas de espacamento:
+1. O arquivo `src/App.css` contem estilos padrao do Vite (`#root { max-width: 1280px; padding: 2rem }`) que adicionam padding desnecessario e restringem o layout
+2. As secoes usam `py-20 md:py-32` (128px de padding em cada lado no desktop), criando 256px de espaco total entre conteudos -- excessivo para uma landing page moderna
 
-## Solucao
+## O que sera feito
 
-Editar apenas `src/components/score/ScoreHistoryChart.tsx` com as seguintes mudancas:
+### 1. Limpar `src/App.css`
+Remover os estilos padrao do Vite no `#root` (max-width, padding, text-align) e classes nao utilizadas (`.logo`, `.card`, `.read-the-docs`). Essas regras sao sobras do template inicial e nao sao usadas pelo app.
 
-### 1. Agrupar por dia e manter apenas a ultima avaliacao
+### 2. Reduzir padding vertical das secoes da landing page
+Padronizar o espacamento em `py-16 md:py-20` (maximo ~80px por lado no desktop), respeitando o limite solicitado de 80px entre secoes:
 
-Antes de formatar os dados para o grafico, agrupar as entradas por data (dia) e manter apenas a mais recente de cada dia. Isso elimina duplicatas na raiz.
+| Componente | Antes | Depois |
+|---|---|---|
+| ProblemSection | `pt-10 pb-20 md:pb-32` | `pt-10 pb-16 md:pb-20` |
+| DemoSection | `py-20 md:py-32` | `py-16 md:py-20` |
+| ClaraSection | `py-20 md:py-32` | `py-16 md:py-20` |
+| NewPricingSection | `py-20 md:py-32` | `py-16 md:py-20` |
+| TestimonialsSection | `py-20 md:py-32` | `py-16 md:py-20` |
+| SecuritySection | `py-20 md:py-32` | `py-16 md:py-20` |
 
-```
-// Agrupar por dia, manter ultima avaliacao
-const latestPerDay = Map<string, entry> -> ultimo de cada "YYYY-MM-DD"
-```
+A RTCCalculatorSection ja usa `py-16 md:py-24` e sera ajustada para `py-16 md:py-20` por consistencia.
 
-### 2. Formato adaptativo no eixo X
+### 3. Reduzir espaco no footer CTA
+O CTA final dentro do `NewFooter` usa `py-16 md:py-24`. Sera reduzido para `py-12 md:py-16` para manter proporcao.
 
-Calcular a diferenca em dias entre a primeira e ultima avaliacao:
-
-- Menos de 7 dias: formato "dd/MM HH:mm"
-- 7 a 30 dias: formato "dd/MM"
-- Mais de 30 dias: formato "dd MMM" (ex: "23 Jan")
-
-### 3. Garantir labels unicos consecutivos
-
-Apos formatar, verificar se ha labels consecutivos iguais. Se houver, adicionar horario ao segundo para diferenciar.
+## O que NAO muda
+- Botoes CTA ("Comece seus 7 dias gratis") -- mantidos intactos
+- Configuracoes do Stripe
+- Logica de trial de 7 dias
+- Hero section (layout e imagem de fundo)
+- Footer (links, legal disclaimer, powered by)
+- Responsividade mobile -- ajustes respeitam breakpoints
 
 ## Secao tecnica
 
-### Arquivo editado
-- `src/components/score/ScoreHistoryChart.tsx`
-
-### Logica detalhada
-
-1. Apos o fetch dos dados (`history`), criar um `Map` agrupando por `format(date, 'yyyy-MM-dd')`. Para cada chave, manter apenas a entrada com `calculated_at` mais recente.
-
-2. Substituir `history` pelo array filtrado antes de gerar `chartData`.
-
-3. Calcular `daySpan = differenceInDays(lastDate, firstDate)` usando `date-fns` (ja importado).
-
-4. Escolher formato de data baseado no `daySpan`:
-   - `daySpan < 7` -> "dd/MM HH:mm"
-   - `daySpan <= 30` -> "dd/MM"
-   - `daySpan > 30` -> "dd MMM"
-
-5. Apos formatar, iterar pelo array e se `chartData[i].date === chartData[i-1].date`, adicionar horario ao label duplicado.
-
-### O que NAO muda
-- Query ao banco (continua buscando 12 entradas)
-- Tooltip (continua mostrando data completa)
-- Calculo de tendencia (continua usando os 2 ultimos do array original)
-- Logica de calculo do Score
-- Landing page, Stripe, trial
+### Arquivos editados
+- `src/App.css` -- Remover regras `#root`, `.logo`, `.card`, `.read-the-docs`
+- `src/components/landing/ProblemSection.tsx` -- Linha 25: `pb-20 md:pb-32` para `pb-16 md:pb-20`
+- `src/components/landing/DemoSection.tsx` -- Linha 11: `py-20 md:py-32` para `py-16 md:py-20`
+- `src/components/landing/RTCCalculatorSection.tsx` -- Linha 31: `py-16 md:py-24` para `py-16 md:py-20`
+- `src/components/landing/ClaraSection.tsx` -- Linha 20: `py-20 md:py-32` para `py-16 md:py-20`
+- `src/components/landing/NewPricingSection.tsx` -- Linha 90: `py-20 md:py-32` para `py-16 md:py-20`
+- `src/components/landing/TestimonialsSection.tsx` -- Linha 27: `py-20 md:py-32` para `py-16 md:py-20`
+- `src/components/landing/SecuritySection.tsx` -- Linha 22: `py-20 md:py-32` para `py-16 md:py-20`
+- `src/components/landing/NewFooter.tsx` -- Linha 19: `py-16 md:py-24` para `py-12 md:py-16`
