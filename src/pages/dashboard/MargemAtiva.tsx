@@ -34,12 +34,6 @@ export default function MargemAtiva() {
           </div>
         </div>
 
-        <MotivationalBanner
-          id="margem"
-          icon="dollarSign"
-          text="Para analisar seus fornecedores e calcular o impacto da Reforma Tributária na sua margem, precisamos das suas notas fiscais de compra em formato XML. É simples: importe os XMLs uma vez e tudo aparece automaticamente aqui. 🎯"
-        />
-
         {/* Tabs da Suíte */}
         <Tabs value={activeTab} onValueChange={setActiveTab} key={resetKey}>
           <TabsList className="grid w-full grid-cols-3 h-12">
