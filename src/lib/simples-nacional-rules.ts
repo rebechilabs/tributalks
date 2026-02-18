@@ -1,5 +1,6 @@
 // src/lib/simples-nacional-rules.ts
 // Motor de cálculo de créditos para Simples Nacional
+// Usa fórmula proporcional baseada nos valores absolutos do PGDAS
 
 import { calcularAliquotaEfetiva } from '../data/simples-nacional-tabelas';
 import { verificarNcmMonofasico } from '../data/ncms-monofasicos';
@@ -19,6 +20,15 @@ export interface ItemNfe {
 export interface DadosPgdas {
   rbt12: number;
   anexo: string;
+  receitaBruta?: number;
+  reparticao?: {
+    pis: number;
+    cofins: number;
+    icms: number;
+    irpj: number;
+    csll: number;
+    cpp: number;
+  };
 }
 
 export interface CreditoIdentificado {
@@ -58,6 +68,16 @@ export const REGRAS_BLOQUEADAS_SIMPLES: string[] = [
   "PIS_COFINS_010", "PIS_COFINS_011",
 ];
 
+/**
+ * Calcula créditos de PIS e COFINS monofásicos usando fórmula proporcional.
+ * 
+ * Fórmula:
+ *   PIS indevido    = PIS_pago    × (fat_mono + fat_ST) / fat_total
+ *   COFINS indevido = COFINS_pago × (fat_mono + fat_ST) / fat_total
+ * 
+ * Quando reparticao em R$ está disponível no PGDAS, usa valores absolutos.
+ * Caso contrário, estima via alíquota efetiva × percentuais de repartição.
+ */
 export function calcularCreditoMonofasico(
   itensSaida: ItemNfe[],
   dadosPgdas: DadosPgdas,
@@ -65,85 +85,40 @@ export function calcularCreditoMonofasico(
 ): CreditoIdentificado[] {
   const creditos: CreditoIdentificado[] = [];
 
-  const { aliquotaEfetiva, reparticao } = calcularAliquotaEfetiva(
+  const { aliquotaEfetiva, reparticao: reparticaoPercentual } = calcularAliquotaEfetiva(
     dadosPgdas.rbt12,
     dadosPgdas.anexo
   );
 
-  if (!reparticao) return creditos;
+  if (!reparticaoPercentual) return creditos;
 
-  const percentualPis = reparticao.PIS;
-  const percentualCofins = reparticao.COFINS;
-  const percentualPisCofins = percentualPis + percentualCofins;
-
-  let receitaMonofasica = 0;
+  // Aggregate revenues from items
+  let faturamentoTotal = 0;
+  let faturamentoMonofasico = 0;
+  let faturamentoST = 0;
   const ncmsEncontrados: Set<string> = new Set();
 
   for (const item of itensSaida) {
-    let isMonofasico = false;
+    faturamentoTotal += item.valorProduto;
 
+    // Check monophasic
+    let isMonofasico = false;
     if (item.cstPis && isMonofasicoPorCst(item.cstPis)) {
       isMonofasico = true;
     } else if (item.cstCofins && isMonofasicoPorCst(item.cstCofins)) {
       isMonofasico = true;
     } else {
       const ncmInfo = verificarNcmMonofasico(item.ncm);
-      if (ncmInfo) {
-        isMonofasico = true;
-      }
+      if (ncmInfo) isMonofasico = true;
     }
 
     if (isMonofasico) {
-      receitaMonofasica += item.valorProduto;
+      faturamentoMonofasico += item.valorProduto;
       ncmsEncontrados.add(item.ncm);
     }
-  }
 
-  if (receitaMonofasica > 0) {
-    const valorRecuperavel = receitaMonofasica * aliquotaEfetiva * (percentualPisCofins / 100);
-
-    creditos.push({
-      regra: "SIMPLES_MONO_001",
-      tributo: "PIS/COFINS",
-      descricao: `PIS e COFINS pagos indevidamente no DAS sobre receita de produtos monofásicos em ${mes}`,
-      baseLegal: "LC 123/2006, art. 18, §4º-A, inciso I; Leis 10.147/2000, 10.485/2002, 13.097/2015",
-      valorRecuperavel: Math.round(valorRecuperavel * 100) / 100,
-      confianca: "alta",
-      detalhamento: {
-        ncm: Array.from(ncmsEncontrados).join(", "),
-        mes,
-        receitaBase: Math.round(receitaMonofasica * 100) / 100,
-        aliquotaEfetiva,
-        percentualTributo: percentualPisCofins,
-      }
-    });
-  }
-
-  return creditos;
-}
-
-export function calcularCreditoIcmsST(
-  itensSaida: ItemNfe[],
-  dadosPgdas: DadosPgdas,
-  mes: string
-): CreditoIdentificado[] {
-  const creditos: CreditoIdentificado[] = [];
-
-  const { aliquotaEfetiva, reparticao } = calcularAliquotaEfetiva(
-    dadosPgdas.rbt12,
-    dadosPgdas.anexo
-  );
-
-  if (!reparticao || !reparticao.ICMS) return creditos;
-  if (reparticao.ICMS === 0) return creditos;
-
-  const percentualIcms = reparticao.ICMS;
-
-  let receitaComST = 0;
-
-  for (const item of itensSaida) {
+    // Check ST
     let isComST = false;
-
     if (item.csosn && isIcmsRecolhidoPorST(item.csosn)) {
       isComST = true;
     } else if (isCfopSaidaComST(item.cfop)) {
@@ -151,25 +126,146 @@ export function calcularCreditoIcmsST(
     }
 
     if (isComST) {
-      receitaComST += item.valorProduto;
+      faturamentoST += item.valorProduto;
     }
   }
 
-  if (receitaComST > 0) {
-    const valorRecuperavel = receitaComST * aliquotaEfetiva * (percentualIcms / 100);
+  const fatTotalRef = dadosPgdas.receitaBruta || faturamentoTotal;
+  if (fatTotalRef === 0) return creditos;
 
+  const baseIndevida = faturamentoMonofasico + faturamentoST;
+  if (baseIndevida === 0) return creditos;
+
+  const proporcao = baseIndevida / fatTotalRef;
+
+  // Use absolute R$ values from PGDAS if available, otherwise estimate
+  let pisPago: number;
+  let cofinsPago: number;
+
+  if (dadosPgdas.reparticao) {
+    pisPago = dadosPgdas.reparticao.pis;
+    cofinsPago = dadosPgdas.reparticao.cofins;
+  } else {
+    // Estimate from aliquota efetiva × receita × percentual
+    const dasTotal = fatTotalRef * aliquotaEfetiva;
+    pisPago = dasTotal * (reparticaoPercentual.PIS / 100);
+    cofinsPago = dasTotal * (reparticaoPercentual.COFINS / 100);
+  }
+
+  const pisIndevido = Math.round(pisPago * proporcao * 100) / 100;
+  const cofinsIndevido = Math.round(cofinsPago * proporcao * 100) / 100;
+
+  // Credit 1: PIS
+  if (pisIndevido > 0.01) {
+    creditos.push({
+      regra: "SIMPLES_MONO_001",
+      tributo: "PIS",
+      descricao: `PIS recolhido indevidamente no DAS sobre receita de produtos monofásicos e com ST em ${mes}`,
+      baseLegal: "Art. 2º, §1º-A da Lei 10.637/2002",
+      valorRecuperavel: pisIndevido,
+      confianca: "alta",
+      detalhamento: {
+        ncm: Array.from(ncmsEncontrados).join(", "),
+        mes,
+        receitaBase: Math.round(baseIndevida * 100) / 100,
+        aliquotaEfetiva,
+        percentualTributo: reparticaoPercentual.PIS,
+      }
+    });
+  }
+
+  // Credit 2: COFINS
+  if (cofinsIndevido > 0.01) {
+    creditos.push({
+      regra: "SIMPLES_MONO_001",
+      tributo: "COFINS",
+      descricao: `COFINS recolhido indevidamente no DAS sobre receita de produtos monofásicos e com ST em ${mes}`,
+      baseLegal: "Art. 2º, §1º-A da Lei 10.833/2003",
+      valorRecuperavel: cofinsIndevido,
+      confianca: "alta",
+      detalhamento: {
+        ncm: Array.from(ncmsEncontrados).join(", "),
+        mes,
+        receitaBase: Math.round(baseIndevida * 100) / 100,
+        aliquotaEfetiva,
+        percentualTributo: reparticaoPercentual.COFINS,
+      }
+    });
+  }
+
+  return creditos;
+}
+
+/**
+ * Calcula créditos de ICMS-ST usando fórmula proporcional.
+ * 
+ * Fórmula:
+ *   ICMS-ST indevido = ICMS_pago × fat_ST / fat_total
+ * 
+ * Nota: Apenas faturamento com ST entra aqui (monofásicos NÃO afetam ICMS).
+ */
+export function calcularCreditoIcmsST(
+  itensSaida: ItemNfe[],
+  dadosPgdas: DadosPgdas,
+  mes: string
+): CreditoIdentificado[] {
+  const creditos: CreditoIdentificado[] = [];
+
+  const { aliquotaEfetiva, reparticao: reparticaoPercentual } = calcularAliquotaEfetiva(
+    dadosPgdas.rbt12,
+    dadosPgdas.anexo
+  );
+
+  if (!reparticaoPercentual || !reparticaoPercentual.ICMS) return creditos;
+  if (reparticaoPercentual.ICMS === 0) return creditos;
+
+  let faturamentoTotal = 0;
+  let faturamentoST = 0;
+
+  for (const item of itensSaida) {
+    faturamentoTotal += item.valorProduto;
+
+    let isComST = false;
+    if (item.csosn && isIcmsRecolhidoPorST(item.csosn)) {
+      isComST = true;
+    } else if (isCfopSaidaComST(item.cfop)) {
+      isComST = true;
+    }
+
+    if (isComST) {
+      faturamentoST += item.valorProduto;
+    }
+  }
+
+  const fatTotalRef = dadosPgdas.receitaBruta || faturamentoTotal;
+  if (fatTotalRef === 0 || faturamentoST === 0) return creditos;
+
+  const proporcaoST = faturamentoST / fatTotalRef;
+
+  // Use absolute R$ values from PGDAS if available, otherwise estimate
+  let icmsPago: number;
+  if (dadosPgdas.reparticao) {
+    icmsPago = dadosPgdas.reparticao.icms;
+  } else {
+    const dasTotal = fatTotalRef * aliquotaEfetiva;
+    icmsPago = dasTotal * (reparticaoPercentual.ICMS / 100);
+  }
+
+  const icmsStIndevido = Math.round(icmsPago * proporcaoST * 100) / 100;
+
+  if (icmsStIndevido > 0.01) {
     creditos.push({
       regra: "SIMPLES_ICMS_ST_001",
       tributo: "ICMS",
-      descricao: `ICMS pago indevidamente no DAS sobre receita de produtos com ST em ${mes}`,
-      baseLegal: "LC 123/2006, art. 18, §4º-A, inciso IV",
-      valorRecuperavel: Math.round(valorRecuperavel * 100) / 100,
+      descricao: `ICMS recolhido indevidamente no DAS sobre receita de produtos com ST em ${mes}`,
+      baseLegal: "Art. 13, §1º, XIII da LC 123/2006",
+      valorRecuperavel: icmsStIndevido,
       confianca: "alta",
       detalhamento: {
         mes,
-        receitaBase: Math.round(receitaComST * 100) / 100,
+        receitaBase: Math.round(faturamentoST * 100) / 100,
         aliquotaEfetiva,
-        percentualTributo: percentualIcms,
+        percentualTributo: reparticaoPercentual.ICMS,
       }
     });
   }
@@ -191,13 +287,19 @@ export function analisarCreditosSimplesNacional(
     todosCreditos.push(...creditosIcmsSt);
   }
 
-  const totalPisCofins = todosCreditos
-    .filter(c => c.tributo === "PIS/COFINS")
+  const totalPis = todosCreditos
+    .filter(c => c.tributo === "PIS")
+    .reduce((sum, c) => sum + c.valorRecuperavel, 0);
+
+  const totalCofins = todosCreditos
+    .filter(c => c.tributo === "COFINS")
     .reduce((sum, c) => sum + c.valorRecuperavel, 0);
 
   const totalIcms = todosCreditos
     .filter(c => c.tributo === "ICMS")
     .reduce((sum, c) => sum + c.valorRecuperavel, 0);
+
+  const totalPisCofins = totalPis + totalCofins;
 
   return {
     regime: 'simples_nacional',

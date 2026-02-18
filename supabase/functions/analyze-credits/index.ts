@@ -413,34 +413,23 @@ serve(async (req) => {
     // 2. Analyze each XML
     if (isSimplesNacional) {
       // ========== SIMPLES NACIONAL ANALYSIS ==========
-      // Determine anexo: prefer PGDAS field, then CNAE inference
-      const anexo = latestPgdas?.anexo_simples || detectAnexoFromCNAE(companyContext.cnae || '')
-      // [CORREÇÃO #11] Faixa default 1 (mais conservador) em vez de 4
-      const faixa = rbt12Final > 0 ? detectFaixaFromRBT12(rbt12Final) : 1
-      // [CORREÇÃO #2] Usar normalização segura da alíquota
-      const aliquotaEfetiva = normalizeAliquotaEfetiva(companyContext.aliquotaEfetiva)
-
-      // [CORREÇÃO #6] Get tax distribution from DB, fallback por Anexo específico
-      const taxDistKey = `${anexo}_${faixa}`
-      const fallbackDist = FALLBACK_TAX_DISTRIBUTIONS[anexo] || FALLBACK_TAX_DISTRIBUTIONS['I']
-      const taxDist = taxDistributions[taxDistKey] || fallbackDist
-
-      if (!taxDistributions[taxDistKey]) {
-        console.warn(`[analyze-credits] Tax distribution não encontrada para ${taxDistKey}, usando fallback do Anexo ${anexo}`)
-      }
-
-      const parcelaPisCofins = (taxDist.pis + taxDist.cofins) / 100
-      const parcelaIcms = taxDist.icms / 100
-
-      console.log(`[analyze-credits] Simples config: Anexo ${anexo}, Faixa ${faixa}, RBT12 ${rbt12Final}, Alíquota ${aliquotaEfetiva}, PIS+COFINS ${parcelaPisCofins}, ICMS ${parcelaIcms}`)
+      // Uses proportional formula based on PGDAS absolute R$ values
+      // PIS indevido    = PIS_pago    × (fat_mono + fat_ST) / fat_total
+      // COFINS indevido = COFINS_pago × (fat_mono + fat_ST) / fat_total
+      // ICMS-ST indevido = ICMS_pago  × fat_ST / fat_total
 
       // Find Simples-specific rules
       const simplesMonoRule = applicableRules.find((r: CreditRule) => r.rule_code === 'SIMPLES_MONO_001')
       const simplesIcmsStRule = applicableRules.find((r: CreditRule) => r.rule_code === 'SIMPLES_ICMS_ST_001')
 
+      // Step 1: Aggregate revenue from XMLs (exit operations only)
+      let faturamentoTotal = 0
+      let faturamentoMonofasico = 0
+      let faturamentoST = 0
+      const ncmsEncontrados: Set<string> = new Set()
+
       for (const xml of parsed_xmls as ParsedXml[]) {
         const items = xml.itens || []
-
         for (const item of items) {
           const cfop = item.cfop || ''
           const ncm = item.ncm || ''
@@ -450,73 +439,111 @@ serve(async (req) => {
 
           // Only analyze exit operations for Simples segregation
           if (!isExitOperation(cfop)) continue
+          if (valorItem <= 0) continue
 
-          // Determine item-level anexo for mixed activities
-          let itemAnexo = anexo
-          if (companyContext.temAtividadesMistas && companyContext.cnaeSecundarios?.length) {
-            // For now, use the primary CNAE's anexo as default
-            // Future: map item CNAE to specific anexo
-            itemAnexo = anexo
+          faturamentoTotal += valorItem
+
+          // Check monophasic (NCM from DB list or CST 04/05/06)
+          const monoMatch = isMonophasicNCMFromList(ncm, monophasicNcms)
+          const isMonoCST = isMonophasicCST(cstPis)
+          if (monoMatch || isMonoCST) {
+            faturamentoMonofasico += valorItem
+            ncmsEncontrados.add(ncm)
           }
 
-          // Get distribution for this item's anexo (may differ in mixed activities)
-          const itemDistKey = `${itemAnexo}_${faixa}`
-          const itemFallback = FALLBACK_TAX_DISTRIBUTIONS[itemAnexo] || fallbackDist
-          const itemDist = taxDistributions[itemDistKey] || itemFallback
-          const itemParcelaPisCofins = (itemDist.pis + itemDist.cofins) / 100
-          const itemParcelaIcms = itemDist.icms / 100
-
-          // SIMPLES_MONO_001: Monophasic PIS/COFINS segregation (uses DB list)
-          if (simplesMonoRule && valorItem > 0) {
-            const monoMatch = isMonophasicNCMFromList(ncm, monophasicNcms)
-            if (monoMatch) {
-              const recovery = valorItem * aliquotaEfetiva * itemParcelaPisCofins
-
-              identifiedCredits.push({
-                rule_id: simplesMonoRule.id,
-                original_tax_value: valorItem * aliquotaEfetiva,
-                potential_recovery: recovery,
-                ncm_code: ncm,
-                cfop: cfop,
-                cst: cstPis || '04',
-                confidence_level: 'high',
-                confidence_score: 92,
-                product_description: `Produto monofásico (${monoMatch.category}) - Segregação PGDAS-D - ${monoMatch.legal_basis}`,
-                nfe_key: xml.chave_nfe || '',
-                nfe_number: xml.numero || '',
-                nfe_date: xml.data_emissao || new Date().toISOString().split('T')[0],
-                supplier_cnpj: xml.cnpj_emitente || '',
-                supplier_name: xml.nome_emitente || '',
-              })
-            }
-          }
-
-          // SIMPLES_ICMS_ST_001: ICMS-ST segregation
-          // [CORREÇÃO #10c] CFOPs expandidos para ICMS-ST
-          if (simplesIcmsStRule && valorItem > 0) {
-            const isST = csosn === '500' || ['5405', '6405', '5403', '6403'].includes(cfop)
-            if (isST) {
-              const recovery = valorItem * aliquotaEfetiva * itemParcelaIcms
-
-              identifiedCredits.push({
-                rule_id: simplesIcmsStRule.id,
-                original_tax_value: valorItem * aliquotaEfetiva,
-                potential_recovery: recovery,
-                ncm_code: ncm,
-                cfop: cfop,
-                cst: csosn || '500',
-                confidence_level: 'high',
-                confidence_score: 90,
-                product_description: `ICMS-ST já recolhido - Segregação PGDAS-D - LC 123/2006, art. 18, §4º-A`,
-                nfe_key: xml.chave_nfe || '',
-                nfe_number: xml.numero || '',
-                nfe_date: xml.data_emissao || new Date().toISOString().split('T')[0],
-                supplier_cnpj: xml.cnpj_emitente || '',
-                supplier_name: xml.nome_emitente || '',
-              })
-            }
+          // Check ST (CSOSN 500 or specific CFOPs)
+          const isST = csosn === '500' || ['5405', '6405', '5403', '6403'].includes(cfop)
+          if (isST) {
+            faturamentoST += valorItem
           }
         }
+      }
+
+      console.log(`[analyze-credits] Simples aggregated: fatTotal=${faturamentoTotal}, fatMono=${faturamentoMonofasico}, fatST=${faturamentoST}, NCMs=${Array.from(ncmsEncontrados).join(',')}`)
+
+      // Step 2: Get PGDAS reparticao (absolute R$ values)
+      const reparticao = (latestPgdas?.dados_completos as Record<string, unknown>)?.reparticao as Record<string, number> | null
+      const pgdasReceita = latestPgdas?.receita_bruta as number || 0
+
+      // Use PGDAS receita_bruta as fatTotal reference (more reliable), fallback to XML sum
+      const fatTotalRef = pgdasReceita > 0 ? pgdasReceita : faturamentoTotal
+
+      if (reparticao && fatTotalRef > 0) {
+        const pisPago = reparticao.pis || 0
+        const cofinsPago = reparticao.cofins || 0
+        const icmsPago = reparticao.icms || 0
+
+        const baseIndevidaPisCofins = faturamentoMonofasico + faturamentoST
+        const proporcaoPisCofins = baseIndevidaPisCofins / fatTotalRef
+        const proporcaoST = faturamentoST / fatTotalRef
+
+        const pisIndevido = Math.round(pisPago * proporcaoPisCofins * 100) / 100
+        const cofinsIndevido = Math.round(cofinsPago * proporcaoPisCofins * 100) / 100
+        const icmsStIndevido = Math.round(icmsPago * proporcaoST * 100) / 100
+
+        console.log(`[analyze-credits] Simples credits: PIS=${pisIndevido}, COFINS=${cofinsIndevido}, ICMS-ST=${icmsStIndevido} (propPisCofins=${proporcaoPisCofins.toFixed(4)}, propST=${proporcaoST.toFixed(4)})`)
+
+        // Credit 1: PIS indevido
+        if (simplesMonoRule && pisIndevido > 0.01) {
+          identifiedCredits.push({
+            rule_id: simplesMonoRule.id,
+            original_tax_value: pisPago,
+            potential_recovery: pisIndevido,
+            ncm_code: Array.from(ncmsEncontrados).join(','),
+            cfop: '',
+            cst: '04',
+            confidence_level: 'high',
+            confidence_score: 92,
+            product_description: `PIS recolhido indevidamente no DAS sobre receita de produtos monofásicos e com ST — Art. 2º, §1º-A da Lei 10.637/2002`,
+            nfe_key: '',
+            nfe_number: '',
+            nfe_date: latestPgdas?.periodo_apuracao || new Date().toISOString().split('T')[0],
+            supplier_cnpj: '',
+            supplier_name: '',
+          })
+        }
+
+        // Credit 2: COFINS indevido
+        if (simplesMonoRule && cofinsIndevido > 0.01) {
+          identifiedCredits.push({
+            rule_id: simplesMonoRule.id,
+            original_tax_value: cofinsPago,
+            potential_recovery: cofinsIndevido,
+            ncm_code: Array.from(ncmsEncontrados).join(','),
+            cfop: '',
+            cst: '04',
+            confidence_level: 'high',
+            confidence_score: 92,
+            product_description: `COFINS recolhido indevidamente no DAS sobre receita de produtos monofásicos e com ST — Art. 2º, §1º-A da Lei 10.833/2003`,
+            nfe_key: '',
+            nfe_number: '',
+            nfe_date: latestPgdas?.periodo_apuracao || new Date().toISOString().split('T')[0],
+            supplier_cnpj: '',
+            supplier_name: '',
+          })
+        }
+
+        // Credit 3: ICMS-ST indevido
+        if (simplesIcmsStRule && icmsStIndevido > 0.01) {
+          identifiedCredits.push({
+            rule_id: simplesIcmsStRule.id,
+            original_tax_value: icmsPago,
+            potential_recovery: icmsStIndevido,
+            ncm_code: '',
+            cfop: '5405',
+            cst: '500',
+            confidence_level: 'high',
+            confidence_score: 90,
+            product_description: `ICMS recolhido indevidamente no DAS sobre receita de produtos com ST — Art. 13, §1º, XIII da LC 123/2006`,
+            nfe_key: '',
+            nfe_number: '',
+            nfe_date: latestPgdas?.periodo_apuracao || new Date().toISOString().split('T')[0],
+            supplier_cnpj: '',
+            supplier_name: '',
+          })
+        }
+      } else {
+        console.warn(`[analyze-credits] Simples: sem dados de repartição no PGDAS ou faturamento zero. reparticao=${!!reparticao}, fatTotalRef=${fatTotalRef}`)
       }
     } else {
       // ========== LUCRO REAL / PRESUMIDO ANALYSIS ==========
