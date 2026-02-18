@@ -37,10 +37,10 @@ export default function PrecificacaoPage() {
   };
 
   return (
-    <DashboardLayout title="Precificação">
+    <DashboardLayout title="Precificar">
       <div className="container mx-auto px-4 py-6">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold mb-2">Precificação</h1>
+          <h1 className="text-2xl font-bold mb-2">Precificar</h1>
           <p className="text-muted-foreground">
             Proteja suas margens com análises de impacto tributário
           </p>

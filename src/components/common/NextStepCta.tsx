@@ -49,7 +49,7 @@ const NEXT_STEPS: Record<ToolType, NextStep> = {
     title: 'Descobrir oportunidades',
     description: 'Com base nos seus dados financeiros, identifique benefícios fiscais.',
     cta: 'Ver Oportunidades',
-    href: '/dashboard/oportunidades',
+    href: '/dashboard/planejar/oportunidades',
     icon: Lightbulb,
   },
   rtc: {

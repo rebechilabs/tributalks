@@ -450,7 +450,7 @@ export function useDashboardData() {
         { type: 'score' as const, date: scoreDate, description: `Score ${taxScoreHistory?.score_grade}`, link: '/dashboard/score-tributario' },
         { type: 'xml' as const, date: lastXmlDate, description: `${xmlCount} XMLs importados`, link: '/dashboard/analise-notas' },
         { type: 'dre' as const, date: dreDate, description: 'DRE atualizado', link: '/dashboard/dre' },
-        { type: 'opportunity' as const, date: lastOpportunityDate, description: `${opportunitiesCount} oportunidades`, link: '/dashboard/oportunidades' },
+        { type: 'opportunity' as const, date: lastOpportunityDate, description: `${opportunitiesCount} oportunidades`, link: '/dashboard/planejar/oportunidades' },
         { type: 'workflow' as const, date: lastWorkflowDate, description: 'Workflow atualizado', link: '/dashboard/workflows' },
         { type: 'simulation' as const, date: simulationResult.data?.created_at, description: `Simulação ${simulationResult.data?.calculator_slug}`, link: '/historico' },
       ].filter(a => a.date);

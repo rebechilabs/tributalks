@@ -99,7 +99,7 @@ export function ExecutiveProjects({ projects, loading, onAction }: ExecutiveProj
                   <Link to="/dashboard/score-tributario">Calcular Score</Link>
                 </Button>
                 <Button asChild size="sm">
-                  <Link to="/dashboard/oportunidades">
+                  <Link to="/dashboard/planejar/oportunidades">
                     Ver Oportunidades
                     <ArrowRight className="w-4 h-4 ml-1" />
                   </Link>

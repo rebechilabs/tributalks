@@ -54,7 +54,7 @@ const STEP_RECOMMENDATIONS: StepRecommendation[] = [
     title: 'Descubra Oportunidades',
     description: 'Com base no seu perfil, encontre benefícios fiscais aplicáveis ao seu negócio.',
     cta: 'Ver Oportunidades',
-    href: '/dashboard/oportunidades',
+    href: '/dashboard/planejar/oportunidades',
     icon: Lightbulb,
     benefit: 'Economia personalizada',
   },

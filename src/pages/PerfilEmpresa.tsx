@@ -198,7 +198,7 @@ export default function PerfilEmpresa() {
             : "Vamos buscar oportunidades para você.",
         });
 
-        navigate('/dashboard/oportunidades');
+        navigate('/dashboard/planejar/oportunidades');
       }
     } catch (error) {
       console.error('Save error:', error);

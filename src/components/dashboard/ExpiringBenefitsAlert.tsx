@@ -76,7 +76,7 @@ export function ExpiringBenefitsAlert({ benefits }: ExpiringBenefitsAlertProps) 
         )}
 
         <Button asChild size="sm" variant="outline" className="gap-2">
-          <Link to="/dashboard/oportunidades">
+          <Link to="/dashboard/planejar/oportunidades">
             Ver alternativas e plano de ação
             <ArrowRight className="h-4 w-4" />
           </Link>

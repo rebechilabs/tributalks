@@ -37,11 +37,11 @@ const GROUP_TITLE_TO_KEY: Record<string, string> = {
   'Diagnóstico Avançado': 'avancado',
   'Integrações': 'integracoes',
   'Ferramentas Pro': 'avancado',
-  'ENTENDER MEU NEGÓCIO': 'entender',
-  'RECUPERAR CRÉDITOS': 'recuperar',
-  'PRECIFICAÇÃO': 'precificacao',
+  'ENTENDER': 'entender',
+  'RECUPERAR': 'recuperar',
+  'PLANEJAR': 'planejar',
+  'PRECIFICAR': 'precificacao',
   'COMANDAR': 'comandar',
-  'CONEXÃO & COMUNICAÇÃO': 'conexao',
 };
 
 export function MobileNav() {
