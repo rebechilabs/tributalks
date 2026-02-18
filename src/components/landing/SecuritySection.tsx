@@ -41,7 +41,7 @@
              whileInView={{ opacity: 1, x: 0 }}
              viewport={{ once: true }}
              transition={{ duration: 0.6 }}
-              className="bg-[#222222] rounded-2xl p-8 border border-white/10"
+              className="bg-[#1A1A1A] rounded-2xl p-8 border border-white/10"
            >
              <h3 className="text-xl font-bold text-white mb-6">Segurança</h3>
              <div className="grid grid-cols-2 gap-4">
@@ -60,7 +60,7 @@
              whileInView={{ opacity: 1, x: 0 }}
              viewport={{ once: true }}
              transition={{ duration: 0.6, delay: 0.1 }}
-             className="bg-[#222222] rounded-2xl p-8 border border-white/10"
+             className="bg-[#1A1A1A] rounded-2xl p-8 border border-white/10"
            >
              <h3 className="text-xl font-bold text-white mb-6">Integrações ERP</h3>
              <div className="grid grid-cols-3 gap-4">
