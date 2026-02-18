@@ -1,135 +1,141 @@
 
+# Dados Compartilhados Entre Ferramentas por CNPJ
 
-# Redesign do Radar de Creditos - Fluxo Guiado em 3 Passos
+## Problema
 
-## Resumo
+Hoje cada ferramenta busca dados de forma isolada. O usuario preenche faturamento, folha de pagamento e regime na DRE, mas precisa digitar tudo novamente no Comparativo de Regimes e no Radar de Creditos.
 
-Substituir a interface atual com 7 abas por um fluxo linear de 3 passos que guia o usuario desde a selecao do regime tributario ate a visualizacao dos resultados.
+## Solucao
 
-## Arquitetura
+Usar a tabela `company_profile` (que ja possui campos como `faturamento_anual`, `folha_mensal`, `regime_tributario`, `cnae_principal`) como hub central de dados compartilhados. Quando a DRE for salva, os dados-chave serao gravados automaticamente no perfil da empresa. Todas as ferramentas consultam o perfil primeiro para pre-preencher campos.
 
-A pagina `AnaliseNotasFiscais.tsx` (896 linhas) sera refatorada para um componente orquestrador leve que gerencia o passo atual e renderiza o componente do passo ativo.
+## Mudancas necessarias
 
-### Novos arquivos
+### 1. Adicionar colunas ao `company_profile` (migracao SQL)
+
+Adicionar campos derivados da DRE que ainda nao existem:
+
+- `receita_liquida_mensal` (numeric) — calculado pela DRE
+- `margem_bruta_percentual` (numeric) — calculado pela DRE
+- `compras_insumos_mensal` (numeric) — custo_mercadorias + custo_materiais da DRE
+- `prolabore_mensal` (numeric) — pro-labore dos socios
+- `dados_financeiros_origem` (text) — 'dre' | 'manual' | 'erp'
+- `dados_financeiros_atualizados_em` (timestamptz) — quando foi atualizado
+
+### 2. Atualizar Edge Function `process-dre/index.ts`
+
+Apos salvar a DRE (linha ~222), adicionar bloco que atualiza o `company_profile` do usuario:
 
 ```
-src/components/radar/
-  RadarStepper.tsx          -- Indicador visual de passos (1 -> 2 -> 3) no topo
-  RegimeSelector.tsx        -- Passo 1: selecao de regime com 3 cards
-  DocumentUploadStep.tsx    -- Passo 2: uploads especificos por regime
-  AnalysisStep.tsx          -- Passo 3: progresso + resultados
-  regimeConfig.ts           -- Configuracao de documentos e checklist por regime
+// Apos savedDre
+await supabaseAdmin.from('company_profile').update({
+  faturamento_anual: dre.receita_bruta * 12,
+  faturamento_mensal_medio: dre.receita_bruta,
+  folha_mensal: (inputs.salarios_encargos || 0) + (inputs.prolabore || 0),
+  regime_tributario: inputs.regime_tributario,
+  receita_liquida_mensal: dre.receita_liquida,
+  margem_bruta_percentual: dre.margem_bruta,
+  compras_insumos_mensal: (inputs.custo_mercadorias || 0) + (inputs.custo_materiais || 0),
+  prolabore_mensal: inputs.prolabore || 0,
+  dados_financeiros_origem: 'dre',
+  dados_financeiros_atualizados_em: new Date().toISOString(),
+}).eq('user_id', userId)
 ```
 
-### Arquivo editado
+Se o usuario tiver multiplas empresas, usara `.limit(1)` na empresa ativa (ou primeira).
+
+### 3. Criar hook `useSharedCompanyData`
+
+Novo arquivo: `src/hooks/useSharedCompanyData.ts`
+
+Hook que retorna dados financeiros da empresa ativa a partir do `CompanyContext`:
+
+```typescript
+interface SharedCompanyData {
+  regime_tributario: string | null;
+  faturamento_anual: number | null;
+  folha_anual: number | null;        // folha_mensal * 12
+  cnae_principal: string | null;
+  setor: string | null;
+  receita_liquida_mensal: number | null;
+  margem_bruta_percentual: number | null;
+  compras_insumos_anual: number | null; // compras_insumos_mensal * 12
+  origem: string | null;              // 'dre' | 'manual' | 'erp'
+  atualizado_em: string | null;
+}
+```
+
+O hook buscara diretamente do `company_profile` via query (expandindo os campos ja carregados no CompanyContext).
+
+### 4. Atualizar `CompanyContext.tsx`
+
+Expandir a query SELECT para incluir os novos campos: `receita_liquida_mensal`, `margem_bruta_percentual`, `compras_insumos_mensal`, `prolabore_mensal`, `dados_financeiros_origem`, `dados_financeiros_atualizados_em`.
+
+Atualizar a interface `Company` com esses campos opcionais.
+
+### 5. Atualizar `ComparativoRegimesWizard.tsx`
+
+Substituir a query direta ao `company_dre` pelo hook `useSharedCompanyData`:
+
+- `faturamento_anual` pre-preenchido do perfil (se existir)
+- `folha_pagamento` pre-preenchido do perfil
+- `compras_insumos` pre-preenchido do perfil
+- `cnae_principal` pre-preenchido do perfil
+
+Adicionar badge visual nos campos pre-preenchidos:
 
 ```
-src/pages/AnaliseNotasFiscais.tsx  -- Refatorado para orquestrador de 3 passos
+<Badge variant="outline" className="text-yellow-500 border-yellow-500/50">
+  icone 📊 Importado da DRE
+</Badge>
 ```
 
----
+Campos continuam editaveis — apenas indicam a origem.
 
-## Detalhamento dos Passos
+### 6. Atualizar `RegimeSelector.tsx` (Radar de Creditos)
 
-### Passo 1 - Selecao de Regime (`RegimeSelector.tsx`)
+Simplificar: usar `useSharedCompanyData` em vez de duas queries separadas (company_profile + company_dre). Mostrar badge "Do cadastro" ou "Importado da DRE" quando auto-detectado.
 
-Tres cards selecionaveis lado a lado:
+### 7. Componente visual `DataSourceBadge`
 
-| Regime | Descricao | Icone |
-|---|---|---|
-| Simples Nacional | "Regime unificado com DAS mensal" | Building |
-| Lucro Presumido | "Tributacao sobre receita presumida" | TrendingUp |
-| Lucro Real | "Tributacao sobre lucro efetivo - maior potencial de creditos" | Target |
+Novo componente reutilizavel: `src/components/common/DataSourceBadge.tsx`
 
-- Pre-selecao automatica: buscar na tabela `dre_reports` o campo `tax_regime` do usuario logado. Se existir, pre-selecionar o card correspondente.
-- Card selecionado ganha borda `border-primary` e fundo `bg-primary/5`
-- Botao "Proximo" habilitado somente apos selecao
+Exibe badges como:
+- "📊 Importado da DRE" (origem = 'dre')
+- "👤 Do cadastro" (origem = 'manual')
+- "🔗 Do ERP" (origem = 'erp')
 
-### Passo 2 - Upload de Documentos (`DocumentUploadStep.tsx`)
+Estilo: badge dourado/amarelo, pequeno, ao lado do label do campo.
 
-Exibe documentos especificos para o regime selecionado, definidos em `regimeConfig.ts`:
+## Fluxo de dados
 
-**Simples Nacional:**
-- XMLs de NF-e (obrigatorio)
-- DAS (opcional - recomendado)
-- PGDAS-D (opcional - recomendado)
-- Texto auxiliar sobre creditos limitados, bitributacao, DAS a maior, CFOP incorreto, DIFAL
+```text
+DRE Wizard (usuario preenche) 
+  --> process-dre Edge Function (salva DRE + atualiza company_profile)
+    --> company_profile (hub central)
+      --> Comparativo de Regimes (le faturamento, folha, CNAE)
+      --> Radar de Creditos (le regime tributario)
+      --> Score Tributario (le regime, setor)
+      --> Margem Ativa (le receita liquida, margem bruta)
+```
 
-**Lucro Presumido:**
-- XMLs de NF-e (obrigatorio)
-- SPED EFD-ICMS/IPI (obrigatorio)
-- DCTF (recomendado)
-- Texto auxiliar sobre ICMS insumos, IPI, IRPJ/CSLL, IRRF, DIFAL
+## O que NAO muda
 
-**Lucro Real:**
-- XMLs de NF-e (obrigatorio)
-- SPED EFD-ICMS/IPI (obrigatorio)
-- SPED EFD-Contribuicoes (obrigatorio)
-- SPED ECD (recomendado)
-- SPED ECF (recomendado)
-- DCTF (recomendado)
-- Texto auxiliar sobre creditos PIS/COFINS nao-cumulativo, ICMS integral, IPI, prescricao 5 anos, CBS/IBS 2027
-
-Cada tipo de documento tera:
-- Area de drag-and-drop individual
-- Indicador de status: check verde (enviado), circulo vazio (pendente), raio (recomendado)
-- Asterisco (*) nos obrigatorios
-- Botoes Voltar e Proximo (habilitado quando pelo menos 1 obrigatorio foi enviado)
-
-Os uploaders existentes (`SpedUploader`, `DctfUploader`, `PgdasUploader`) serao reutilizados internamente. A area de upload de XMLs reutilizara a logica existente de drag-and-drop e `processChunk`.
-
-### Passo 3 - Analise (`AnalysisStep.tsx`)
-
-Duas fases:
-
-**Fase A - Em andamento:**
-- Barra de progresso (reutiliza `ImportProgressBar`)
-- Checklist animado especifico do regime (items aparecem com checkmark conforme progridem)
-- Ex Simples: Bitributacao, DAS a maior, CFOP incorreta, DIFAL
-- Ex Lucro Real: PIS/COFINS nao-cumulativo, ICMS insumos, IPI, IRPJ/CSLL, IRRF, prescricao, duplicidades, CBS/IBS 2027
-
-**Fase B - Concluido:**
-- Card de resumo com: valor total de creditos, quantidade de oportunidades, nivel de risco
-- Botao "Ver detalhes completos" que renderiza o `CreditRadar` existente (sem alteracao) abaixo
-- Botao "Voltar" para reiniciar o fluxo
-
-### Indicador de Passos (`RadarStepper.tsx`)
-
-Componente no topo da pagina com 3 circulos conectados por linha:
-- Passo atual: circulo preenchido `bg-primary` com numero branco
-- Passo concluido: circulo verde com checkmark
-- Passo futuro: circulo `bg-muted` com numero cinza
-- Labels: "Regime" / "Documentos" / "Analise"
-
----
-
-## Secao tecnica
-
-### Estado do fluxo
-
-O componente principal gerenciara:
-- `currentStep: 1 | 2 | 3`
-- `selectedRegime: 'simples' | 'presumido' | 'real' | null`
-- `uploadedDocs: Record<string, { status: 'pending' | 'uploaded' | 'recommended' }>`
-
-### Reutilizacao de logica existente
-
-- Toda a logica de upload/processamento de XMLs (funcoes `processChunk`, `uploadAndProcess`, etc) sera extraida para um hook `useXmlProcessing` ou mantida no componente principal
-- Os componentes `CreditRadar`, `ExposureProjection`, `SavingsSummaryCard` continuam sendo usados na fase de resultados
-- Os uploaders SPED, DCTF, PGDAS continuam funcionando internamente
-
-### Configuracao de regime (`regimeConfig.ts`)
-
-Objeto tipado com a estrutura de documentos, textos auxiliares e checklist de analise para cada regime, evitando hardcode nos componentes.
-
-### O que NAO muda
-
-- Logica de backend (Edge Functions)
-- Tabelas do banco de dados
-- Componentes de creditos (`CreditRadar`, `IdentifiedCreditsTable`, etc)
-- Componentes de upload (`SpedUploader`, `DctfUploader`, `PgdasUploader`)
 - Botoes da landing page
 - Configuracoes do Stripe
 - Logica de trial de 7 dias
-- Rotas existentes
+- Tabelas existentes (apenas colunas novas adicionadas)
+- Dados ja digitados pelo usuario (pre-preenchimento so ocorre em campos vazios)
+- Backend de analise do Radar de Creditos
 
+## Secao tecnica: Ordem de execucao
+
+1. Migracao SQL: adicionar 6 colunas ao company_profile
+2. Atualizar Edge Function process-dre para gravar dados compartilhados
+3. Criar componente DataSourceBadge
+4. Criar hook useSharedCompanyData
+5. Atualizar CompanyContext (interface + query)
+6. Atualizar ComparativoRegimesWizard (usar hook + badges)
+7. Atualizar RegimeSelector (usar hook + badges)
+
+Total: 1 migracao, 1 edge function editada, 2 novos arquivos, 4 arquivos editados
