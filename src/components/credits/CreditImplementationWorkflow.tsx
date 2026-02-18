@@ -260,23 +260,7 @@ export function CreditImplementationWorkflow({
           </CardContent>
         </Card>
 
-        {/* Professional Help CTA */}
-        <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border">
-          <div>
-            <p className="font-medium">
-              Precisa de ajuda profissional?
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Conectamos você com contadores especializados em recuperação tributária
-            </p>
-          </div>
-          <Button variant="outline" asChild>
-            <a href="/consultorias">
-              Ver Consultores
-              <ExternalLink className="h-4 w-4 ml-2" />
-            </a>
-          </Button>
-        </div>
+
       </CardContent>
     </Card>
   );
