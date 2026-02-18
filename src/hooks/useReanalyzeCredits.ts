@@ -120,6 +120,8 @@ export function useReanalyzeCredits() {
 
           if (response.error) {
             console.error(`Batch ${i / BATCH_SIZE + 1} error:`, response.error);
+            toast.error(`Erro no lote ${i / BATCH_SIZE + 1}: ${response.error.message || 'Erro desconhecido'}`);
+            break;
           } else {
             totalCreditsFound += response.data?.credits_count || response.data?.creditAnalysis?.creditsFound || 0;
           }
