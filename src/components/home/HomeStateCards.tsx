@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { 
   BarChart3, Trophy, FileText, Plug, CheckCircle2, ArrowRight,
-  Sparkles, TrendingUp, AlertCircle, Target, Coins, Gift, Scale, DollarSign, Lightbulb
+  Sparkles, TrendingUp, AlertCircle, Target, Coins, Scale, DollarSign, Lightbulb
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -336,18 +336,6 @@ export function NoCreditsCard({
         </CardContent>
       </Card>
 
-      {/* Indique e Ganhe CTA */}
-      <Link 
-        to="/indicar" 
-        className="flex items-center gap-3 p-4 rounded-lg border border-green-500/20 bg-green-500/5 hover:bg-green-500/10 transition-colors"
-      >
-        <Gift className="w-5 h-5 text-green-500" />
-        <div className="flex-1">
-          <p className="text-sm font-medium">Indique e ganhe até 20% de desconto</p>
-          <p className="text-xs text-muted-foreground">Convide empresários para a plataforma</p>
-        </div>
-        <ArrowRight className="w-4 h-4 text-muted-foreground" />
-      </Link>
     </div>
   );
 }
@@ -462,18 +450,6 @@ export function CompleteCard({
             <div className="flex-1">
               <p className="text-sm font-medium">Simule o impacto do Split Payment na sua margem</p>
               <p className="text-xs text-muted-foreground">Prepare-se para 2026</p>
-            </div>
-            <ArrowRight className="w-4 h-4 text-muted-foreground" />
-          </Link>
-
-          <Link 
-            to="/indicar" 
-            className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-          >
-            <Gift className="w-5 h-5 text-green-500" />
-            <div className="flex-1">
-              <p className="text-sm font-medium">Indique e ganhe até 20% de desconto</p>
-              <p className="text-xs text-muted-foreground">Convide empresários para a plataforma</p>
             </div>
             <ArrowRight className="w-4 h-4 text-muted-foreground" />
           </Link>
