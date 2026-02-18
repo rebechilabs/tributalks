@@ -17,52 +17,59 @@ import { LEGACY_PLAN_MAP } from "@/data/menuConfig";
 
 interface ModuleInfo {
   title: string;
-  items: { label: string; href: string; icon: React.ComponentType<{ className?: string }>; minPlan: UserPlan }[];
+  description: string;
+  items: { label: string; description: string; href: string; icon: React.ComponentType<{ className?: string }>; minPlan: UserPlan }[];
 }
 
 const ALL_MODULES: ModuleInfo[] = [
   {
     title: 'ENTENDER',
+    description: 'Diagnóstico completo da saúde tributária da sua empresa. Entenda onde você está antes de tomar qualquer decisão.',
     items: [
-      { label: 'DRE Inteligente', href: '/dashboard/entender/dre', icon: BarChart3, minPlan: 'STARTER' },
-      { label: 'Score Tributário', href: '/dashboard/entender/score', icon: Trophy, minPlan: 'STARTER' },
-      { label: 'Comparativo de Regimes Tributários', href: '/dashboard/entender/comparativo', icon: Scale, minPlan: 'STARTER' },
+      { label: 'DRE Inteligente', description: 'Visualize seu lucro ou prejuízo líquido com análise automática de receitas e despesas.', href: '/dashboard/entender/dre', icon: BarChart3, minPlan: 'STARTER' },
+      { label: 'Score Tributário', description: 'Nota de 0 a 1000 que avalia sua situação fiscal atual e aponta melhorias.', href: '/dashboard/entender/score', icon: Trophy, minPlan: 'STARTER' },
+      { label: 'Comparativo de Regimes Tributários', description: 'Compare Simples, Presumido, Real e os novos regimes IBS/CBS de 2027.', href: '/dashboard/entender/comparativo', icon: Scale, minPlan: 'STARTER' },
     ],
   },
   {
     title: 'PRECIFICAR',
+    description: 'Precifique seus produtos e serviços corretamente, considerando o impacto tributário real na sua margem.',
     items: [
-      { label: 'Margem Ativa', href: '/dashboard/precificacao/margem', icon: Target, minPlan: 'PROFESSIONAL' },
-      { label: 'Split Payment', href: '/dashboard/precificacao/split', icon: Wallet, minPlan: 'PROFESSIONAL' },
-      { label: 'PriceGuard', href: '/dashboard/precificacao/priceguard', icon: Shield, minPlan: 'PROFESSIONAL' },
+      { label: 'Margem Ativa', description: 'Analise a margem real de cada produto por NCM com os impostos embutidos.', href: '/dashboard/precificacao/margem', icon: Target, minPlan: 'PROFESSIONAL' },
+      { label: 'Split Payment', description: 'Simule o impacto do split payment obrigatório a partir de 2026 no seu caixa.', href: '/dashboard/precificacao/split', icon: Wallet, minPlan: 'PROFESSIONAL' },
+      { label: 'PriceGuard', description: 'Monitore e proteja suas margens contra variações tributárias automáticas.', href: '/dashboard/precificacao/priceguard', icon: Shield, minPlan: 'PROFESSIONAL' },
     ],
   },
   {
     title: 'RECUPERAR',
+    description: 'Identifique tributos pagos a mais e recupere créditos fiscais que sua empresa tem direito.',
     items: [
-      { label: 'Radar de Créditos', href: '/dashboard/recuperar/radar', icon: FileText, minPlan: 'NAVIGATOR' },
+      { label: 'Radar de Créditos', description: 'Analise seus XMLs de notas fiscais e descubra créditos tributários não aproveitados.', href: '/dashboard/recuperar/radar', icon: FileText, minPlan: 'NAVIGATOR' },
     ],
   },
   {
     title: 'PLANEJAR',
+    description: 'Planeje o futuro tributário da sua empresa com oportunidades reais de economia.',
     items: [
-      { label: 'Oportunidades Tributárias', href: '/dashboard/planejar/oportunidades', icon: Lightbulb, minPlan: 'NAVIGATOR' },
-      { label: 'Planejamento Tributário', href: '/dashboard/planejar/planejamento', icon: Route, minPlan: 'NAVIGATOR' },
+      { label: 'Oportunidades Tributárias', description: 'Mais de 61 benefícios fiscais mapeados e filtrados para o seu perfil.', href: '/dashboard/planejar/oportunidades', icon: Lightbulb, minPlan: 'NAVIGATOR' },
+      { label: 'Planejamento Tributário', description: 'Monte um plano de ação personalizado para otimizar sua carga tributária.', href: '/dashboard/planejar/planejamento', icon: Route, minPlan: 'NAVIGATOR' },
     ],
   },
   {
     title: 'COMANDAR',
+    description: 'Visão executiva completa para tomar decisões estratégicas com dados em tempo real.',
     items: [
-      { label: 'NEXUS', href: '/dashboard/comandar/nexus', icon: LayoutDashboard, minPlan: 'PROFESSIONAL' },
-      { label: 'Valuation', href: '/dashboard/comandar/valuation', icon: TrendingUp, minPlan: 'PROFESSIONAL' },
-      { label: 'Relatórios PDF', href: '/dashboard/comandar/relatorios', icon: FileText, minPlan: 'PROFESSIONAL' },
+      { label: 'NEXUS', description: 'Painel de comando com 8 KPIs tributários essenciais em tempo real.', href: '/dashboard/comandar/nexus', icon: LayoutDashboard, minPlan: 'PROFESSIONAL' },
+      { label: 'Valuation', description: 'Estime o valor da sua empresa com 3 métodos de avaliação diferentes.', href: '/dashboard/comandar/valuation', icon: TrendingUp, minPlan: 'PROFESSIONAL' },
+      { label: 'Relatórios PDF', description: 'Gere relatórios profissionais para apresentar a sócios e investidores.', href: '/dashboard/comandar/relatorios', icon: FileText, minPlan: 'PROFESSIONAL' },
     ],
   },
   {
     title: 'PIT',
+    description: 'Prazos Importantes Tributários — acompanhe a Reforma Tributária e prepare sua empresa.',
     items: [
-      { label: 'Timeline 2026-2033', href: '/dashboard/timeline-reforma', icon: MapPin, minPlan: 'STARTER' },
-      { label: 'Checklist de Prontidão', href: '/dashboard/checklist-reforma', icon: ClipboardCheck, minPlan: 'NAVIGATOR' },
+      { label: 'Timeline 2026-2033', description: 'Calendário visual com todos os marcos da transição tributária.', href: '/dashboard/timeline-reforma', icon: MapPin, minPlan: 'STARTER' },
+      { label: 'Checklist de Prontidão', description: 'Lista de verificação para garantir que sua empresa está preparada.', href: '/dashboard/checklist-reforma', icon: ClipboardCheck, minPlan: 'NAVIGATOR' },
     ],
   },
 ];
@@ -134,8 +141,9 @@ export default function HomePage() {
           <div className="space-y-4">
             {ALL_MODULES.map((mod) => (
               <Card key={mod.title} className="overflow-hidden">
-                <div className="px-4 py-2 bg-muted/50">
+                <div className="px-4 py-3 bg-muted/50">
                   <h3 className="text-xs font-bold tracking-wider text-muted-foreground">{mod.title}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">{mod.description}</p>
                 </div>
                 <CardContent className="p-0">
                   <ul className="divide-y divide-border">
@@ -148,9 +156,12 @@ export default function HomePage() {
                         <li key={item.href}>
                           {isLocked ? (
                             <div className="flex items-center gap-3 px-4 py-3 opacity-50 cursor-not-allowed">
-                              <Icon className="w-4 h-4 text-muted-foreground" />
-                              <span className="text-sm text-muted-foreground flex-1">{item.label}</span>
-                              <div className="flex items-center gap-1.5">
+                              <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <span className="text-sm text-muted-foreground">{item.label}</span>
+                                <p className="text-xs text-muted-foreground/70 mt-0.5">{item.description}</p>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
                                 <Lock className="w-3.5 h-3.5 text-muted-foreground" />
                                 <span className="text-xs text-muted-foreground">{PLAN_LABELS[item.minPlan]}+</span>
                               </div>
@@ -160,8 +171,11 @@ export default function HomePage() {
                               to={item.href}
                               className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors"
                             >
-                              <Icon className="w-4 h-4 text-primary" />
-                              <span className="text-sm flex-1">{item.label}</span>
+                              <Icon className="w-4 h-4 text-primary shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <span className="text-sm">{item.label}</span>
+                                <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
+                              </div>
                             </Link>
                           )}
                         </li>
