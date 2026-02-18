@@ -37,7 +37,7 @@ export default function MargemAtiva() {
         <MotivationalBanner
           id="margem"
           icon="dollarSign"
-          text="Descubra o impacto tributário real na sua margem de lucro e receba sugestões de precificação otimizada considerando a Reforma Tributária 2027."
+          text="Para analisar seus fornecedores e calcular o impacto da Reforma Tributária na sua margem, precisamos das suas notas fiscais de compra em formato XML. É simples: importe os XMLs uma vez e tudo aparece automaticamente aqui. 🎯"
         />
 
         {/* Tabs da Suíte */}
