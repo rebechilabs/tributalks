@@ -8,6 +8,7 @@ import { ClaraSection } from "@/components/landing/ClaraSection";
 import { NewPricingSection } from "@/components/landing/NewPricingSection";
 import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
 import { SecuritySection } from "@/components/landing/SecuritySection";
+import { FAQSection } from "@/components/landing/FAQSection";
 import { NewFooter } from "@/components/landing/NewFooter";
 import { InteractiveDemo } from "@/components/landing/InteractiveDemo";
 
@@ -33,6 +34,7 @@ const Index = () => {
         <NewPricingSection />
         <TestimonialsSection />
         <SecuritySection />
+        <FAQSection />
       </main>
       <NewFooter />
       

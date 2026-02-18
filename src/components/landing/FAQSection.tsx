@@ -96,13 +96,13 @@ Nunca compartilhamos seus dados com terceiros.`,
 
 export function FAQSection() {
   return (
-    <section className="py-16 md:py-24 bg-background">
+    <section className="py-16 md:py-24 bg-[#1A1A1A]">
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className="text-center mb-10 md:mb-16">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">
             Perguntas frequentes
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-white/60">
             Tire suas dúvidas sobre o TribuTalks
           </p>
         </div>
@@ -113,12 +113,12 @@ export function FAQSection() {
               <AccordionItem
                 key={index}
                 value={`item-${index}`}
-                className="bg-card border border-border rounded-xl px-4 md:px-6 data-[state=open]:bg-secondary"
+                className="bg-[#222222] border border-white/10 rounded-xl px-4 md:px-6 data-[state=open]:bg-[#2A2A2A]"
               >
-                <AccordionTrigger className="text-left text-foreground hover:text-primary hover:no-underline py-4 md:py-6 text-sm md:text-base">
+                <AccordionTrigger className="text-left text-white hover:text-primary hover:no-underline py-4 md:py-6 text-sm md:text-base">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground pb-4 md:pb-6 text-sm md:text-base leading-relaxed whitespace-pre-line">
+                <AccordionContent className="text-white/70 pb-4 md:pb-6 text-sm md:text-base leading-relaxed whitespace-pre-line">
                   {faq.answer === "enterprise" ? (
                     <div className="space-y-4">
                       <p>
@@ -146,7 +146,7 @@ export function FAQSection() {
 
           {/* Support CTA */}
           <div className="text-center mt-8">
-            <p className="text-muted-foreground">
+            <p className="text-white/60">
               Ainda tem dúvidas?{" "}
               <Link to="/contato" className="text-primary font-medium hover:underline">
                 Fale conosco

@@ -1,4 +1,4 @@
- import { motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { 
   BarChart3, 
   Calculator, 
@@ -8,6 +8,7 @@ import {
   Sparkles,
   MessageCircle
 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
  
 const agents = [
   { icon: BarChart3, label: "Entender" },
@@ -18,6 +19,7 @@ const agents = [
 ];
  
  export function ClaraSection() {
+   const isMobile = useIsMobile();
    return (
      <section className="py-16 md:py-20 bg-[#1A1A1A] overflow-hidden">
        <div className="container mx-auto px-4 md:px-8">
@@ -58,8 +60,8 @@ const agents = [
              transition={{ duration: 0.6, delay: 0.2 }}
              className="relative"
            >
-             {/* Central Clara orb */}
-             <div className="relative w-64 h-64 md:w-80 md:h-80 mx-auto">
+            {/* Central Clara orb */}
+              <div className="relative w-48 h-48 md:w-80 md:h-80 mx-auto">
                {/* Glow effect */}
                <div className="absolute inset-0 rounded-full bg-primary/20 blur-3xl animate-pulse" />
                
@@ -71,7 +73,7 @@ const agents = [
                 {/* Orbiting agents */}
                 {agents.map((agent, index) => {
                   const angle = (index * 72) - 90;
-                  const radius = 140;
+                   const radius = isMobile ? 95 : 140;
                   const x = Math.cos((angle * Math.PI) / 180) * radius;
                   const y = Math.sin((angle * Math.PI) / 180) * radius;
                   
@@ -96,7 +98,7 @@ const agents = [
                           repeat: Infinity,
                           ease: "linear",
                         }}
-                        className="w-14 h-14 md:w-16 md:h-16 rounded-xl bg-[#222222] border border-white/10 flex flex-col items-center justify-center shadow-lg gap-0.5"
+                        className="w-11 h-11 md:w-16 md:h-16 rounded-xl bg-[#222222] border border-white/10 flex flex-col items-center justify-center shadow-lg gap-0.5"
                       >
                         <agent.icon className="w-5 h-5 md:w-6 md:h-6 text-primary" />
                         <span className="text-[9px] text-white/60 font-medium">{agent.label}</span>

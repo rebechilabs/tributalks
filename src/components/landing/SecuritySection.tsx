@@ -44,7 +44,7 @@
              className="bg-[#222222] rounded-2xl p-8 border border-white/10"
            >
              <h3 className="text-xl font-bold text-white mb-6">Segurança</h3>
-             <div className="grid grid-cols-2 gap-4">
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                {securityFeatures.map((feature) => (
                  <div key={feature.label} className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
                    <feature.icon className="w-5 h-5 text-primary flex-shrink-0" />
