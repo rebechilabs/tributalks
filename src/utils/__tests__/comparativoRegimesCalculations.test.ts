@@ -36,8 +36,8 @@ describe("Constantes tributárias", () => {
     expect(ALIQUOTA_CBS_IBS).toBe(0.265);
   });
 
-  it("redução DAS por fora deve ser 30%", () => {
-    expect(REDUCAO_DAS_POR_FORA).toBe(0.30);
+  it("redução DAS por fora deve ser 40%", () => {
+    expect(REDUCAO_DAS_POR_FORA).toBe(0.40);
   });
 
   it("limite Simples Nacional deve ser R$ 4.8M", () => {
@@ -232,19 +232,20 @@ describe("Lucro Real", () => {
 // Simples 2027
 // ========================================
 describe("Simples 2027 'Por Dentro'", () => {
-  it("deve ter mesma alíquota que Simples atual", () => {
+  it("deve ter alíquota ajustada por setor (maior que Simples atual)", () => {
     const input = buildInput();
     const result = calcularComparativoRegimes(input);
     const atual = result.regimes.find((r) => r.tipo === "SIMPLES_NACIONAL")!;
     const dentro = result.regimes.find((r) => r.tipo === "SIMPLES_2027_DENTRO")!;
 
-    expect(dentro.aliquota_efetiva).toBe(atual.aliquota_efetiva);
-    expect(dentro.imposto_anual).toBe(atual.imposto_anual);
+    // Comércio: ajuste de +1,5pp → alíquota efetiva deve ser maior que atual
+    expect(dentro.aliquota_efetiva).toBeGreaterThan(atual.aliquota_efetiva);
+    expect(dentro.imposto_anual).toBeGreaterThan(atual.imposto_anual);
   });
 });
 
 describe("Simples 2027 'Por Fora'", () => {
-  it("deve ter DAS reduzido em 30% + IBS/CBS líquido", () => {
+  it("deve ter DAS reduzido em 40% + IBS/CBS líquido", () => {
     const input = buildInput({
       faturamento_anual: 1200000,
       compras_insumos: 480000,
@@ -254,7 +255,7 @@ describe("Simples 2027 'Por Fora'", () => {
 
     // 1.2M → faixa index 3 → comércio[3] = 0.107
     const aliquota = ALIQUOTAS_SIMPLES.comercio[3];
-    const dasReduzido = 1200000 * aliquota * 0.70;
+    const dasReduzido = 1200000 * aliquota * (1 - REDUCAO_DAS_POR_FORA);
     const ibsDebito = 1200000 * ALIQUOTA_CBS_IBS;
     const ibsCredito = 480000 * ALIQUOTA_CBS_IBS;
     const ibsLiquido = Math.max(0, ibsDebito - ibsCredito);

@@ -8,7 +8,12 @@ import {
 
 // Constantes de cálculo
 export const ALIQUOTA_CBS_IBS = 0.265; // 26.5% estimado
-export const REDUCAO_DAS_POR_FORA = 0.30; // 30% redução
+// Fator de redução do DAS para o Simples Híbrido ("por fora")
+// A LC 214/2025 ainda não fixou o percentual exato de redução do DAS
+// quando o Simples opta por recolher IBS/CBS separadamente.
+// Estimativa: 40% de redução do DAS (alinhado com SplitPayment.tsx)
+// Fonte: orientações Sebrae/Receita Federal 2025 — sujeito a regulamentação do Comitê Gestor
+export const REDUCAO_DAS_POR_FORA = 0.40;
 export const LIMITE_SIMPLES = 4800000; // R$ 4.8M/ano
 
 // Faixas do Simples Nacional (valores anuais)
@@ -144,8 +149,20 @@ function calcularLucroReal(input: ComparativoRegimesInput): RegimeCalculation {
 function calcularSimples2027Dentro(input: ComparativoRegimesInput): RegimeCalculation {
   const setor = determinarSetor(input.cnae_principal);
   const aliquota = calcularAliquotaSimples(input.faturamento_anual, setor, input.folha_pagamento);
-  // "Por dentro": alíquota do DAS sofre ajuste estimado de +2pp pela absorção do IBS/CBS
-  const aliquotaAjustada = aliquota + 0.02;
+
+  // Ajuste por setor para absorção do IBS/CBS no DAS ("por dentro")
+  // A LC 214/2025 ainda não fixou os valores exatos — estimativas baseadas
+  // no perfil tributário de cada setor e nas orientações da Receita Federal 2025
+  // Serviços: maior ajuste pois alíquota base já é alta e IBS/CBS impacta mais
+  // Comércio/Indústria: menor ajuste pois cadeia tem mais créditos a compensar
+  const AJUSTE_POR_SETOR: Record<'comercio' | 'industria' | 'servicos', number> = {
+    comercio: 0.015,   // +1,5pp — menor impacto, cadeia com mais créditos
+    industria: 0.018,  // +1,8pp — impacto médio
+    servicos: 0.025,   // +2,5pp — maior impacto, poucos créditos de insumos
+  };
+
+  const ajuste = AJUSTE_POR_SETOR[setor] ?? 0.02;
+  const aliquotaAjustada = aliquota + ajuste;
   const imposto = input.faturamento_anual * aliquotaAjustada;
   const isElegivel = input.faturamento_anual <= LIMITE_SIMPLES;
 
