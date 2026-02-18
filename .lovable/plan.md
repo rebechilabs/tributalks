@@ -1,57 +1,86 @@
 
-# Atualizar Demo da Clara AI na Landing Page
+
+# Reorganizar Tabela de Planos com Nova Estrutura de Modulos
 
 ## Resumo
 
-Atualizar o passo 4 da demo interativa (`DemoStepClara.tsx`) e a seção `ClaraSection.tsx` para refletir a arquitetura multi-agente com 5 agentes especializados.
+Reescrever completamente o componente `NewPricingSection.tsx` para substituir os 3 cards com listas de features por uma **tabela de comparacao detalhada** agrupada por modulo (Entender, Precificar, Recuperar, Planejar, Comandar, Clara AI, Empresa, Extras), com versao responsiva em cards empilhados no mobile.
 
-## Mudanças
+## Mudancas
 
-### 1. DemoStepClara.tsx - Mostrar sistema multi-agente em ação
+### Arquivo: `src/components/landing/NewPricingSection.tsx`
 
-Reformular a interação para demonstrar o roteamento inteligente:
+**Estrutura atual**: 3 cards lado a lado, cada um com lista de checks generica.
 
-- Pergunta do usuário: "Clara, como a Reforma vai afetar minha empresa?"
-- Clara mostra badge do agente que está respondendo: tag "Planejar" (dourada) acima da resposta
-- Resposta com dados simulados e um botão de ação inline "[Simular cenário]"
-- Após a resposta principal, mostrar uma segunda interação rápida com agente diferente ("Precificar") para demonstrar que Clara roteia para agentes especializados
-- Texto inferior atualizado: "Clara orquestra 5 agentes especializados com seus dados reais"
+**Nova estrutura**: Tabela comparativa com linhas agrupadas por modulo.
 
-Fluxo visual da demo:
-1. Usuário pergunta
-2. Tag "Planejar" aparece com animação
-3. Clara responde sobre impacto da Reforma (typing effect)
-4. Botão de ação "[Ver no Comparativo]" aparece na resposta
-5. Chips de sugestão aparecem embaixo: "Quanto cobrar?" / "Encontrou créditos?"
+#### Header da tabela (sticky)
+- 3 colunas de planos com nome, subtitulo, preco e botao CTA
+- Subtitulos atualizados:
+  - STARTER: "Entenda sua situacao tributaria"
+  - NAVIGATOR: "Precifique certo e recupere creditos" + badge "RECOMENDADO"
+  - PROFESSIONAL: "Planejamento estrategico com IA ilimitada"
+- Navigator recebe borda dourada e badge "Recomendado" (em vez de Professional como "MAIS POPULAR")
 
-### 2. ClaraSection.tsx - Atualizar módulos orbitantes para 5 agentes
+#### Grupos de linhas (cada grupo com header de secao)
+Cada header de modulo tera fundo `bg-white/5`, icone do Lucide correspondente e nome do modulo em dourado.
 
-Substituir os 4 módulos genéricos (Score, DRE, Radar, NEXUS) pelos 5 agentes com seus ícones e emojis:
-
-| Agente | Ícone | Label |
+| Modulo | Icone Lucide | Features |
 |---|---|---|
-| Entender | BarChart3 | Entender |
-| Precificar | Calculator | Precificar |
-| Recuperar | FileSearch | Recuperar |
-| Planejar | Target | Planejar |
-| Comandar | LayoutDashboard | Comandar |
+| ENTENDER | BarChart3 | DRE Inteligente, Score Tributario, Comparativo de Regimes |
+| PRECIFICAR | Calculator | Margem Ativa |
+| RECUPERAR | FileSearch | Radar de Creditos |
+| PLANEJAR | Target | Oportunidades Tributarias, Planejamento Tributario |
+| COMANDAR | LayoutDashboard | Painel Executivo, Relatorios PDF |
+| CLARA AI | Sparkles | Mensagens/dia, Agentes disponiveis |
+| EMPRESA | Building2 | CNPJs, Conexao ERP |
+| EXTRAS | Gift | Noticias da Reforma, Comunidade, Analisador de Docs |
 
-Atualizar o texto descritivo para mencionar os 5 agentes especializados e o conceito de orquestradora.
+Cada celula mostra:
+- Checkmark dourado para incluso
+- Traco cinza para nao incluso
+- Texto especifico para itens como mensagens/dia ou agentes
 
-### 3. DemoSection.tsx - Ajustar subtítulo
+#### Versao mobile
+- Em telas < md, renderizar como 3 cards empilhados (Navigator primeiro por ser recomendado)
+- Cada card lista todas as features agrupadas por modulo com check/traco
 
-Alterar subtítulo de "Do preenchimento do DRE ao diagnóstico completo" para "Veja como 5 agentes especializados trabalham com seus dados" para alinhar com o posicionamento multi-agente.
+#### Rodape
+- Texto: "Todos os planos incluem 7 dias gratis. Cancele quando quiser."
+- Card Enterprise mantido abaixo, sem alteracoes
 
-## O que NÃO muda
+## O que NAO muda
 
-- Estrutura do InteractiveDemo (5 passos, auto-advance, navegação)
-- Outros passos da demo (Upload, Score, Radar, NEXUS)
-- Botões da landing page e CTAs de checkout
-- Configurações do Stripe e trial de 7 dias
+- Precos (R$ 297, R$ 697, R$ 1.997 e anuais)
+- Links de checkout Stripe (CONFIG.PAYMENT_LINKS)
+- Toggle mensal/anual
+- Card Enterprise e EnterpriseModal
+- Logica de trial de 7 dias
+- Secao header (titulo e subtitulo da secao)
 
-## Seção técnica
+## Secao tecnica
 
-### Arquivos editados
-- `src/components/landing/demo/DemoStepClara.tsx` - Reformulação completa: badge de agente, botão de ação inline, chips de sugestão, segunda micro-interação
-- `src/components/landing/ClaraSection.tsx` - 5 agentes orbitantes em vez de 4 módulos, texto atualizado
-- `src/components/landing/DemoSection.tsx` - Subtítulo atualizado (linha 24)
+### Arquivo editado
+- `src/components/landing/NewPricingSection.tsx` - Reescrita completa: substituir grid de cards por tabela comparativa agrupada por modulo com dados estruturados, renderizacao condicional desktop (tabela) vs mobile (cards), headers de grupo com icones, e Navigator como plano recomendado
+
+### Dados estruturados
+Os dados da tabela serao definidos como array de grupos:
+```typescript
+const featureGroups = [
+  {
+    name: "ENTENDER",
+    icon: BarChart3,
+    features: [
+      { name: "DRE Inteligente", starter: true, navigator: true, professional: true },
+      { name: "Score Tributario", starter: true, navigator: true, professional: true },
+      { name: "Comparativo de Regimes", starter: true, navigator: true, professional: true },
+    ]
+  },
+  // ... demais grupos
+];
+```
+
+### Responsividade
+- Desktop (md+): tabela HTML com `<table>` usando componentes do shadcn/ui (Table, TableHeader, TableBody, TableRow, TableHead, TableCell)
+- Mobile (<md): cards empilhados com `div` e listas, Navigator aparece primeiro com destaque visual
+
