@@ -97,6 +97,13 @@ export const MENU_STARTER: MenuElement[] = [
   },
   { type: 'divider' as const },
   {
+    title: 'NOTÍCIAS',
+    collapsible: true,
+    items: [
+      { label: 'Reforma Tributária', href: '/noticias', icon: Newspaper, description: 'Atualizações da Reforma' },
+    ]
+  },
+  {
     title: '',
     items: [
       { label: 'Indique e Ganhe', href: '/indicar', icon: Gift, badge: 'Até 20%', badgeVariant: 'success', description: 'Ganhe desconto indicando' },
@@ -186,6 +193,13 @@ export const MENU_NAVIGATOR: MenuElement[] = [
   { type: 'divider' as const },
   // Seções secundárias
   {
+    title: 'NOTÍCIAS',
+    collapsible: true,
+    items: [
+      { label: 'Reforma Tributária', href: '/noticias', icon: Newspaper, description: 'Atualizações da Reforma' },
+    ]
+  },
+  {
     title: '',
     items: [
       { label: 'Indique e Ganhe', href: '/indicar', icon: Gift, badge: 'Até 20%', badgeVariant: 'success', description: 'Ganhe desconto indicando' },
@@ -269,6 +283,13 @@ export const MENU_PROFESSIONAL_V2: MenuElement[] = [
   },
   { type: 'divider' as const },
   // Seções secundárias
+  {
+    title: 'NOTÍCIAS',
+    collapsible: true,
+    items: [
+      { label: 'Reforma Tributária', href: '/noticias', icon: Newspaper, description: 'Atualizações da Reforma' },
+    ]
+  },
   {
     title: '',
     items: [
