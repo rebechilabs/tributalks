@@ -118,13 +118,30 @@ const ROUTE_CONTEXTS: Record<string, ClaraContextConfig> = {
     variant: 'prominent'
   },
   '/dashboard/dre': {
-    intent: 'analyze',
-    headline: 'Analiso sua saúde financeira',
-    description: 'O DRE revela oportunidades de economia tributária. Posso destacar os pontos críticos.',
-    ctaLabel: 'Analisar indicadores',
-    ctaQuestion: 'Analise meu DRE e me diga: quais indicadores financeiros merecem atenção e como posso otimizar minha carga tributária?',
-    proactiveQuestion: 'Qual sua principal preocupação hoje: reduzir impostos ou melhorar margem de lucro?',
-    variant: 'default'
+    intent: 'suggest',
+    headline: 'Próximo passo: Score Tributário',
+    description: 'Agora que você tem seu DRE, descubra sua nota fiscal de 0 a 100 e identifique pontos de melhoria.',
+    ctaLabel: 'Calcular meu Score',
+    ctaQuestion: 'Acabei de preencher meu DRE. Qual deve ser meu próximo passo para otimizar minha carga tributária?',
+    proactiveQuestion: '🎯 Seu DRE está pronto! Que tal calcular seu Score Tributário? Ele cruza seus dados financeiros com 11 indicadores fiscais.',
+    quickActions: [
+      { label: 'Ir para o Score', question: 'Quero calcular meu Score Tributário agora.' },
+      { label: 'Analisar DRE', question: 'Analise meu DRE e me diga: quais indicadores financeiros merecem atenção?' }
+    ],
+    variant: 'prominent'
+  },
+  '/dashboard/entender/dre': {
+    intent: 'suggest',
+    headline: 'Próximo passo: Score Tributário',
+    description: 'Agora que você tem seu DRE, descubra sua nota fiscal de 0 a 100 e identifique pontos de melhoria.',
+    ctaLabel: 'Calcular meu Score',
+    ctaQuestion: 'Acabei de preencher meu DRE. Qual deve ser meu próximo passo para otimizar minha carga tributária?',
+    proactiveQuestion: '🎯 Seu DRE está pronto! Que tal calcular seu Score Tributário? Ele cruza seus dados financeiros com 11 indicadores fiscais.',
+    quickActions: [
+      { label: 'Ir para o Score', question: 'Quero calcular meu Score Tributário agora.' },
+      { label: 'Analisar DRE', question: 'Analise meu DRE e me diga: quais indicadores financeiros merecem atenção?' }
+    ],
+    variant: 'prominent'
   },
   '/dashboard/planejar/oportunidades': {
     intent: 'suggest',
