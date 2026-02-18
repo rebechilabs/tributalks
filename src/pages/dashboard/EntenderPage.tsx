@@ -14,7 +14,7 @@ const tools = [
   },
   {
     title: "Score Tributário",
-    description: "Diagnóstico da saúde tributária em escala de 0 a 1000.",
+    description: "Diagnóstico da saúde tributária em escala de 0 a 100.",
     href: "/dashboard/entender/score",
     icon: Trophy,
     stepNumber: 2,

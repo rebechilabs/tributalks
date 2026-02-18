@@ -155,7 +155,7 @@ export function TribuTalksPitchPdf() {
       {
         name: "Score Tributário",
         badge: "Novo",
-        desc: "Avalia a saúde fiscal da empresa em 5 dimensões com nota de 0 a 1000 e grade (A+ a E).",
+        desc: "Avalia a saúde fiscal da empresa em 5 dimensões com nota de 0 a 100 e grade (A+ a E).",
         inputs: "4 cards automáticos (XMLs, DRE, perfil) + 4 cards manuais (situação fiscal, certidões, obrigações, controles)",
         outputs: "Score total, nota por dimensão, ações recomendadas priorizadas, economia potencial"
       },

@@ -27,7 +27,7 @@ const ALL_MODULES: ModuleInfo[] = [
     description: 'Diagnóstico completo da saúde tributária da sua empresa. Entenda onde você está antes de tomar qualquer decisão.',
     items: [
       { label: 'DRE Inteligente', description: 'Visualize seu lucro ou prejuízo líquido com análise automática de receitas e despesas.', href: '/dashboard/entender/dre', icon: BarChart3, minPlan: 'STARTER' },
-      { label: 'Score Tributário', description: 'Nota de 0 a 1000 que avalia sua situação fiscal atual e aponta melhorias.', href: '/dashboard/entender/score', icon: Trophy, minPlan: 'STARTER' },
+      { label: 'Score Tributário', description: 'Nota de 0 a 100 que avalia sua situação fiscal atual e aponta melhorias.', href: '/dashboard/entender/score', icon: Trophy, minPlan: 'STARTER' },
       { label: 'Comparativo de Regimes Tributários', description: 'Compare Simples, Presumido, Real e os novos regimes IBS/CBS de 2027.', href: '/dashboard/entender/comparativo', icon: Scale, minPlan: 'STARTER' },
     ],
   },

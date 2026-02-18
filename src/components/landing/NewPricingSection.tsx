@@ -34,7 +34,7 @@ const plans: PlanCard[] = [
     features: [
       "@ENTENDER",
       "DRE Inteligente",
-      "Score Tributário 0-1000",
+      "Score Tributário 0-100",
       "Calculadora CBS/IBS por NCM",
       "Comparativo de Regimes",
       "Timeline 2026-2033",

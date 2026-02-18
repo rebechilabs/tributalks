@@ -230,7 +230,7 @@ export function ScorePdfReport({ scoreData, actions, open, onClose }: ScorePdfRe
           <div className="flex items-center justify-center p-4 bg-muted/30 rounded-lg">
             <div className="text-center">
               <div className="text-3xl font-bold">{scoreData.score_total}</div>
-              <div className="text-sm text-muted-foreground">pontos / 1000</div>
+              <div className="text-sm text-muted-foreground">pontos / 100</div>
               <div className="mt-1 inline-block px-2 py-0.5 rounded bg-primary text-primary-foreground text-xs font-bold">
                 {scoreData.score_grade}
               </div>

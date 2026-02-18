@@ -325,7 +325,7 @@ export function drawScoreDisplay(doc: jsPDF, score: ScoreData, yStart: number): 
   doc.roundedRect(barX, yPos, barWidth, barHeight, 2, 2, 'F');
   
   // Progress
-  const progressWidth = (score.total / 1000) * barWidth;
+  const progressWidth = (score.total / 100) * barWidth;
   doc.setFillColor(statusColor.r, statusColor.g, statusColor.b);
   doc.roundedRect(barX, yPos, progressWidth, barHeight, 2, 2, 'F');
   
