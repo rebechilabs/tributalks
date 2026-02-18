@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Component, type ReactNode, type ErrorInfo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, CheckCircle2, Circle, Target, AlertTriangle, TrendingUp, RotateCcw } from 'lucide-react';
@@ -11,6 +11,23 @@ import {
 import { CreditRadar } from '@/components/credits';
 import { SavingsSummaryCard } from '@/components/credits';
 import { motion, AnimatePresence } from 'framer-motion';
+
+class ErrorBoundaryFallback extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(error: Error, info: ErrorInfo) { console.error('CreditRadar error:', error, info); }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <Card><CardContent className="py-6 text-center text-muted-foreground">
+          <AlertTriangle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+          <p>Erro ao carregar dados. Tente novamente.</p>
+        </CardContent></Card>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 interface AnalysisStepProps {
   regime: RegimeType;
@@ -186,9 +203,13 @@ export function AnalysisStep({
       {/* Full CreditRadar details */}
       {isComplete && showDetails && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-          <SavingsSummaryCard />
+          <ErrorBoundaryFallback>
+            <SavingsSummaryCard />
+          </ErrorBoundaryFallback>
           <div className="mt-6">
-            <CreditRadar />
+            <ErrorBoundaryFallback>
+              <CreditRadar />
+            </ErrorBoundaryFallback>
           </div>
         </motion.div>
       )}

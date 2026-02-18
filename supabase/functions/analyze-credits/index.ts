@@ -297,7 +297,10 @@ serve(async (req) => {
       .from('pgdas_arquivos')
       .select('aliquota_efetiva, dados_completos, periodo_apuracao, anexo_simples, receita_bruta')
       .eq('user_id', userId)
+      .not('dados_completos', 'is', null)
+      .gt('receita_bruta', 0)
       .order('periodo_apuracao', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle()
 
