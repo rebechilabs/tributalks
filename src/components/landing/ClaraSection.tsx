@@ -1,19 +1,21 @@
  import { motion } from "framer-motion";
- import { 
-   BarChart3, 
-   Calculator, 
-   FileSearch, 
-   Target,
-   Sparkles,
-   MessageCircle
- } from "lucide-react";
+import { 
+  BarChart3, 
+  Calculator, 
+  FileSearch, 
+  Target,
+  LayoutDashboard,
+  Sparkles,
+  MessageCircle
+} from "lucide-react";
  
- const modules = [
-   { icon: BarChart3, label: "Score" },
-   { icon: Calculator, label: "DRE" },
-   { icon: FileSearch, label: "Radar" },
-   { icon: Target, label: "NEXUS" },
- ];
+const agents = [
+  { icon: BarChart3, label: "Entender", emoji: "🎯" },
+  { icon: Calculator, label: "Precificar", emoji: "💰" },
+  { icon: FileSearch, label: "Recuperar", emoji: "🔍" },
+  { icon: Target, label: "Planejar", emoji: "💡" },
+  { icon: LayoutDashboard, label: "Comandar", emoji: "📊" },
+];
  
  export function ClaraSection() {
    return (
@@ -36,17 +38,16 @@
                Sua Copilota Tributária Pessoal.
              </h2>
              
-             <p className="text-lg text-white/70 mb-8 leading-relaxed">
-               <span className="text-primary font-semibold">Clara AI</span> não é apenas um chatbot. 
-               Ela é o cérebro do TribuTalks. Integrada a todas as ferramentas, ela acompanha você em cada passo, 
-               interpretando gráficos, explicando os cálculos do Radar de Créditos e traduzindo o "juridiquês" 
-               da Reforma Tributária para o português que seu negócio entende.
-             </p>
-             
-             <p className="text-lg text-white/70 leading-relaxed">
-               É como ter um <span className="text-primary font-semibold">consultor tributário sênior</span> ao seu lado, 
-               24 horas por dia.
-             </p>
+              <p className="text-lg text-white/70 mb-8 leading-relaxed">
+                <span className="text-primary font-semibold">Clara AI</span> não é apenas um chatbot. 
+                Ela é uma orquestradora de <span className="text-primary font-semibold">5 agentes especializados</span> que 
+                trabalham juntos com seus dados reais: Entender, Precificar, Recuperar, Planejar e Comandar.
+              </p>
+              
+              <p className="text-lg text-white/70 leading-relaxed">
+                Cada agente domina uma área tributária. Clara roteia sua pergunta para o especialista certo, 
+                <span className="text-primary font-semibold"> 24 horas por dia</span>.
+              </p>
            </motion.div>
  
            {/* Right: Visual */}
@@ -67,42 +68,43 @@
                  <MessageCircle className="w-16 h-16 md:w-20 md:h-20 text-primary-foreground" />
                </div>
  
-               {/* Orbiting modules */}
-               {modules.map((module, index) => {
-                 const angle = (index * 90) - 45;
-                 const radius = 140;
-                 const x = Math.cos((angle * Math.PI) / 180) * radius;
-                 const y = Math.sin((angle * Math.PI) / 180) * radius;
-                 
-                 return (
-                   <motion.div
-                     key={module.label}
-                     className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-                     style={{ x, y }}
-                     animate={{ 
-                       rotate: [0, 360],
-                     }}
-                     transition={{
-                       duration: 20,
-                       repeat: Infinity,
-                       ease: "linear",
-                     }}
-                   >
-                     <motion.div
-                       animate={{ rotate: [0, -360] }}
-                       transition={{
-                         duration: 20,
-                         repeat: Infinity,
-                         ease: "linear",
-                       }}
-                       className="w-14 h-14 md:w-16 md:h-16 rounded-xl bg-[#111111] border border-white/10 flex items-center justify-center shadow-lg"
-                     >
-                       <module.icon className="w-6 h-6 md:w-7 md:h-7 text-primary" />
-                     </motion.div>
-                   </motion.div>
-                 );
-               })}
- 
+                {/* Orbiting agents */}
+                {agents.map((agent, index) => {
+                  const angle = (index * 72) - 90;
+                  const radius = 140;
+                  const x = Math.cos((angle * Math.PI) / 180) * radius;
+                  const y = Math.sin((angle * Math.PI) / 180) * radius;
+                  
+                  return (
+                    <motion.div
+                      key={agent.label}
+                      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+                      style={{ x, y }}
+                      animate={{ 
+                        rotate: [0, 360],
+                      }}
+                      transition={{
+                        duration: 25,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                    >
+                      <motion.div
+                        animate={{ rotate: [0, -360] }}
+                        transition={{
+                          duration: 25,
+                          repeat: Infinity,
+                          ease: "linear",
+                        }}
+                        className="w-14 h-14 md:w-16 md:h-16 rounded-xl bg-[#111111] border border-white/10 flex flex-col items-center justify-center shadow-lg gap-0.5"
+                      >
+                        <agent.icon className="w-5 h-5 md:w-6 md:h-6 text-primary" />
+                        <span className="text-[9px] text-white/60 font-medium">{agent.label}</span>
+                      </motion.div>
+                    </motion.div>
+                  );
+                })}
+
                {/* Connection lines */}
                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 320 320">
                  <circle
