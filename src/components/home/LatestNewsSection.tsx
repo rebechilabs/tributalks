@@ -69,7 +69,25 @@ export function LatestNewsSection() {
                     className="block p-3 rounded-lg border border-border/50 hover:border-amber-500/40 hover:bg-accent/30 transition-all group"
                   >
                     <span className="text-xs text-muted-foreground">
-                      {formatBrasilia(item.data_publicacao, "dd MMM yyyy")}
+                      {formatBrasilia(item.data_publicacao, "dd MMM yyyy 'às' HH:mm")}
+                      {item.fonte && (
+                        <>
+                          {" · "}
+                          {item.fonte_url ? (
+                            <a
+                              href={item.fonte_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:text-primary underline-offset-2 hover:underline"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {item.fonte}
+                            </a>
+                          ) : (
+                            item.fonte
+                          )}
+                        </>
+                      )}
                     </span>
                     <h4 className="text-sm font-medium line-clamp-1 mt-0.5 group-hover:text-primary transition-colors">
                       {item.titulo_original}
