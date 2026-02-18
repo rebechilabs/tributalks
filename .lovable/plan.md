@@ -1,58 +1,41 @@
 
-# Aplicar Suporte Multi-Empresa ao Wizard de Perfil
+
+# Migrar Campos de Artesanato e Persistir no Wizard
 
 ## Resumo
 
-O arquivo enviado adiciona suporte para multiplas empresas no wizard de perfil (`PerfilEmpresa.tsx`), alem de incluir campos setoriais que faltavam no `loadProfile` e `saveProgress`. Porem, o arquivo tem alguns bugs que precisam ser corrigidos antes de aplicar.
+Adicionar 14 colunas booleanas de artesanato na tabela `company_profile` no banco de dados, e atualizar o wizard (`PerfilEmpresa.tsx`) para ler e salvar esses campos corretamente.
 
-## Problemas no Arquivo Enviado (que serao corrigidos)
+## Etapas
 
-1. **`selectedCompany` nao existe** no `CompanyContext` — o nome correto e `currentCompany`
-2. **`selectedCompany.name` e `selectedCompany.cnpj`** nao existem na interface `Company` — os campos corretos sao `nome_fantasia` e `cnpj_principal`
-3. **`company_id` nao existe** na tabela `company_profile` — a propria coluna `id` da tabela e o identificador da empresa. O filtro correto para multi-empresa e `.eq('id', currentCompany.id)`
-4. **O `match-opportunities` nao aceita `company_id` no body** — ele usa o JWT para buscar o perfil. Para suporte multi-empresa, precisaria ser adaptado separadamente
+### 1. Executar a migracao no banco de dados
+Adicionar as 14 colunas na tabela `company_profile`:
+- **Artesanato (Producao)**: `tem_carteira_artesao`, `artesanato_regional`, `mei_artesao`, `venda_direta_consumidor`, `participa_feiras`, `exporta_artesanato`, `usa_insumos_naturais`
+- **Comercio de Artesanato**: `compra_artesao_local`, `compra_cooperativas`, `revende_artesanato_regional`, `loja_fisica_artesanato`, `vende_turistas`, `exporta_revenda_artesanato`, `participa_feiras_revenda`
 
-## O Que Sera Implementado
+Todas `boolean NOT NULL DEFAULT false`, com comentarios descritivos.
 
-### 1. Corrigir imports e hooks
-- Trocar `selectedCompany` por `currentCompany` (do `useCompany()`)
+### 2. Atualizar `src/pages/PerfilEmpresa.tsx`
+Incluir os 14 campos de artesanato no `loadProfile` (leitura do banco) e no `saveProgress` (escrita no banco), seguindo o mesmo padrao ja usado para os demais setores (saude, construcao, transporte, etc.).
 
-### 2. Filtro multi-empresa com `getProfileFilter()`
-- Quando `currentCompany` existe, filtrar por `id = currentCompany.id`
-- Fallback para `user_id = user.id` quando nao ha empresa selecionada
+Campos a adicionar no select e no upsert:
+```text
+tem_carteira_artesao, artesanato_regional, mei_artesao,
+venda_direta_consumidor, participa_feiras, exporta_artesanato,
+usa_insumos_naturais, compra_artesao_local, compra_cooperativas,
+revende_artesanato_regional, loja_fisica_artesanato, vende_turistas,
+exporta_revenda_artesanato, participa_feiras_revenda
+```
 
-### 3. Banner da empresa selecionada
-- Mostrar qual empresa esta sendo configurada na tela intro
-- Usar `currentCompany.nome_fantasia || currentCompany.cnpj_principal`
-
-### 4. Campos setoriais no loadProfile e saveProgress
-- Adicionar todos os campos setor-especificos que o arquivo enviado inclui (artesanato, saude, construcao, transporte, etc.)
-- Garantir que o save e load cobrem os mesmos campos
-
-### 5. Dependencia do useEffect em `currentCompany.id`
-- Recarregar perfil ao trocar de empresa
+### O que NAO muda
+- `ProfileWizardSteps.tsx` ja tem os campos, labels e defaults configurados -- nenhuma alteracao necessaria
+- `CompanyContext.tsx` nao precisa de mudanca (nao gerencia campos setoriais)
 
 ## Detalhes Tecnicos
 
-### Arquivo modificado:
-- `src/pages/PerfilEmpresa.tsx`
+### SQL da migracao
+Exatamente o SQL fornecido pelo usuario, com `ADD COLUMN IF NOT EXISTS` e `COMMENT ON COLUMN`.
 
-### Mapeamento de correcoes:
-```text
-selectedCompany          →  currentCompany
-selectedCompany.name     →  currentCompany.nome_fantasia
-selectedCompany.cnpj     →  currentCompany.cnpj_principal
-company_id column        →  id (PK da tabela)
-{ column: "company_id" } →  { column: "id" }
-```
+### Alteracoes no PerfilEmpresa.tsx
+Adicionar os 14 campos booleanos tanto na query `.select(...)` do `loadProfile` quanto no objeto do `.upsert(...)` do `saveProgress`, mapeando de/para `formData` com o mesmo nome de campo.
 
-### Logica do getProfileFilter:
-```text
-if currentCompany exists:
-  filter by id = currentCompany.id
-else:
-  filter by user_id = user.id
-```
-
-### Nenhuma migracao de banco necessaria
-A tabela `company_profile` ja tem a coluna `id` como PK — nao precisa de `company_id`.
