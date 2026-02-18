@@ -95,7 +95,7 @@ export function NewPricingSection() {
   const [enterpriseModalOpen, setEnterpriseModalOpen] = useState(false);
 
   return (
-    <section id="planos" className="py-16 md:py-20 bg-[#0A0A0A]">
+    <section id="planos" className="py-16 md:py-20 bg-[#1A1A1A]">
       <div className="container mx-auto px-4 md:px-8">
         {/* Section Header */}
         <motion.div
@@ -115,7 +115,7 @@ export function NewPricingSection() {
 
         {/* Billing Toggle */}
         <div className="flex items-center justify-center gap-4 mb-12">
-          <div className="inline-flex items-center bg-[#111111] rounded-full p-1 border border-white/10">
+          <div className="inline-flex items-center bg-[#222222] rounded-full p-1 border border-white/10">
             <button
               onClick={() => setBillingPeriod("mensal")}
               className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${
@@ -158,7 +158,7 @@ export function NewPricingSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className={`relative flex flex-col bg-[#111111] rounded-2xl p-6 md:p-8 border-2 ${
+                className={`relative flex flex-col bg-[#222222] rounded-2xl p-6 md:p-8 border-2 ${
                   plan.recommended
                     ? "border-primary shadow-lg shadow-primary/20"
                     : "border-white/10"
@@ -245,7 +245,7 @@ export function NewPricingSection() {
           transition={{ duration: 0.6, delay: 0.3 }}
           className="max-w-2xl mx-auto"
         >
-          <div className="bg-[#111111] rounded-2xl p-6 md:p-8 border border-white/10 text-center">
+          <div className="bg-[#222222] rounded-2xl p-6 md:p-8 border border-white/10 text-center">
             <h3 className="text-xl font-bold text-white mb-2">ENTERPRISE</h3>
             <p className="text-white/60 mb-6">
               Para grupos econômicos e soluções White Label.

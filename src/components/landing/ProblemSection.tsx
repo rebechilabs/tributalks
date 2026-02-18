@@ -21,7 +21,7 @@
  
  export function ProblemSection() {
    return (
-    <section className="bg-[#0A0A0A]">
+    <section className="bg-[#1A1A1A]">
       <div className="container mx-auto px-4 md:px-8 pt-10 pb-16 md:pb-20">
          {/* Section Header */}
          <motion.div
@@ -47,7 +47,7 @@
                whileInView={{ opacity: 1, y: 0 }}
                viewport={{ once: true }}
                transition={{ duration: 0.6, delay: index * 0.1 }}
-               className="bg-[#111111] border border-white/10 rounded-2xl p-8 hover:border-primary/50 transition-all duration-300 group"
+               className="bg-[#222222] border border-white/10 rounded-2xl p-8 hover:border-primary/50 transition-all duration-300 group"
              >
                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
                  <benefit.icon className="w-7 h-7 text-primary" />
