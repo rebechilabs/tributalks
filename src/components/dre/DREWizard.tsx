@@ -363,7 +363,7 @@ export function DREWizard({ onComplete, initialData }: DREWizardProps) {
           {steps.map((step) => {
             const StepIcon = step.icon;
             return (
-              <div key={step.id} className={`flex flex-col items-center ${step.id === currentStep ? 'text-primary' : 'text-muted-foreground'}`}>
+              <div key={step.id} onClick={() => setCurrentStep(step.id)} className={`flex flex-col items-center cursor-pointer hover:bg-muted/50 rounded-lg p-1 transition-colors ${step.id === currentStep ? 'text-primary' : 'text-muted-foreground'}`}>
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1 ${step.id < currentStep ? 'bg-primary text-primary-foreground' : step.id === currentStep ? 'bg-primary/20 border-2 border-primary' : 'bg-muted'}`}>
                   {step.id < currentStep ? <CheckCircle2 className="w-5 h-5" /> : <StepIcon className="w-5 h-5" />}
                 </div>
