@@ -30,10 +30,10 @@ export function generateBriefingText(opp: OpportunityData, company?: CompanyInfo
     `Preparado por TribuTalks em ${formatDate(now)}`,
     `Empresa: ${razao} | CNPJ: ${cnpj} | Regime: ${regime}`,
     '',
-    '═══ OPORTUNIDADE IDENTIFICADA ═══',
+    '═══ HIPÓTESE IDENTIFICADA ═══',
     opp.description || 'Descrição em breve.',
     '',
-    '═══ POR QUE ESTA EMPRESA SE QUALIFICA ═══',
+    '═══ POR QUE ESTA EMPRESA PODE SE QUALIFICAR ═══',
   ];
 
   if (opp.match_reasons && opp.match_reasons.length > 0) {
@@ -42,10 +42,15 @@ export function generateBriefingText(opp: OpportunityData, company?: CompanyInfo
     lines.push(`Empresa do ${regime} pode se beneficiar desta oportunidade.`);
   }
 
+  const hasPct = opp.economia_percentual_min != null && opp.economia_percentual_max != null &&
+    (opp.economia_percentual_min > 0 || opp.economia_percentual_max > 0);
+
   lines.push(
     '',
-    '═══ ECONOMIA ESTIMADA ═══',
-    `Mínima: ${formatCurrency(opp.economia_anual_min)}/ano | Máxima: ${formatCurrency(opp.economia_anual_max)}/ano`,
+    '═══ IMPACTO ESTIMADO ═══',
+    hasPct
+      ? `${opp.economia_percentual_min}%–${opp.economia_percentual_max}% de economia estimada por ano`
+      : `Impacto: ${opp.impact_label === 'alto' ? 'Alto' : opp.impact_label === 'baixo' ? 'Baixo' : 'Médio'} (estimativa baseada no perfil)`,
     '',
     '═══ FUNDAMENTAÇÃO LEGAL ═══',
     opp.base_legal || 'Fundamentação a ser complementada.',
@@ -67,7 +72,8 @@ export function generateBriefingText(opp: OpportunityData, company?: CompanyInfo
     '3. Implementar com acompanhamento profissional',
     '',
     '---',
-    'Este documento é de caráter informativo. Consulte um profissional habilitado.',
+    'Este documento descreve uma hipótese identificada por análise automatizada.',
+    'A confirmação e execução dependem de validação por profissional habilitado.',
     'TribuTalks — Inteligência Tributária | tributalks.com.br',
   );
 
@@ -129,16 +135,24 @@ export function generateBriefingPdf(opp: OpportunityData, company?: CompanyInfo)
   doc.setFont('helvetica', 'bold');
   doc.text(opp.name, PAGE.marginLeft + 5, y);
   y += 8;
+
+  const hasPct = opp.economia_percentual_min != null && opp.economia_percentual_max != null &&
+    (opp.economia_percentual_min > 0 || opp.economia_percentual_max > 0);
   doc.setTextColor(...C.success);
   doc.setFontSize(FONT_SIZES.heading1);
-  doc.text(`${formatCurrency(opp.economia_anual_min)} — ${formatCurrency(opp.economia_anual_max)} /ano`, PAGE.marginLeft + 5, y);
+  if (hasPct) {
+    doc.text(`${opp.economia_percentual_min}%–${opp.economia_percentual_max}% de economia /ano`, PAGE.marginLeft + 5, y);
+  } else {
+    const label = opp.impact_label === 'alto' ? 'Alto' : opp.impact_label === 'baixo' ? 'Baixo' : 'Médio';
+    doc.text(`Impacto: ${label} (estimativa)`, PAGE.marginLeft + 5, y);
+  }
 
   // Description
   y += 18;
   doc.setTextColor(...C.gold);
   doc.setFontSize(FONT_SIZES.heading3);
   doc.setFont('helvetica', 'bold');
-  doc.text('OPORTUNIDADE IDENTIFICADA', PAGE.marginLeft, y);
+  doc.text('HIPÓTESE IDENTIFICADA', PAGE.marginLeft, y);
   y += 7;
   doc.setTextColor(...C.textSecondary);
   doc.setFontSize(FONT_SIZES.body);
@@ -151,7 +165,7 @@ export function generateBriefingPdf(opp: OpportunityData, company?: CompanyInfo)
   doc.setTextColor(...C.gold);
   doc.setFontSize(FONT_SIZES.heading3);
   doc.setFont('helvetica', 'bold');
-  doc.text('POR QUE ESTA EMPRESA SE QUALIFICA', PAGE.marginLeft, y);
+  doc.text('POR QUE ESTA EMPRESA PODE SE QUALIFICAR', PAGE.marginLeft, y);
   y += 7;
   doc.setTextColor(...C.textSecondary);
   doc.setFontSize(FONT_SIZES.body);
@@ -209,7 +223,7 @@ export function generateBriefingPdf(opp: OpportunityData, company?: CompanyInfo)
   doc.line(PAGE.marginLeft, footerY, PAGE.width - PAGE.marginRight, footerY);
   doc.setTextColor(...C.textMuted);
   doc.setFontSize(FONT_SIZES.micro);
-  doc.text('Este documento é de caráter informativo. Consulte um profissional habilitado.', PAGE.width / 2, footerY + 5, { align: 'center' });
+  doc.text('Este documento descreve uma hipótese identificada por análise automatizada. A confirmação e execução dependem de validação por profissional habilitado.', PAGE.width / 2, footerY + 5, { align: 'center', maxWidth: PAGE.contentWidth });
   doc.text('TribuTalks — Inteligência Tributária | tributalks.com.br', PAGE.width / 2, footerY + 9, { align: 'center' });
 
   doc.save(`briefing-${opp.name.toLowerCase().replace(/\s+/g, '-')}.pdf`);

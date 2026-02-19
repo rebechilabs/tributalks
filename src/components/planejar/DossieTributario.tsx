@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Zap, Scale, Clock, AlertTriangle, CheckCircle2, Copy, FileText, Shield, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { OpportunityData } from './OpportunityCard';
+import { getImpactLine } from './OpportunityCard';
 import { generateBriefingPdf, generateBriefingText } from './BriefingExport';
 import { toast } from 'sonner';
 
@@ -72,12 +73,20 @@ export function DossieTributario({ open, onOpenChange, opportunity: opp, company
         <SheetHeader className="p-6 pb-4 border-b border-border">
           <SheetTitle className="text-lg font-bold text-foreground">{opp.name}</SheetTitle>
           <SheetDescription className="sr-only">Dossiê tributário detalhado</SheetDescription>
-          <div className="flex items-center gap-3 mt-2">
-            <span className="text-2xl font-bold text-emerald-400">
-              {formatCurrency(opp.economia_anual_min)} — {formatCurrency(opp.economia_anual_max)}
-            </span>
-            <span className="text-sm text-muted-foreground">/ano</span>
-          </div>
+          {(() => {
+            const impact = getImpactLine(opp);
+            return (
+              <div className="flex items-center gap-3 mt-2">
+                <span className="text-2xl font-bold text-emerald-400">
+                  {impact.isPercentual ? `Economia estimada: ${impact.text}` : impact.text}
+                </span>
+                {impact.isPercentual && <span className="text-sm text-muted-foreground">/ano</span>}
+                {impact.badge && (
+                  <Badge variant="outline" className={cn("text-xs", impact.badgeClassName)}>{impact.badge}</Badge>
+                )}
+              </div>
+            );
+          })()}
           <div className="flex items-center gap-2 mt-2">
             <Badge variant="outline" className={cn('text-xs', urgency.color)}>
               <UrgencyIcon className="w-3 h-3 mr-1" />

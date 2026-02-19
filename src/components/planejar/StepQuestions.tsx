@@ -11,6 +11,7 @@ interface QuestionField {
   type: 'grid' | 'currency' | 'uf' | 'textarea' | 'number' | 'text';
   options?: { value: string; label: string }[];
   placeholder?: string;
+  roiHint?: string;
   condition?: (answers: Record<string, string | number>, existing: Record<string, unknown> | null) => boolean;
 }
 
@@ -165,7 +166,8 @@ const EXPLORATORY_FIELDS: QuestionField[] = [
   {
     key: 'folha_acima_28pct',
     label: 'Fator R',
-    claraText: 'Sua folha de pagamento representa mais de 28% do faturamento? Isso pode mudar seu enquadramento no Simples.',
+    claraText: 'Sua folha de pagamento representa mais de 28% do faturamento?',
+    roiHint: 'Destrava Fator R',
     type: 'grid',
     options: [
       { value: 'sim', label: 'Sim' },
@@ -181,7 +183,8 @@ const EXPLORATORY_FIELDS: QuestionField[] = [
   {
     key: 'tem_st_icms',
     label: 'Substituição Tributária',
-    claraText: 'Seus produtos têm substituição tributária de ICMS? Isso pode gerar créditos não aproveitados.',
+    claraText: 'Seus produtos têm substituição tributária de ICMS?',
+    roiHint: 'Destrava exclusão ICMS-ST',
     type: 'grid',
     options: [
       { value: 'sim', label: 'Sim' },
@@ -198,6 +201,7 @@ const EXPLORATORY_FIELDS: QuestionField[] = [
     key: 'creditos_pis_cofins_pendentes',
     label: 'Créditos PIS/COFINS',
     claraText: 'Você tem créditos de PIS/COFINS não aproveitados nos últimos 5 anos?',
+    roiHint: 'Destrava recuperação de créditos',
     type: 'grid',
     options: [
       { value: 'sim', label: 'Sim' },
@@ -212,7 +216,8 @@ const EXPLORATORY_FIELDS: QuestionField[] = [
   {
     key: 'usa_jcp',
     label: 'JCP',
-    claraText: 'Você faz planejamento de JCP (Juros sobre Capital Próprio)? Pode reduzir significativamente o IRPJ.',
+    claraText: 'Você distribui JCP (Juros sobre Capital Próprio) aos sócios?',
+    roiHint: 'Destrava planejamento JCP',
     type: 'grid',
     options: [
       { value: 'sim', label: 'Sim' },
@@ -228,6 +233,7 @@ const EXPLORATORY_FIELDS: QuestionField[] = [
     key: 'creditos_icms_exportacao',
     label: 'Créditos ICMS Exportação',
     claraText: 'Você acumula créditos de ICMS de exportação sem aproveitamento?',
+    roiHint: 'Destrava transferência de créditos',
     type: 'grid',
     options: [
       { value: 'sim', label: 'Sim' },
@@ -243,6 +249,7 @@ const EXPLORATORY_FIELDS: QuestionField[] = [
     key: 'usa_ret',
     label: 'RET',
     claraText: 'Você usa o RET (Regime Especial de Tributação) para suas incorporações?',
+    roiHint: 'Destrava redução de alíquota',
     type: 'grid',
     options: [
       { value: 'sim', label: 'Sim' },
@@ -257,7 +264,8 @@ const EXPLORATORY_FIELDS: QuestionField[] = [
   {
     key: 'conhece_imunidade_issqn',
     label: 'Imunidade ISSQN',
-    claraText: 'Você conhece a imunidade do ISSQN para serviços hospitalares? Pode gerar economia significativa.',
+    claraText: 'Seus serviços são de natureza hospitalar?',
+    roiHint: 'Destrava imunidade ISSQN',
     type: 'grid',
     options: [
       { value: 'sim', label: 'Sim, já aproveitamos' },
@@ -272,7 +280,8 @@ const EXPLORATORY_FIELDS: QuestionField[] = [
   {
     key: 'conhece_pep_sp',
     label: 'PEP/SP',
-    claraText: 'Você conhece o Programa Especial de Parcelamento (PEP) do ICMS em SP? Pode reduzir multas e juros.',
+    claraText: 'Você tem débitos de ICMS em aberto?',
+    roiHint: 'Destrava PEP-SP',
     type: 'grid',
     options: [
       { value: 'sim', label: 'Sim' },
@@ -446,6 +455,14 @@ export function StepQuestions({ missingFields, onComplete, existingProfile = nul
       </div>
 
       <ClaraMessage message={current.claraText} key={current.key} />
+
+      {current.roiHint && (
+        <div className="flex items-center gap-1.5 -mt-2">
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary">
+            🔓 Destrava: {current.roiHint.replace('Destrava ', '')}
+          </span>
+        </div>
+      )}
 
       {current.type === 'grid' && current.options && (
         <div className="grid grid-cols-2 gap-2">

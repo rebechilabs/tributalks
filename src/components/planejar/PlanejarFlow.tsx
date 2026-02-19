@@ -62,14 +62,21 @@ function getComplementaryFields(profile: Record<string, unknown> | null): string
 }
 
 function sortOpportunities(opps: OpportunityData[]): OpportunityData[] {
+  const riskOrder: Record<string, number> = { baixo: 0, medio: 1, alto: 2 };
   const compOrder: Record<string, number> = { muito_baixa: 0, baixa: 1, media: 2, alta: 3, muito_alta: 4 };
   return [...opps].sort((a, b) => {
-    if (a.alto_impacto && !b.alto_impacto) return -1;
-    if (!a.alto_impacto && b.alto_impacto) return 1;
+    // 1. match_score DESC (proxy de impact_score)
+    const scoreA = a.match_score ?? 0;
+    const scoreB = b.match_score ?? 0;
+    if (scoreB !== scoreA) return scoreB - scoreA;
+    // 2. risco_fiscal ASC (baixo primeiro, null = medio)
+    const ra = riskOrder[a.risco_fiscal || 'medio'] ?? 1;
+    const rb = riskOrder[b.risco_fiscal || 'medio'] ?? 1;
+    if (ra !== rb) return ra - rb;
+    // 3. complexidade ASC (baixa primeiro, null = media)
     const ca = compOrder[a.complexidade || 'media'] ?? 2;
     const cb = compOrder[b.complexidade || 'media'] ?? 2;
-    if (ca !== cb) return ca - cb;
-    return (b.economia_anual_max || 0) - (a.economia_anual_max || 0);
+    return ca - cb;
   });
 }
 
