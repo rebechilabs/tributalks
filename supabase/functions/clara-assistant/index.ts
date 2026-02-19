@@ -2040,24 +2040,50 @@ function generateAnalysisResponse(type: AnalysisType, ctx: UserPlatformContext):
   }
 }
 
+// ============================================
+// WATERMARK INVISÍVEL POR USUÁRIO
+// ============================================
+// Codifica user_id em caracteres Unicode de largura zero.
+// Se alguém copiar e colar, o watermark identifica a origem.
+const ZERO_WIDTH_CHARS = ['\u200B', '\u200C', '\u200D', '\uFEFF'];
+
+function encodeWatermark(userId: string): string {
+  // Convert each char of the userId to 2-bit pairs encoded as zero-width chars
+  const bytes = new TextEncoder().encode(userId.replace(/-/g, ''));
+  let watermark = '';
+  for (const byte of bytes) {
+    for (let shift = 6; shift >= 0; shift -= 2) {
+      const index = (byte >> shift) & 0x03;
+      watermark += ZERO_WIDTH_CHARS[index];
+    }
+  }
+  return watermark;
+}
+
 // Adiciona disclaimer automaticamente quando resposta menciona termos tributários
-function appendDisclaimer(response: string, userPlan: string): string {
-  // Só adiciona se resposta > 100 chars E menciona termos tributários relevantes
-  const needsDisclaimer = response.length > 100 && 
-    /estratégia|implementar|economia|regime|crédito|planejamento|simulação|impacto|tribut|benefício|incentivo|oportunidade/i.test(response);
+function appendDisclaimer(response: string, userPlan: string, userId?: string): string {
+  // Injeta watermark invisível no início da resposta
+  let result = response;
+  if (userId) {
+    result = encodeWatermark(userId) + result;
+  }
+
+  // Só adiciona disclaimer se resposta > 100 chars E menciona termos tributários relevantes
+  const needsDisclaimer = result.length > 100 && 
+    /estratégia|implementar|economia|regime|crédito|planejamento|simulação|impacto|tribut|benefício|incentivo|oportunidade/i.test(result);
   
-  if (!needsDisclaimer) return response;
+  if (!needsDisclaimer) return result;
   
   // Verifica se já tem disclaimer
-  if (response.includes('✨ No Enterprise') || response.includes('⚠️ Antes de implementar') || response.includes('⚠️ Lembre-se')) {
-    return response;
+  if (result.includes('✨ No Enterprise') || result.includes('⚠️ Antes de implementar') || result.includes('⚠️ Lembre-se')) {
+    return result;
   }
   
   if (userPlan === 'ENTERPRISE') {
-    return response + '\n\n✨ No Enterprise, suas consultorias com advogados tributaristas são incluídas e ilimitadas.';
+    return result + '\n\n✨ No Enterprise, suas consultorias com advogados tributaristas são incluídas e ilimitadas.';
   }
   
-  return response + '\n\n⚠️ Antes de implementar, converse com seu contador ou advogado tributarista. Para consultorias personalizadas assine o plano [Enterprise](https://wa.me/5511914523971).';
+  return result + '\n\n⚠️ Antes de implementar, converse com seu contador ou advogado tributarista. Para consultorias personalizadas assine o plano [Enterprise](https://wa.me/5511914523971).';
 }
 
 // Constrói o prompt do sistema baseado no contexto
@@ -2292,7 +2318,7 @@ serve(async (req) => {
         
         // Adiciona disclaimer de data para transparência
         const cachedResponse = cacheEntry.response + getCacheDisclaimer(cacheEntry.created_at);
-        const finalResponse = appendDisclaimer(cachedResponse, userPlan);
+        const finalResponse = appendDisclaimer(cachedResponse, userPlan, user.id);
         
         console.log(`Cache HIT for query: "${lastMessage.substring(0, 50)}..." - saved ~${cacheEntry.tokens_saved || 500} tokens`);
         
@@ -2483,7 +2509,7 @@ serve(async (req) => {
       }
       
       // Disclaimer já está incluído no ENTERPRISE response
-      const finalResponse = appendDisclaimer(planResponse, userPlan);
+      const finalResponse = appendDisclaimer(planResponse, userPlan, user.id);
       
       return new Response(JSON.stringify({ message: finalResponse }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -2743,7 +2769,7 @@ serve(async (req) => {
     }
     
     // Aplica disclaimer automaticamente no pós-processamento
-    const finalMessage = appendDisclaimer(assistantMessage, userPlan);
+    const finalMessage = appendDisclaimer(assistantMessage, userPlan, user.id);
 
     return new Response(JSON.stringify({ 
       message: finalMessage,
