@@ -1,46 +1,130 @@
 
 
-# Correcao de Autenticacao na Edge Function send-executive-report
+# Adicionar Autenticacao Bearer Token em 8 Edge Functions
 
-## Problema
+## Resumo
 
-A Edge Function `send-executive-report/index.ts` nao valida o token de autenticacao do usuario. Qualquer requisicao com um `userId` arbitrario no body pode disparar o envio de relatorios, expondo dados sensiveis e permitindo uso nao autorizado do servico de email.
+Adicionar validacao de autenticacao JWT em 8 Edge Functions que atualmente nao verificam a identidade do chamador. O mesmo padrao sera aplicado em todas.
 
-## Correcao
+## Analise por Funcao
 
-Adicionar validacao Bearer token logo apos o bloco OPTIONS, antes de processar o body da requisicao.
+Cada funcao tem particularidades em como (ou se) parseia o body. A tabela abaixo resume:
 
-### Mudancas no arquivo `supabase/functions/send-executive-report/index.ts`
+| Funcao | Parseia body? | Campo userId | Adaptacao necessaria |
+|--------|:---:|:---:|---|
+| check-achievements | Sim (`await req.json()`) | `user_id` | Substituir por `body`, checar `body.user_id` |
+| quick-diagnostic | Sim (`await req.json()`) | `userId` | Substituir por `body`, checar `body.userId` |
+| execute-autonomous-action | Sim (`body = await req.json()`) | Nenhum direto | Ja usa `body`, apenas inserir auth antes |
+| trigger-autonomous-actions | Sim (`body = await req.json()`) | `user_id` | Ja usa `body`, inserir auth antes e checar `body.user_id` |
+| memory-decay | Nao | Nenhum | Inserir auth, nao precisa parsear body |
+| export-tax-opportunities | Nao | Nenhum | Inserir auth, nao precisa parsear body |
+| process-referral-rewards | Nao | Nenhum | Inserir auth, nao precisa parsear body |
+| process-pgdas | Sim (`await req.json()`) | Nenhum | Substituir por `body`, sem check de userId |
 
-1. Apos a linha 283 (fim do bloco OPTIONS), inserir:
-   - Validacao do header `Authorization` (Bearer token)
-   - Criacao de cliente Supabase com anon key para validar o token via `getUser()`
-   - Retorno 401 se token invalido ou ausente
-   - Parse do body (`await req.json()`) antes da validacao de `userId`
-   - Comparacao `body.userId !== user.id` retornando 403 se divergente
+## Mudancas por Arquivo
 
-2. Substituir a linha 292:
-   - De: `const { userId, ... } = await req.json() as ReportRequest;`
-   - Para: `const { userId, ... } = body;` (body ja foi parseado na etapa de autenticacao)
+### 1. check-achievements/index.ts
+- Inserir bloco de auth apos OPTIONS (linha 121)
+- Linha 128: substituir `const { user_id } = await req.json()` por `const { user_id } = body`
+- Check de identidade usa `body.user_id` (campo com underscore)
 
-### O que NAO muda
+### 2. quick-diagnostic/index.ts
+- Inserir bloco de auth apos OPTIONS (linha 209)
+- Linha 218: substituir `const { xmlPaths, userId }: DiagnosticRequest = await req.json()` por `const { xmlPaths, userId } = body as DiagnosticRequest`
+- Check de identidade usa `body.userId` (camelCase)
 
-- Nenhuma outra logica do arquivo e alterada
-- Template de email, envio via Resend, logs — tudo permanece identico
-- Nenhum outro arquivo e modificado
+### 3. execute-autonomous-action/index.ts
+- Inserir bloco de auth apos OPTIONS (linha 241)
+- Linha 248 ja usa `const body = await req.json()` — mover o parse para dentro do bloco de auth
+- Sem check de userId (funcao usa `action_id`/`process_all`)
+
+### 4. trigger-autonomous-actions/index.ts
+- Inserir bloco de auth apos OPTIONS (linha 76)
+- Linha 83 ja usa `const body = await req.json()` — mover o parse para dentro do bloco de auth
+- Check de identidade usa `body.user_id`
+
+### 5. memory-decay/index.ts
+- Inserir bloco de auth apos OPTIONS (linha 26)
+- Sem body parsing, sem check de userId (funcao administrativa)
+
+### 6. export-tax-opportunities/index.ts
+- Inserir bloco de auth apos OPTIONS (linha 11)
+- Sem body parsing, sem check de userId (funcao de consulta)
+
+### 7. process-referral-rewards/index.ts
+- Inserir bloco de auth apos OPTIONS (linha 119)
+- Sem body parsing, sem check de userId (funcao batch)
+
+### 8. process-pgdas/index.ts
+- Inserir bloco de auth apos OPTIONS (linha 201)
+- Linha 209: substituir `const { pgdasId, storagePath } = await req.json()` por `const { pgdasId, storagePath } = body`
+- Sem check de userId (body nao tem userId)
+
+## Bloco de Auth Padrao
+
+O bloco inserido em todas as funcoes:
+
+```text
+// Validar Bearer token
+const authHeader = req.headers.get('Authorization');
+if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  return new Response(
+    JSON.stringify({ error: 'Unauthorized' }),
+    { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
+}
+
+const token = authHeader.replace('Bearer ', '');
+const supabaseAuth = createClient(
+  Deno.env.get('SUPABASE_URL')!,
+  Deno.env.get('SUPABASE_ANON_KEY')!
+);
+
+const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
+if (authError || !user) {
+  return new Response(
+    JSON.stringify({ error: 'Unauthorized' }),
+    { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
+}
+
+// (Apenas para funcoes com body contendo userId/user_id)
+const body = await req.json();
+if (body.userId && body.userId !== user.id) {
+  return new Response(
+    JSON.stringify({ error: 'Forbidden' }),
+    { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
+}
+```
+
+Para funcoes que ja tem `const body = await req.json()`, o parse sera movido para dentro do bloco de auth. Para funcoes sem body (memory-decay, export-tax-opportunities, process-referral-rewards), o parse e o check de userId sao omitidos.
+
+## O que NAO muda
+
+- Nenhuma logica de negocio e alterada
+- Nenhum layout ou resposta e modificado
+- Nenhum outro arquivo e tocado
+- O cliente `supabase` com service role key continua sendo usado para operacoes de banco
 
 ## Secao Tecnica
 
-### Fluxo apos a correcao
+### Arquivos modificados
 
-```text
-Request -> OPTIONS check -> Bearer token check (401) -> getUser() (401) -> userId match (403) -> processamento normal
-```
+| Arquivo | Tipo de mudanca |
+|---------|----------------|
+| `supabase/functions/check-achievements/index.ts` | Auth + body refactor |
+| `supabase/functions/quick-diagnostic/index.ts` | Auth + body refactor |
+| `supabase/functions/execute-autonomous-action/index.ts` | Auth + body reorder |
+| `supabase/functions/trigger-autonomous-actions/index.ts` | Auth + body reorder |
+| `supabase/functions/memory-decay/index.ts` | Auth only |
+| `supabase/functions/export-tax-opportunities/index.ts` | Auth only |
+| `supabase/functions/process-referral-rewards/index.ts` | Auth only |
+| `supabase/functions/process-pgdas/index.ts` | Auth + body refactor |
 
-### Detalhes
+### Variacao no check de userId
 
-- Usa `supabase.auth.getUser(token)` para validar o JWT contra o servidor de autenticacao
-- Cliente criado com `SUPABASE_ANON_KEY` (nao service role) para validacao de auth
-- O cliente `supabase` com service role key continua sendo usado para operacoes de banco (profiles, logs)
-- Garante que o usuario autenticado so pode enviar relatorios para si mesmo (previne IDOR)
+- `check-achievements` e `trigger-autonomous-actions`: campo `user_id` (underscore)
+- `quick-diagnostic`: campo `userId` (camelCase)
+- Demais: sem campo userId no body — check omitido
 
