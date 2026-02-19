@@ -160,6 +160,132 @@ const REQUIRED_FIELDS: QuestionField[] = [
   },
 ];
 
+// Layer 2 — Exploratory questions based on company profile
+const EXPLORATORY_FIELDS: QuestionField[] = [
+  {
+    key: 'folha_acima_28pct',
+    label: 'Fator R',
+    claraText: 'Sua folha de pagamento representa mais de 28% do faturamento? Isso pode mudar seu enquadramento no Simples.',
+    type: 'grid',
+    options: [
+      { value: 'sim', label: 'Sim' },
+      { value: 'nao', label: 'Não' },
+      { value: 'nao_sei', label: 'Não sei' },
+    ],
+    condition: (answers, existing) => {
+      const regime = (answers.regime_tributario ?? existing?.regime_tributario ?? '') as string;
+      const setor = (answers.setor ?? existing?.setor ?? '') as string;
+      return regime === 'simples' && (setor === 'servicos' || setor === 'tecnologia');
+    },
+  },
+  {
+    key: 'tem_st_icms',
+    label: 'Substituição Tributária',
+    claraText: 'Seus produtos têm substituição tributária de ICMS? Isso pode gerar créditos não aproveitados.',
+    type: 'grid',
+    options: [
+      { value: 'sim', label: 'Sim' },
+      { value: 'nao', label: 'Não' },
+      { value: 'nao_sei', label: 'Não sei' },
+    ],
+    condition: (answers, existing) => {
+      const regime = (answers.regime_tributario ?? existing?.regime_tributario ?? '') as string;
+      const setor = (answers.setor ?? existing?.setor ?? '') as string;
+      return regime === 'simples' && (setor === 'comercio' || setor === 'industria');
+    },
+  },
+  {
+    key: 'creditos_pis_cofins_pendentes',
+    label: 'Créditos PIS/COFINS',
+    claraText: 'Você tem créditos de PIS/COFINS não aproveitados nos últimos 5 anos?',
+    type: 'grid',
+    options: [
+      { value: 'sim', label: 'Sim' },
+      { value: 'nao', label: 'Não' },
+      { value: 'nao_sei', label: 'Não sei' },
+    ],
+    condition: (answers, existing) => {
+      const regime = (answers.regime_tributario ?? existing?.regime_tributario ?? '') as string;
+      return regime === 'presumido';
+    },
+  },
+  {
+    key: 'usa_jcp',
+    label: 'JCP',
+    claraText: 'Você faz planejamento de JCP (Juros sobre Capital Próprio)? Pode reduzir significativamente o IRPJ.',
+    type: 'grid',
+    options: [
+      { value: 'sim', label: 'Sim' },
+      { value: 'nao', label: 'Não' },
+      { value: 'nao_sei', label: 'Não sei o que é' },
+    ],
+    condition: (answers, existing) => {
+      const regime = (answers.regime_tributario ?? existing?.regime_tributario ?? '') as string;
+      return regime === 'lucro_real';
+    },
+  },
+  {
+    key: 'creditos_icms_exportacao',
+    label: 'Créditos ICMS Exportação',
+    claraText: 'Você acumula créditos de ICMS de exportação sem aproveitamento?',
+    type: 'grid',
+    options: [
+      { value: 'sim', label: 'Sim' },
+      { value: 'nao', label: 'Não' },
+      { value: 'nao_sei', label: 'Não sei' },
+    ],
+    condition: (answers, existing) => {
+      const exporta = answers.exporta_produtos ?? existing?.exporta_produtos;
+      return exporta === true || exporta === 'true' || exporta === 'sim';
+    },
+  },
+  {
+    key: 'usa_ret',
+    label: 'RET',
+    claraText: 'Você usa o RET (Regime Especial de Tributação) para suas incorporações?',
+    type: 'grid',
+    options: [
+      { value: 'sim', label: 'Sim' },
+      { value: 'nao', label: 'Não' },
+      { value: 'nao_sei', label: 'Não sei o que é' },
+    ],
+    condition: (answers, existing) => {
+      const setor = (answers.setor ?? existing?.setor ?? '') as string;
+      return setor === 'construcao';
+    },
+  },
+  {
+    key: 'conhece_imunidade_issqn',
+    label: 'Imunidade ISSQN',
+    claraText: 'Você conhece a imunidade do ISSQN para serviços hospitalares? Pode gerar economia significativa.',
+    type: 'grid',
+    options: [
+      { value: 'sim', label: 'Sim, já aproveitamos' },
+      { value: 'nao', label: 'Não conheço' },
+      { value: 'nao_sei', label: 'Não sei se se aplica' },
+    ],
+    condition: (answers, existing) => {
+      const setor = (answers.setor ?? existing?.setor ?? '') as string;
+      return setor === 'saude';
+    },
+  },
+  {
+    key: 'conhece_pep_sp',
+    label: 'PEP/SP',
+    claraText: 'Você conhece o Programa Especial de Parcelamento (PEP) do ICMS em SP? Pode reduzir multas e juros.',
+    type: 'grid',
+    options: [
+      { value: 'sim', label: 'Sim' },
+      { value: 'nao', label: 'Não' },
+      { value: 'nao_sei', label: 'Não sei' },
+    ],
+    condition: (answers, existing) => {
+      const uf = (answers.uf_sede ?? existing?.uf_sede ?? '') as string;
+      return uf === 'SP';
+    },
+  },
+];
+
 // Complementary questions for retry when zero opportunities found
 const COMPLEMENTARY_FIELDS: QuestionField[] = [
   {
@@ -231,7 +357,15 @@ export function StepQuestions({ missingFields, onComplete, existingProfile = nul
   const [numberInput, setNumberInput] = useState('');
   const [textInput, setTextInput] = useState('');
 
-  const ALL_FIELDS = [...REQUIRED_FIELDS, ...COMPLEMENTARY_FIELDS];
+  // Filter exploratory fields: max 4 that match the current profile
+  const applicableExploratory = useMemo(() => {
+    return EXPLORATORY_FIELDS.filter(f => {
+      if (!f.condition) return true;
+      return f.condition(answers, existingProfile);
+    }).slice(0, 4);
+  }, [answers, existingProfile]);
+
+  const ALL_FIELDS = [...REQUIRED_FIELDS, ...applicableExploratory, ...COMPLEMENTARY_FIELDS];
 
   // Dynamically compute visible questions based on answers so far
   const questions = useMemo(() => {
