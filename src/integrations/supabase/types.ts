@@ -1135,6 +1135,7 @@ export type Database = {
           desafio_principal: string | null
           descricao_atividade: string | null
           descricao_operacao: string | null
+          distribuicao_lucros: string | null
           email_ceo: string | null
           email_cfo: string | null
           email_contador: string | null
@@ -1175,6 +1176,7 @@ export type Database = {
           nivel_declaracao: string | null
           nome_fantasia: string | null
           num_funcionarios: number | null
+          num_socios: string | null
           opera_outros_estados: boolean | null
           opera_todo_brasil: boolean | null
           operacao_interestadual: boolean | null
@@ -1208,6 +1210,7 @@ export type Database = {
           revende_artesanato_regional: boolean
           segmento: string | null
           setor: string | null
+          socios_outras_empresas: string | null
           tem_area_preservacao: boolean | null
           tem_atividade_pd: boolean | null
           tem_atividades_mistas: boolean | null
@@ -1282,6 +1285,7 @@ export type Database = {
           desafio_principal?: string | null
           descricao_atividade?: string | null
           descricao_operacao?: string | null
+          distribuicao_lucros?: string | null
           email_ceo?: string | null
           email_cfo?: string | null
           email_contador?: string | null
@@ -1322,6 +1326,7 @@ export type Database = {
           nivel_declaracao?: string | null
           nome_fantasia?: string | null
           num_funcionarios?: number | null
+          num_socios?: string | null
           opera_outros_estados?: boolean | null
           opera_todo_brasil?: boolean | null
           operacao_interestadual?: boolean | null
@@ -1355,6 +1360,7 @@ export type Database = {
           revende_artesanato_regional?: boolean
           segmento?: string | null
           setor?: string | null
+          socios_outras_empresas?: string | null
           tem_area_preservacao?: boolean | null
           tem_atividade_pd?: boolean | null
           tem_atividades_mistas?: boolean | null
@@ -1429,6 +1435,7 @@ export type Database = {
           desafio_principal?: string | null
           descricao_atividade?: string | null
           descricao_operacao?: string | null
+          distribuicao_lucros?: string | null
           email_ceo?: string | null
           email_cfo?: string | null
           email_contador?: string | null
@@ -1469,6 +1476,7 @@ export type Database = {
           nivel_declaracao?: string | null
           nome_fantasia?: string | null
           num_funcionarios?: number | null
+          num_socios?: string | null
           opera_outros_estados?: boolean | null
           opera_todo_brasil?: boolean | null
           operacao_interestadual?: boolean | null
@@ -1502,6 +1510,7 @@ export type Database = {
           revende_artesanato_regional?: boolean
           segmento?: string | null
           setor?: string | null
+          socios_outras_empresas?: string | null
           tem_area_preservacao?: boolean | null
           tem_atividade_pd?: boolean | null
           tem_atividades_mistas?: boolean | null
