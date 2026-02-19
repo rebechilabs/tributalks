@@ -189,6 +189,9 @@ export function PlanejarFlow() {
           company={companyProfile as Record<string, unknown> | null}
           missingCount={missingFields.length}
           onNext={handleIntroNext}
+          companyId={(companyProfile?.id as string) ?? null}
+          userId={user?.id ?? null}
+          onFieldUpdated={refetch}
         />
       )}
       {step === 'questions' && (
