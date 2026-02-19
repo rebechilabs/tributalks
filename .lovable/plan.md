@@ -1,127 +1,124 @@
 
+# Evolucao do Planejar: Setores Detalhados, Tags de Operacao e Perguntas por Setor
 
-# Triagem Clinica: Revisao de Regime Tributario (REV_REGIME_001)
+## Contexto
 
-## Escopo
+O fluxo Planejar ja esta implementado com as 4 etapas, Clara AI, Dossie, Briefing PDF, e triagem clinica. Este plano aborda os gaps remanescentes do spec original:
 
-Implementar a regra deterministica de "triagem clinica" para Revisao de Regime Tributario, incluindo: inserir o registro na base `tax_opportunities`, adicionar 3 novos campos ao `company_profile` para as perguntas exploratórias, atualizar a Edge Function para aplicar `engine_overrides` (priority boost + urgencia), e adicionar 4 novas perguntas exploratórias no frontend.
+1. Selecao de setor em dois passos (macro -> 15 setores especificos)
+2. Tags de operacao com multi-selecao e defaults por setor
+3. Banco de perguntas exploratorias por setor (sectorQuestionBank.ts)
+4. Injecao frontend de revisao de regime (Simples >= 2M)
+5. Atualizacao da reforma tag para mostrar "2026" ou "2027" conforme contexto
 
-## 1. Migracao de banco (3 acoes)
+## Mapeamento de Campos
 
-### 1a. Novos campos em `company_profile`
+Campos existentes na base que serao reaproveitados:
+- `setor` (text) -> armazenara o setor detalhado (ex: `tecnologia_saas`)
+- `segmento` (text) -> armazenara o macro_segmento (ex: `servicos`)
 
-Os campos `margem_liquida_faixa`, `mix_b2b_faixa`, e `alto_volume_compras_nfe` nao existem. Precisam ser criados para alimentar os criterios de matching:
+Campo novo necessario:
+- `tags_operacao` (text[]) -> array de tags como `tem_icms`, `tem_iss`, `multi_uf`, etc.
 
-```text
-ALTER TABLE company_profile ADD COLUMN margem_liquida_faixa text;
-ALTER TABLE company_profile ADD COLUMN mix_b2b_faixa text;
-ALTER TABLE company_profile ADD COLUMN alto_volume_compras_nfe boolean DEFAULT false;
-```
+## 1. Migracao SQL
 
-### 1b. Inserir REV_REGIME_001 em `tax_opportunities`
-
-INSERT com todos os campos do JSON fornecido, mapeados para as colunas existentes. Os campos `engine_overrides`, `explainability_template`, e `implementation_template` vao no JSONB de `criterios_pontuacao` (ou campos dedicados se existirem). Na pratica:
-
-- `criterios` recebe o bloco `always_include_when` (adaptado ao formato existente de matching)
-- `criterios_obrigatorios` fica vazio (nenhum criterio eliminatorio rigido -- a regra e "always include when")
-- `criterios_pontuacao` recebe `engine_overrides` como campo adicional para o boost
-- Campos padrao: `complexidade = 'baixa'`, `risco_fiscal = 'baixo'`, `requer_contador = true`, `futuro_reforma = 'reforma_2027'`, etc.
-
-### 1c. Valores dos campos especiais
-
-- `economia_percentual_min/max` = NULL (impacto via proxy label "alto")
-- `futuro_reforma` = 'reforma_2027'
-- `descricao_reforma` = '2026 e fase de testes; 2027 marca vigencia plena da CBS e mudanca relevante na tributacao do consumo.'
-- `status_lc_224_2025` = 'EC 132/2023, LC 214/2025'
-
-## 2. Edge Function -- engine_overrides + triagem clinica
-
-**Arquivo**: `supabase/functions/match-opportunities/index.ts`
-
-### 2a. Adicionar campos ao CompanyProfile interface
+Adicionar coluna `tags_operacao` ao `company_profile`:
 
 ```text
-margem_liquida_faixa?: string;
-mix_b2b_faixa?: string;
-alto_volume_compras_nfe?: boolean;
+ALTER TABLE public.company_profile ADD COLUMN IF NOT EXISTS tags_operacao text[] DEFAULT '{}';
 ```
 
-### 2b. Nova funcao `applyEngineOverrides`
+## 2. Criar `src/data/sectorQuestionBank.ts`
 
-Apos o `evaluateOpportunity` retornar `eligible = true`, verificar se a oportunidade tem `engine_overrides` no campo `criterios_pontuacao`. Se sim, avaliar cada `priority_boost.when` contra o perfil. Quando um trigger bater:
+Arquivo novo com:
 
-- Somar `match_score_boost` ao score
-- Setar `impact_label` e `urgency` no payload de resposta
-- Adicionar `warnings` como match_reasons extras
+- Mapeamento `MACRO_TO_SECTORS`: 3 macros (servicos, comercio, industria), cada um com seus setores especificos
+- Mapeamento `SECTOR_DEFAULT_TAGS`: tags pre-marcadas por setor (ex: `tecnologia_saas` -> `['tem_iss']`)
+- Mapeamento `SECTOR_QUESTIONS`: ate 4 perguntas exploratorias por setor, com campos `text`, `roi`, `maps_to`, `adds_tag`, `type`, `options`
 
-Logica simplificada:
+Setores implementados (conforme spec):
+- Servicos (7): servicos_profissionais, tecnologia_saas, logistica_transporte, corretagem_seguros, educacao, saude, imobiliario
+- Comercio (4): ecommerce, varejo_fisico, distribuicao_atacado, alimentacao_bares_restaurantes
+- Industria (4): construcao_incorporacao, agro, industria_alimentos_bebidas, industria_metal_mecanica
+
+As perguntas exploratórias seguirao o formato do spec com ROI badges e `maps_to`/`adds_tag` para integrar com o perfil.
+
+## 3. Atualizar StepQuestions.tsx
+
+### 3a. Selecao de setor em dois passos
+
+Substituir a pergunta atual de `setor` (grid unica com 8 opcoes) por um fluxo de 2 perguntas:
+
+1. **macro_segmento** (key: `segmento`): grid com 3 chips — Servicos, Comercio, Industria
+2. **setor_primario** (key: `setor`): grid com os setores do macro selecionado (5-7 opcoes)
+
+A segunda pergunta usa `condition` para so aparecer apos o macro ser selecionado.
+
+### 3b. Tags de operacao (multi-selecao)
+
+Adicionar uma nova pergunta especial do tipo `multi_toggle` apos a selecao de setor:
+
+- Key: `tags_operacao`
+- Opcoes: "ICMS", "ISS", "ST", "Importo", "Exporto", "Multi-UF", "Alto volume NF", "Grupo economico"
+- Pre-selecionar defaults do setor escolhido (via `SECTOR_DEFAULT_TAGS`)
+- Implementar novo tipo de input `multi_toggle` com botoes toggle que podem ser selecionados/deselecionados
+
+### 3c. Perguntas exploratorias por setor
+
+Substituir o sistema atual (regime-based) por setor-based usando `SECTOR_QUESTIONS`. O fluxo:
+
+1. Verificar o setor selecionado (do answers ou existingProfile)
+2. Buscar perguntas de `SECTOR_QUESTIONS[setor]`
+3. Filtrar as que ainda nao foram respondidas
+4. Limitar a 4 perguntas
+5. Exibir com ROI badge
+
+Manter as perguntas exploratorias regime-based existentes (margem_liquida_faixa, mix_b2b, etc.) como fallback para setores sem perguntas especificas.
+
+## 4. Atualizar PlanejarFlow.tsx
+
+### 4a. Injecao de revisao de regime no frontend
+
+Antes de exibir resultados, verificar:
 
 ```text
-for each boost in engine_overrides.priority_boost:
-  if evaluateWhenClause(boost.when, profile):
-    match.match_score += boost.match_score_boost
-    match.impact_label = boost.impact_label
-    match.urgency = boost.urgency
-    break  // aplicar apenas o primeiro boost que bater (maior prioridade)
+if regime === 'simples' && faturamento >= 2000000:
+  injetar oportunidade "Revisao de Regime Tributario" no topo
+  se faturamento >= 3600000: marcar urgency = 'alta'
 ```
 
-### 2c. Triagem clinica inline
+Isso complementa a triagem clinica do backend com um gatilho frontend imediato.
 
-A funcao `evaluateOpportunity` ja cobre criterios do tipo `regime_tributario = simples` + `faturamento >= X`. A novidade e o campo `criterios.always_include_when` que funciona como OR entre blocos (qualquer bloco que bater torna elegivel).
+### 4b. Salvar tags_operacao
 
-Implementar no inicio de `evaluateOpportunity`:
+Atualizar `convertBooleanFields` (ou criar logica separada) para salvar `tags_operacao` como array de strings na base.
 
-```text
-if criterios.always_include_when exists:
-  for each rule in always_include_when:
-    if matchesRule(rule, profile):
-      eligible = true, score = 40 (base), reasons = [explain]
-      break
-  if none matched: return not eligible
-```
+### 4c. Salvar segmento (macro)
 
-### 2d. Adicionar `impact_label` e `urgency` ao payload de resposta
+Garantir que ao salvar as respostas, o campo `segmento` receba o macro selecionado.
 
-Nos campos do objeto retornado (linhas ~893-926), adicionar:
+## 5. Atualizar StepIntro.tsx
 
-```text
-impact_label: m.impact_label ?? m.opportunity.impact_label_default ?? null,
-urgency: m.urgency ?? null,
-```
+Adicionar campo `tags_operacao` na tabela de dados da empresa (exibir como badges).
 
-## 3. Frontend -- Perguntas exploratórias novas
+## 6. Atualizar OpportunityCard.tsx
 
-**Arquivo**: `src/components/planejar/StepQuestions.tsx`
+Atualizar a tag de reforma para mostrar "Reforma 2026" ou "Reforma 2027" conforme o valor de `futuro_reforma`:
+- `futuro_reforma` contendo "2027" -> "Reforma 2027"
+- Caso contrario -> "Reforma 2026" (comportamento atual)
 
-Adicionar 3 novas perguntas exploratórias (max 4 ja e respeitado pelo slice):
+## 7. Atualizar Edge Function
 
-| Pergunta | Key | Condicao | ROI Hint |
-|----------|-----|----------|----------|
-| Qual a faixa da sua margem liquida? | `margem_liquida_faixa` | regime = presumido OU lucro_real | Direciona Presumido x Real |
-| Seu mix de vendas e mais B2B ou B2C? | `mix_b2b_faixa` | regime = presumido | Direciona impacto de credito/repasse |
-| Volume alto de compras com NF-e? | `alto_volume_compras_nfe` | regime = presumido | Direciona viabilidade Lucro Real |
-
-Cada pergunta com opcoes grid e `roiHint`.
-
-## 4. Frontend -- OpportunityCard urgencia tag
-
-**Arquivo**: `src/components/planejar/OpportunityCard.tsx`
-
-Adicionar suporte ao campo `urgency` no `OpportunityData` interface. Quando `urgency = 'alta'`, exibir badge vermelho "URGENTE" ao lado do titulo, alem da tag "Reforma 2027" que ja funciona via `futuro_reforma`.
-
-## 5. PlanejarFlow -- Adicionar novos campos ao fluxo
-
-**Arquivo**: `src/components/planejar/PlanejarFlow.tsx`
-
-Adicionar `margem_liquida_faixa`, `mix_b2b_faixa`, `alto_volume_compras_nfe` ao `EXPLORATORY_KEYS` para que aparecam como campos faltantes quando aplicavel.
+Adicionar `tags_operacao` ao `CompanyProfile` interface para que as tags possam ser usadas nos criterios de matching.
 
 ## Resumo de alteracoes
 
 | Arquivo | Tipo | Descricao |
 |---------|------|-----------|
-| Migracao SQL | DB | 3 colunas em company_profile + INSERT REV_REGIME_001 |
-| `supabase/functions/match-opportunities/index.ts` | Edge Function | always_include_when + engine_overrides + novos campos interface |
-| `src/components/planejar/StepQuestions.tsx` | Frontend | 3 perguntas exploratórias novas |
-| `src/components/planejar/OpportunityCard.tsx` | Frontend | Campo urgency + badge |
-| `src/components/planejar/PlanejarFlow.tsx` | Frontend | Novos keys exploratorios |
-
+| Migracao SQL | DB | Adicionar coluna `tags_operacao text[]` |
+| `src/data/sectorQuestionBank.ts` | Novo | Macros, setores, defaults, perguntas por setor |
+| `src/components/planejar/StepQuestions.tsx` | Refactor | Selecao 2-step, multi-toggle tags, perguntas por setor |
+| `src/components/planejar/PlanejarFlow.tsx` | Editar | Injecao regime review, salvar tags/segmento |
+| `src/components/planejar/StepIntro.tsx` | Editar | Exibir tags_operacao |
+| `src/components/planejar/OpportunityCard.tsx` | Editar | Tag reforma 2026/2027 dinamica |
+| `supabase/functions/match-opportunities/index.ts` | Editar | Interface tags_operacao |
