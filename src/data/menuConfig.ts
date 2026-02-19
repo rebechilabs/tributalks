@@ -160,8 +160,7 @@ export const MENU_NAVIGATOR: MenuElement[] = [
     collapsible: true,
     moduleHref: '/dashboard/planejar',
     items: [
-      { label: 'Oportunidades Tributárias', href: '/dashboard/planejar/oportunidades', icon: Lightbulb, badge: '61+' },
-      { label: 'Planejamento Tributário', href: '/dashboard/planejar/planejamento', icon: Route, badge: 'Em breve' },
+      { label: 'Planejamento Tributário', href: '/dashboard/planejar', icon: Route },
     ]
   },
   // Reforma Tributária
@@ -251,8 +250,7 @@ export const MENU_PROFESSIONAL_V2: MenuElement[] = [
     collapsible: true,
     moduleHref: '/dashboard/planejar',
     items: [
-      { label: 'Oportunidades Tributárias', href: '/dashboard/planejar/oportunidades', icon: Lightbulb, badge: '61+' },
-      { label: 'Planejamento Tributário', href: '/dashboard/planejar/planejamento', icon: Route, badge: 'Em breve' },
+      { label: 'Planejamento Tributário', href: '/dashboard/planejar', icon: Route },
     ]
   },
   // Módulo COMANDAR
