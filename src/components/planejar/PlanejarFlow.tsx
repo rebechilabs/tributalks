@@ -10,7 +10,7 @@ import { StepResults } from './StepResults';
 import type { OpportunityData } from './OpportunityCard';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const REQUIRED_KEYS = ['regime_tributario', 'setor', 'faturamento_anual', 'num_funcionarios', 'uf_sede', 'municipio_sede'] as const;
+const REQUIRED_KEYS = ['regime_tributario', 'segmento', 'setor', 'faturamento_anual', 'num_funcionarios', 'uf_sede', 'municipio_sede', 'tags_operacao'] as const;
 const QUALITATIVE_KEYS = ['desafio_principal', 'descricao_operacao', 'nivel_declaracao', 'num_socios', 'socios_outras_empresas', 'distribuicao_lucros'] as const;
 const EXPLORATORY_KEYS = ['folha_acima_28pct', 'tem_st_icms', 'creditos_pis_cofins_pendentes', 'usa_jcp', 'creditos_icms_exportacao', 'usa_ret', 'conhece_imunidade_issqn', 'conhece_pep_sp', 'margem_liquida_faixa', 'mix_b2b_faixa', 'alto_volume_compras_nfe'] as const;
 const COMPLEMENTARY_KEYS = ['exporta_produtos', 'importa_produtos', 'tem_estoque', 'tem_ecommerce', 'descricao_atividade'] as const;
@@ -40,6 +40,9 @@ function getMissingFields(profile: Record<string, unknown> | null): string[] {
   if (!profile) return [...REQUIRED_KEYS, ...QUALITATIVE_KEYS, ...EXPLORATORY_KEYS];
   const missing = REQUIRED_KEYS.filter(k => {
     const v = profile[k];
+    if (k === 'tags_operacao') {
+      return !Array.isArray(v) || v.length === 0;
+    }
     return v === null || v === undefined || v === '';
   });
   const missingQualitative = QUALITATIVE_KEYS.filter(k => {
@@ -65,15 +68,12 @@ function sortOpportunities(opps: OpportunityData[]): OpportunityData[] {
   const riskOrder: Record<string, number> = { baixo: 0, medio: 1, alto: 2 };
   const compOrder: Record<string, number> = { muito_baixa: 0, baixa: 1, media: 2, alta: 3, muito_alta: 4 };
   return [...opps].sort((a, b) => {
-    // 1. match_score DESC (proxy de impact_score)
     const scoreA = a.match_score ?? 0;
     const scoreB = b.match_score ?? 0;
     if (scoreB !== scoreA) return scoreB - scoreA;
-    // 2. risco_fiscal ASC (baixo primeiro, null = medio)
     const ra = riskOrder[a.risco_fiscal || 'medio'] ?? 1;
     const rb = riskOrder[b.risco_fiscal || 'medio'] ?? 1;
     if (ra !== rb) return ra - rb;
-    // 3. complexidade ASC (baixa primeiro, null = media)
     const ca = compOrder[a.complexidade || 'media'] ?? 2;
     const cb = compOrder[b.complexidade || 'media'] ?? 2;
     return ca - cb;
@@ -83,6 +83,40 @@ function sortOpportunities(opps: OpportunityData[]): OpportunityData[] {
 function getFallbackOpps(regime: string): OpportunityData[] {
   const normalizedRegime = regime.includes('real') ? 'lucro_real' : regime.includes('presumido') ? 'presumido' : 'simples';
   return FALLBACK_BY_REGIME[normalizedRegime] || FALLBACK_BY_REGIME.simples;
+}
+
+/**
+ * Frontend injection: Regime review opportunity for Simples >= R$2M
+ */
+function injectRegimeReview(opps: OpportunityData[], profile: Record<string, unknown> | null): OpportunityData[] {
+  if (!profile) return opps;
+  const regime = String(profile.regime_tributario || '');
+  const faturamento = Number(profile.faturamento_anual || 0);
+
+  if (regime === 'simples' && faturamento >= 2000000) {
+    // Check if already present from backend
+    const alreadyHas = opps.some(o => o.id === 'regime-review' || o.name?.toLowerCase().includes('revisão de regime'));
+    if (!alreadyHas) {
+      const isUrgent = faturamento >= 3600000;
+      opps.unshift({
+        id: 'regime-review',
+        name: 'Revisão de Regime Tributário',
+        description: 'Seu faturamento indica que o Simples Nacional pode não ser o regime mais vantajoso. Uma simulação comparativa pode revelar economia expressiva.',
+        economia_anual_min: 0,
+        economia_anual_max: 0,
+        impact_label: 'alto',
+        impact_basis: 'proxy',
+        complexidade: 'baixa',
+        alto_impacto: true,
+        urgency: isUrgent ? 'alta' : undefined,
+        futuro_reforma: 'reforma_2027',
+        descricao_reforma: 'A Reforma Tributária altera alíquotas efetivas por regime a partir de 2027. A janela ideal para mudança é início de 2026.',
+        match_reasons: ['Faturamento acima de R$ 2M no Simples merece simulação comparativa'],
+        match_score: isUrgent ? 95 : 80,
+      });
+    }
+  }
+  return opps;
 }
 
 export function PlanejarFlow() {
@@ -124,11 +158,14 @@ export function PlanejarFlow() {
     }
   }, [missingFields.length]);
 
-  const convertBooleanFields = (answers: Record<string, string | number>): Record<string, unknown> => {
+  const convertAnswerFields = (answers: Record<string, string | number | string[]>): Record<string, unknown> => {
     const BOOL_KEYS = ['exporta_produtos', 'importa_produtos', 'tem_estoque', 'tem_ecommerce', 'alto_volume_compras_nfe'];
     const converted: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(answers)) {
-      if (BOOL_KEYS.includes(k)) {
+      if (k === 'tags_operacao') {
+        // Already an array
+        converted[k] = v;
+      } else if (BOOL_KEYS.includes(k)) {
         converted[k] = String(v) === 'true';
       } else {
         converted[k] = v;
@@ -137,9 +174,9 @@ export function PlanejarFlow() {
     return converted;
   };
 
-  const saveAnswers = useCallback(async (answers: Record<string, string | number>) => {
+  const saveAnswers = useCallback(async (answers: Record<string, string | number | string[]>) => {
     if (companyProfile?.id && user?.id) {
-      const converted = convertBooleanFields(answers);
+      const converted = convertAnswerFields(answers);
       await supabase
         .from('company_profile')
         .update(converted)
@@ -149,12 +186,12 @@ export function PlanejarFlow() {
     }
   }, [companyProfile?.id, user?.id, refetch]);
 
-  const handleQuestionsComplete = useCallback(async (answers: Record<string, string | number>) => {
+  const handleQuestionsComplete = useCallback(async (answers: Record<string, string | number | string[]>) => {
     await saveAnswers(answers);
     setStep('processing');
   }, [saveAnswers]);
 
-  const handleComplementaryComplete = useCallback(async (answers: Record<string, string | number>) => {
+  const handleComplementaryComplete = useCallback(async (answers: Record<string, string | number | string[]>) => {
     await saveAnswers(answers);
     setIsRetry(true);
     setStep('processing');
@@ -162,7 +199,11 @@ export function PlanejarFlow() {
 
   const finalizeResults = useCallback(() => {
     if (dataResult.current) {
-      const { opps, min, max, count } = dataResult.current;
+      let { opps } = dataResult.current;
+      const { min, max, count } = dataResult.current;
+
+      // Frontend regime review injection
+      opps = injectRegimeReview(opps, companyProfile);
 
       // If zero results and not yet retried, go to complementary questions
       if (opps.length === 0 && count === 0 && !isRetry) {

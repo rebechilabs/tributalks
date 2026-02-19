@@ -115,6 +115,9 @@ interface CompanyProfile {
   margem_liquida_faixa?: string;
   mix_b2b_faixa?: string;
   alto_volume_compras_nfe?: boolean;
+
+  // Operation tags
+  tags_operacao?: string[];
 }
 
 interface TaxOpportunity {

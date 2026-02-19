@@ -3,17 +3,29 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ClaraMessage } from './ClaraMessage';
 import { cn } from '@/lib/utils';
+import {
+  MACRO_SEGMENTS,
+  MACRO_TO_SECTORS,
+  OPERATION_TAGS,
+  SECTOR_DEFAULT_TAGS,
+  SECTOR_QUESTIONS,
+  inferMacroFromSector,
+} from '@/data/sectorQuestionBank';
 
 interface QuestionField {
   key: string;
   label: string;
   claraText: string;
-  type: 'grid' | 'currency' | 'uf' | 'textarea' | 'number' | 'text';
+  type: 'grid' | 'currency' | 'uf' | 'textarea' | 'number' | 'text' | 'multi_toggle' | 'select';
   options?: { value: string; label: string }[];
   placeholder?: string;
   roiHint?: string;
-  condition?: (answers: Record<string, string | number>, existing: Record<string, unknown> | null) => boolean;
+  condition?: (answers: Record<string, string | number | string[]>, existing: Record<string, unknown> | null) => boolean;
+  /** For multi_toggle: compute default values based on current answers */
+  getDefaults?: (answers: Record<string, string | number | string[]>, existing: Record<string, unknown> | null) => string[];
 }
+
+// ── Layer 1: Required fields ──
 
 const REQUIRED_FIELDS: QuestionField[] = [
   {
@@ -27,21 +39,25 @@ const REQUIRED_FIELDS: QuestionField[] = [
       { value: 'lucro_real', label: 'Lucro Real' },
     ],
   },
+  // Step 1: Macro segment
+  {
+    key: 'segmento',
+    label: 'Macro-segmento',
+    claraText: 'Em qual macro-segmento a sua empresa atua?',
+    type: 'grid',
+    options: MACRO_SEGMENTS.map(m => ({ value: m.value, label: m.label })),
+  },
+  // Step 2: Detailed sector (depends on macro)
   {
     key: 'setor',
     label: 'Setor',
-    claraText: 'Em qual setor a sua empresa atua?',
+    claraText: 'Em qual setor específico a sua empresa atua?',
     type: 'grid',
-    options: [
-      { value: 'comercio', label: 'Comércio' },
-      { value: 'industria', label: 'Indústria' },
-      { value: 'servicos', label: 'Serviços' },
-      { value: 'tecnologia', label: 'Tecnologia' },
-      { value: 'saude', label: 'Saúde' },
-      { value: 'educacao', label: 'Educação' },
-      { value: 'agro', label: 'Agronegócio' },
-      { value: 'construcao', label: 'Construção' },
-    ],
+    options: [], // dynamically populated
+    condition: (answers, existing) => {
+      const macro = (answers.segmento ?? existing?.segmento ?? '') as string;
+      return !!macro;
+    },
   },
   {
     key: 'faturamento_anual',
@@ -69,7 +85,23 @@ const REQUIRED_FIELDS: QuestionField[] = [
     type: 'text',
     placeholder: 'Ex: São Paulo',
   },
-  // --- Exploratory: Sócios ---
+  // Operation tags (multi-toggle, after sector selection)
+  {
+    key: 'tags_operacao',
+    label: 'Tags de Operação',
+    claraText: 'Quais dessas características se aplicam à sua operação? (selecione todas que se aplicam)',
+    type: 'multi_toggle',
+    options: OPERATION_TAGS.map(t => ({ value: t.value, label: t.label })),
+    condition: (answers, existing) => {
+      const setor = (answers.setor ?? existing?.setor ?? '') as string;
+      return !!setor;
+    },
+    getDefaults: (answers, existing) => {
+      const setor = (answers.setor ?? existing?.setor ?? '') as string;
+      return SECTOR_DEFAULT_TAGS[setor] || [];
+    },
+  },
+  // Sócios
   {
     key: 'num_socios',
     label: 'Sócios',
@@ -125,7 +157,6 @@ const REQUIRED_FIELDS: QuestionField[] = [
       return socios !== '1';
     },
   },
-  // --- End exploratory ---
   {
     key: 'desafio_principal',
     label: 'Desafio',
@@ -161,8 +192,9 @@ const REQUIRED_FIELDS: QuestionField[] = [
   },
 ];
 
-// Layer 2 — Exploratory questions based on company profile
-const EXPLORATORY_FIELDS: QuestionField[] = [
+// ── Layer 2: Regime-based exploratory (fallback for sectors without specific questions) ──
+
+const REGIME_EXPLORATORY_FIELDS: QuestionField[] = [
   {
     key: 'folha_acima_28pct',
     label: 'Fator R',
@@ -177,7 +209,7 @@ const EXPLORATORY_FIELDS: QuestionField[] = [
     condition: (answers, existing) => {
       const regime = (answers.regime_tributario ?? existing?.regime_tributario ?? '') as string;
       const setor = (answers.setor ?? existing?.setor ?? '') as string;
-      return regime === 'simples' && (setor === 'servicos' || setor === 'tecnologia');
+      return regime === 'simples' && (setor === 'servicos' || setor === 'tecnologia' || setor === 'servicos_profissionais' || setor === 'tecnologia_saas');
     },
   },
   {
@@ -194,7 +226,7 @@ const EXPLORATORY_FIELDS: QuestionField[] = [
     condition: (answers, existing) => {
       const regime = (answers.regime_tributario ?? existing?.regime_tributario ?? '') as string;
       const setor = (answers.setor ?? existing?.setor ?? '') as string;
-      return regime === 'simples' && (setor === 'comercio' || setor === 'industria');
+      return regime === 'simples' && ['comercio', 'industria', 'varejo_fisico', 'ecommerce', 'distribuicao_atacado', 'industria_alimentos_bebidas', 'industria_metal_mecanica'].includes(setor);
     },
   },
   {
@@ -258,7 +290,7 @@ const EXPLORATORY_FIELDS: QuestionField[] = [
     ],
     condition: (answers, existing) => {
       const setor = (answers.setor ?? existing?.setor ?? '') as string;
-      return setor === 'construcao';
+      return setor === 'construcao' || setor === 'construcao_incorporacao' || setor === 'imobiliario';
     },
   },
   {
@@ -288,12 +320,12 @@ const EXPLORATORY_FIELDS: QuestionField[] = [
       { value: 'nao', label: 'Não' },
       { value: 'nao_sei', label: 'Não sei' },
     ],
-   condition: (answers, existing) => {
+    condition: (answers, existing) => {
       const uf = (answers.uf_sede ?? existing?.uf_sede ?? '') as string;
       return uf === 'SP';
     },
   },
-  // --- Triagem clínica: Revisão de Regime ---
+  // Triagem clínica
   {
     key: 'margem_liquida_faixa',
     label: 'Margem Líquida',
@@ -402,28 +434,67 @@ const UFS = [
 
 interface StepQuestionsProps {
   missingFields: string[];
-  onComplete: (answers: Record<string, string | number>) => void;
+  onComplete: (answers: Record<string, string | number | string[]>) => void;
   existingProfile?: Record<string, unknown> | null;
   claraIntroMessage?: string;
 }
 
+/**
+ * Build sector-specific exploratory questions as QuestionField[]
+ */
+function buildSectorExploratoryFields(
+  answers: Record<string, string | number | string[]>,
+  existingProfile: Record<string, unknown> | null
+): QuestionField[] {
+  const setor = (answers.setor ?? existingProfile?.setor ?? '') as string;
+  const sectorQs = SECTOR_QUESTIONS[setor];
+
+  if (!sectorQs || sectorQs.length === 0) return [];
+
+  return sectorQs.slice(0, 4).map(sq => {
+    const field: QuestionField = {
+      key: sq.key,
+      label: sq.text.slice(0, 30),
+      claraText: sq.text,
+      roiHint: sq.roi,
+      type: sq.type === 'select' ? 'select' : 'grid',
+      options: sq.type === 'select' && sq.options
+        ? sq.options.map(o => ({ value: o, label: o }))
+        : [
+            { value: 'sim', label: 'Sim' },
+            { value: 'nao', label: 'Não' },
+          ],
+    };
+    return field;
+  });
+}
+
 export function StepQuestions({ missingFields, onComplete, existingProfile = null, claraIntroMessage }: StepQuestionsProps) {
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string | number>>({});
+  const [answers, setAnswers] = useState<Record<string, string | number | string[]>>({});
   const [currencyInput, setCurrencyInput] = useState('');
   const [textareaInput, setTextareaInput] = useState('');
   const [numberInput, setNumberInput] = useState('');
   const [textInput, setTextInput] = useState('');
+  const [multiToggleSelection, setMultiToggleSelection] = useState<string[]>([]);
+  const [multiToggleInitialized, setMultiToggleInitialized] = useState(false);
 
-  // Filter exploratory fields: max 4 that match the current profile
-  const applicableExploratory = useMemo(() => {
-    return EXPLORATORY_FIELDS.filter(f => {
+  // Build sector-specific exploratory fields dynamically
+  const sectorExploratoryFields = useMemo(() =>
+    buildSectorExploratoryFields(answers, existingProfile),
+    [answers, existingProfile]
+  );
+
+  // Use sector questions if available, else fall back to regime-based
+  const exploratoryFields = useMemo(() => {
+    if (sectorExploratoryFields.length > 0) return sectorExploratoryFields;
+    return REGIME_EXPLORATORY_FIELDS.filter(f => {
       if (!f.condition) return true;
       return f.condition(answers, existingProfile);
     }).slice(0, 4);
-  }, [answers, existingProfile]);
+  }, [sectorExploratoryFields, answers, existingProfile]);
 
-  const ALL_FIELDS = [...REQUIRED_FIELDS, ...applicableExploratory, ...COMPLEMENTARY_FIELDS];
+  const ALL_FIELDS = [...REQUIRED_FIELDS, ...exploratoryFields, ...COMPLEMENTARY_FIELDS];
 
   // Dynamically compute visible questions based on answers so far
   const questions = useMemo(() => {
@@ -432,32 +503,59 @@ export function StepQuestions({ missingFields, onComplete, existingProfile = nul
       if (f.condition && !f.condition(answers, existingProfile)) return false;
       return true;
     });
-  }, [missingFields, answers, existingProfile]);
+  }, [missingFields, answers, existingProfile, ALL_FIELDS]);
 
-  const current = questions[currentIdx];
-  if (!current) return null;
+  // Dynamically populate sector options based on selected macro
+  const currentQuestion = useMemo(() => {
+    const q = questions[currentIdx];
+    if (!q) return null;
+
+    if (q.key === 'setor') {
+      const macro = (answers.segmento ?? existingProfile?.segmento ?? '') as string;
+      const sectors = MACRO_TO_SECTORS[macro] || [];
+      return {
+        ...q,
+        options: sectors.map(s => ({ value: s.value, label: s.label })),
+      };
+    }
+    return q;
+  }, [questions, currentIdx, answers, existingProfile]);
+
+  if (!currentQuestion) return null;
 
   const progress = ((currentIdx) / questions.length) * 100;
 
-  const selectAnswer = (value: string | number) => {
-    const newAnswers = { ...answers, [current.key]: value };
+  // Initialize multi-toggle defaults when reaching a multi_toggle question
+  if (currentQuestion.type === 'multi_toggle' && !multiToggleInitialized && currentQuestion.getDefaults) {
+    const defaults = currentQuestion.getDefaults(answers, existingProfile);
+    setMultiToggleSelection(defaults);
+    setMultiToggleInitialized(true);
+  }
+
+  const selectAnswer = (value: string | number | string[]) => {
+    const newAnswers = { ...answers, [currentQuestion.key]: value };
     setAnswers(newAnswers);
 
     // Recalculate questions with new answers to determine next
-    const nextQuestions = ALL_FIELDS.filter(f => {
+    const newSectorExploratory = buildSectorExploratoryFields(newAnswers, existingProfile);
+    const newExploratory = newSectorExploratory.length > 0
+      ? newSectorExploratory
+      : REGIME_EXPLORATORY_FIELDS.filter(f => !f.condition || f.condition(newAnswers, existingProfile)).slice(0, 4);
+    const allFields = [...REQUIRED_FIELDS, ...newExploratory, ...COMPLEMENTARY_FIELDS];
+    const nextQuestions = allFields.filter(f => {
       if (!missingFields.includes(f.key)) return false;
       if (f.condition && !f.condition(newAnswers, existingProfile)) return false;
       return true;
     });
 
-    // Find current question's position in new list and advance
-    const currentPosInNew = nextQuestions.findIndex(q => q.key === current.key);
+    const currentPosInNew = nextQuestions.findIndex(q => q.key === currentQuestion.key);
     if (currentPosInNew < nextQuestions.length - 1) {
       setCurrentIdx(currentPosInNew + 1);
       setCurrencyInput('');
       setTextareaInput('');
       setNumberInput('');
       setTextInput('');
+      setMultiToggleInitialized(false);
     } else {
       onComplete(newAnswers);
     }
@@ -489,6 +587,16 @@ export function StepQuestions({ missingFields, onComplete, existingProfile = nul
     setCurrencyInput(num.toLocaleString('pt-BR'));
   };
 
+  const toggleTag = (tag: string) => {
+    setMultiToggleSelection(prev =>
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const handleMultiToggleSubmit = () => {
+    selectAnswer(multiToggleSelection);
+  };
+
   return (
     <div className="space-y-6 animate-fade-in-up">
       {claraIntroMessage && currentIdx === 0 && (
@@ -503,22 +611,25 @@ export function StepQuestions({ missingFields, onComplete, existingProfile = nul
         <Progress value={progress} className="h-1.5" />
       </div>
 
-      <ClaraMessage message={current.claraText} key={current.key} />
+      <ClaraMessage message={currentQuestion.claraText} key={currentQuestion.key} />
 
-      {current.roiHint && (
+      {currentQuestion.roiHint && (
         <div className="flex items-center gap-1.5 -mt-2">
           <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary">
-            🔓 Destrava: {current.roiHint.replace('Destrava ', '')}
+            🔓 Destrava: {currentQuestion.roiHint.replace('Destrava ', '')}
           </span>
         </div>
       )}
 
-      {current.type === 'grid' && current.options && (
-        <div className="grid grid-cols-2 gap-2">
-          {current.options.map(opt => (
+      {currentQuestion.type === 'grid' && currentQuestion.options && (
+        <div className={cn(
+          "grid gap-2",
+          (currentQuestion.options.length <= 3) ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-2"
+        )}>
+          {currentQuestion.options.map(opt => (
             <button
               key={opt.value}
-              onClick={() => selectAnswer(current.key === 'num_funcionarios' ? parseInt(opt.value) : opt.value)}
+              onClick={() => selectAnswer(currentQuestion.key === 'num_funcionarios' ? parseInt(opt.value) : opt.value)}
               className={cn(
                 "px-4 py-3 rounded-lg border text-sm font-medium transition-all text-left",
                 "border-border bg-card hover:border-primary hover:bg-primary/5 text-foreground"
@@ -530,7 +641,48 @@ export function StepQuestions({ missingFields, onComplete, existingProfile = nul
         </div>
       )}
 
-      {current.type === 'currency' && (
+      {currentQuestion.type === 'select' && currentQuestion.options && (
+        <div className="grid grid-cols-1 gap-2">
+          {currentQuestion.options.map(opt => (
+            <button
+              key={opt.value}
+              onClick={() => selectAnswer(opt.value)}
+              className={cn(
+                "px-4 py-3 rounded-lg border text-sm font-medium transition-all text-left",
+                "border-border bg-card hover:border-primary hover:bg-primary/5 text-foreground"
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {currentQuestion.type === 'multi_toggle' && currentQuestion.options && (
+        <div className="space-y-3">
+          <div className="flex flex-wrap gap-2">
+            {currentQuestion.options.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => toggleTag(opt.value)}
+                className={cn(
+                  "px-3 py-2 rounded-lg border text-sm font-medium transition-all",
+                  multiToggleSelection.includes(opt.value)
+                    ? "border-primary bg-primary/15 text-primary"
+                    : "border-border bg-card hover:border-muted-foreground text-muted-foreground"
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <Button onClick={handleMultiToggleSubmit} className="w-full">
+            Confirmar
+          </Button>
+        </div>
+      )}
+
+      {currentQuestion.type === 'currency' && (
         <div className="space-y-3">
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span>
@@ -551,7 +703,7 @@ export function StepQuestions({ missingFields, onComplete, existingProfile = nul
         </div>
       )}
 
-      {current.type === 'uf' && (
+      {currentQuestion.type === 'uf' && (
         <div className="grid grid-cols-5 sm:grid-cols-7 gap-1.5">
           {UFS.map(uf => (
             <button
@@ -568,13 +720,13 @@ export function StepQuestions({ missingFields, onComplete, existingProfile = nul
         </div>
       )}
 
-      {current.type === 'textarea' && (
+      {currentQuestion.type === 'textarea' && (
         <div className="space-y-3">
           <textarea
             value={textareaInput}
             onChange={e => setTextareaInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleTextareaSubmit(); } }}
-            placeholder={current.placeholder || ''}
+            placeholder={currentQuestion.placeholder || ''}
             rows={4}
             className="w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
             autoFocus
@@ -585,7 +737,7 @@ export function StepQuestions({ missingFields, onComplete, existingProfile = nul
         </div>
       )}
 
-      {current.type === 'number' && (
+      {currentQuestion.type === 'number' && (
         <div className="space-y-3">
           <input
             type="number"
@@ -593,7 +745,7 @@ export function StepQuestions({ missingFields, onComplete, existingProfile = nul
             value={numberInput}
             onChange={e => setNumberInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleNumberSubmit()}
-            placeholder={current.placeholder || '0'}
+            placeholder={currentQuestion.placeholder || '0'}
             className="w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-primary/50"
             autoFocus
           />
@@ -603,14 +755,14 @@ export function StepQuestions({ missingFields, onComplete, existingProfile = nul
         </div>
       )}
 
-      {current.type === 'text' && (
+      {currentQuestion.type === 'text' && (
         <div className="space-y-3">
           <input
             type="text"
             value={textInput}
             onChange={e => setTextInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleTextSubmit()}
-            placeholder={current.placeholder || ''}
+            placeholder={currentQuestion.placeholder || ''}
             className="w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
             autoFocus
           />

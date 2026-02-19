@@ -1219,6 +1219,7 @@ export type Database = {
           segmento: string | null
           setor: string | null
           socios_outras_empresas: string | null
+          tags_operacao: string[] | null
           tem_area_preservacao: boolean | null
           tem_atividade_pd: boolean | null
           tem_atividades_mistas: boolean | null
@@ -1381,6 +1382,7 @@ export type Database = {
           segmento?: string | null
           setor?: string | null
           socios_outras_empresas?: string | null
+          tags_operacao?: string[] | null
           tem_area_preservacao?: boolean | null
           tem_atividade_pd?: boolean | null
           tem_atividades_mistas?: boolean | null
@@ -1543,6 +1545,7 @@ export type Database = {
           segmento?: string | null
           setor?: string | null
           socios_outras_empresas?: string | null
+          tags_operacao?: string[] | null
           tem_area_preservacao?: boolean | null
           tem_atividade_pd?: boolean | null
           tem_atividades_mistas?: boolean | null

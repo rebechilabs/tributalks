@@ -137,7 +137,9 @@ export function OpportunityCard({ opp, onClick }: OpportunityCardProps) {
         <div className="rounded-lg bg-violet-500/10 border border-violet-500/20 p-3 space-y-1">
           <div className="flex items-center gap-1.5">
             <Zap className="w-3.5 h-3.5 text-violet-400" />
-            <span className="text-xs font-semibold text-violet-400">Reforma 2026</span>
+            <span className="text-xs font-semibold text-violet-400">
+              {opp.futuro_reforma?.includes('2027') ? 'Reforma 2027' : 'Reforma 2026'}
+            </span>
           </div>
           {reformaText && (
             <p className="text-[11px] text-violet-300/80 leading-relaxed">{reformaText}</p>
