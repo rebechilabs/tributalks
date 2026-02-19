@@ -1159,6 +1159,7 @@ export type Database = {
           fins_lucrativos: boolean | null
           folha_acima_28pct: string | null
           folha_alta_construcao: boolean | null
+          folha_faixa: string | null
           folha_mensal: number | null
           folha_percentual_faturamento: number | null
           frete_exportacao: boolean | null
@@ -1218,6 +1219,7 @@ export type Database = {
           revende_artesanato_regional: boolean
           segmento: string | null
           setor: string | null
+          setor_secundario: string | null
           socios_outras_empresas: string | null
           tags_operacao: string[] | null
           tem_area_preservacao: boolean | null
@@ -1322,6 +1324,7 @@ export type Database = {
           fins_lucrativos?: boolean | null
           folha_acima_28pct?: string | null
           folha_alta_construcao?: boolean | null
+          folha_faixa?: string | null
           folha_mensal?: number | null
           folha_percentual_faturamento?: number | null
           frete_exportacao?: boolean | null
@@ -1381,6 +1384,7 @@ export type Database = {
           revende_artesanato_regional?: boolean
           segmento?: string | null
           setor?: string | null
+          setor_secundario?: string | null
           socios_outras_empresas?: string | null
           tags_operacao?: string[] | null
           tem_area_preservacao?: boolean | null
@@ -1485,6 +1489,7 @@ export type Database = {
           fins_lucrativos?: boolean | null
           folha_acima_28pct?: string | null
           folha_alta_construcao?: boolean | null
+          folha_faixa?: string | null
           folha_mensal?: number | null
           folha_percentual_faturamento?: number | null
           frete_exportacao?: boolean | null
@@ -1544,6 +1549,7 @@ export type Database = {
           revende_artesanato_regional?: boolean
           segmento?: string | null
           setor?: string | null
+          setor_secundario?: string | null
           socios_outras_empresas?: string | null
           tags_operacao?: string[] | null
           tem_area_preservacao?: boolean | null
@@ -4054,6 +4060,7 @@ export type Database = {
       }
       tax_opportunities: {
         Row: {
+          applicability: Json | null
           base_legal: string | null
           base_legal_resumo: string | null
           casos_sucesso: Json | null
@@ -4099,6 +4106,7 @@ export type Database = {
           validade_ate: string | null
         }
         Insert: {
+          applicability?: Json | null
           base_legal?: string | null
           base_legal_resumo?: string | null
           casos_sucesso?: Json | null
@@ -4144,6 +4152,7 @@ export type Database = {
           validade_ate?: string | null
         }
         Update: {
+          applicability?: Json | null
           base_legal?: string | null
           base_legal_resumo?: string | null
           casos_sucesso?: Json | null
