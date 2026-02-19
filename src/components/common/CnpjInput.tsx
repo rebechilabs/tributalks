@@ -153,6 +153,26 @@ export const CnpjInput = forwardRef<HTMLInputElement, CnpjInputProps>(
                     <span>• CNAE: {data.cnae_fiscal}</span>
                   )}
                 </div>
+                {/* Address */}
+                {data.logradouro && (
+                  <p className="text-xs text-muted-foreground truncate">
+                    {data.logradouro}{data.numero ? `, ${data.numero}` : ''}{data.complemento ? ` - ${data.complemento}` : ''}{data.bairro ? `, ${data.bairro}` : ''}
+                  </p>
+                )}
+                {/* IE */}
+                {data.inscricoes_estaduais && data.inscricoes_estaduais.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    IE: {data.inscricoes_estaduais.map(ie => `${ie.inscricao_estadual} (${ie.uf})`).join(', ')}
+                  </p>
+                )}
+                {/* Contact */}
+                {(data.email || data.telefone) && (
+                  <p className="text-xs text-muted-foreground truncate">
+                    {data.email && <span>{data.email}</span>}
+                    {data.email && data.telefone && <span> • </span>}
+                    {data.telefone && <span>{data.telefone}</span>}
+                  </p>
+                )}
                 <div className="flex items-center gap-2">
                   <span className={cn(
                     "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",

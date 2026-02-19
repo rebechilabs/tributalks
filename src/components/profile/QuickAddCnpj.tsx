@@ -232,9 +232,12 @@ export function QuickAddCnpj({
                 <CheckCircle2 className="h-4 w-4 text-primary mt-0.5" />
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm truncate">{pendingCnpjData.razao_social}</p>
-                  <div className="flex gap-1 mt-1">
+                  <div className="flex flex-wrap gap-1 mt-1">
                     <Badge variant="outline" className="text-xs">{pendingCnpjData.uf}</Badge>
                     <Badge variant="outline" className="text-xs">{pendingCnpjData.porte}</Badge>
+                    {pendingCnpjData.inscricoes_estaduais?.[0] && (
+                      <Badge variant="outline" className="text-xs">IE: {pendingCnpjData.inscricoes_estaduais[0].inscricao_estadual}</Badge>
+                    )}
                   </div>
                 </div>
               </div>
