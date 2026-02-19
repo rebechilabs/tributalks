@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { useCnpjLookup, formatCnpj } from "@/hooks/useCnpjLookup";
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
+import { AntiCopyGuard } from "@/components/common/AntiCopyGuard";
 
 interface Message {
   id: string;
@@ -523,9 +524,11 @@ export function ClaraOnboardingChat() {
                     <div className="space-y-3 flex-1">
                       <Card className="bg-card/80 backdrop-blur-sm border-border/50 shadow-sm">
                         <CardContent className="p-4">
-                          <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:mb-2 [&>p:last-child]:mb-0">
-                            <ReactMarkdown>{message.content}</ReactMarkdown>
-                          </div>
+                          <AntiCopyGuard>
+                            <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:mb-2 [&>p:last-child]:mb-0">
+                              <ReactMarkdown>{message.content}</ReactMarkdown>
+                            </div>
+                          </AntiCopyGuard>
                         </CardContent>
                       </Card>
                       

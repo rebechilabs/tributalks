@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Copy, Check, Gift, Sparkles } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { ShareButtons, getShareMessage } from "./ShareButtons";
+import { AntiCopyGuard } from "@/components/common/AntiCopyGuard";
 
 interface ReferralCodeCardProps {
   code: string | null;
@@ -83,9 +84,11 @@ export function ReferralCodeCard({ code, referralLink, isLoading }: ReferralCode
         {/* Código destacado */}
         <div className="flex items-center gap-3">
           <div className="flex-1 bg-secondary rounded-lg px-4 py-3 text-center">
-            <span className="text-2xl font-mono font-bold tracking-wider text-foreground">
-              {code || "---"}
-            </span>
+            <AntiCopyGuard>
+              <span className="text-2xl font-mono font-bold tracking-wider text-foreground">
+                {code || "---"}
+              </span>
+            </AntiCopyGuard>
           </div>
           <Button
             variant="outline"

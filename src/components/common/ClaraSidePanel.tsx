@@ -8,6 +8,7 @@ import ReactMarkdown from "react-markdown";
 import { ClaraAgentTag } from "./ClaraAgentTag";
 import { ClaraContextualSuggestions } from "./ClaraContextualSuggestions";
 import { ClaraActionButtons } from "./ClaraActionButton";
+import { AntiCopyGuard } from "./AntiCopyGuard";
 
 interface Message {
   role: "user" | "assistant";
@@ -157,9 +158,11 @@ export function ClaraSidePanel({
                     }`}
                   >
                     {msg.role === "assistant" ? (
-                      <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:my-1 [&>ul]:my-1 [&>ol]:my-1 [&_strong]:font-semibold">
-                        <ReactMarkdown skipHtml>{msg.content}</ReactMarkdown>
-                      </div>
+                      <AntiCopyGuard>
+                        <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:my-1 [&>ul]:my-1 [&>ol]:my-1 [&_strong]:font-semibold">
+                          <ReactMarkdown skipHtml>{msg.content}</ReactMarkdown>
+                        </div>
+                      </AntiCopyGuard>
                     ) : (
                       msg.content
                     )}

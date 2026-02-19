@@ -236,3 +236,10 @@
 .animation-delay-500 {
   animation-delay: 500ms;
 }
+
+/* Anti-print protection */
+@media print {
+  body {
+    display: none !important;
+  }
+}
