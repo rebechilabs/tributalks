@@ -110,6 +110,11 @@ interface CompanyProfile {
   cursos_livres?: boolean;
   fins_lucrativos?: boolean;
   investe_tecnologia_educacional?: boolean;
+
+  // Clinical screening fields
+  margem_liquida_faixa?: string;
+  mix_b2b_faixa?: string;
+  alto_volume_compras_nfe?: boolean;
 }
 
 interface TaxOpportunity {
@@ -420,6 +425,31 @@ function evaluateOpportunity(
     return derived[field] ?? profile[field as keyof CompanyProfile];
   };
 
+  // ── always_include_when: deterministic clinical screening ──
+  const alwaysInclude = (criterios as Record<string, unknown>).always_include_when as Array<Record<string, unknown>> | undefined;
+  if (alwaysInclude && Array.isArray(alwaysInclude)) {
+    let matched = false;
+    for (const rule of alwaysInclude) {
+      if (matchesClinicalRule(rule, getValue)) {
+        matched = true;
+        score = 40;
+        reasons.push('Triagem clínica: perfil elegível para revisão');
+        break;
+      }
+    }
+    if (!matched) {
+      return { eligible: false, score: 0, reasons: [], missing: ['Nenhum critério de triagem atendido'] };
+    }
+    // Skip normal criterios evaluation — already determined eligible
+    // Still evaluate pontuacao for bonus points
+    for (const [key, value] of Object.entries(criteriosPontuacao)) {
+      if (key === 'engine_overrides' || key === 'explainability_template' || key === 'implementation_template') continue;
+      evaluateCriterion(key, value, false, 10);
+    }
+    score = Math.min(score, 100);
+    return { eligible: true, score, reasons, missing };
+  }
+
   // Helper to check array inclusion
   const checkArrayInclusion = (criteriaValues: unknown[], profileValue: unknown): boolean => {
     if (Array.isArray(profileValue)) {
@@ -616,6 +646,75 @@ function evaluateOpportunity(
   };
 }
 
+// ── Clinical rule matcher for always_include_when ──
+function matchesClinicalRule(rule: Record<string, unknown>, getValue: (f: string) => unknown): boolean {
+  const field = rule.field as string;
+  const op = rule.op as string;
+  const value = rule.value;
+  const profileVal = getValue(field);
+
+  // Check main field condition
+  if (!evalOp(op, profileVal, value)) return false;
+
+  // Check AND conditions (all must match)
+  const andConds = rule.and as Array<Record<string, unknown>> | undefined;
+  if (andConds) {
+    for (const cond of andConds) {
+      const cv = getValue(cond.field as string);
+      if (!evalOp(cond.op as string, cv, cond.value)) return false;
+    }
+  }
+
+  // Check AND_ANY conditions (at least one must match)
+  const andAnyConds = rule.and_any as Array<Record<string, unknown>> | undefined;
+  if (andAnyConds) {
+    const anyMatch = andAnyConds.some(cond => {
+      const cv = getValue(cond.field as string);
+      return evalOp(cond.op as string, cv, cond.value);
+    });
+    if (!anyMatch) return false;
+  }
+
+  return true;
+}
+
+function evalOp(op: string, profileVal: unknown, criteriaVal: unknown): boolean {
+  switch (op) {
+    case 'eq': return profileVal === criteriaVal;
+    case 'gte': return typeof profileVal === 'number' && profileVal >= (criteriaVal as number);
+    case 'lte': return typeof profileVal === 'number' && profileVal <= (criteriaVal as number);
+    case 'in': return Array.isArray(criteriaVal) && criteriaVal.includes(profileVal);
+    default: return false;
+  }
+}
+
+// ── Engine overrides: priority boost + urgency ──
+function applyEngineOverrides(
+  match: { match_score: number; impact_label?: string; urgency?: string; match_reasons: string[] },
+  criteriosPontuacao: Record<string, unknown>,
+  getValue: (f: string) => unknown
+): void {
+  const overrides = criteriosPontuacao.engine_overrides as { priority_boost?: Array<Record<string, unknown>>; warnings?: string[] } | undefined;
+  if (!overrides?.priority_boost) return;
+
+  for (const boost of overrides.priority_boost) {
+    const when = boost.when as Record<string, unknown>;
+    if (matchesClinicalRule(when, getValue)) {
+      match.match_score += (boost.match_score_boost as number) || 0;
+      match.impact_label = (boost.impact_label as string) || match.impact_label;
+      match.urgency = (boost.urgency as string) || match.urgency;
+      break; // Apply only the first matching boost (highest priority)
+    }
+  }
+
+  // Add warnings as extra reasons
+  if (overrides.warnings) {
+    for (const w of overrides.warnings) {
+      match.match_reasons.push(w);
+    }
+  }
+}
+
 function calculateEconomia(
   profile: CompanyProfile, 
   opportunity: TaxOpportunity
@@ -804,13 +903,14 @@ serve(async (req) => {
         const economia = calculateEconomia(profile as CompanyProfile, opp as TaxOpportunity)
         const prioridade = calculatePrioridade(opp as TaxOpportunity, economia)
         
-        console.log(`Match: ${opp.code} - score=${result.score}, economia=${economia.anual_max}`)
+        const derivedForOverrides = getDerivedValues(profile as CompanyProfile);
+        const getVal = (f: string) => derivedForOverrides[f] ?? (profile as Record<string,unknown>)[f];
         
-        matches.push({
+        const matchObj = {
           opportunity_id: opp.id,
           opportunity: opp,
           match_score: result.score,
-          match_reasons: result.reasons,
+          match_reasons: [...result.reasons],
           missing_criteria: result.missing,
           economia_mensal_min: economia.mensal_min,
           economia_mensal_max: economia.mensal_max,
@@ -818,8 +918,17 @@ serve(async (req) => {
           economia_anual_max: economia.anual_max,
           quick_win: opp.complexidade === 'muito_baixa' || opp.complexidade === 'baixa',
           alto_impacto: economia.anual_max > 50000,
-          prioridade
-        })
+          prioridade,
+          impact_label: undefined as string | undefined,
+          urgency: undefined as string | undefined,
+        };
+
+        // Apply engine overrides (priority boost, urgency)
+        applyEngineOverrides(matchObj, (opp as Record<string,unknown>).criterios_pontuacao as Record<string,unknown> || {}, getVal);
+        
+        console.log(`Match: ${opp.code} - score=${matchObj.match_score}, economia=${economia.anual_max}`)
+        
+        matches.push(matchObj)
       }
     }
 
@@ -923,6 +1032,8 @@ serve(async (req) => {
         descricao_lc_224_2025: m.opportunity.descricao_lc_224_2025 || null,
         economia_percentual_min: m.opportunity.economia_percentual_min ?? null,
         economia_percentual_max: m.opportunity.economia_percentual_max ?? null,
+        impact_label: m.impact_label ?? (m.opportunity as Record<string,unknown>).impact_label_default ?? null,
+        urgency: m.urgency ?? null,
       }))
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

@@ -288,9 +288,58 @@ const EXPLORATORY_FIELDS: QuestionField[] = [
       { value: 'nao', label: 'Não' },
       { value: 'nao_sei', label: 'Não sei' },
     ],
-    condition: (answers, existing) => {
+   condition: (answers, existing) => {
       const uf = (answers.uf_sede ?? existing?.uf_sede ?? '') as string;
       return uf === 'SP';
+    },
+  },
+  // --- Triagem clínica: Revisão de Regime ---
+  {
+    key: 'margem_liquida_faixa',
+    label: 'Margem Líquida',
+    claraText: 'Qual é a faixa de margem líquida da sua empresa?',
+    roiHint: 'Direciona Presumido x Real',
+    type: 'grid',
+    options: [
+      { value: 'lt_5', label: 'Abaixo de 5%' },
+      { value: '5_a_10', label: '5% a 10%' },
+      { value: '10_a_20', label: '10% a 20%' },
+      { value: 'gt_20', label: 'Acima de 20%' },
+    ],
+    condition: (answers, existing) => {
+      const regime = (answers.regime_tributario ?? existing?.regime_tributario ?? '') as string;
+      return regime === 'presumido' || regime === 'lucro_presumido' || regime === 'lucro_real';
+    },
+  },
+  {
+    key: 'mix_b2b_faixa',
+    label: 'Mix B2B / B2C',
+    claraText: 'Seu mix de vendas é mais B2B (empresas) ou B2C (consumidor final)?',
+    roiHint: 'Direciona impacto de crédito/repasse',
+    type: 'grid',
+    options: [
+      { value: 'b2c_70', label: 'Mais B2C (>70%)' },
+      { value: 'equilibrado', label: 'Equilibrado' },
+      { value: 'b2b_70', label: 'Mais B2B (>70%)' },
+    ],
+    condition: (answers, existing) => {
+      const regime = (answers.regime_tributario ?? existing?.regime_tributario ?? '') as string;
+      return regime === 'presumido' || regime === 'lucro_presumido';
+    },
+  },
+  {
+    key: 'alto_volume_compras_nfe',
+    label: 'Volume de Compras NF-e',
+    claraText: 'Sua empresa tem alto volume de compras com nota fiscal eletrônica?',
+    roiHint: 'Direciona viabilidade Lucro Real',
+    type: 'grid',
+    options: [
+      { value: 'true', label: 'Sim' },
+      { value: 'false', label: 'Não' },
+    ],
+    condition: (answers, existing) => {
+      const regime = (answers.regime_tributario ?? existing?.regime_tributario ?? '') as string;
+      return regime === 'presumido' || regime === 'lucro_presumido';
     },
   },
 ];
