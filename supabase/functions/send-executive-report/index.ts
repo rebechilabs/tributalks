@@ -283,13 +283,43 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Validar Bearer token
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey);
+
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Parse body e validar que userId pertence ao usuário autenticado
+    const body = await req.json() as ReportRequest;
+    if (body.userId !== user.id) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    const { userId, referenceMonth, recipients: overrideRecipients, reportData } = await req.json() as ReportRequest;
+    const { userId, referenceMonth, recipients: overrideRecipients, reportData } = body;
     
     if (!userId || !referenceMonth || !reportData) {
       return new Response(
