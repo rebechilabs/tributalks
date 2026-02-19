@@ -1,38 +1,116 @@
 
-
-# Permitir Edição Inline no Quadro de Dados da Empresa (StepIntro)
+# Perguntas Exploratórias Inteligentes: Sócios + Ramificação Condicional
 
 ## Resumo
 
-Adicionar um botao de edicao (icone Pencil) em cada linha preenchida do quadro de dados da empresa na Etapa 1. Ao clicar, o campo entra em modo de edicao inline, permitindo corrigir o valor sem precisar passar pelo fluxo de perguntas novamente. Campos vazios continuam com o comportamento atual (respondidos na Etapa 2).
+Adicionar 2 perguntas sobre sócios (quantos e se possuem outras empresas) e implementar **ramificacao condicional**: dependendo das respostas, a Clara faz perguntas adicionais que aproximam o usuario de oportunidades tributarias especificas (holding, distribuicao de lucros, planejamento societario).
 
-## Como funciona
+## Novas Perguntas
 
-### Comportamento por tipo de campo
+### Perguntas Base (sempre aparecem)
 
-| Campo | Tipo de edicao |
-|-------|---------------|
-| Regime Tributario | Dropdown com 3 opcoes (Simples, Presumido, Real) |
-| Setor | Dropdown com 8 opcoes |
-| Faturamento Anual | Input numerico com mascara R$ |
-| Funcionarios | Dropdown com faixas (0-9, 10-49, etc.) |
-| Estado (UF) | Dropdown com 27 UFs |
-| Exportacao | Toggle Sim/Nao |
-| Importacao | Toggle Sim/Nao |
+**1. Quantos socios?** (grid)
+Clara: "Quantos socios a empresa possui?"
+Opcoes: 1 (so eu) | 2 | 3 | 4 ou mais
 
-### Fluxo do usuario
+**2. Socios com outras empresas?** (grid)
+Clara: "Algum dos socios possui participacao em outras empresas?"
+Opcoes: Sim | Nao | Nao sei
 
-1. Usuario ve o quadro com os dados preenchidos
-2. Clica no icone de lapis ao lado do valor que quer corrigir
-3. O valor vira um campo editavel (select, input ou toggle, conforme o tipo)
-4. Usuario altera e clica no botao de confirmacao (icone Check) ou pressiona Enter
-5. O valor e salvo imediatamente no banco via `supabase.from('company_profile').update()`
-6. O campo volta ao modo leitura com o novo valor e badge verde
+### Perguntas Condicionais (aparecem conforme respostas)
 
-### Cancelar edicao
+**Se num_socios >= 2 E socios_outras_empresas = "sim":**
 
-- Icone X ao lado do Check para cancelar
-- Pressionar Escape tambem cancela
+**3. Tem holding?** (grid)
+Clara: "Os socios ja possuem uma holding para organizar as participacoes?"
+Opcoes: Sim | Nao | Nao sei o que e isso
+
+> Isso abre oportunidade de "Planejamento Societario via Holding" e "Distribuicao Otimizada de Lucros"
+
+**Se num_socios >= 2:**
+
+**4. Como distribuem os lucros?** (grid)
+Clara: "Como a empresa distribui os lucros entre os socios hoje?"
+Opcoes: Pro-labore fixo | Dividendos periodicos | Mistura dos dois | Nao distribuimos ainda
+
+> Isso abre oportunidade de "Otimizacao Pro-labore vs Dividendos"
+
+## Logica de Ramificacao
+
+A ideia e transformar o `StepQuestions` para suportar perguntas condicionais. Cada pergunta pode ter um campo `condition` que e uma funcao avaliada contra as respostas ja dadas. Se a condicao retorna `true`, a pergunta aparece; se `false`, ela e pulada.
+
+```text
+Fluxo:
+  num_socios -> socios_outras_empresas
+                  |
+                  v
+          [socios = "sim" E num >= 2?]
+            SIM -> tem_holding
+            NAO -> pula
+                  |
+                  v
+          [num >= 2?]
+            SIM -> distribuicao_lucros
+            NAO -> pula
+                  |
+                  v
+          ... continua com desafio_principal, etc.
+```
+
+## O que muda
+
+### 1. Migracao: 4 novas colunas
+
+```sql
+ALTER TABLE company_profile
+  ADD COLUMN IF NOT EXISTS num_socios text,
+  ADD COLUMN IF NOT EXISTS socios_outras_empresas text,
+  ADD COLUMN IF NOT EXISTS distribuicao_lucros text;
+```
+
+Nota: `tem_holding` ja existe na tabela, nao precisa criar.
+
+### 2. StepQuestions.tsx - Perguntas condicionais
+
+Alterar a interface `QuestionField` para incluir um campo opcional `condition`:
+
+```text
+interface QuestionField {
+  key: string;
+  label: string;
+  claraText: string;
+  type: 'grid' | 'currency' | 'uf' | 'textarea';
+  options?: { value: string; label: string }[];
+  placeholder?: string;
+  condition?: (answers: Record<string, string | number>) => boolean;
+}
+```
+
+As novas perguntas:
+
+| Pergunta | Posicao | Condicao |
+|----------|---------|----------|
+| num_socios | Apos uf_sede | Sempre |
+| socios_outras_empresas | Apos num_socios | Sempre |
+| tem_holding | Apos socios_outras_empresas | num_socios != "1" E socios_outras_empresas = "sim" |
+| distribuicao_lucros | Apos tem_holding | num_socios != "1" |
+
+### 3. StepQuestions.tsx - Filtro dinamico
+
+Hoje o componente filtra perguntas assim:
+```text
+const questions = REQUIRED_FIELDS.filter(f => missingFields.includes(f.key));
+```
+
+Precisa mudar para tambem avaliar `condition` dinamicamente conforme o usuario responde. A lista de perguntas sera recalculada a cada resposta para incluir/excluir condicionais.
+
+### 4. PlanejarFlow.tsx
+
+Adicionar `num_socios`, `socios_outras_empresas` e `distribuicao_lucros` ao array `QUALITATIVE_KEYS`.
+
+### 5. match-opportunities (nenhuma mudanca agora)
+
+As novas colunas (`num_socios`, `socios_outras_empresas`, `tem_holding`, `distribuicao_lucros`) ja podem ser usadas pela Edge Function no futuro para scoring de oportunidades como "Holding Familiar" e "Otimizacao de Pro-labore". Nao precisa alterar a Edge Function agora -- os dados sao capturados e ficam disponiveis.
 
 ## Detalhes Tecnicos
 
@@ -40,39 +118,22 @@ Adicionar um botao de edicao (icone Pencil) em cada linha preenchida do quadro d
 
 | Arquivo | Alteracao |
 |---------|-----------|
-| `src/components/planejar/StepIntro.tsx` | Adicionar estado de edicao por campo, renderizar inputs inline, logica de save |
+| `src/components/planejar/StepQuestions.tsx` | Adicionar campo `condition` na interface, 4 novas perguntas, logica de filtragem dinamica |
+| `src/components/planejar/PlanejarFlow.tsx` | Adicionar 3 novas chaves ao QUALITATIVE_KEYS |
+| Migracao SQL | 3 novas colunas (num_socios, socios_outras_empresas, distribuicao_lucros) |
 
-### Mudancas no StepIntro.tsx
+### Logica de filtragem dinamica no StepQuestions
 
-1. Adicionar `editingField` state (string ou null) para controlar qual campo esta em modo edicao
-2. Adicionar `editValue` state para o valor temporario durante edicao
-3. Expandir o array `FIELDS` com metadata de tipo de edicao e opcoes (reutilizar as mesmas opcoes do StepQuestions)
-4. Renderizar icone Pencil em cada linha preenchida (ao lado do CheckCircle2)
-5. Quando `editingField === key`, renderizar o campo de edicao apropriado no lugar do valor
-6. Funcao `handleSave` que faz update no Supabase e chama `refetch` (recebido via props)
-7. Adicionar `companyId`, `userId` e `onFieldUpdated` (callback para refetch) nas props
+O componente precisa recalcular a lista de perguntas visiveis a cada resposta. A abordagem:
 
-### Novas props do StepIntro
+1. Filtrar perguntas que estao em `missingFields`
+2. Dentro dessas, remover as que tem `condition` retornando `false` baseado nas respostas ate o momento
+3. A pergunta atual e sempre `questions[currentIdx]` da lista filtrada
+4. Ao responder, recalcular a lista -- se a proxima pergunta condicional agora ficou visivel, ela aparece; se ficou invisivel, pula
 
-```text
-interface StepIntroProps {
-  company: CompanyData | null;
-  missingCount: number;
-  onNext: () => void;
-  companyId: string | null;    // novo
-  userId: string | null;       // novo
-  onFieldUpdated: () => void;  // novo - chama refetch no PlanejarFlow
-}
-```
+### Mapeamento para oportunidades
 
-### PlanejarFlow.tsx
-
-Passar as novas props para StepIntro:
-- `companyId={companyProfile?.id as string}`
-- `userId={user?.id}`
-- `onFieldUpdated={refetch}`
-
-### Sem migracoes de banco
-
-Nenhuma alteracao no banco necessaria — os campos ja existem.
-
+As respostas alimentam o perfil e no futuro a Edge Function pode usar:
+- `num_socios >= 2` + `socios_outras_empresas = sim` + `tem_holding = nao` --> Oportunidade: "Constituicao de Holding Patrimonial"
+- `num_socios >= 2` + `distribuicao_lucros = pro_labore` --> Oportunidade: "Otimizacao Pro-labore vs Dividendos"
+- `tem_holding = sim` --> Oportunidade: "Revisao de Estrutura Societaria"
