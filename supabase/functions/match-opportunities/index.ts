@@ -921,6 +921,8 @@ serve(async (req) => {
         descricao_reforma: m.opportunity.descricao_reforma || null,
         status_lc_224_2025: m.opportunity.status_lc_224_2025 || null,
         descricao_lc_224_2025: m.opportunity.descricao_lc_224_2025 || null,
+        economia_percentual_min: m.opportunity.economia_percentual_min ?? null,
+        economia_percentual_max: m.opportunity.economia_percentual_max ?? null,
       }))
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

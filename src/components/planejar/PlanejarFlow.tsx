@@ -291,6 +291,10 @@ export function PlanejarFlow() {
           totalMax={totalMax}
           totalCount={totalCount}
           companyProfile={companyProfile}
+          onRefine={() => {
+            setStep('questions');
+            setIsRetry(false);
+          }}
         />
       )}
     </div>
