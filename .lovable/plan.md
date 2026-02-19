@@ -1,147 +1,84 @@
 
 
-# Transformar /dashboard/planejar em Fluxo Guiado pela Clara AI
+# Adicionar 3 Novas Perguntas Qualitativas ao Fluxo da Clara
 
 ## Resumo
 
-Substituir os 2 cards estaticos da pagina `PlanejarPage.tsx` (que ja existe) por um fluxo interativo em 4 etapas guiado pela Clara AI. O conteudo interno muda, mas o `DashboardLayout` e a estrutura da rota permanecem intactos.
+Adicionar 3 perguntas qualitativas ao fluxo de perguntas (Etapa 2) para entender melhor o contexto do usuario: **maior desafio tributario**, **como funciona a operacao** e **se declara 100% do faturamento**. Essas perguntas aparecem **apos** as perguntas obrigatorias ja existentes, sempre -- nao dependem de campos faltantes.
 
-## Correcoes aplicadas
+## Novas Perguntas
 
-1. **Arquivo**: `src/pages/dashboard/PlanejarPage.tsx` ja existe e sera **modificado** (nao criado do zero). A rota `/dashboard/planejar` ja aponta para ele em `App.tsx`.
-2. **Faturamento**: Input numerico livre (sem faixas pre-definidas), pois `match-opportunities` usa o valor exato para calcular economia.
-3. **Fallback**: Se `match-opportunities` falhar ou demorar mais de 15 segundos, exibir 3 oportunidades genericas baseadas no regime tributario da empresa.
-
----
-
-## Etapas do Fluxo
-
-### Etapa 1 -- Intro
-
-- Balao da Clara (icone Sparkles, fundo muted, estilo chat) com efeito de digitacao (typewriter via useState + setInterval)
-- Tabela com 7 campos da empresa vindos de `company_profile`: regime tributario, setor, faturamento anual, numero de funcionarios, estado (UF), exportacao, importacao
-- Campos preenchidos: badge verde com valor
-- Campos faltantes: fundo ambar, icone AlertTriangle
-- Se houver campos faltantes: aviso + botao "Responder X perguntas e gerar analise"
-- Se tudo preenchido: botao "Gerar analise agora" (pula Etapa 2)
-
-### Etapa 2 -- Perguntas (condicional)
-
-So aparece se faltar algum dos 5 campos obrigatorios: `regime_tributario`, `setor`, `faturamento_anual`, `num_funcionarios`, `uf_sede`
-
-Cada pergunta e um card individual com progress bar no topo (ex: "Pergunta 2 de 4"). Respostas via grid de botoes estilizados, **exceto faturamento que usa input numerico livre**.
-
+### 1. Maior desafio tributario (grid de opcoes)
+Clara pergunta: "Qual e o maior desafio tributario que voce enfrenta hoje?"
 Opcoes:
-- **regime_tributario**: Simples Nacional, Lucro Presumido, Lucro Real
-- **setor**: Comercio, Industria, Servicos, Tecnologia, Saude, Educacao, Agronegocio, Construcao
-- **faturamento_anual**: Input numerico livre com mascara de moeda (R$)
-- **num_funcionarios**: Faixas 0-9, 10-49, 50-99, 100-499, 500+
-- **uf_sede**: Grid com 27 UFs brasileiras
+- Pago muito imposto
+- Nao sei se estou no regime certo
+- Medo de fiscalizacao
+- Dificuldade com obrigacoes acessorias
+- Falta de planejamento tributario
+- Nao sei quanto pago de imposto
 
-Ao responder tudo, salva via `supabase.from('company_profile').update(...)` e avanca.
+### 2. Descricao da operacao (texto livre)
+Clara pergunta: "Me conta um pouco como funciona a operacao da sua empresa. O que voce vende, como entrega, quem sao seus clientes?"
+Input: textarea com placeholder e botao Confirmar.
 
-### Etapa 3 -- Processando
+### 3. Declara 100% do faturamento (grid sim/nao)
+Clara pergunta: "Sua empresa declara 100% do faturamento? Essa informacao e confidencial e nos ajuda a calibrar a analise."
+Opcoes:
+- Sim, 100%
+- Quase tudo (acima de 80%)
+- Parcialmente (50-80%)
+- Prefiro nao responder
 
-Animacao com 5 steps sequenciais (delay visual de ~1.5s cada):
-1. "Analisando perfil tributario"
-2. "Consultando base de oportunidades"
-3. "Calculando economia estimada"
-4. "Verificando impacto da Reforma Tributaria"
-5. "Priorizando recomendacoes"
+## O que muda
 
-Em paralelo, chama `match-opportunities` via `supabase.functions.invoke()`.
+### 1. Migracao de banco: 3 novas colunas em `company_profile`
 
-**Fallback**: Se a Edge Function retornar erro ou timeout (15s), exibir 3 oportunidades genericas baseadas no regime tributario:
-- Simples: Revisao de Enquadramento, Exclusao de ICMS-ST, Fator R
-- Presumido: Revisao de Aliquota Presumida, Creditos de PIS/COFINS, Planejamento de Pro-labore
-- Real: Creditos de PIS/COFINS, Incentivos Fiscais de P&D, Revisao de IRPJ/CSLL
+```sql
+ALTER TABLE company_profile
+  ADD COLUMN IF NOT EXISTS desafio_principal text,
+  ADD COLUMN IF NOT EXISTS descricao_operacao text,
+  ADD COLUMN IF NOT EXISTS nivel_declaracao text;
+```
 
-Quando a resposta chega E todos os steps visuais completaram, avanca para Etapa 4.
+### 2. Novo tipo de pergunta: `textarea`
 
-### Etapa 4 -- Resultados
+O componente `StepQuestions.tsx` hoje suporta 3 tipos: `grid`, `currency`, `uf`. Sera adicionado um quarto tipo `textarea` para a pergunta sobre operacao.
 
-- Balao da Clara resumindo a economia total estimada (min-max)
-- 3 cards rankeados por: impacto (alto > medio > baixo), depois complexidade (baixa > media > alta)
-- Cada card mostra: titulo, descricao curta, economia estimada min/max por ano, badge de impacto, badge de complexidade
-- Se a oportunidade tiver `futuro_reforma` ou `status_lc_224_2025` preenchido (campos confirmados na tabela `tax_opportunities`): tag "Reforma 2026" com icone Zap + bloco roxo com `descricao_reforma` ou `descricao_lc_224_2025`
-- Botao "Ver todas as X oportunidades" navega para `/dashboard/planejar/oportunidades`
+### 3. Logica de exibicao das novas perguntas
 
----
+As 3 perguntas novas **sempre aparecem**, independentemente de estarem preenchidas ou nao na tabela (exceto se ja respondidas naquela sessao). Elas sao adicionadas apos as perguntas de campos faltantes na lista de `questions`.
+
+### 4. Atualizacao do `PlanejarFlow.tsx`
+
+- Incluir as 3 novas chaves (`desafio_principal`, `descricao_operacao`, `nivel_declaracao`) na lista de campos que serao salvos via `update`
+- Ajustar o `missingFields` para sempre incluir essas 3 chaves qualitativas se estiverem vazias no perfil
+
+### 5. Atualizacao do `StepIntro.tsx`
+
+Nao adicionar essas perguntas a tabela de dados da intro -- elas nao sao "dados da empresa", sao perguntas qualitativas. O contador de "Responder X perguntas" deve incluir essas 3 quando nao preenchidas.
 
 ## Detalhes Tecnicos
 
-### Novos Arquivos
-
-| Arquivo | Descricao |
-|---------|-----------|
-| `src/components/planejar/PlanejarFlow.tsx` | Componente principal com state machine (step 1-4) |
-| `src/components/planejar/StepIntro.tsx` | Etapa 1: Intro da Clara + tabela de dados |
-| `src/components/planejar/StepQuestions.tsx` | Etapa 2: Perguntas com grid de botoes |
-| `src/components/planejar/StepProcessing.tsx` | Etapa 3: Animacao de processamento |
-| `src/components/planejar/StepResults.tsx` | Etapa 4: Top 3 oportunidades + resumo |
-| `src/components/planejar/ClaraMessage.tsx` | Balao da Clara com typewriter |
-| `src/components/planejar/OpportunityCard.tsx` | Card individual de oportunidade |
-
-### Arquivo Modificado
+### Arquivos Modificados
 
 | Arquivo | Alteracao |
 |---------|-----------|
-| `src/pages/dashboard/PlanejarPage.tsx` | Substituir conteudo interno pelos novos componentes, manter DashboardLayout |
+| `src/components/planejar/StepQuestions.tsx` | Adicionar 3 perguntas ao array `REQUIRED_FIELDS`, adicionar tipo `textarea` no render |
+| `src/components/planejar/PlanejarFlow.tsx` | Incluir as 3 novas chaves na logica de `getMissingFields` e no `handleQuestionsComplete` |
 
-### Hooks e Contextos Utilizados
-
-- `useAuth()` de `src/hooks/useAuth.tsx` -- obter user
-- `useCompany()` de `src/contexts/CompanyContext.tsx` -- obter currentCompany
-- `useQuery` do TanStack -- fetch do company_profile completo
-- `supabase.functions.invoke('match-opportunities')` -- gerar oportunidades
-
-### Dados da Empresa (Query)
-
-```text
-SELECT * FROM company_profile 
-WHERE company_id = :currentCompany.id   -- se disponivel
-   OR user_id = :user.id               -- fallback
-LIMIT 1
-```
-
-### Resposta do match-opportunities (ja implementado)
-
-A Edge Function retorna: `total_opportunities`, `economia_anual_min/max`, `quick_wins`, `high_impact`, e array `opportunities[]` com `name`, `description`, `economia_anual_min/max`, `complexidade`, `alto_impacto`, `match_score`, `tributos_afetados`, etc.
-
-Os campos de Reforma (`futuro_reforma`, `descricao_reforma`, `status_lc_224_2025`, `descricao_lc_224_2025`) estao na tabela `tax_opportunities` mas **nao sao retornados** pela Edge Function atual. Sera necessario adicionar esses 4 campos ao objeto `opportunity` no response do `match-opportunities`.
-
-### Ranking dos Resultados
-
-```text
-1. alto_impacto = true primeiro
-2. complexidade: baixa (1) > media (2) > alta (3)
-3. economia_anual_max DESC
-Pegar top 3 apos ordenacao.
-```
-
-### Fallback Generico (estrutura)
+### Estrutura da nova pergunta textarea
 
 ```text
 {
-  name: "Oportunidade genérica",
-  description: "Descrição padrão",
-  economia_anual_min: 0,
-  economia_anual_max: 0,
-  complexidade: "media",
-  alto_impacto: false,
-  is_fallback: true   // flag para indicar que não é resultado real
+  key: 'descricao_operacao',
+  label: 'Operação',
+  claraText: 'Me conta um pouco como funciona a operação da sua empresa...',
+  type: 'textarea'
 }
 ```
 
-### Nenhuma Migracao de Banco Necessaria
+### Render do tipo textarea
 
-Todos os campos necessarios ja existem nas tabelas `company_profile` e `tax_opportunities`.
-
-### Alteracao na Edge Function match-opportunities
-
-Adicionar ao response os campos de Reforma Tributaria que ja existem em `tax_opportunities` mas nao sao retornados:
-- `futuro_reforma`
-- `descricao_reforma`
-- `status_lc_224_2025`
-- `descricao_lc_224_2025`
+Um `<textarea>` com 4 linhas, placeholder contextual, e botao "Confirmar" abaixo (similar ao currency). Avanca ao clicar Confirmar.
 
