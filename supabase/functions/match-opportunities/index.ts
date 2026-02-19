@@ -916,7 +916,11 @@ serve(async (req) => {
         base_legal: m.opportunity.base_legal,
         base_legal_resumo: m.opportunity.base_legal_resumo,
         requer_contador: m.opportunity.requer_contador,
-        requer_advogado: m.opportunity.requer_advogado
+        requer_advogado: m.opportunity.requer_advogado,
+        futuro_reforma: m.opportunity.futuro_reforma || null,
+        descricao_reforma: m.opportunity.descricao_reforma || null,
+        status_lc_224_2025: m.opportunity.status_lc_224_2025 || null,
+        descricao_lc_224_2025: m.opportunity.descricao_lc_224_2025 || null,
       }))
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
