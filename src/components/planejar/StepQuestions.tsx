@@ -163,13 +163,6 @@ const REQUIRED_FIELDS: QuestionField[] = [
 // Complementary questions for retry when zero opportunities found
 const COMPLEMENTARY_FIELDS: QuestionField[] = [
   {
-    key: 'municipio_sede',
-    label: 'Município',
-    claraText: 'Em qual município fica a sede da sua empresa?',
-    type: 'text',
-    placeholder: 'Ex: São Paulo',
-  },
-  {
     key: 'exporta_produtos',
     label: 'Exportação',
     claraText: 'Sua empresa exporta produtos ou serviços?',

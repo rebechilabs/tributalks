@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const REQUIRED_KEYS = ['regime_tributario', 'setor', 'faturamento_anual', 'num_funcionarios', 'uf_sede', 'municipio_sede'] as const;
 const QUALITATIVE_KEYS = ['desafio_principal', 'descricao_operacao', 'nivel_declaracao', 'num_socios', 'socios_outras_empresas', 'distribuicao_lucros'] as const;
-const COMPLEMENTARY_KEYS = ['municipio_sede', 'exporta_produtos', 'importa_produtos', 'tem_estoque', 'tem_ecommerce', 'descricao_atividade'] as const;
+const COMPLEMENTARY_KEYS = ['exporta_produtos', 'importa_produtos', 'tem_estoque', 'tem_ecommerce', 'descricao_atividade'] as const;
 
 type Step = 'intro' | 'questions' | 'processing' | 'complementary' | 'results';
 
