@@ -1,0 +1,1 @@
+ALTER TABLE public.company_profile ADD COLUMN IF NOT EXISTS tem_estoque boolean DEFAULT null;

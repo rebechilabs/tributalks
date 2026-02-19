@@ -22,7 +22,7 @@ export function StepResults({ opportunities, totalMin, totalMax, totalCount }: S
 
   const claraText = totalMax > 0
     ? `Encontrei ${totalCount} oportunidade${totalCount > 1 ? 's' : ''} para a sua empresa! A economia estimada total pode chegar a ${formatCurrency(totalMin)} — ${formatCurrency(totalMax)} por ano. Aqui estão as 3 mais relevantes:`
-    : 'Não encontrei oportunidades específicas para o seu perfil no momento. Complete mais dados do seu perfil para uma análise mais precisa.';
+    : 'Com base no perfil da sua empresa, identifiquei essas oportunidades que podem se aplicar ao seu caso:';
 
   return (
     <div className="space-y-6 animate-fade-in-up">

@@ -13,6 +13,7 @@ interface CompanyData {
   faturamento_anual?: number | null;
   num_funcionarios?: number | null;
   uf_sede?: string | null;
+  municipio_sede?: string | null;
   exporta_produtos?: boolean | null;
   importa_produtos?: boolean | null;
 }
@@ -48,16 +49,8 @@ const SETOR_OPTIONS = [
   { value: 'educacao', label: 'Educação' },
 ];
 
-const FUNCIONARIOS_OPTIONS = [
-  { value: 0, label: '0' },
-  { value: 5, label: '1-9' },
-  { value: 25, label: '10-49' },
-  { value: 75, label: '50-99' },
-  { value: 150, label: '100-499' },
-  { value: 500, label: '500+' },
-];
 
-type EditType = 'select' | 'currency' | 'uf' | 'toggle';
+type EditType = 'select' | 'currency' | 'uf' | 'toggle' | 'text' | 'number';
 
 interface FieldDef {
   key: keyof CompanyData;
@@ -89,17 +82,16 @@ const FIELDS: FieldDef[] = [
     format: (v) => `R$ ${Number(v).toLocaleString('pt-BR')}`
   },
   {
-    key: 'num_funcionarios', label: 'Funcionários', editType: 'select',
-    options: FUNCIONARIOS_OPTIONS.map(o => ({ value: o.value, label: o.label })),
-    format: (v) => {
-      const n = Number(v);
-      const found = FUNCIONARIOS_OPTIONS.find(o => o.value === n);
-      return found?.label || String(v);
-    }
+    key: 'num_funcionarios', label: 'Funcionários', editType: 'number',
+    format: (v) => String(Number(v))
   },
   {
     key: 'uf_sede', label: 'Estado (UF)', editType: 'uf',
     format: (v) => String(v).toUpperCase()
+  },
+  {
+    key: 'municipio_sede', label: 'Município', editType: 'text',
+    format: (v) => String(v)
   },
   { key: 'exporta_produtos', label: 'Exportação', editType: 'toggle', format: (v) => v ? 'Sim' : 'Não' },
   { key: 'importa_produtos', label: 'Importação', editType: 'toggle', format: (v) => v ? 'Sim' : 'Não' },
@@ -212,6 +204,48 @@ export function StepIntro({ company, missingCount, onNext, companyId, userId, on
             <option value="">Selecione</option>
             {UF_OPTIONS.map(uf => <option key={uf} value={uf}>{uf}</option>)}
           </select>
+          <button onClick={() => handleSave(key)} disabled={saving} className="p-0.5 rounded hover:bg-emerald-500/20 text-emerald-400">
+            <Check className="w-3.5 h-3.5" />
+          </button>
+          <button onClick={cancelEdit} className="p-0.5 rounded hover:bg-destructive/20 text-muted-foreground">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      );
+    }
+
+    if (editType === 'text') {
+      return (
+        <div className="flex items-center gap-1.5">
+          <input
+            type="text"
+            value={editValue as string}
+            onChange={(e) => setEditValue(e.target.value)}
+            onKeyDown={(e) => handleKeyDown(e, key)}
+            className="w-32 h-7 px-2 text-xs rounded border border-input bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            autoFocus
+          />
+          <button onClick={() => handleSave(key)} disabled={saving} className="p-0.5 rounded hover:bg-emerald-500/20 text-emerald-400">
+            <Check className="w-3.5 h-3.5" />
+          </button>
+          <button onClick={cancelEdit} className="p-0.5 rounded hover:bg-destructive/20 text-muted-foreground">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      );
+    }
+
+    if (editType === 'number') {
+      return (
+        <div className="flex items-center gap-1.5">
+          <input
+            type="number"
+            value={editValue as number}
+            onChange={(e) => setEditValue(Number(e.target.value))}
+            onKeyDown={(e) => handleKeyDown(e, key)}
+            className="w-20 h-7 px-2 text-xs rounded border border-input bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            autoFocus
+          />
           <button onClick={() => handleSave(key)} disabled={saving} className="p-0.5 rounded hover:bg-emerald-500/20 text-emerald-400">
             <Check className="w-3.5 h-3.5" />
           </button>
