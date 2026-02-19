@@ -325,6 +325,23 @@ const REGIME_EXPLORATORY_FIELDS: QuestionField[] = [
       return uf === 'SP';
     },
   },
+  {
+    key: 'folha_faixa',
+    label: 'Faixa de Folha',
+    claraText: 'Qual é a faixa da sua folha de pagamento em relação ao faturamento?',
+    roiHint: 'Destrava Fator R e enquadramento',
+    type: 'grid',
+    options: [
+      { value: 'lt_10', label: 'Abaixo de 10%' },
+      { value: '10_a_20', label: '10% a 20%' },
+      { value: '20_a_28', label: '20% a 28%' },
+      { value: 'gt_28', label: 'Acima de 28%' },
+    ],
+    condition: (answers, existing) => {
+      const regime = (answers.regime_tributario ?? existing?.regime_tributario ?? '') as string;
+      return regime === 'simples';
+    },
+  },
   // Triagem clínica
   {
     key: 'margem_liquida_faixa',
