@@ -8,8 +8,9 @@ interface QuestionField {
   key: string;
   label: string;
   claraText: string;
-  type: 'grid' | 'currency' | 'uf';
+  type: 'grid' | 'currency' | 'uf' | 'textarea';
   options?: { value: string; label: string }[];
+  placeholder?: string;
 }
 
 const REQUIRED_FIELDS: QuestionField[] = [
@@ -65,6 +66,39 @@ const REQUIRED_FIELDS: QuestionField[] = [
     claraText: 'Em qual estado fica a sede da sua empresa?',
     type: 'uf',
   },
+  {
+    key: 'desafio_principal',
+    label: 'Desafio',
+    claraText: 'Qual é o maior desafio tributário que você enfrenta hoje?',
+    type: 'grid',
+    options: [
+      { value: 'pago_muito_imposto', label: 'Pago muito imposto' },
+      { value: 'regime_errado', label: 'Não sei se estou no regime certo' },
+      { value: 'medo_fiscalizacao', label: 'Medo de fiscalização' },
+      { value: 'obrigacoes_acessorias', label: 'Dificuldade com obrigações acessórias' },
+      { value: 'falta_planejamento', label: 'Falta de planejamento tributário' },
+      { value: 'nao_sei_quanto_pago', label: 'Não sei quanto pago de imposto' },
+    ],
+  },
+  {
+    key: 'descricao_operacao',
+    label: 'Operação',
+    claraText: 'Me conta um pouco como funciona a operação da sua empresa. O que você vende, como entrega, quem são seus clientes?',
+    type: 'textarea',
+    placeholder: 'Ex: Vendemos roupas pela internet, entregamos via Correios e transportadoras. Nossos clientes são pessoas físicas, maioria do Sudeste...',
+  },
+  {
+    key: 'nivel_declaracao',
+    label: 'Declaração',
+    claraText: 'Sua empresa declara 100% do faturamento? Essa informação é confidencial e nos ajuda a calibrar a análise.',
+    type: 'grid',
+    options: [
+      { value: '100', label: 'Sim, 100%' },
+      { value: '80', label: 'Quase tudo (acima de 80%)' },
+      { value: '50', label: 'Parcialmente (50-80%)' },
+      { value: 'prefiro_nao_responder', label: 'Prefiro não responder' },
+    ],
+  },
 ];
 
 const UFS = [
@@ -82,6 +116,7 @@ export function StepQuestions({ missingFields, onComplete }: StepQuestionsProps)
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | number>>({});
   const [currencyInput, setCurrencyInput] = useState('');
+  const [textareaInput, setTextareaInput] = useState('');
 
   const current = questions[currentIdx];
   if (!current) return null;
@@ -95,6 +130,7 @@ export function StepQuestions({ missingFields, onComplete }: StepQuestionsProps)
     if (currentIdx < questions.length - 1) {
       setCurrentIdx(currentIdx + 1);
       setCurrencyInput('');
+      setTextareaInput('');
     } else {
       onComplete(newAnswers);
     }
@@ -104,6 +140,10 @@ export function StepQuestions({ missingFields, onComplete }: StepQuestionsProps)
     const raw = currencyInput.replace(/\D/g, '');
     const num = parseInt(raw, 10);
     if (num > 0) selectAnswer(num);
+  };
+
+  const handleTextareaSubmit = () => {
+    if (textareaInput.trim().length > 0) selectAnswer(textareaInput.trim());
   };
 
   const formatCurrencyInput = (val: string) => {
@@ -177,6 +217,23 @@ export function StepQuestions({ missingFields, onComplete }: StepQuestionsProps)
               {uf}
             </button>
           ))}
+        </div>
+      )}
+
+      {current.type === 'textarea' && (
+        <div className="space-y-3">
+          <textarea
+            value={textareaInput}
+            onChange={e => setTextareaInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleTextareaSubmit(); } }}
+            placeholder={current.placeholder || ''}
+            rows={4}
+            className="w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+            autoFocus
+          />
+          <Button onClick={handleTextareaSubmit} className="w-full" disabled={!textareaInput.trim()}>
+            Confirmar
+          </Button>
         </div>
       )}
     </div>

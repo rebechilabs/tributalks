@@ -11,6 +11,7 @@ import type { OpportunityData } from './OpportunityCard';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const REQUIRED_KEYS = ['regime_tributario', 'setor', 'faturamento_anual', 'num_funcionarios', 'uf_sede'] as const;
+const QUALITATIVE_KEYS = ['desafio_principal', 'descricao_operacao', 'nivel_declaracao'] as const;
 
 type Step = 'intro' | 'questions' | 'processing' | 'results';
 
@@ -34,11 +35,17 @@ const FALLBACK_BY_REGIME: Record<string, OpportunityData[]> = {
 };
 
 function getMissingFields(profile: Record<string, unknown> | null): string[] {
-  if (!profile) return [...REQUIRED_KEYS];
-  return REQUIRED_KEYS.filter(k => {
+  if (!profile) return [...REQUIRED_KEYS, ...QUALITATIVE_KEYS];
+  const missing = REQUIRED_KEYS.filter(k => {
     const v = profile[k];
     return v === null || v === undefined || v === '';
   });
+  // Always include qualitative keys if empty
+  const missingQualitative = QUALITATIVE_KEYS.filter(k => {
+    const v = profile[k];
+    return v === null || v === undefined || v === '';
+  });
+  return [...missing, ...missingQualitative];
 }
 
 export function PlanejarFlow() {

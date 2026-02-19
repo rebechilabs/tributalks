@@ -1132,7 +1132,9 @@ export type Database = {
           cursos_livres: boolean | null
           dados_financeiros_atualizados_em: string | null
           dados_financeiros_origem: string | null
+          desafio_principal: string | null
           descricao_atividade: string | null
+          descricao_operacao: string | null
           email_ceo: string | null
           email_cfo: string | null
           email_contador: string | null
@@ -1170,6 +1172,7 @@ export type Database = {
           margem_bruta_percentual: number | null
           mei_artesao: boolean
           municipio_sede: string | null
+          nivel_declaracao: string | null
           nome_fantasia: string | null
           num_funcionarios: number | null
           opera_outros_estados: boolean | null
@@ -1276,7 +1279,9 @@ export type Database = {
           cursos_livres?: boolean | null
           dados_financeiros_atualizados_em?: string | null
           dados_financeiros_origem?: string | null
+          desafio_principal?: string | null
           descricao_atividade?: string | null
+          descricao_operacao?: string | null
           email_ceo?: string | null
           email_cfo?: string | null
           email_contador?: string | null
@@ -1314,6 +1319,7 @@ export type Database = {
           margem_bruta_percentual?: number | null
           mei_artesao?: boolean
           municipio_sede?: string | null
+          nivel_declaracao?: string | null
           nome_fantasia?: string | null
           num_funcionarios?: number | null
           opera_outros_estados?: boolean | null
@@ -1420,7 +1426,9 @@ export type Database = {
           cursos_livres?: boolean | null
           dados_financeiros_atualizados_em?: string | null
           dados_financeiros_origem?: string | null
+          desafio_principal?: string | null
           descricao_atividade?: string | null
+          descricao_operacao?: string | null
           email_ceo?: string | null
           email_cfo?: string | null
           email_contador?: string | null
@@ -1458,6 +1466,7 @@ export type Database = {
           margem_bruta_percentual?: number | null
           mei_artesao?: boolean
           municipio_sede?: string | null
+          nivel_declaracao?: string | null
           nome_fantasia?: string | null
           num_funcionarios?: number | null
           opera_outros_estados?: boolean | null
