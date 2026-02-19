@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ClaraMessage } from './ClaraMessage';
@@ -11,6 +11,7 @@ interface QuestionField {
   type: 'grid' | 'currency' | 'uf' | 'textarea';
   options?: { value: string; label: string }[];
   placeholder?: string;
+  condition?: (answers: Record<string, string | number>, existing: Record<string, unknown> | null) => boolean;
 }
 
 const REQUIRED_FIELDS: QuestionField[] = [
@@ -66,6 +67,63 @@ const REQUIRED_FIELDS: QuestionField[] = [
     claraText: 'Em qual estado fica a sede da sua empresa?',
     type: 'uf',
   },
+  // --- Exploratory: Sócios ---
+  {
+    key: 'num_socios',
+    label: 'Sócios',
+    claraText: 'Quantos sócios a empresa possui?',
+    type: 'grid',
+    options: [
+      { value: '1', label: '1 (só eu)' },
+      { value: '2', label: '2' },
+      { value: '3', label: '3' },
+      { value: '4+', label: '4 ou mais' },
+    ],
+  },
+  {
+    key: 'socios_outras_empresas',
+    label: 'Sócios c/ outras empresas',
+    claraText: 'Algum dos sócios possui participação em outras empresas?',
+    type: 'grid',
+    options: [
+      { value: 'sim', label: 'Sim' },
+      { value: 'nao', label: 'Não' },
+      { value: 'nao_sei', label: 'Não sei' },
+    ],
+  },
+  {
+    key: 'tem_holding',
+    label: 'Holding',
+    claraText: 'Os sócios já possuem uma holding para organizar as participações societárias?',
+    type: 'grid',
+    options: [
+      { value: 'true', label: 'Sim' },
+      { value: 'false', label: 'Não' },
+      { value: 'nao_sei', label: 'Não sei o que é isso' },
+    ],
+    condition: (answers, existing) => {
+      const socios = (answers.num_socios ?? existing?.num_socios ?? '1') as string;
+      const outras = (answers.socios_outras_empresas ?? existing?.socios_outras_empresas ?? '') as string;
+      return socios !== '1' && outras === 'sim';
+    },
+  },
+  {
+    key: 'distribuicao_lucros',
+    label: 'Distribuição de lucros',
+    claraText: 'Como a empresa distribui os lucros entre os sócios hoje?',
+    type: 'grid',
+    options: [
+      { value: 'pro_labore', label: 'Pró-labore fixo' },
+      { value: 'dividendos', label: 'Dividendos periódicos' },
+      { value: 'misto', label: 'Mistura dos dois' },
+      { value: 'nao_distribui', label: 'Não distribuímos ainda' },
+    ],
+    condition: (answers, existing) => {
+      const socios = (answers.num_socios ?? existing?.num_socios ?? '1') as string;
+      return socios !== '1';
+    },
+  },
+  // --- End exploratory ---
   {
     key: 'desafio_principal',
     label: 'Desafio',
@@ -109,14 +167,23 @@ const UFS = [
 interface StepQuestionsProps {
   missingFields: string[];
   onComplete: (answers: Record<string, string | number>) => void;
+  existingProfile?: Record<string, unknown> | null;
 }
 
-export function StepQuestions({ missingFields, onComplete }: StepQuestionsProps) {
-  const questions = REQUIRED_FIELDS.filter(f => missingFields.includes(f.key));
+export function StepQuestions({ missingFields, onComplete, existingProfile = null }: StepQuestionsProps) {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | number>>({});
   const [currencyInput, setCurrencyInput] = useState('');
   const [textareaInput, setTextareaInput] = useState('');
+
+  // Dynamically compute visible questions based on answers so far
+  const questions = useMemo(() => {
+    return REQUIRED_FIELDS.filter(f => {
+      if (!missingFields.includes(f.key)) return false;
+      if (f.condition && !f.condition(answers, existingProfile)) return false;
+      return true;
+    });
+  }, [missingFields, answers, existingProfile]);
 
   const current = questions[currentIdx];
   if (!current) return null;
@@ -127,8 +194,17 @@ export function StepQuestions({ missingFields, onComplete }: StepQuestionsProps)
     const newAnswers = { ...answers, [current.key]: value };
     setAnswers(newAnswers);
 
-    if (currentIdx < questions.length - 1) {
-      setCurrentIdx(currentIdx + 1);
+    // Recalculate questions with new answers to determine next
+    const nextQuestions = REQUIRED_FIELDS.filter(f => {
+      if (!missingFields.includes(f.key)) return false;
+      if (f.condition && !f.condition(newAnswers, existingProfile)) return false;
+      return true;
+    });
+
+    // Find current question's position in new list and advance
+    const currentPosInNew = nextQuestions.findIndex(q => q.key === current.key);
+    if (currentPosInNew < nextQuestions.length - 1) {
+      setCurrentIdx(currentPosInNew + 1);
       setCurrencyInput('');
       setTextareaInput('');
     } else {
