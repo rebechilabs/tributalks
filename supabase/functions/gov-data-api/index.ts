@@ -10,12 +10,23 @@ const BRASIL_API_BASE = 'https://brasilapi.com.br/api';
 // Fallback API for CNPJ
 const OPEN_CNPJ_BASE = 'https://publica.cnpj.ws/cnpj';
 
+interface CnaeSecundario {
+  codigo: number;
+  descricao: string;
+}
+
+interface InscricaoEstadual {
+  inscricao_estadual: string;
+  uf: string;
+}
+
 interface CnpjResponse {
   cnpj: string;
   razao_social: string;
   nome_fantasia: string;
   cnae_fiscal: number;
   cnae_fiscal_descricao: string;
+  cnaes_secundarios: CnaeSecundario[];
   uf: string;
   municipio: string;
   cep: string;
@@ -23,6 +34,15 @@ interface CnpjResponse {
   porte: string;
   natureza_juridica: string;
   capital_social: number;
+  data_inicio_atividade: string;
+  data_situacao_cadastral: string;
+  logradouro: string;
+  numero: string;
+  complemento: string;
+  bairro: string;
+  email: string;
+  telefone: string;
+  inscricoes_estaduais: InscricaoEstadual[];
 }
 
 interface MunicipioResponse {
@@ -79,13 +99,26 @@ async function lookupCnpjBrasilApi(cnpj: string): Promise<CnpjResponse | null> {
   }
   
   const data = await response.json();
-  
+
+  // Extract CNAEs secundários
+  const cnaes_secundarios: CnaeSecundario[] = (data.cnaes_secundarios || []).map((c: any) => ({
+    codigo: c.codigo,
+    descricao: c.descricao || '',
+  }));
+
+  // BrasilAPI doesn't return IE, will be empty
+  const inscricoes_estaduais: InscricaoEstadual[] = [];
+
+  // Build phone from DDD + telefone
+  const telefone = [data.ddd_telefone_1, data.ddd_telefone_2].filter(Boolean).join(' / ') || '';
+
   return {
     cnpj: data.cnpj,
     razao_social: data.razao_social,
     nome_fantasia: data.nome_fantasia || '',
     cnae_fiscal: data.cnae_fiscal,
     cnae_fiscal_descricao: data.cnae_fiscal_descricao,
+    cnaes_secundarios,
     uf: data.uf,
     municipio: data.municipio,
     cep: data.cep,
@@ -93,6 +126,15 @@ async function lookupCnpjBrasilApi(cnpj: string): Promise<CnpjResponse | null> {
     porte: data.porte || data.descricao_porte || '',
     natureza_juridica: data.natureza_juridica,
     capital_social: data.capital_social || 0,
+    data_inicio_atividade: data.data_inicio_atividade || '',
+    data_situacao_cadastral: data.data_situacao_cadastral || '',
+    logradouro: data.logradouro || '',
+    numero: data.numero || '',
+    complemento: data.complemento || '',
+    bairro: data.bairro || '',
+    email: data.email || '',
+    telefone,
+    inscricoes_estaduais,
   };
 }
 
@@ -107,20 +149,48 @@ async function lookupCnpjFallback(cnpj: string): Promise<CnpjResponse | null> {
   }
   
   const data = await response.json();
-  
+  const est = data.estabelecimento || {};
+
+  // Extract CNAEs secundários from CNPJ.ws
+  const cnaes_secundarios: CnaeSecundario[] = (est.atividades_secundarias || []).map((a: any) => ({
+    codigo: parseInt(a.id || '0'),
+    descricao: a.descricao || '',
+  }));
+
+  // Extract IEs from CNPJ.ws
+  const inscricoes_estaduais: InscricaoEstadual[] = (est.inscricoes_estaduais || [])
+    .filter((ie: any) => ie.inscricao_estadual && ie.ativo)
+    .map((ie: any) => ({
+      inscricao_estadual: ie.inscricao_estadual,
+      uf: ie.estado?.sigla || '',
+    }));
+
+  // Build phone
+  const phones = [est.ddd1 && est.telefone1 ? `(${est.ddd1}) ${est.telefone1}` : '', est.ddd2 && est.telefone2 ? `(${est.ddd2}) ${est.telefone2}` : ''].filter(Boolean);
+
   return {
     cnpj: cleanedCnpj,
     razao_social: data.razao_social,
-    nome_fantasia: data.estabelecimento?.nome_fantasia || '',
-    cnae_fiscal: parseInt(data.estabelecimento?.atividade_principal?.id || '0'),
-    cnae_fiscal_descricao: data.estabelecimento?.atividade_principal?.descricao || '',
-    uf: data.estabelecimento?.estado?.sigla || '',
-    municipio: data.estabelecimento?.cidade?.nome || '',
-    cep: data.estabelecimento?.cep || '',
-    situacao_cadastral: data.estabelecimento?.situacao_cadastral || '',
+    nome_fantasia: est.nome_fantasia || '',
+    cnae_fiscal: parseInt(est.atividade_principal?.id || '0'),
+    cnae_fiscal_descricao: est.atividade_principal?.descricao || '',
+    cnaes_secundarios,
+    uf: est.estado?.sigla || '',
+    municipio: est.cidade?.nome || '',
+    cep: est.cep || '',
+    situacao_cadastral: est.situacao_cadastral || '',
     porte: data.porte?.descricao || '',
     natureza_juridica: data.natureza_juridica?.descricao || '',
     capital_social: data.capital_social || 0,
+    data_inicio_atividade: est.data_inicio_atividade || '',
+    data_situacao_cadastral: est.data_situacao_cadastral || '',
+    logradouro: est.logradouro || '',
+    numero: est.numero || '',
+    complemento: est.complemento || '',
+    bairro: est.bairro || '',
+    email: est.email || '',
+    telefone: phones.join(' / '),
+    inscricoes_estaduais,
   };
 }
 

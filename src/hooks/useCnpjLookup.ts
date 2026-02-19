@@ -1,12 +1,23 @@
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+export interface CnaeSecundario {
+  codigo: number;
+  descricao: string;
+}
+
+export interface InscricaoEstadual {
+  inscricao_estadual: string;
+  uf: string;
+}
+
 export interface CnpjData {
   cnpj: string;
   razao_social: string;
   nome_fantasia: string;
   cnae_fiscal: number;
   cnae_fiscal_descricao: string;
+  cnaes_secundarios: CnaeSecundario[];
   uf: string;
   municipio: string;
   cep: string;
@@ -14,6 +25,15 @@ export interface CnpjData {
   porte: string;
   natureza_juridica: string;
   capital_social: number;
+  data_inicio_atividade: string;
+  data_situacao_cadastral: string;
+  logradouro: string;
+  numero: string;
+  complemento: string;
+  bairro: string;
+  email: string;
+  telefone: string;
+  inscricoes_estaduais: InscricaoEstadual[];
 }
 
 interface UseCnpjLookupResult {
