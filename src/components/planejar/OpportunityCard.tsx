@@ -77,11 +77,6 @@ export function OpportunityCard({ opp }: { opp: OpportunityData }) {
         </div>
       )}
 
-      {opp.is_fallback && (
-        <p className="text-[10px] text-muted-foreground italic">
-          * Estimativa genérica — complete seu perfil para valores personalizados
-        </p>
-      )}
     </div>
   );
 }

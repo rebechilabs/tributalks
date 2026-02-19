@@ -8,7 +8,7 @@ interface QuestionField {
   key: string;
   label: string;
   claraText: string;
-  type: 'grid' | 'currency' | 'uf' | 'textarea';
+  type: 'grid' | 'currency' | 'uf' | 'textarea' | 'number' | 'text';
   options?: { value: string; label: string }[];
   placeholder?: string;
   condition?: (answers: Record<string, string | number>, existing: Record<string, unknown> | null) => boolean;
@@ -52,20 +52,21 @@ const REQUIRED_FIELDS: QuestionField[] = [
     key: 'num_funcionarios',
     label: 'Funcionários',
     claraText: 'Quantos funcionários sua empresa possui?',
-    type: 'grid',
-    options: [
-      { value: '5', label: '0 – 9' },
-      { value: '25', label: '10 – 49' },
-      { value: '75', label: '50 – 99' },
-      { value: '250', label: '100 – 499' },
-      { value: '500', label: '500+' },
-    ],
+    type: 'number',
+    placeholder: 'Ex: 12',
   },
   {
     key: 'uf_sede',
     label: 'Estado',
     claraText: 'Em qual estado fica a sede da sua empresa?',
     type: 'uf',
+  },
+  {
+    key: 'municipio_sede',
+    label: 'Município',
+    claraText: 'Em qual município fica a sede da sua empresa?',
+    type: 'text',
+    placeholder: 'Ex: São Paulo',
   },
   // --- Exploratory: Sócios ---
   {
@@ -159,6 +160,64 @@ const REQUIRED_FIELDS: QuestionField[] = [
   },
 ];
 
+// Complementary questions for retry when zero opportunities found
+const COMPLEMENTARY_FIELDS: QuestionField[] = [
+  {
+    key: 'municipio_sede',
+    label: 'Município',
+    claraText: 'Em qual município fica a sede da sua empresa?',
+    type: 'text',
+    placeholder: 'Ex: São Paulo',
+  },
+  {
+    key: 'exporta_produtos',
+    label: 'Exportação',
+    claraText: 'Sua empresa exporta produtos ou serviços?',
+    type: 'grid',
+    options: [
+      { value: 'true', label: 'Sim' },
+      { value: 'false', label: 'Não' },
+    ],
+  },
+  {
+    key: 'importa_produtos',
+    label: 'Importação',
+    claraText: 'Sua empresa importa produtos ou insumos?',
+    type: 'grid',
+    options: [
+      { value: 'true', label: 'Sim' },
+      { value: 'false', label: 'Não' },
+    ],
+  },
+  {
+    key: 'tem_estoque',
+    label: 'Estoque',
+    claraText: 'Sua empresa trabalha com estoque de produtos?',
+    type: 'grid',
+    options: [
+      { value: 'true', label: 'Sim' },
+      { value: 'false', label: 'Não' },
+    ],
+  },
+  {
+    key: 'tem_ecommerce',
+    label: 'E-commerce',
+    claraText: 'Sua empresa vende online (e-commerce ou marketplace)?',
+    type: 'grid',
+    options: [
+      { value: 'true', label: 'Sim' },
+      { value: 'false', label: 'Não' },
+    ],
+  },
+  {
+    key: 'descricao_atividade',
+    label: 'Atividade Principal',
+    claraText: 'Descreva brevemente a atividade principal da sua empresa.',
+    type: 'textarea',
+    placeholder: 'Ex: Comércio varejista de eletrônicos, com loja física e online...',
+  },
+];
+
 const UFS = [
   'AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT',
   'PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO',
@@ -168,17 +227,22 @@ interface StepQuestionsProps {
   missingFields: string[];
   onComplete: (answers: Record<string, string | number>) => void;
   existingProfile?: Record<string, unknown> | null;
+  claraIntroMessage?: string;
 }
 
-export function StepQuestions({ missingFields, onComplete, existingProfile = null }: StepQuestionsProps) {
+export function StepQuestions({ missingFields, onComplete, existingProfile = null, claraIntroMessage }: StepQuestionsProps) {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | number>>({});
   const [currencyInput, setCurrencyInput] = useState('');
   const [textareaInput, setTextareaInput] = useState('');
+  const [numberInput, setNumberInput] = useState('');
+  const [textInput, setTextInput] = useState('');
+
+  const ALL_FIELDS = [...REQUIRED_FIELDS, ...COMPLEMENTARY_FIELDS];
 
   // Dynamically compute visible questions based on answers so far
   const questions = useMemo(() => {
-    return REQUIRED_FIELDS.filter(f => {
+    return ALL_FIELDS.filter(f => {
       if (!missingFields.includes(f.key)) return false;
       if (f.condition && !f.condition(answers, existingProfile)) return false;
       return true;
@@ -195,7 +259,7 @@ export function StepQuestions({ missingFields, onComplete, existingProfile = nul
     setAnswers(newAnswers);
 
     // Recalculate questions with new answers to determine next
-    const nextQuestions = REQUIRED_FIELDS.filter(f => {
+    const nextQuestions = ALL_FIELDS.filter(f => {
       if (!missingFields.includes(f.key)) return false;
       if (f.condition && !f.condition(newAnswers, existingProfile)) return false;
       return true;
@@ -207,6 +271,8 @@ export function StepQuestions({ missingFields, onComplete, existingProfile = nul
       setCurrentIdx(currentPosInNew + 1);
       setCurrencyInput('');
       setTextareaInput('');
+      setNumberInput('');
+      setTextInput('');
     } else {
       onComplete(newAnswers);
     }
@@ -222,6 +288,15 @@ export function StepQuestions({ missingFields, onComplete, existingProfile = nul
     if (textareaInput.trim().length > 0) selectAnswer(textareaInput.trim());
   };
 
+  const handleNumberSubmit = () => {
+    const num = parseInt(numberInput, 10);
+    if (!isNaN(num) && num >= 0) selectAnswer(num);
+  };
+
+  const handleTextSubmit = () => {
+    if (textInput.trim().length > 0) selectAnswer(textInput.trim());
+  };
+
   const formatCurrencyInput = (val: string) => {
     const digits = val.replace(/\D/g, '');
     if (!digits) { setCurrencyInput(''); return; }
@@ -231,6 +306,10 @@ export function StepQuestions({ missingFields, onComplete, existingProfile = nul
 
   return (
     <div className="space-y-6 animate-fade-in-up">
+      {claraIntroMessage && currentIdx === 0 && (
+        <ClaraMessage message={claraIntroMessage} />
+      )}
+
       <div className="space-y-2">
         <div className="flex justify-between text-xs text-muted-foreground">
           <span>Pergunta {currentIdx + 1} de {questions.length}</span>
@@ -308,6 +387,41 @@ export function StepQuestions({ missingFields, onComplete, existingProfile = nul
             autoFocus
           />
           <Button onClick={handleTextareaSubmit} className="w-full" disabled={!textareaInput.trim()}>
+            Confirmar
+          </Button>
+        </div>
+      )}
+
+      {current.type === 'number' && (
+        <div className="space-y-3">
+          <input
+            type="number"
+            inputMode="numeric"
+            value={numberInput}
+            onChange={e => setNumberInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleNumberSubmit()}
+            placeholder={current.placeholder || '0'}
+            className="w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-primary/50"
+            autoFocus
+          />
+          <Button onClick={handleNumberSubmit} className="w-full" disabled={!numberInput}>
+            Confirmar
+          </Button>
+        </div>
+      )}
+
+      {current.type === 'text' && (
+        <div className="space-y-3">
+          <input
+            type="text"
+            value={textInput}
+            onChange={e => setTextInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleTextSubmit()}
+            placeholder={current.placeholder || ''}
+            className="w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+            autoFocus
+          />
+          <Button onClick={handleTextSubmit} className="w-full" disabled={!textInput.trim()}>
             Confirmar
           </Button>
         </div>

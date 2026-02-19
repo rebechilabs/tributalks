@@ -10,10 +10,11 @@ import { StepResults } from './StepResults';
 import type { OpportunityData } from './OpportunityCard';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const REQUIRED_KEYS = ['regime_tributario', 'setor', 'faturamento_anual', 'num_funcionarios', 'uf_sede'] as const;
+const REQUIRED_KEYS = ['regime_tributario', 'setor', 'faturamento_anual', 'num_funcionarios', 'uf_sede', 'municipio_sede'] as const;
 const QUALITATIVE_KEYS = ['desafio_principal', 'descricao_operacao', 'nivel_declaracao', 'num_socios', 'socios_outras_empresas', 'distribuicao_lucros'] as const;
+const COMPLEMENTARY_KEYS = ['municipio_sede', 'exporta_produtos', 'importa_produtos', 'tem_estoque', 'tem_ecommerce', 'descricao_atividade'] as const;
 
-type Step = 'intro' | 'questions' | 'processing' | 'results';
+type Step = 'intro' | 'questions' | 'processing' | 'complementary' | 'results';
 
 // Fallback opportunities by regime
 const FALLBACK_BY_REGIME: Record<string, OpportunityData[]> = {
@@ -40,12 +41,36 @@ function getMissingFields(profile: Record<string, unknown> | null): string[] {
     const v = profile[k];
     return v === null || v === undefined || v === '';
   });
-  // Always include qualitative keys if empty
   const missingQualitative = QUALITATIVE_KEYS.filter(k => {
     const v = profile[k];
     return v === null || v === undefined || v === '';
   });
   return [...missing, ...missingQualitative];
+}
+
+function getComplementaryFields(profile: Record<string, unknown> | null): string[] {
+  if (!profile) return [...COMPLEMENTARY_KEYS];
+  return COMPLEMENTARY_KEYS.filter(k => {
+    const v = profile[k];
+    return v === null || v === undefined || v === '';
+  });
+}
+
+function sortOpportunities(opps: OpportunityData[]): OpportunityData[] {
+  const compOrder: Record<string, number> = { muito_baixa: 0, baixa: 1, media: 2, alta: 3, muito_alta: 4 };
+  return [...opps].sort((a, b) => {
+    if (a.alto_impacto && !b.alto_impacto) return -1;
+    if (!a.alto_impacto && b.alto_impacto) return 1;
+    const ca = compOrder[a.complexidade || 'media'] ?? 2;
+    const cb = compOrder[b.complexidade || 'media'] ?? 2;
+    if (ca !== cb) return ca - cb;
+    return (b.economia_anual_max || 0) - (a.economia_anual_max || 0);
+  });
+}
+
+function getFallbackOpps(regime: string): OpportunityData[] {
+  const normalizedRegime = regime.includes('real') ? 'lucro_real' : regime.includes('presumido') ? 'presumido' : 'simples';
+  return FALLBACK_BY_REGIME[normalizedRegime] || FALLBACK_BY_REGIME.simples;
 }
 
 export function PlanejarFlow() {
@@ -56,11 +81,11 @@ export function PlanejarFlow() {
   const [totalMin, setTotalMin] = useState(0);
   const [totalMax, setTotalMax] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
+  const [isRetry, setIsRetry] = useState(false);
   const visualDone = useRef(false);
   const dataDone = useRef(false);
   const dataResult = useRef<{ opps: OpportunityData[]; min: number; max: number; count: number } | null>(null);
 
-  // Fetch full company profile
   const { data: companyProfile, isLoading, refetch } = useQuery({
     queryKey: ['company-profile-planejar', currentCompany?.id, user?.id],
     queryFn: async () => {
@@ -87,28 +112,71 @@ export function PlanejarFlow() {
     }
   }, [missingFields.length]);
 
-  const handleQuestionsComplete = useCallback(async (answers: Record<string, string | number>) => {
-    // Save answers to company_profile
+  const convertBooleanFields = (answers: Record<string, string | number>): Record<string, unknown> => {
+    const BOOL_KEYS = ['exporta_produtos', 'importa_produtos', 'tem_estoque', 'tem_ecommerce'];
+    const converted: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(answers)) {
+      if (BOOL_KEYS.includes(k)) {
+        converted[k] = String(v) === 'true';
+      } else {
+        converted[k] = v;
+      }
+    }
+    return converted;
+  };
+
+  const saveAnswers = useCallback(async (answers: Record<string, string | number>) => {
     if (companyProfile?.id && user?.id) {
+      const converted = convertBooleanFields(answers);
       await supabase
         .from('company_profile')
-        .update(answers as Record<string, unknown>)
+        .update(converted)
         .eq('id', companyProfile.id as string)
         .eq('user_id', user.id);
       refetch();
     }
-    setStep('processing');
   }, [companyProfile?.id, user?.id, refetch]);
+
+  const handleQuestionsComplete = useCallback(async (answers: Record<string, string | number>) => {
+    await saveAnswers(answers);
+    setStep('processing');
+  }, [saveAnswers]);
+
+  const handleComplementaryComplete = useCallback(async (answers: Record<string, string | number>) => {
+    await saveAnswers(answers);
+    setIsRetry(true);
+    setStep('processing');
+  }, [saveAnswers]);
 
   const finalizeResults = useCallback(() => {
     if (dataResult.current) {
-      setOpportunities(dataResult.current.opps);
-      setTotalMin(dataResult.current.min);
-      setTotalMax(dataResult.current.max);
-      setTotalCount(dataResult.current.count);
+      const { opps, min, max, count } = dataResult.current;
+
+      // If zero results and not yet retried, go to complementary questions
+      if (opps.length === 0 && count === 0 && !isRetry) {
+        const complementary = getComplementaryFields(companyProfile);
+        if (complementary.length > 0) {
+          setStep('complementary');
+          return;
+        }
+      }
+
+      // If still zero after retry (or no complementary fields), use fallback
+      if (opps.length === 0) {
+        const regime = String(companyProfile?.regime_tributario || 'simples');
+        setOpportunities(getFallbackOpps(regime));
+        setTotalMin(0);
+        setTotalMax(0);
+        setTotalCount(0);
+      } else {
+        setOpportunities(opps);
+        setTotalMin(min);
+        setTotalMax(max);
+        setTotalCount(count);
+      }
       setStep('results');
     }
-  }, []);
+  }, [isRetry, companyProfile]);
 
   const onVisualComplete = useCallback(() => {
     visualDone.current = true;
@@ -136,16 +204,7 @@ export function PlanejarFlow() {
 
         if (error || !data?.success) throw new Error('Edge function failed');
 
-        // Rank: alto_impacto first, then complexidade (baixa < media < alta), then economia desc
-        const compOrder: Record<string, number> = { muito_baixa: 0, baixa: 1, media: 2, alta: 3, muito_alta: 4 };
-        const sorted = [...(data.opportunities || [])].sort((a: OpportunityData, b: OpportunityData) => {
-          if (a.alto_impacto && !b.alto_impacto) return -1;
-          if (!a.alto_impacto && b.alto_impacto) return 1;
-          const ca = compOrder[a.complexidade || 'media'] ?? 2;
-          const cb = compOrder[b.complexidade || 'media'] ?? 2;
-          if (ca !== cb) return ca - cb;
-          return (b.economia_anual_max || 0) - (a.economia_anual_max || 0);
-        });
+        const sorted = sortOpportunities(data.opportunities || []);
 
         dataResult.current = {
           opps: sorted.slice(0, 3),
@@ -154,11 +213,10 @@ export function PlanejarFlow() {
           count: data.total_opportunities || 0,
         };
       } catch {
-        // Fallback
+        // Fallback on error
         const regime = String(companyProfile?.regime_tributario || 'simples');
-        const normalizedRegime = regime.includes('real') ? 'lucro_real' : regime.includes('presumido') ? 'presumido' : 'simples';
         dataResult.current = {
-          opps: FALLBACK_BY_REGIME[normalizedRegime] || FALLBACK_BY_REGIME.simples,
+          opps: getFallbackOpps(regime),
           min: 0,
           max: 0,
           count: 0,
@@ -182,6 +240,8 @@ export function PlanejarFlow() {
     );
   }
 
+  const complementaryFields = getComplementaryFields(companyProfile);
+
   return (
     <div className="max-w-xl mx-auto">
       {step === 'intro' && (
@@ -203,6 +263,14 @@ export function PlanejarFlow() {
       )}
       {step === 'processing' && (
         <StepProcessing onVisualComplete={onVisualComplete} />
+      )}
+      {step === 'complementary' && (
+        <StepQuestions
+          missingFields={complementaryFields}
+          onComplete={handleComplementaryComplete}
+          existingProfile={companyProfile}
+          claraIntroMessage="Preciso de mais alguns dados para encontrar as oportunidades certas para você."
+        />
       )}
       {step === 'results' && (
         <StepResults

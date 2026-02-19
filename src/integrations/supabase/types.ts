@@ -1217,6 +1217,7 @@ export type Database = {
           tem_bar: boolean | null
           tem_carteira_artesao: boolean
           tem_ecommerce: boolean | null
+          tem_estoque: boolean | null
           tem_filiais: boolean | null
           tem_geracao_solar: boolean | null
           tem_holding: boolean | null
@@ -1367,6 +1368,7 @@ export type Database = {
           tem_bar?: boolean | null
           tem_carteira_artesao?: boolean
           tem_ecommerce?: boolean | null
+          tem_estoque?: boolean | null
           tem_filiais?: boolean | null
           tem_geracao_solar?: boolean | null
           tem_holding?: boolean | null
@@ -1517,6 +1519,7 @@ export type Database = {
           tem_bar?: boolean | null
           tem_carteira_artesao?: boolean
           tem_ecommerce?: boolean | null
+          tem_estoque?: boolean | null
           tem_filiais?: boolean | null
           tem_geracao_solar?: boolean | null
           tem_holding?: boolean | null
