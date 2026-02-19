@@ -1110,6 +1110,7 @@ export type Database = {
       company_profile: {
         Row: {
           agricultura: boolean | null
+          alto_volume_compras_nfe: boolean | null
           area_livre_comercio: boolean | null
           artesanato_regional: boolean
           atividades_diferentes_tributacao: boolean | null
@@ -1176,7 +1177,9 @@ export type Database = {
           laboratorio: boolean | null
           loja_fisica_artesanato: boolean
           margem_bruta_percentual: number | null
+          margem_liquida_faixa: string | null
           mei_artesao: boolean
+          mix_b2b_faixa: string | null
           municipio_sede: string | null
           nivel_declaracao: string | null
           nome_fantasia: string | null
@@ -1269,6 +1272,7 @@ export type Database = {
         }
         Insert: {
           agricultura?: boolean | null
+          alto_volume_compras_nfe?: boolean | null
           area_livre_comercio?: boolean | null
           artesanato_regional?: boolean
           atividades_diferentes_tributacao?: boolean | null
@@ -1335,7 +1339,9 @@ export type Database = {
           laboratorio?: boolean | null
           loja_fisica_artesanato?: boolean
           margem_bruta_percentual?: number | null
+          margem_liquida_faixa?: string | null
           mei_artesao?: boolean
+          mix_b2b_faixa?: string | null
           municipio_sede?: string | null
           nivel_declaracao?: string | null
           nome_fantasia?: string | null
@@ -1428,6 +1434,7 @@ export type Database = {
         }
         Update: {
           agricultura?: boolean | null
+          alto_volume_compras_nfe?: boolean | null
           area_livre_comercio?: boolean | null
           artesanato_regional?: boolean
           atividades_diferentes_tributacao?: boolean | null
@@ -1494,7 +1501,9 @@ export type Database = {
           laboratorio?: boolean | null
           loja_fisica_artesanato?: boolean
           margem_bruta_percentual?: number | null
+          margem_liquida_faixa?: string | null
           mei_artesao?: boolean
+          mix_b2b_faixa?: string | null
           municipio_sede?: string | null
           nivel_declaracao?: string | null
           nome_fantasia?: string | null
