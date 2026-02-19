@@ -15,6 +15,21 @@ export interface OpportunityData {
   status_lc_224_2025?: string;
   descricao_lc_224_2025?: string;
   is_fallback?: boolean;
+  // Extended fields for Dossiê Tributário
+  match_reasons?: string[];
+  match_score?: number;
+  category?: string;
+  subcategory?: string;
+  base_legal?: string;
+  base_legal_resumo?: string;
+  tributos_afetados?: string[];
+  tempo_implementacao?: string;
+  tempo_retorno?: string;
+  risco_fiscal?: string;
+  risco_descricao?: string;
+  requer_contador?: boolean;
+  requer_advogado?: boolean;
+  missing_criteria?: string[];
 }
 
 const complexidadeConfig: Record<string, { label: string; className: string }> = {
@@ -32,13 +47,24 @@ function formatCurrency(value: number): string {
   return `R$ ${value.toLocaleString('pt-BR')}`;
 }
 
-export function OpportunityCard({ opp }: { opp: OpportunityData }) {
+interface OpportunityCardProps {
+  opp: OpportunityData;
+  onClick?: () => void;
+}
+
+export function OpportunityCard({ opp, onClick }: OpportunityCardProps) {
   const comp = complexidadeConfig[opp.complexidade || 'media'] || complexidadeConfig.media;
   const hasReforma = !!(opp.futuro_reforma || opp.status_lc_224_2025);
   const reformaText = opp.descricao_reforma || opp.descricao_lc_224_2025;
 
   return (
-    <div className="bg-card border border-border rounded-xl p-5 space-y-3 hover:border-primary/30 transition-colors">
+    <div
+      className={cn(
+        "bg-card border border-border rounded-xl p-5 space-y-3 hover:border-primary/30 transition-colors",
+        onClick && "cursor-pointer"
+      )}
+      onClick={onClick}
+    >
       <div className="flex items-start justify-between gap-2">
         <h3 className="font-semibold text-foreground text-sm leading-tight">{opp.name}</h3>
         <div className="flex gap-1.5 shrink-0">

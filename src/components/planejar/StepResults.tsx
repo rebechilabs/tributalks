@@ -1,14 +1,17 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ClaraMessage } from './ClaraMessage';
 import { OpportunityCard, type OpportunityData } from './OpportunityCard';
+import { DossieTributario } from './DossieTributario';
 
 interface StepResultsProps {
   opportunities: OpportunityData[];
   totalMin: number;
   totalMax: number;
   totalCount: number;
+  companyProfile?: Record<string, unknown> | null;
 }
 
 function formatCurrency(value: number): string {
@@ -17,8 +20,9 @@ function formatCurrency(value: number): string {
   return `R$ ${value.toLocaleString('pt-BR')}`;
 }
 
-export function StepResults({ opportunities, totalMin, totalMax, totalCount }: StepResultsProps) {
+export function StepResults({ opportunities, totalMin, totalMax, totalCount, companyProfile }: StepResultsProps) {
   const navigate = useNavigate();
+  const [selectedOpp, setSelectedOpp] = useState<OpportunityData | null>(null);
 
   const claraText = totalMax > 0
     ? `Encontrei ${totalCount} oportunidade${totalCount > 1 ? 's' : ''} para a sua empresa! A economia estimada total pode chegar a ${formatCurrency(totalMin)} — ${formatCurrency(totalMax)} por ano. Aqui estão as 3 mais relevantes:`
@@ -31,7 +35,11 @@ export function StepResults({ opportunities, totalMin, totalMax, totalCount }: S
       {opportunities.length > 0 && (
         <div className="space-y-3">
           {opportunities.map((opp, i) => (
-            <OpportunityCard key={opp.id || i} opp={opp} />
+            <OpportunityCard
+              key={opp.id || i}
+              opp={opp}
+              onClick={() => setSelectedOpp(opp)}
+            />
           ))}
         </div>
       )}
@@ -45,6 +53,15 @@ export function StepResults({ opportunities, totalMin, totalMax, totalCount }: S
           Ver todas as {totalCount} oportunidades
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
+      )}
+
+      {selectedOpp && (
+        <DossieTributario
+          open={!!selectedOpp}
+          onOpenChange={(open) => { if (!open) setSelectedOpp(null); }}
+          opportunity={selectedOpp}
+          companyProfile={companyProfile as Record<string, unknown> | null}
+        />
       )}
     </div>
   );

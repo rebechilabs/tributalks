@@ -1128,7 +1128,11 @@ export type Database = {
           compra_equipamentos_medicos: boolean | null
           compra_insumos_agricolas: boolean | null
           compras_insumos_mensal: number | null
+          conhece_imunidade_issqn: string | null
+          conhece_pep_sp: string | null
           created_at: string | null
+          creditos_icms_exportacao: string | null
+          creditos_pis_cofins_pendentes: string | null
           cursos_livres: boolean | null
           dados_financeiros_atualizados_em: string | null
           dados_financeiros_origem: string | null
@@ -1152,6 +1156,7 @@ export type Database = {
           faturamento_anual: number | null
           faturamento_mensal_medio: number | null
           fins_lucrativos: boolean | null
+          folha_acima_28pct: string | null
           folha_alta_construcao: boolean | null
           folha_mensal: number | null
           folha_percentual_faturamento: number | null
@@ -1229,6 +1234,7 @@ export type Database = {
           tem_patentes: boolean | null
           tem_produtos_monofasicos: boolean | null
           tem_restaurante: boolean | null
+          tem_st_icms: string | null
           tipo_cooperativa: boolean | null
           tipo_societario: string | null
           transporte_cargas: boolean | null
@@ -1237,7 +1243,9 @@ export type Database = {
           ufs_operacao: string[] | null
           updated_at: string | null
           usa_insumos_naturais: boolean
+          usa_jcp: string | null
           usa_plataformas_delivery: boolean | null
+          usa_ret: string | null
           user_id: string
           venda_direta_consumidor: boolean
           vende_automoveis: boolean | null
@@ -1279,7 +1287,11 @@ export type Database = {
           compra_equipamentos_medicos?: boolean | null
           compra_insumos_agricolas?: boolean | null
           compras_insumos_mensal?: number | null
+          conhece_imunidade_issqn?: string | null
+          conhece_pep_sp?: string | null
           created_at?: string | null
+          creditos_icms_exportacao?: string | null
+          creditos_pis_cofins_pendentes?: string | null
           cursos_livres?: boolean | null
           dados_financeiros_atualizados_em?: string | null
           dados_financeiros_origem?: string | null
@@ -1303,6 +1315,7 @@ export type Database = {
           faturamento_anual?: number | null
           faturamento_mensal_medio?: number | null
           fins_lucrativos?: boolean | null
+          folha_acima_28pct?: string | null
           folha_alta_construcao?: boolean | null
           folha_mensal?: number | null
           folha_percentual_faturamento?: number | null
@@ -1380,6 +1393,7 @@ export type Database = {
           tem_patentes?: boolean | null
           tem_produtos_monofasicos?: boolean | null
           tem_restaurante?: boolean | null
+          tem_st_icms?: string | null
           tipo_cooperativa?: boolean | null
           tipo_societario?: string | null
           transporte_cargas?: boolean | null
@@ -1388,7 +1402,9 @@ export type Database = {
           ufs_operacao?: string[] | null
           updated_at?: string | null
           usa_insumos_naturais?: boolean
+          usa_jcp?: string | null
           usa_plataformas_delivery?: boolean | null
+          usa_ret?: string | null
           user_id: string
           venda_direta_consumidor?: boolean
           vende_automoveis?: boolean | null
@@ -1430,7 +1446,11 @@ export type Database = {
           compra_equipamentos_medicos?: boolean | null
           compra_insumos_agricolas?: boolean | null
           compras_insumos_mensal?: number | null
+          conhece_imunidade_issqn?: string | null
+          conhece_pep_sp?: string | null
           created_at?: string | null
+          creditos_icms_exportacao?: string | null
+          creditos_pis_cofins_pendentes?: string | null
           cursos_livres?: boolean | null
           dados_financeiros_atualizados_em?: string | null
           dados_financeiros_origem?: string | null
@@ -1454,6 +1474,7 @@ export type Database = {
           faturamento_anual?: number | null
           faturamento_mensal_medio?: number | null
           fins_lucrativos?: boolean | null
+          folha_acima_28pct?: string | null
           folha_alta_construcao?: boolean | null
           folha_mensal?: number | null
           folha_percentual_faturamento?: number | null
@@ -1531,6 +1552,7 @@ export type Database = {
           tem_patentes?: boolean | null
           tem_produtos_monofasicos?: boolean | null
           tem_restaurante?: boolean | null
+          tem_st_icms?: string | null
           tipo_cooperativa?: boolean | null
           tipo_societario?: string | null
           transporte_cargas?: boolean | null
@@ -1539,7 +1561,9 @@ export type Database = {
           ufs_operacao?: string[] | null
           updated_at?: string | null
           usa_insumos_naturais?: boolean
+          usa_jcp?: string | null
           usa_plataformas_delivery?: boolean | null
+          usa_ret?: string | null
           user_id?: string
           venda_direta_consumidor?: boolean
           vende_automoveis?: boolean | null
