@@ -1,99 +1,147 @@
 
-# Integrar SintegraWS + Expandir Dados de CNPJ
+
+# Transformar /dashboard/planejar em Fluxo Guiado pela Clara AI
 
 ## Resumo
 
-Adicionar o SintegraWS como fonte complementar de Inscricao Estadual e, ao mesmo tempo, capturar dados que ja estao disponiveis nas APIs atuais (BrasilAPI e CNPJ.ws) mas estao sendo descartados -- como CNAEs secundarios, endereco completo, email e telefone.
+Substituir os 2 cards estaticos da pagina `PlanejarPage.tsx` (que ja existe) por um fluxo interativo em 4 etapas guiado pela Clara AI. O conteudo interno muda, mas o `DashboardLayout` e a estrutura da rota permanecem intactos.
 
-## Custo estimado
+## Correcoes aplicadas
 
-O SintegraWS opera com pacotes pre-pagos. O pacote mais comum custa aproximadamente **R$ 179,90 por 1.000 consultas** (R$ 0,18 por consulta), com creditos validos por 1 ano.
+1. **Arquivo**: `src/pages/dashboard/PlanejarPage.tsx` ja existe e sera **modificado** (nao criado do zero). A rota `/dashboard/planejar` ja aponta para ele em `App.tsx`.
+2. **Faturamento**: Input numerico livre (sem faixas pre-definidas), pois `match-opportunities` usa o valor exato para calcular economia.
+3. **Fallback**: Se `match-opportunities` falhar ou demorar mais de 15 segundos, exibir 3 oportunidades genericas baseadas no regime tributario da empresa.
 
-## O que muda
+---
 
-### 1. Configurar o secret SINTEGRA_API_KEY
+## Etapas do Fluxo
 
-Sera necessario cadastrar a chave de API do SintegraWS como secret do projeto. Voce precisara criar uma conta em sintegraws.com.br e adquirir um pacote de creditos.
+### Etapa 1 -- Intro
 
-### 2. Expandir a resposta do endpoint /cnpj na Edge Function
+- Balao da Clara (icone Sparkles, fundo muted, estilo chat) com efeito de digitacao (typewriter via useState + setInterval)
+- Tabela com 7 campos da empresa vindos de `company_profile`: regime tributario, setor, faturamento anual, numero de funcionarios, estado (UF), exportacao, importacao
+- Campos preenchidos: badge verde com valor
+- Campos faltantes: fundo ambar, icone AlertTriangle
+- Se houver campos faltantes: aviso + botao "Responder X perguntas e gerar analise"
+- Se tudo preenchido: botao "Gerar analise agora" (pula Etapa 2)
 
-Campos adicionais que serao retornados:
+### Etapa 2 -- Perguntas (condicional)
 
-```text
-+ inscricoes_estaduais: { inscricao_estadual: string, uf: string }[]
-+ cnaes_secundarios: { codigo: number, descricao: string }[]
-+ data_inicio_atividade: string
-+ data_situacao_cadastral: string
-+ logradouro: string
-+ numero: string
-+ complemento: string
-+ bairro: string
-+ email: string
-+ telefone: string
-```
+So aparece se faltar algum dos 5 campos obrigatorios: `regime_tributario`, `setor`, `faturamento_anual`, `num_funcionarios`, `uf_sede`
 
-### 3. Adicionar consulta ao SintegraWS na Edge Function
+Cada pergunta e um card individual com progress bar no topo (ex: "Pergunta 2 de 4"). Respostas via grid de botoes estilizados, **exceto faturamento que usa input numerico livre**.
 
-- Criar funcao `lookupSintegra(cnpj)` que consulta `https://www.sintegraws.com.br/api/v1/consulta-cnpj.php`
-- Essa funcao sera chamada **apos** a consulta principal (BrasilAPI/CNPJ.ws) para complementar o campo `inscricoes_estaduais` caso a fonte primaria nao tenha retornado IEs
-- Se o secret `SINTEGRA_API_KEY` nao estiver configurado, o sistema continua funcionando normalmente sem o Sintegra (graceful degradation)
+Opcoes:
+- **regime_tributario**: Simples Nacional, Lucro Presumido, Lucro Real
+- **setor**: Comercio, Industria, Servicos, Tecnologia, Saude, Educacao, Agronegocio, Construcao
+- **faturamento_anual**: Input numerico livre com mascara de moeda (R$)
+- **num_funcionarios**: Faixas 0-9, 10-49, 50-99, 100-499, 500+
+- **uf_sede**: Grid com 27 UFs brasileiras
 
-### 4. Atualizar o hook useCnpjLookup no frontend
+Ao responder tudo, salva via `supabase.from('company_profile').update(...)` e avanca.
 
-Expandir a interface `CnpjData` para incluir todos os novos campos retornados pela Edge Function.
+### Etapa 3 -- Processando
 
-### 5. Atualizar componentes consumidores
+Animacao com 5 steps sequenciais (delay visual de ~1.5s cada):
+1. "Analisando perfil tributario"
+2. "Consultando base de oportunidades"
+3. "Calculando economia estimada"
+4. "Verificando impacto da Reforma Tributaria"
+5. "Priorizando recomendacoes"
 
-- **CnpjInput**: exibir IE e endereco no card de confirmacao
-- **QuickAddCnpj**: mostrar IE junto com UF e porte
-- **CompanySetupForm / AddCompanyModal**: auto-preencher campos adicionais quando disponivel
+Em paralelo, chama `match-opportunities` via `supabase.functions.invoke()`.
 
-### 6. Adicionar colunas na tabela company_profile
+**Fallback**: Se a Edge Function retornar erro ou timeout (15s), exibir 3 oportunidades genericas baseadas no regime tributario:
+- Simples: Revisao de Enquadramento, Exclusao de ICMS-ST, Fator R
+- Presumido: Revisao de Aliquota Presumida, Creditos de PIS/COFINS, Planejamento de Pro-labore
+- Real: Creditos de PIS/COFINS, Incentivos Fiscais de P&D, Revisao de IRPJ/CSLL
 
-Migracao SQL para persistir os novos dados:
-- `inscricao_estadual` (text)
-- `data_inicio_atividade` (date)
+Quando a resposta chega E todos os steps visuais completaram, avanca para Etapa 4.
+
+### Etapa 4 -- Resultados
+
+- Balao da Clara resumindo a economia total estimada (min-max)
+- 3 cards rankeados por: impacto (alto > medio > baixo), depois complexidade (baixa > media > alta)
+- Cada card mostra: titulo, descricao curta, economia estimada min/max por ano, badge de impacto, badge de complexidade
+- Se a oportunidade tiver `futuro_reforma` ou `status_lc_224_2025` preenchido (campos confirmados na tabela `tax_opportunities`): tag "Reforma 2026" com icone Zap + bloco roxo com `descricao_reforma` ou `descricao_lc_224_2025`
+- Botao "Ver todas as X oportunidades" navega para `/dashboard/planejar/oportunidades`
+
+---
 
 ## Detalhes Tecnicos
 
-### Arquivos modificados
+### Novos Arquivos
+
+| Arquivo | Descricao |
+|---------|-----------|
+| `src/components/planejar/PlanejarFlow.tsx` | Componente principal com state machine (step 1-4) |
+| `src/components/planejar/StepIntro.tsx` | Etapa 1: Intro da Clara + tabela de dados |
+| `src/components/planejar/StepQuestions.tsx` | Etapa 2: Perguntas com grid de botoes |
+| `src/components/planejar/StepProcessing.tsx` | Etapa 3: Animacao de processamento |
+| `src/components/planejar/StepResults.tsx` | Etapa 4: Top 3 oportunidades + resumo |
+| `src/components/planejar/ClaraMessage.tsx` | Balao da Clara com typewriter |
+| `src/components/planejar/OpportunityCard.tsx` | Card individual de oportunidade |
+
+### Arquivo Modificado
 
 | Arquivo | Alteracao |
 |---------|-----------|
-| `supabase/functions/gov-data-api/index.ts` | Expandir `CnpjResponse`, atualizar mapeamentos BrasilAPI/CNPJ.ws, adicionar `lookupSintegra()` |
-| `src/hooks/useCnpjLookup.ts` | Expandir interface `CnpjData` |
-| `src/components/common/CnpjInput.tsx` | Exibir IE e endereco no resultado |
-| `src/components/profile/QuickAddCnpj.tsx` | Mostrar IE no card de confirmacao |
+| `src/pages/dashboard/PlanejarPage.tsx` | Substituir conteudo interno pelos novos componentes, manter DashboardLayout |
 
-### Fluxo de consulta atualizado
+### Hooks e Contextos Utilizados
 
-```text
-1. Usuario digita CNPJ
-2. Edge Function consulta BrasilAPI (gratis)
-   - Se falhar: consulta CNPJ.ws (gratis, fallback)
-3. Se inscricoes_estaduais estiver vazio E SINTEGRA_API_KEY existir:
-   - Consulta SintegraWS (pago, complementar)
-   - Adiciona IE ao resultado
-4. Retorna dados enriquecidos ao frontend
-```
+- `useAuth()` de `src/hooks/useAuth.tsx` -- obter user
+- `useCompany()` de `src/contexts/CompanyContext.tsx` -- obter currentCompany
+- `useQuery` do TanStack -- fetch do company_profile completo
+- `supabase.functions.invoke('match-opportunities')` -- gerar oportunidades
 
-### Endpoint SintegraWS
+### Dados da Empresa (Query)
 
 ```text
-GET https://www.sintegraws.com.br/api/v1/consulta-cnpj.php
-  ?token={SINTEGRA_API_KEY}
-  &cnpj={cnpj}
-  &plugin=ST
-
-Resposta relevante:
-  inscricao_estadual: string
-  data_situacao_cadastral_ie: string
+SELECT * FROM company_profile 
+WHERE company_id = :currentCompany.id   -- se disponivel
+   OR user_id = :user.id               -- fallback
+LIMIT 1
 ```
 
-### Migracao SQL
+### Resposta do match-opportunities (ja implementado)
 
-```sql
-ALTER TABLE company_profile 
-  ADD COLUMN IF NOT EXISTS inscricao_estadual text,
-  ADD COLUMN IF NOT EXISTS data_inicio_atividade date;
+A Edge Function retorna: `total_opportunities`, `economia_anual_min/max`, `quick_wins`, `high_impact`, e array `opportunities[]` com `name`, `description`, `economia_anual_min/max`, `complexidade`, `alto_impacto`, `match_score`, `tributos_afetados`, etc.
+
+Os campos de Reforma (`futuro_reforma`, `descricao_reforma`, `status_lc_224_2025`, `descricao_lc_224_2025`) estao na tabela `tax_opportunities` mas **nao sao retornados** pela Edge Function atual. Sera necessario adicionar esses 4 campos ao objeto `opportunity` no response do `match-opportunities`.
+
+### Ranking dos Resultados
+
+```text
+1. alto_impacto = true primeiro
+2. complexidade: baixa (1) > media (2) > alta (3)
+3. economia_anual_max DESC
+Pegar top 3 apos ordenacao.
 ```
+
+### Fallback Generico (estrutura)
+
+```text
+{
+  name: "Oportunidade genérica",
+  description: "Descrição padrão",
+  economia_anual_min: 0,
+  economia_anual_max: 0,
+  complexidade: "media",
+  alto_impacto: false,
+  is_fallback: true   // flag para indicar que não é resultado real
+}
+```
+
+### Nenhuma Migracao de Banco Necessaria
+
+Todos os campos necessarios ja existem nas tabelas `company_profile` e `tax_opportunities`.
+
+### Alteracao na Edge Function match-opportunities
+
+Adicionar ao response os campos de Reforma Tributaria que ja existem em `tax_opportunities` mas nao sao retornados:
+- `futuro_reforma`
+- `descricao_reforma`
+- `status_lc_224_2025`
+- `descricao_lc_224_2025`
+
