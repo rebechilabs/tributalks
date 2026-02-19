@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ClaraMessage } from './ClaraMessage';
 import { OpportunityCard, type OpportunityData } from './OpportunityCard';
@@ -12,6 +12,7 @@ interface StepResultsProps {
   totalMax: number;
   totalCount: number;
   companyProfile?: Record<string, unknown> | null;
+  onRefine?: () => void;
 }
 
 function formatCurrency(value: number): string {
@@ -20,9 +21,10 @@ function formatCurrency(value: number): string {
   return `R$ ${value.toLocaleString('pt-BR')}`;
 }
 
-export function StepResults({ opportunities, totalMin, totalMax, totalCount, companyProfile }: StepResultsProps) {
+export function StepResults({ opportunities, totalMin, totalMax, totalCount, companyProfile, onRefine }: StepResultsProps) {
   const navigate = useNavigate();
   const [selectedOpp, setSelectedOpp] = useState<OpportunityData | null>(null);
+  const [accepted, setAccepted] = useState(false);
 
   const isFallback = totalCount === 0 && opportunities.length > 0;
 
@@ -36,7 +38,30 @@ export function StepResults({ opportunities, totalMin, totalMax, totalCount, com
     <div className="space-y-6 animate-fade-in-up">
       <ClaraMessage message={claraText} />
 
-      {opportunities.length > 0 && (
+      {isFallback && !accepted && (
+        <div className="flex gap-3">
+          <Button
+            variant="default"
+            className="flex-1"
+            onClick={() => setAccepted(true)}
+          >
+            <CheckCircle2 className="w-4 h-4 mr-1" />
+            Sim, seguir
+          </Button>
+          {onRefine && (
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={onRefine}
+            >
+              <RefreshCw className="w-4 h-4 mr-1" />
+              Refinar com mais perguntas
+            </Button>
+          )}
+        </div>
+      )}
+
+      {(!isFallback || accepted) && opportunities.length > 0 && (
         <div className="space-y-3">
           {opportunities.map((opp, i) => (
             <OpportunityCard
