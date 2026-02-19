@@ -1,4 +1,4 @@
-import { Zap, TrendingUp, ArrowUpRight, ArrowRight } from 'lucide-react';
+import { Zap, TrendingUp, ArrowUpRight, ArrowRight, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -35,6 +35,7 @@ export interface OpportunityData {
   requer_contador?: boolean;
   requer_advogado?: boolean;
   missing_criteria?: string[];
+  urgency?: string;
 }
 
 const complexidadeConfig: Record<string, { label: string; className: string }> = {
@@ -97,6 +98,11 @@ export function OpportunityCard({ opp, onClick }: OpportunityCardProps) {
       <div className="flex items-start justify-between gap-2">
         <h3 className="font-semibold text-foreground text-sm leading-tight">{opp.name}</h3>
         <div className="flex gap-1.5 shrink-0">
+          {opp.urgency === 'alta' && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-destructive/20 text-destructive">
+              <AlertTriangle className="w-3 h-3" /> URGENTE
+            </span>
+          )}
           {opp.alto_impacto && (
             <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/20 text-primary">
               <TrendingUp className="w-3 h-3" /> Alto

@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const REQUIRED_KEYS = ['regime_tributario', 'setor', 'faturamento_anual', 'num_funcionarios', 'uf_sede', 'municipio_sede'] as const;
 const QUALITATIVE_KEYS = ['desafio_principal', 'descricao_operacao', 'nivel_declaracao', 'num_socios', 'socios_outras_empresas', 'distribuicao_lucros'] as const;
-const EXPLORATORY_KEYS = ['folha_acima_28pct', 'tem_st_icms', 'creditos_pis_cofins_pendentes', 'usa_jcp', 'creditos_icms_exportacao', 'usa_ret', 'conhece_imunidade_issqn', 'conhece_pep_sp'] as const;
+const EXPLORATORY_KEYS = ['folha_acima_28pct', 'tem_st_icms', 'creditos_pis_cofins_pendentes', 'usa_jcp', 'creditos_icms_exportacao', 'usa_ret', 'conhece_imunidade_issqn', 'conhece_pep_sp', 'margem_liquida_faixa', 'mix_b2b_faixa', 'alto_volume_compras_nfe'] as const;
 const COMPLEMENTARY_KEYS = ['exporta_produtos', 'importa_produtos', 'tem_estoque', 'tem_ecommerce', 'descricao_atividade'] as const;
 
 type Step = 'intro' | 'questions' | 'processing' | 'complementary' | 'results';
@@ -125,7 +125,7 @@ export function PlanejarFlow() {
   }, [missingFields.length]);
 
   const convertBooleanFields = (answers: Record<string, string | number>): Record<string, unknown> => {
-    const BOOL_KEYS = ['exporta_produtos', 'importa_produtos', 'tem_estoque', 'tem_ecommerce'];
+    const BOOL_KEYS = ['exporta_produtos', 'importa_produtos', 'tem_estoque', 'tem_ecommerce', 'alto_volume_compras_nfe'];
     const converted: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(answers)) {
       if (BOOL_KEYS.includes(k)) {
