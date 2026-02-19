@@ -1,94 +1,122 @@
 
 
-# Guardrails Anti-Copia de Codigos e Prompts
+# Correcao do Bug Critico no SwitchCompanyCard
 
-## Contexto
+## Problema Real Encontrado
 
-O TribuTalks tem conteudo sensivel exposto no frontend que pode ser copiado por usuarios mal-intencionados:
-- Respostas da Clara (conteudo gerado por IA com logica tributaria proprietaria)
-- Codigos de referral (ja tem botao de copia controlado)
-- Prompts do sistema (esses ja estao protegidos no servidor — edge functions)
+A investigacao revelou que **nenhuma** das tabelas afetadas possui a coluna `company_id`. Todas filtram apenas por `user_id`:
 
-**Nota importante:** Protecoes no frontend sao barreiras de friccao, nao seguranca absoluta. Um usuario tecnico sempre pode usar DevTools. O objetivo e dificultar a copia casual e em massa.
+| Tabela | Tem user_id | Tem company_id |
+|--------|:-----------:|:--------------:|
+| identified_credits | Sim | **Nao** |
+| credit_analysis_summary | Sim | **Nao** |
+| xml_imports | Sim | **Nao** |
+| fiscal_cross_analysis | Sim | **Nao** |
+| dctf_debitos | Sim | **Nao** |
+| dctf_declaracoes | Sim | **Nao** |
+| sped_contribuicoes | Sim | **Nao** |
+| company_ncm_analysis | Sim | **Nao** |
+| company_opportunities | Sim | **Nao** |
+| company_dre | Sim | **Nao** |
+| price_simulations | Sim | **Nao** |
+| margin_dashboard | Sim | **Nao** |
+| erp_sync_logs | Sim | **Nao** |
+| erp_connections | Sim | **Nao** |
+| erp_checklist | Sim | **Nao** |
+| company_profile | Sim (dono) | N/A (e a propria tabela) |
+
+Isso significa que **nao e possivel** distinguir dados de empresas diferentes hoje. A correcao precisa de 2 etapas.
 
 ## Plano de Execucao
 
-### 1. Componente `AntiCopyGuard` (novo)
+### Etapa 1 — Migracao SQL: Adicionar company_id em todas as tabelas
 
-Criar `src/components/common/AntiCopyGuard.tsx` — wrapper reutilizavel que aplica protecoes em qualquer conteudo sensivel:
+Adicionar coluna `company_id UUID REFERENCES company_profile(id) ON DELETE CASCADE` em cada uma das 15 tabelas.
 
-- `user-select: none` via CSS (impede selecao de texto)
-- Bloqueia `contextmenu` (clique direito) mostrando toast educativo
-- Bloqueia `Ctrl+C` / `Cmd+C` dentro do wrapper
-- Bloqueia `Ctrl+A` dentro do wrapper
-- Prop `allowCopy?: boolean` para desativar quando necessario (ex: codigo de referral que tem botao proprio)
+A clausula `ON DELETE CASCADE` garante que ao deletar um `company_profile`, todos os dados filhos sao removidos automaticamente.
 
-### 2. Aplicar nas respostas da Clara
+Tabelas que receberao `company_id`:
+- identified_credits
+- credit_analysis_summary
+- xml_imports
+- fiscal_cross_analysis
+- dctf_debitos
+- dctf_declaracoes
+- sped_contribuicoes
+- company_ncm_analysis
+- company_opportunities
+- company_dre
+- price_simulations
+- margin_dashboard
+- erp_sync_logs
+- erp_connections
+- erp_checklist
 
-Envolver as respostas da Clara (mensagens `role === "assistant"`) com `AntiCopyGuard` nos dois componentes de chat:
+Backfill: Para usuarios que ja tem dados e uma unica empresa, preencher automaticamente o `company_id` com o id da empresa existente:
 
-- `src/components/common/FloatingAssistant.tsx` — chat flutuante
-- `src/components/onboarding/ClaraOnboardingChat.tsx` — chat de onboarding
+```text
+UPDATE identified_credits ic
+SET company_id = (
+  SELECT cp.id FROM company_profile cp 
+  WHERE cp.user_id = ic.user_id 
+  ORDER BY cp.created_at ASC LIMIT 1
+)
+WHERE ic.company_id IS NULL;
+```
 
-Mensagens do usuario continuam copiaveis normalmente.
+(Repetido para cada tabela)
 
-### 3. Protecao global contra Print Screen e Print
+### Etapa 2 — Corrigir SwitchCompanyCard.tsx
 
-Adicionar no `App.tsx` ou `index.css`:
+Arquivo: `src/components/profile/SwitchCompanyCard.tsx`
 
-- `@media print { body { display: none; } }` — bloqueia impressao/PDF
-- Event listener global para `Ctrl+P` mostrando toast
+Mudancas:
+1. Importar `useCompany` do `CompanyContext`
+2. Obter `currentCompany` do hook
+3. Adicionar guard `if (!currentCompany?.id) return`
+4. Para cada DELETE, adicionar `.eq('company_id', currentCompany.id)` alem do `.eq('user_id', user.id)`
+5. Para `company_profile`, deletar por `.eq('id', currentCompany.id)`
 
-### 4. Watermark invisivel nas respostas da Clara
+Exemplo do padrao corrigido:
 
-Na edge function `clara-assistant`, adicionar caracteres Unicode de largura zero (zero-width spaces) com padrao unico por usuario. Se alguem copiar e colar, o watermark identifica a origem.
+```text
+// Antes (apaga TUDO do usuario)
+await supabase.from('identified_credits').delete().eq('user_id', user.id);
 
-Isso ja esta no servidor, entao nao requer mudanca no frontend.
+// Depois (apaga so da empresa atual)
+await supabase.from('identified_credits').delete()
+  .eq('user_id', user.id)
+  .eq('company_id', currentCompany.id);
 
-### 5. Protecao do codigo de referral
+// company_profile — deleta pelo ID da empresa
+await supabase.from('company_profile').delete()
+  .eq('id', currentCompany.id);
+```
 
-O `ReferralCodeCard` ja tem botao de copia controlado. Adicionar `AntiCopyGuard` ao redor do codigo exibido para impedir selecao manual — forcando uso do botao oficial.
+### Etapa 3 — Atualizar RLS policies
+
+Atualizar as policies das 15 tabelas para incluir validacao de `company_id` onde aplicavel, garantindo que usuarios so acessem dados de empresas que possuem.
+
+## Nenhuma mudanca visual
+
+O layout, textos e comportamento do componente permanecem identicos. Apenas os filtros SQL sao corrigidos.
 
 ## Secao Tecnica
-
-### Arquivos novos
-
-| Arquivo | Descricao |
-|---------|-----------|
-| `src/components/common/AntiCopyGuard.tsx` | Wrapper com protecoes anti-copia |
 
 ### Arquivos modificados
 
 | Arquivo | Mudanca |
 |---------|---------|
-| `src/components/common/FloatingAssistant.tsx` | Envolver respostas Clara com AntiCopyGuard |
-| `src/components/onboarding/ClaraOnboardingChat.tsx` | Envolver respostas Clara com AntiCopyGuard |
-| `src/components/referral/ReferralCodeCard.tsx` | Envolver codigo com AntiCopyGuard |
-| `src/index.css` | Regra `@media print` para bloquear impressao |
-| `supabase/functions/clara-assistant/index.ts` | Watermark invisivel por usuario nas respostas |
+| Nova migracao SQL | ADD COLUMN company_id + FK + backfill + cascade |
+| `src/components/profile/SwitchCompanyCard.tsx` | Import useCompany, filtrar DELETEs por company_id |
 
-### AntiCopyGuard — Comportamento
+### Risco
 
-```text
-+-----------------------------+
-|       AntiCopyGuard         |
-|-----------------------------|
-| CSS: user-select: none      |
-| Block: right-click          |
-| Block: Ctrl+C / Cmd+C      |
-| Block: Ctrl+A               |
-| Toast: "Conteudo protegido" |
-+-----------------------------+
-```
+- O backfill assume que usuarios com dados existentes tem pelo menos 1 company_profile (validado pelo fluxo de onboarding)
+- Coluna `company_id` sera nullable inicialmente para nao quebrar inserts existentes — mas o backfill preenche todos os registros existentes
+- Apos confirmar que o backfill funcionou, uma migracao futura pode tornar a coluna NOT NULL
 
-### Watermark invisivel — Implementacao
+### ON DELETE CASCADE
 
-Inserir no inicio da resposta da Clara (server-side) uma sequencia de caracteres Unicode invisivel (U+200B, U+200C, U+200D, U+FEFF) que codifica o `user_id` em binario. Comprimento: ~36 chars invisivel (UUID em binario). Impacto zero na renderizacao.
+Com a FK `ON DELETE CASCADE`, a operacao de troca de empresa se simplifica: basta deletar o `company_profile` e todos os dados filhos sao removidos automaticamente pelo banco. O SwitchCompanyCard continuara deletando explicitamente para manter controle e logs, mas o cascade serve como rede de seguranca.
 
-### Limitacoes conhecidas
-
-- DevTools (F12) permite inspecionar o DOM e copiar texto — nao ha como bloquear isso em web
-- Print Screen nativo do OS nao pode ser bloqueado pelo browser
-- Essas protecoes sao barreiras de friccao, nao DRM
-
-Nenhuma migracao de banco necessaria.
