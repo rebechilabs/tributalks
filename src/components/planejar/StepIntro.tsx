@@ -111,7 +111,7 @@ export function StepIntro({ company, missingCount, onNext, companyId, userId, on
   const [saving, setSaving] = useState(false);
 
   const claraText = missingCount > 0
-    ? `Olá! Sou a Clara, sua assistente tributária. Vou analisar o perfil da sua empresa e encontrar oportunidades de economia fiscal. Antes, preciso confirmar ${missingCount} dado${missingCount > 1 ? 's' : ''} que ${missingCount > 1 ? 'estão faltando' : 'está faltando'}.`
+    ? 'Olá! Sou a Clara, sua assistente tributária. Vou analisar o perfil da sua empresa e encontrar oportunidades de economia fiscal. Antes, preciso lhe fazer algumas perguntas.'
     : 'Olá! Sou a Clara, sua assistente tributária. Seu perfil está completo! Vou analisar suas informações e encontrar as melhores oportunidades de economia fiscal para a sua empresa.';
 
   const startEdit = (key: string, currentValue: unknown, editType: EditType) => {
@@ -298,7 +298,7 @@ export function StepIntro({ company, missingCount, onNext, companyId, userId, on
 
       <Button onClick={onNext} className="w-full" size="lg">
         {missingCount > 0
-          ? `Responder ${missingCount} pergunta${missingCount > 1 ? 's' : ''} e gerar análise`
+          ? 'Responder perguntas e gerar análise'
           : 'Gerar análise agora'}
       </Button>
     </div>
