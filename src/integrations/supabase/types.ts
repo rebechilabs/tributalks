@@ -797,6 +797,7 @@ export type Database = {
           calc_resultado_antes_ir: number | null
           calc_resultado_financeiro: number | null
           calc_resultado_operacional: number | null
+          company_id: string | null
           created_at: string | null
           diagnostics: Json | null
           health_score: number | null
@@ -861,6 +862,7 @@ export type Database = {
           calc_resultado_antes_ir?: number | null
           calc_resultado_financeiro?: number | null
           calc_resultado_operacional?: number | null
+          company_id?: string | null
           created_at?: string | null
           diagnostics?: Json | null
           health_score?: number | null
@@ -925,6 +927,7 @@ export type Database = {
           calc_resultado_antes_ir?: number | null
           calc_resultado_financeiro?: number | null
           calc_resultado_operacional?: number | null
+          company_id?: string | null
           created_at?: string | null
           diagnostics?: Json | null
           health_score?: number | null
@@ -971,12 +974,21 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "company_dre_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profile"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       company_ncm_analysis: {
         Row: {
           alerta_cfop: string | null
           cfops_frequentes: string[] | null
+          company_id: string | null
           created_at: string
           id: string
           ncm_code: string
@@ -993,6 +1005,7 @@ export type Database = {
         Insert: {
           alerta_cfop?: string | null
           cfops_frequentes?: string[] | null
+          company_id?: string | null
           created_at?: string
           id?: string
           ncm_code: string
@@ -1009,6 +1022,7 @@ export type Database = {
         Update: {
           alerta_cfop?: string | null
           cfops_frequentes?: string[] | null
+          company_id?: string | null
           created_at?: string
           id?: string
           ncm_code?: string
@@ -1022,11 +1036,20 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "company_ncm_analysis_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profile"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       company_opportunities: {
         Row: {
           alto_impacto: boolean | null
+          company_id: string | null
           created_at: string | null
           data_conclusao: string | null
           data_inicio_implementacao: string | null
@@ -1051,6 +1074,7 @@ export type Database = {
         }
         Insert: {
           alto_impacto?: boolean | null
+          company_id?: string | null
           created_at?: string | null
           data_conclusao?: string | null
           data_inicio_implementacao?: string | null
@@ -1075,6 +1099,7 @@ export type Database = {
         }
         Update: {
           alto_impacto?: boolean | null
+          company_id?: string | null
           created_at?: string | null
           data_conclusao?: string | null
           data_inicio_implementacao?: string | null
@@ -1098,6 +1123,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "company_opportunities_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profile"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "company_opportunities_opportunity_id_fkey"
             columns: ["opportunity_id"]
@@ -1725,6 +1757,7 @@ export type Database = {
       credit_analysis_summary: {
         Row: {
           analysis_date: string | null
+          company_id: string | null
           created_at: string | null
           credits_found_count: number | null
           high_confidence_total: number | null
@@ -1743,6 +1776,7 @@ export type Database = {
         }
         Insert: {
           analysis_date?: string | null
+          company_id?: string | null
           created_at?: string | null
           credits_found_count?: number | null
           high_confidence_total?: number | null
@@ -1761,6 +1795,7 @@ export type Database = {
         }
         Update: {
           analysis_date?: string | null
+          company_id?: string | null
           created_at?: string | null
           credits_found_count?: number | null
           high_confidence_total?: number | null
@@ -1777,7 +1812,15 @@ export type Database = {
           total_xmls_analyzed?: number | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "credit_analysis_summary_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profile"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       credit_purchases: {
         Row: {
@@ -1887,6 +1930,7 @@ export type Database = {
       dctf_debitos: {
         Row: {
           codigo_receita: string
+          company_id: string | null
           created_at: string | null
           credito_vinculado: number | null
           dctf_id: string
@@ -1904,6 +1948,7 @@ export type Database = {
         }
         Insert: {
           codigo_receita: string
+          company_id?: string | null
           created_at?: string | null
           credito_vinculado?: number | null
           dctf_id: string
@@ -1921,6 +1966,7 @@ export type Database = {
         }
         Update: {
           codigo_receita?: string
+          company_id?: string | null
           created_at?: string | null
           credito_vinculado?: number | null
           dctf_id?: string
@@ -1938,6 +1984,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "dctf_debitos_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profile"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "dctf_debitos_dctf_id_fkey"
             columns: ["dctf_id"]
             isOneToOne: false
@@ -1951,6 +2004,7 @@ export type Database = {
           ano_calendario: number
           arquivo_nome: string | null
           cnpj: string
+          company_id: string | null
           created_at: string | null
           gap_identificado: number | null
           id: string
@@ -1970,6 +2024,7 @@ export type Database = {
           ano_calendario: number
           arquivo_nome?: string | null
           cnpj: string
+          company_id?: string | null
           created_at?: string | null
           gap_identificado?: number | null
           id?: string
@@ -1989,6 +2044,7 @@ export type Database = {
           ano_calendario?: number
           arquivo_nome?: string | null
           cnpj?: string
+          company_id?: string | null
           created_at?: string | null
           gap_identificado?: number | null
           id?: string
@@ -2004,7 +2060,15 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "dctf_declaracoes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profile"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       diagnostic_results: {
         Row: {
@@ -2079,6 +2143,7 @@ export type Database = {
       }
       erp_checklist: {
         Row: {
+          company_id: string | null
           id: string
           item_description: string | null
           item_key: string
@@ -2088,6 +2153,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          company_id?: string | null
           id?: string
           item_description?: string | null
           item_key: string
@@ -2097,6 +2163,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          company_id?: string | null
           id?: string
           item_description?: string | null
           item_key?: string
@@ -2105,10 +2172,19 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "erp_checklist_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profile"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       erp_connections: {
         Row: {
+          company_id: string | null
           connection_name: string
           created_at: string
           credentials: Json
@@ -2124,6 +2200,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          company_id?: string | null
           connection_name: string
           created_at?: string
           credentials?: Json
@@ -2139,6 +2216,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          company_id?: string | null
           connection_name?: string
           created_at?: string
           credentials?: Json
@@ -2153,10 +2231,19 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "erp_connections_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profile"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       erp_sync_logs: {
         Row: {
+          company_id: string | null
           completed_at: string | null
           connection_id: string
           details: Json | null
@@ -2170,6 +2257,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          company_id?: string | null
           completed_at?: string | null
           connection_id: string
           details?: Json | null
@@ -2183,6 +2271,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          company_id?: string | null
           completed_at?: string | null
           connection_id?: string
           details?: Json | null
@@ -2196,6 +2285,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "erp_sync_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profile"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "erp_sync_logs_connection_id_fkey"
             columns: ["connection_id"]
@@ -2247,6 +2343,7 @@ export type Database = {
       fiscal_cross_analysis: {
         Row: {
           ano: number
+          company_id: string | null
           created_at: string | null
           dctf_cofins_declarado: number | null
           dctf_csll_declarado: number | null
@@ -2272,6 +2369,7 @@ export type Database = {
         }
         Insert: {
           ano: number
+          company_id?: string | null
           created_at?: string | null
           dctf_cofins_declarado?: number | null
           dctf_csll_declarado?: number | null
@@ -2297,6 +2395,7 @@ export type Database = {
         }
         Update: {
           ano?: number
+          company_id?: string | null
           created_at?: string | null
           dctf_cofins_declarado?: number | null
           dctf_csll_declarado?: number | null
@@ -2322,6 +2421,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fiscal_cross_analysis_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profile"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "fiscal_cross_analysis_dctf_id_fkey"
             columns: ["dctf_id"]
             isOneToOne: false
@@ -2341,6 +2447,7 @@ export type Database = {
         Row: {
           accountant_notes: string | null
           cfop: string | null
+          company_id: string | null
           confidence_level: string | null
           confidence_score: number | null
           created_at: string | null
@@ -2366,6 +2473,7 @@ export type Database = {
         Insert: {
           accountant_notes?: string | null
           cfop?: string | null
+          company_id?: string | null
           confidence_level?: string | null
           confidence_score?: number | null
           created_at?: string | null
@@ -2391,6 +2499,7 @@ export type Database = {
         Update: {
           accountant_notes?: string | null
           cfop?: string | null
+          company_id?: string | null
           confidence_level?: string | null
           confidence_score?: number | null
           created_at?: string | null
@@ -2414,6 +2523,13 @@ export type Database = {
           xml_import_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "identified_credits_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profile"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "identified_credits_rule_id_fkey"
             columns: ["rule_id"]
@@ -2510,6 +2626,7 @@ export type Database = {
       }
       margin_dashboard: {
         Row: {
+          company_id: string | null
           created_at: string | null
           economia_potencial_renegociacao: number | null
           fornecedores_analisados: number | null
@@ -2529,6 +2646,7 @@ export type Database = {
           variacao_media_preco: number | null
         }
         Insert: {
+          company_id?: string | null
           created_at?: string | null
           economia_potencial_renegociacao?: number | null
           fornecedores_analisados?: number | null
@@ -2548,6 +2666,7 @@ export type Database = {
           variacao_media_preco?: number | null
         }
         Update: {
+          company_id?: string | null
           created_at?: string | null
           economia_potencial_renegociacao?: number | null
           fornecedores_analisados?: number | null
@@ -2566,7 +2685,15 @@ export type Database = {
           user_id?: string
           variacao_media_preco?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "margin_dashboard_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profile"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       monophasic_ncms: {
         Row: {
@@ -2913,6 +3040,7 @@ export type Database = {
           aliquota_pis_cofins: number | null
           cenario_otimista: Json | null
           cenario_pessimista: Json | null
+          company_id: string | null
           created_at: string | null
           credito_fonte: string | null
           credito_insumo_estimado: number | null
@@ -2953,6 +3081,7 @@ export type Database = {
           aliquota_pis_cofins?: number | null
           cenario_otimista?: Json | null
           cenario_pessimista?: Json | null
+          company_id?: string | null
           created_at?: string | null
           credito_fonte?: string | null
           credito_insumo_estimado?: number | null
@@ -2993,6 +3122,7 @@ export type Database = {
           aliquota_pis_cofins?: number | null
           cenario_otimista?: Json | null
           cenario_pessimista?: Json | null
+          company_id?: string | null
           created_at?: string | null
           credito_fonte?: string | null
           credito_insumo_estimado?: number | null
@@ -3022,7 +3152,15 @@ export type Database = {
           variacao_preco_percent?: number | null
           volume_mensal?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "price_simulations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profile"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -3598,6 +3736,7 @@ export type Database = {
           arquivo_nome: string | null
           arquivo_storage_path: string | null
           cnpj: string
+          company_id: string | null
           created_at: string | null
           erro_mensagem: string | null
           id: string
@@ -3621,6 +3760,7 @@ export type Database = {
           arquivo_nome?: string | null
           arquivo_storage_path?: string | null
           cnpj: string
+          company_id?: string | null
           created_at?: string | null
           erro_mensagem?: string | null
           id?: string
@@ -3644,6 +3784,7 @@ export type Database = {
           arquivo_nome?: string | null
           arquivo_storage_path?: string | null
           cnpj?: string
+          company_id?: string | null
           created_at?: string | null
           erro_mensagem?: string | null
           id?: string
@@ -3663,7 +3804,15 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "sped_contribuicoes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profile"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sped_contribuicoes_items: {
         Row: {
@@ -4835,6 +4984,7 @@ export type Database = {
       xml_imports: {
         Row: {
           batch_id: string | null
+          company_id: string | null
           created_at: string
           error_message: string | null
           file_name: string
@@ -4847,6 +4997,7 @@ export type Database = {
         }
         Insert: {
           batch_id?: string | null
+          company_id?: string | null
           created_at?: string
           error_message?: string | null
           file_name: string
@@ -4859,6 +5010,7 @@ export type Database = {
         }
         Update: {
           batch_id?: string | null
+          company_id?: string | null
           created_at?: string
           error_message?: string | null
           file_name?: string
@@ -4869,7 +5021,15 @@ export type Database = {
           status?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "xml_imports_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profile"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

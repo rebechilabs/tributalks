@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useCompany } from "@/contexts/CompanyContext";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Building2, 
@@ -32,6 +33,7 @@ interface SwitchCompanyCardProps {
 export function SwitchCompanyCard({ companyName, cnpj }: SwitchCompanyCardProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { currentCompany } = useCompany();
   const { toast } = useToast();
   const [isResetting, setIsResetting] = useState(false);
 
@@ -44,28 +46,31 @@ export function SwitchCompanyCard({ companyName, cnpj }: SwitchCompanyCardProps)
   };
 
   const handleSwitchCompany = async () => {
-    if (!user?.id) return;
+    if (!user?.id || !currentCompany?.id) return;
 
     setIsResetting(true);
     try {
-      // Delete all user data related to current company
+      const companyId = currentCompany.id;
+
+      // Delete all data related to current company only
       // Order matters due to foreign key constraints
-      await supabase.from('identified_credits').delete().eq('user_id', user.id);
-      await supabase.from('credit_analysis_summary').delete().eq('user_id', user.id);
-      await supabase.from('xml_imports').delete().eq('user_id', user.id);
-      await supabase.from('fiscal_cross_analysis').delete().eq('user_id', user.id);
-      await supabase.from('dctf_debitos').delete().eq('user_id', user.id);
-      await supabase.from('dctf_declaracoes').delete().eq('user_id', user.id);
-      await supabase.from('sped_contribuicoes').delete().eq('user_id', user.id);
-      await supabase.from('company_ncm_analysis').delete().eq('user_id', user.id);
-      await supabase.from('company_opportunities').delete().eq('user_id', user.id);
-      await supabase.from('company_dre').delete().eq('user_id', user.id);
-      await supabase.from('price_simulations').delete().eq('user_id', user.id);
-      await supabase.from('margin_dashboard').delete().eq('user_id', user.id);
-      await supabase.from('erp_sync_logs').delete().eq('user_id', user.id);
-      await supabase.from('erp_connections').delete().eq('user_id', user.id);
-      await supabase.from('erp_checklist').delete().eq('user_id', user.id);
-      await supabase.from('company_profile').delete().eq('user_id', user.id);
+      await supabase.from('identified_credits').delete().eq('user_id', user.id).eq('company_id', companyId);
+      await supabase.from('credit_analysis_summary').delete().eq('user_id', user.id).eq('company_id', companyId);
+      await supabase.from('xml_imports').delete().eq('user_id', user.id).eq('company_id', companyId);
+      await supabase.from('fiscal_cross_analysis').delete().eq('user_id', user.id).eq('company_id', companyId);
+      await supabase.from('dctf_debitos').delete().eq('user_id', user.id).eq('company_id', companyId);
+      await supabase.from('dctf_declaracoes').delete().eq('user_id', user.id).eq('company_id', companyId);
+      await supabase.from('sped_contribuicoes').delete().eq('user_id', user.id).eq('company_id', companyId);
+      await supabase.from('company_ncm_analysis').delete().eq('user_id', user.id).eq('company_id', companyId);
+      await supabase.from('company_opportunities').delete().eq('user_id', user.id).eq('company_id', companyId);
+      await supabase.from('company_dre').delete().eq('user_id', user.id).eq('company_id', companyId);
+      await supabase.from('price_simulations').delete().eq('user_id', user.id).eq('company_id', companyId);
+      await supabase.from('margin_dashboard').delete().eq('user_id', user.id).eq('company_id', companyId);
+      await supabase.from('erp_sync_logs').delete().eq('user_id', user.id).eq('company_id', companyId);
+      await supabase.from('erp_connections').delete().eq('user_id', user.id).eq('company_id', companyId);
+      await supabase.from('erp_checklist').delete().eq('user_id', user.id).eq('company_id', companyId);
+      // Delete the company profile itself by its own ID
+      await supabase.from('company_profile').delete().eq('id', companyId);
 
       toast({
         title: "Dados limpos com sucesso!",
