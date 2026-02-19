@@ -24,9 +24,13 @@ export function StepResults({ opportunities, totalMin, totalMax, totalCount, com
   const navigate = useNavigate();
   const [selectedOpp, setSelectedOpp] = useState<OpportunityData | null>(null);
 
-  const claraText = totalMax > 0
-    ? `Encontrei ${totalCount} oportunidade${totalCount > 1 ? 's' : ''} para a sua empresa! A economia estimada total pode chegar a ${formatCurrency(totalMin)} — ${formatCurrency(totalMax)} por ano. Aqui estão as 3 mais relevantes:`
-    : 'Com base no perfil da sua empresa, identifiquei essas oportunidades que podem se aplicar ao seu caso:';
+  const isFallback = totalCount === 0 && opportunities.length > 0;
+
+  const claraText = isFallback
+    ? 'Não encontrei oportunidades de alto impacto com os dados atuais. Posso seguir por 3 frentes de governança que normalmente destravam economia indireta:\n\n• Créditos e conciliações\n• Rotinas de compliance\n• Revisão de cadastros fiscais'
+    : totalMax > 0
+      ? `Encontrei ${totalCount} oportunidade${totalCount > 1 ? 's' : ''} para a sua empresa! A economia estimada total pode chegar a ${formatCurrency(totalMin)} — ${formatCurrency(totalMax)} por ano. Aqui estão as 3 mais relevantes:`
+      : 'Com base no perfil da sua empresa, identifiquei essas oportunidades que podem se aplicar ao seu caso:';
 
   return (
     <div className="space-y-6 animate-fade-in-up">

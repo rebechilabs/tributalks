@@ -1,5 +1,6 @@
 import { Zap, TrendingUp, ArrowUpRight, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 export interface OpportunityData {
   id?: string;
@@ -7,6 +8,10 @@ export interface OpportunityData {
   description?: string;
   economia_anual_min: number;
   economia_anual_max: number;
+  economia_percentual_min?: number | null;
+  economia_percentual_max?: number | null;
+  impact_label?: 'alto' | 'medio' | 'baixo';
+  impact_basis?: 'economia_percentual' | 'proxy';
   complexidade?: string;
   alto_impacto?: boolean;
   quick_win?: boolean;
@@ -40,11 +45,34 @@ const complexidadeConfig: Record<string, { label: string; className: string }> =
   muito_alta: { label: 'Muito Alta', className: 'bg-red-500/20 text-red-400' },
 };
 
-function formatCurrency(value: number): string {
-  if (value >= 1000) {
-    return `R$ ${(value / 1000).toFixed(0)}k`;
+const impactLabelConfig: Record<string, { label: string; className: string }> = {
+  alto: { label: 'Impacto Alto', className: 'bg-emerald-500/20 text-emerald-400' },
+  medio: { label: 'Impacto Médio', className: 'bg-amber-500/20 text-amber-400' },
+  baixo: { label: 'Impacto Baixo', className: 'bg-muted text-muted-foreground' },
+};
+
+export function getImpactLine(opp: OpportunityData) {
+  const hasPct =
+    opp.economia_percentual_min != null &&
+    opp.economia_percentual_max != null &&
+    (opp.economia_percentual_min > 0 || opp.economia_percentual_max > 0);
+
+  if (hasPct) {
+    return {
+      text: `${opp.economia_percentual_min}%–${opp.economia_percentual_max}% de economia`,
+      badge: null,
+      isPercentual: true,
+    };
   }
-  return `R$ ${value.toLocaleString('pt-BR')}`;
+
+  const label = opp.impact_label ?? (opp.alto_impacto ? 'alto' : 'medio');
+  const config = impactLabelConfig[label] || impactLabelConfig.medio;
+  return {
+    text: config.label,
+    badge: 'estimativa',
+    isPercentual: false,
+    badgeClassName: config.className,
+  };
 }
 
 interface OpportunityCardProps {
@@ -56,6 +84,7 @@ export function OpportunityCard({ opp, onClick }: OpportunityCardProps) {
   const comp = complexidadeConfig[opp.complexidade || 'media'] || complexidadeConfig.media;
   const hasReforma = !!(opp.futuro_reforma || opp.status_lc_224_2025);
   const reformaText = opp.descricao_reforma || opp.descricao_lc_224_2025;
+  const impact = getImpactLine(opp);
 
   return (
     <div
@@ -86,9 +115,16 @@ export function OpportunityCard({ opp, onClick }: OpportunityCardProps) {
       <div className="flex items-center gap-1.5 text-sm">
         <ArrowUpRight className="w-4 h-4 text-emerald-400" />
         <span className="font-semibold text-emerald-400">
-          {formatCurrency(opp.economia_anual_min)} — {formatCurrency(opp.economia_anual_max)}
+          {impact.text}
         </span>
-        <span className="text-muted-foreground text-xs">/ano</span>
+        {impact.isPercentual && (
+          <span className="text-muted-foreground text-xs">/ano</span>
+        )}
+        {impact.badge && (
+          <span className={cn("text-[10px] font-medium px-2 py-0.5 rounded-full ml-1", impact.badgeClassName)}>
+            {impact.badge}
+          </span>
+        )}
       </div>
 
       {hasReforma && (
@@ -103,6 +139,11 @@ export function OpportunityCard({ opp, onClick }: OpportunityCardProps) {
         </div>
       )}
 
+      {onClick && (
+        <Button variant="ghost" size="sm" className="w-full text-xs text-primary hover:text-primary" onClick={(e) => { e.stopPropagation(); onClick(); }}>
+          Ver detalhes <ArrowRight className="w-3.5 h-3.5 ml-1" />
+        </Button>
+      )}
     </div>
   );
 }

@@ -319,10 +319,12 @@ export function StepIntro({ company, missingCount, onNext, companyId, userId, on
                     )}
                   </span>
                 ) : (
-                  <span className="flex items-center gap-1.5 text-amber-400 text-xs">
-                    <AlertTriangle className="w-3.5 h-3.5" />
-                    Não informado
-                  </span>
+                  <button
+                    onClick={onNext}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline cursor-pointer bg-transparent border-none p-0"
+                  >
+                    Completar agora (30s)
+                  </button>
                 )}
               </div>
             );
