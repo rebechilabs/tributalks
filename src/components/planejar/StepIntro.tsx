@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 
 interface CompanyData {
   regime_tributario?: string | null;
+  segmento?: string | null;
   setor?: string | null;
   faturamento_anual?: number | null;
   num_funcionarios?: number | null;
@@ -16,6 +17,7 @@ interface CompanyData {
   municipio_sede?: string | null;
   exporta_produtos?: boolean | null;
   importa_produtos?: boolean | null;
+  tags_operacao?: string[] | null;
 }
 
 interface StepIntroProps {
@@ -39,14 +41,27 @@ const REGIME_OPTIONS = [
 ];
 
 const SETOR_OPTIONS = [
-  { value: 'comercio', label: 'Comércio' },
-  { value: 'servicos', label: 'Serviços' },
-  { value: 'industria', label: 'Indústria' },
-  { value: 'construcao', label: 'Construção' },
-  { value: 'agronegocio', label: 'Agronegócio' },
-  { value: 'tecnologia', label: 'Tecnologia' },
-  { value: 'saude', label: 'Saúde' },
+  { value: 'servicos_profissionais', label: 'Serviços Profissionais' },
+  { value: 'tecnologia_saas', label: 'Tecnologia / SaaS' },
+  { value: 'logistica_transporte', label: 'Logística e Transporte' },
+  { value: 'corretagem_seguros', label: 'Corretagem e Seguros' },
   { value: 'educacao', label: 'Educação' },
+  { value: 'saude', label: 'Saúde' },
+  { value: 'imobiliario', label: 'Imobiliário' },
+  { value: 'ecommerce', label: 'E-commerce' },
+  { value: 'varejo_fisico', label: 'Varejo Físico' },
+  { value: 'distribuicao_atacado', label: 'Distribuição / Atacado' },
+  { value: 'alimentacao_bares_restaurantes', label: 'Alimentação / Bares / Restaurantes' },
+  { value: 'construcao_incorporacao', label: 'Construção / Incorporação' },
+  { value: 'agro', label: 'Agronegócio' },
+  { value: 'industria_alimentos_bebidas', label: 'Indústria de Alimentos e Bebidas' },
+  { value: 'industria_metal_mecanica', label: 'Indústria Metal-Mecânica' },
+];
+
+const SEGMENTO_OPTIONS = [
+  { value: 'servicos', label: 'Serviços' },
+  { value: 'comercio', label: 'Comércio' },
+  { value: 'industria', label: 'Indústria' },
 ];
 
 
@@ -67,6 +82,14 @@ const FIELDS: FieldDef[] = [
     format: (v) => {
       const map: Record<string, string> = { simples: 'Simples Nacional', presumido: 'Lucro Presumido', lucro_presumido: 'Lucro Presumido', real: 'Lucro Real', lucro_real: 'Lucro Real' };
       return map[String(v)] || String(v);
+    }
+  },
+  {
+    key: 'segmento' as keyof CompanyData, label: 'Macro-segmento', editType: 'select',
+    options: SEGMENTO_OPTIONS,
+    format: (v) => {
+      const found = SEGMENTO_OPTIONS.find(o => o.value === String(v));
+      return found?.label || String(v).charAt(0).toUpperCase() + String(v).slice(1);
     }
   },
   {
@@ -95,6 +118,20 @@ const FIELDS: FieldDef[] = [
   },
   { key: 'exporta_produtos', label: 'Exportação', editType: 'toggle', format: (v) => v ? 'Sim' : 'Não' },
   { key: 'importa_produtos', label: 'Importação', editType: 'toggle', format: (v) => v ? 'Sim' : 'Não' },
+  {
+    key: 'tags_operacao' as keyof CompanyData, label: 'Tags de Operação', editType: 'text' as EditType,
+    format: (v) => {
+      if (Array.isArray(v) && v.length > 0) {
+        const tagLabels: Record<string, string> = {
+          tem_icms: 'ICMS', tem_iss: 'ISS', tem_st_icms: 'ST', importa: 'Importa',
+          exporta: 'Exporta', multi_uf: 'Multi-UF', alto_volume_nfe: 'Alto vol. NF',
+          grupo_economico: 'Grupo econômico', b2b_alto: 'B2B Alto',
+        };
+        return v.map((t: string) => tagLabels[t] || t).join(', ');
+      }
+      return '';
+    },
+  },
 ];
 
 export function StepIntro({ company, missingCount, onNext, companyId, userId, onFieldUpdated }: StepIntroProps) {
