@@ -1,87 +1,89 @@
 
-# Atualizar sectorQuestionBank.ts com o JSON Completo
+# Blindar RLS das Tabelas de Migracao
 
-## Objetivo
+## Problema Encontrado
 
-Substituir o conteudo atual de `src/data/sectorQuestionBank.ts` pelo banco de perguntas completo fornecido no JSON, mantendo compatibilidade com o codigo existente em `StepQuestions.tsx`.
+As politicas RLS de `company_profile` e `tax_opportunities` estao configuradas com `TO public` (role padrao quando omitido), o que permite que usuarios anonimos (nao autenticados) tentem acessar os dados. Embora a condicao `auth.uid() = user_id` bloqueie na pratica (retorna NULL para anon), a melhor pratica e restringir explicitamente a `authenticated`.
 
-## Analise de Compatibilidade
+### Estado Atual
 
-O `StepQuestions.tsx` consome do banco:
-- `MACRO_SEGMENTS`, `MACRO_TO_SECTORS`, `OPERATION_TAGS` -- sem mudanca
-- `SECTOR_DEFAULT_TAGS` -- atualizar valores para coincidir com o JSON
-- `SECTOR_QUESTIONS` -- atualizar textos, ids, e estrutura
-- `inferMacroFromSector()` -- sem mudanca
+| Tabela | Politica | Role Atual | Problema |
+|--------|----------|------------|----------|
+| `company_profile` | SELECT own | `public` | Deveria ser `authenticated` |
+| `company_profile` | INSERT own | `public` | Deveria ser `authenticated` |
+| `company_profile` | UPDATE own | `public` | Deveria ser `authenticated` |
+| `company_profile` | DELETE own | `public` | Deveria ser `authenticated` |
+| `tax_opportunities` | Admin manage (ALL) | `public` | Deveria ser `authenticated` |
+| `tax_opportunities` | Read opportunities | `authenticated` | OK |
 
-O campo `adds_tag` (string) nao e consumido em nenhum componente frontend atualmente. E seguro migrar para `adds_tags_if_true` (array de strings) sem quebrar nada, desde que a interface seja atualizada.
+O trigger `infer_macro_segmento` nao e `SECURITY DEFINER` — esta correto pois roda no contexto do usuario que faz o INSERT/UPDATE.
 
-## Alteracoes
+## Plano de Execucao
 
-### 1. Atualizar `src/data/sectorQuestionBank.ts`
+### 1. Migracao SQL
 
-**Interface `SectorQuestion`:**
-- Adicionar `id: string`
-- Renomear `adds_tag?: string` para `adds_tags_if_true?: string[]`
-- Remover `value_if_true` (nao utilizado no JSON)
+Dropar as 5 politicas com role `public` e recriar com `TO authenticated`:
 
-**`SECTOR_DEFAULT_TAGS`:** Atualizar para coincidir com o JSON:
-- `servicos_profissionais`: `['tem_iss', 'b2b_alto', 'alto_volume_servicos']`
-- `tecnologia_saas`: `['tem_iss', 'b2b_alto', 'alto_volume_servicos']`
-- `logistica_transporte`: `['tem_iss', 'b2b_alto']`
-- `ecommerce`: `['tem_icms', 'b2c_alto', 'alto_volume_nfe']`
-- `varejo_fisico`: `['tem_icms', 'b2c_alto']`
-- `distribuicao_atacado`: `['tem_icms', 'b2b_alto', 'alto_volume_nfe']`
-- `alimentacao_bares_restaurantes`: `['b2c_alto']`
-- `construcao_incorporacao`: `['alto_volume_servicos']`
-- `saude`: `['tem_iss', 'alto_volume_servicos']`
-- `corretagem_seguros`: `['tem_iss', 'alto_volume_servicos']`
-- `educacao`: `['tem_iss', 'alto_volume_servicos']`
-- `agro`: `['tem_icms']`
-- `industria_alimentos_bebidas`: `['tem_icms', 'alto_volume_nfe']`
-- `industria_metal_mecanica`: `['tem_icms', 'b2b_alto', 'alto_volume_nfe']`
-- `imobiliario`: `['tem_iss']`
+```text
+-- company_profile: restringir a authenticated
+DROP POLICY IF EXISTS "Users can view own profile" ON public.company_profile;
+DROP POLICY IF EXISTS "Users can insert own profile" ON public.company_profile;
+DROP POLICY IF EXISTS "Users can update own profile" ON public.company_profile;
+DROP POLICY IF EXISTS "Users can delete own profile" ON public.company_profile;
 
-**Adicionar `SECTOR_PROBABLE_TAGS`:** Novo export com tags provaveis por setor (para uso futuro no matching).
+CREATE POLICY "Users can view own profile"
+ON public.company_profile FOR SELECT
+TO authenticated
+USING (auth.uid() = user_id);
 
-**`SECTOR_QUESTIONS`:** Substituir todas as perguntas de todos os 15 setores pelos textos exatos do JSON, incluindo `id`, `maps_to`, `adds_tags_if_true`, `type`, e `options`.
+CREATE POLICY "Users can insert own profile"
+ON public.company_profile FOR INSERT
+TO authenticated
+WITH CHECK (auth.uid() = user_id);
 
-**Adicionar `SECTOR_SYNONYMS`:** Novo export com o mapa de sinonimos por setor (para uso futuro em busca/NLP).
+CREATE POLICY "Users can update own profile"
+ON public.company_profile FOR UPDATE
+TO authenticated
+USING (auth.uid() = user_id);
 
-**Adicionar `UNIVERSAL_TRIGGERS`:** Novo export com os gatilhos universais (regime review e reforma).
+CREATE POLICY "Users can delete own profile"
+ON public.company_profile FOR DELETE
+TO authenticated
+USING (auth.uid() = user_id);
 
-### 2. Ajustar `OPERATION_TAGS` em `sectorQuestionBank.ts`
+-- tax_opportunities: admin policy restringir a authenticated
+DROP POLICY IF EXISTS "Only admins can manage opportunities" ON public.tax_opportunities;
 
-Adicionar novas tags referenciadas no JSON que nao estao nos toggles atuais:
-- `b2c_alto` (B2C Alto)
-- `b2b_alto` (B2B Alto) -- ja existe como tag adicionavel, mas nao no toggle
-- `alto_volume_servicos` (Alto volume servicos)
+CREATE POLICY "Only admins can manage opportunities"
+ON public.tax_opportunities FOR ALL
+TO authenticated
+USING (public.has_role(auth.uid(), 'admin'))
+WITH CHECK (public.has_role(auth.uid(), 'admin'));
+```
 
-Isso garante que tags adicionadas automaticamente por `adds_tags_if_true` sejam visiveis no multi-toggle.
+### 2. Adicionar politica RESTRICTIVE para anon
 
-### 3. Nenhuma mudanca necessaria em `StepQuestions.tsx`
+Bloquear explicitamente acesso anonimo nas duas tabelas:
 
-O campo `adds_tag`/`adds_tags_if_true` nao e consumido pelo frontend atualmente (verificado via search). A funcao `buildSectorExploratoryFields` usa apenas `key`, `text`, `roi`, `type`, `options` -- todos preservados. Nenhuma alteracao de componente e necessaria.
+```text
+CREATE POLICY "Deny anon access to company_profile"
+ON public.company_profile AS RESTRICTIVE FOR ALL
+TO anon
+USING (false);
+
+CREATE POLICY "Deny anon access to tax_opportunities"
+ON public.tax_opportunities AS RESTRICTIVE FOR ALL
+TO anon
+USING (false);
+```
+
+## Resultado Esperado
+
+- 0 politicas com `TO public` nas tabelas de migracao
+- Acesso anonimo explicitamente bloqueado
+- Nenhuma mudanca funcional para usuarios autenticados
+- Nenhuma alteracao de codigo frontend necessaria
 
 ## Secao Tecnica
 
-### Mapeamento de campos JSON para TypeScript
-
-| JSON | TypeScript atual | TypeScript novo |
-|------|-----------------|-----------------|
-| `id` | nao existe | `id: string` |
-| `text` | `text` | `text` (sem mudanca) |
-| `type` | `type` | `type` (sem mudanca) |
-| `roi` | `roi` | `roi` (sem mudanca) |
-| `maps_to` | `maps_to` | `maps_to` (sem mudanca) |
-| `adds_tags_if_true` | `adds_tag` (string) | `adds_tags_if_true` (string[]) |
-| `options` (array strings) | `options` (array strings) | `options` (sem mudanca) |
-| N/A | `value_if_true` | removido |
-| N/A | `key` (gerado) | `key` = `id` do JSON |
-
-### Arquivos modificados
-
-| Arquivo | Tipo | Descricao |
-|---------|------|-----------|
-| `src/data/sectorQuestionBank.ts` | Reescrever | Interface, defaults, questions, synonyms, triggers |
-
-Nenhuma migracao de banco, nenhuma mudanca em edge function, nenhuma mudanca em componentes frontend.
+A unica alteracao e uma migracao SQL. Nenhum arquivo de codigo precisa ser modificado. As colunas novas (`setor_secundario`, `folha_faixa`, `tags_operacao`, `applicability`) ficam protegidas pelas mesmas politicas da tabela — RLS opera no nivel da linha, nao da coluna.
