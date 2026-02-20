@@ -1,58 +1,52 @@
 
 
-# Importacao de NCMs em Lote no Catalogo de Produtos
+# Melhorar clareza do seletor Produtos/Servicos no catalogo do DRE
 
 ## Problema
-Hoje, para cadastrar NCMs no catalogo de produtos/servicos do DRE, o usuario precisa adicionar um por um manualmente. Na pratica, empresas trabalham com dezenas ou centenas de NCMs ao mesmo tempo.
+O RadioGroup atual entre "Produtos (NCM)" e "Servicos (NBS)" da a impressao de que o usuario deve escolher um OU outro. Na verdade, ele pode adicionar ambos os tipos na mesma lista.
 
 ## Solucao
 
-Adicionar duas formas de importacao em lote:
+### 1. Adicionar texto explicativo abaixo do RadioGroup
+Incluir uma mensagem como: "Voce pode adicionar produtos e servicos na mesma lista. Selecione o tipo e adicione quantos itens quiser de cada."
 
-### 1. Importar dos XMLs ja processados
-Se o usuario ja importou XMLs na plataforma, os NCMs ja estao analisados na tabela `company_ncm_analysis`. Um botao "Importar dos meus XMLs" busca esses NCMs e permite selecionar quais adicionar ao catalogo, ja com nome do produto e percentual de receita preenchidos.
+### 2. Trocar o label "O que voce vende?" por algo mais claro
+Novo label: "Que tipo de item deseja adicionar agora?"
+Isso deixa claro que e uma selecao temporaria, nao uma escolha definitiva.
 
-### 2. Colar lista de NCMs
-Um campo de texto onde o usuario cola varios codigos NCM separados por virgula, ponto-e-virgula ou quebra de linha (ex: `8471.30.19, 0901.21.00, 6109.10.00`). O sistema valida cada codigo contra a API governamental e adiciona todos de uma vez.
+### 3. Mostrar indicadores visuais na lista de itens
+Quando ja houver itens de ambos os tipos na lista, exibir um resumo acima dela:
+"X produto(s) e Y servico(s) adicionados"
 
 ## Mudancas tecnicas
 
 ### `src/components/dre/ProductCatalogStep.tsx`
-- Adicionar botao "Importar em lote" ao lado do formulario individual
-- Ao clicar, abrir modal com duas abas: "Dos meus XMLs" e "Colar codigos"
 
-### Novo: `src/components/dre/NCMBatchImportModal.tsx`
-Modal com duas abas:
+**Linha 122** - Trocar o label:
+- De: `O que voce vende?`
+- Para: `Que tipo de item deseja adicionar agora?`
 
-**Aba 1 - Dos meus XMLs:**
-- Consulta `company_ncm_analysis` do usuario
-- Lista NCMs encontrados com checkboxes para selecao
-- Botao "Adicionar selecionados" que converte em `ProductCatalogItem[]`
+**Apos linha 143 (fechamento do RadioGroup)** - Adicionar texto explicativo:
+```typescript
+<p className="text-xs text-muted-foreground flex items-center gap-1">
+  <Package className="w-3 h-3 inline" />
+  +
+  <Briefcase className="w-3 h-3 inline" />
+  Voce pode adicionar produtos e servicos na mesma lista.
+</p>
+```
 
-**Aba 2 - Colar codigos:**
-- Textarea para colar NCMs (separados por virgula, ponto-e-virgula ou linha)
-- Botao "Validar" que consulta a API de NCMs e exibe os resultados
-- Usuario confirma quais adicionar
-- Percentual de receita pode ser distribuido igualmente ou preenchido depois
+**Linha 264 (label dos itens adicionados)** - Melhorar o resumo:
+Substituir o label generico por um que mostra a contagem por tipo:
+```typescript
+const prodCount = items.filter(i => i.tipo === 'produto').length;
+const servCount = items.filter(i => i.tipo === 'servico').length;
 
-### Fluxo visual
-
-```text
-+------------------------------------------+
-|  Importar NCMs em Lote                   |
-|  [Dos meus XMLs] [Colar codigos]         |
-|                                          |
-|  Aba XMLs:                               |
-|  [x] 8471.30.19 - Notebook       (12%)  |
-|  [x] 0901.21.00 - Cafe torrado   (8%)   |
-|  [ ] 6109.10.00 - Camiseta       (5%)   |
-|                                          |
-|  [Adicionar 2 selecionados]              |
-+------------------------------------------+
+// Exibir: "2 produto(s) e 1 servico(s) adicionados"
 ```
 
 ## O que NAO muda
-- O formulario individual continua funcionando normalmente
-- A estrutura de `ProductCatalogItem` permanece a mesma
-- Nenhuma tabela nova no banco de dados
+- O comportamento do RadioGroup continua o mesmo (alterna campos do formulario)
+- A estrutura de dados permanece identica
+- Nenhuma alteracao no banco de dados
 
