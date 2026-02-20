@@ -1637,6 +1637,57 @@ export type Database = {
         }
         Relationships: []
       }
+      comparativo_regimes_simulations: {
+        Row: {
+          cnae_principal: string | null
+          compras_insumos: number
+          created_at: string | null
+          despesas_operacionais: number | null
+          economia_estimada: number | null
+          faturamento_anual: number
+          folha_pagamento: number
+          id: string
+          margem_lucro: number
+          perfil_clientes: string
+          regime_recomendado: string
+          resultados: Json
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cnae_principal?: string | null
+          compras_insumos?: number
+          created_at?: string | null
+          despesas_operacionais?: number | null
+          economia_estimada?: number | null
+          faturamento_anual: number
+          folha_pagamento?: number
+          id?: string
+          margem_lucro: number
+          perfil_clientes: string
+          regime_recomendado: string
+          resultados: Json
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cnae_principal?: string | null
+          compras_insumos?: number
+          created_at?: string | null
+          despesas_operacionais?: number | null
+          economia_estimada?: number | null
+          faturamento_anual?: number
+          folha_pagamento?: number
+          id?: string
+          margem_lucro?: number
+          perfil_clientes?: string
+          regime_recomendado?: string
+          resultados?: Json
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       connect_applications: {
         Row: {
           cargo: string
@@ -3639,57 +3690,6 @@ export type Database = {
           pis?: number
           receita_max?: number
           receita_min?: number
-        }
-        Relationships: []
-      }
-      simpronto_simulations: {
-        Row: {
-          cnae_principal: string | null
-          compras_insumos: number
-          created_at: string | null
-          despesas_operacionais: number | null
-          economia_estimada: number | null
-          faturamento_anual: number
-          folha_pagamento: number
-          id: string
-          margem_lucro: number
-          perfil_clientes: string
-          regime_recomendado: string
-          resultados: Json
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          cnae_principal?: string | null
-          compras_insumos?: number
-          created_at?: string | null
-          despesas_operacionais?: number | null
-          economia_estimada?: number | null
-          faturamento_anual: number
-          folha_pagamento?: number
-          id?: string
-          margem_lucro: number
-          perfil_clientes: string
-          regime_recomendado: string
-          resultados: Json
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          cnae_principal?: string | null
-          compras_insumos?: number
-          created_at?: string | null
-          despesas_operacionais?: number | null
-          economia_estimada?: number | null
-          faturamento_anual?: number
-          folha_pagamento?: number
-          id?: string
-          margem_lucro?: number
-          perfil_clientes?: string
-          regime_recomendado?: string
-          resultados?: Json
-          updated_at?: string | null
-          user_id?: string
         }
         Relationships: []
       }

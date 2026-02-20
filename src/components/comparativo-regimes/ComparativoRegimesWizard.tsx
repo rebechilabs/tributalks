@@ -70,9 +70,9 @@ export function ComparativoRegimesWizard({ onSubmit, isLoading }: ComparativoReg
 
       const annualize = (value: number | null, periodType: string | null) => {
         if (!value) return 0;
-        if (periodType === 'mensal') return value * 12;
-        if (periodType === 'trimestral') return value * 4;
-        return value; // anual
+        if (periodType === 'mensal' || periodType === 'monthly') return value * 12;
+        if (periodType === 'trimestral' || periodType === 'quarterly') return value * 4;
+        return value; // anual / yearly
       };
 
       let filled = false;
