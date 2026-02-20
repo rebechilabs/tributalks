@@ -3,7 +3,7 @@ import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-
 import { checkRateLimit, RATE_LIMITS, rateLimitedResponse, createRateLimitHeaders } from "../_shared/rate-limiter.ts";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "https://tributalks.com.br",
+  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
