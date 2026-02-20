@@ -68,12 +68,15 @@ export function ProductCatalogStep({ items, onChange, onSkip, onFinish, loading 
   const handleAddItem = () => {
     if (tipo === 'produto' && !ncmCode) return;
     if (tipo === 'servico' && !nbsCategoria) return;
-    if (!nome.trim()) return;
+
+    // Para serviços, usar nome da categoria como fallback se descrição estiver vazia
+    const itemNome = nome.trim() || (tipo === 'servico' ? getCategoriaLabel(nbsCategoria) : '');
+    if (!itemNome) return;
 
     const newItem: ProductCatalogItem = {
       id: crypto.randomUUID(),
       tipo,
-      nome: nome.trim(),
+      nome: itemNome,
       percentual_receita: parseFloat(percentual) || 0,
       ...(tipo === 'produto' ? { ncm_code: ncmCode, ncm_descricao: ncmDescricao } : { nbs_categoria: nbsCategoria }),
     };
