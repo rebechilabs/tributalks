@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ClaraMessage } from './ClaraMessage';
@@ -538,16 +538,21 @@ export function StepQuestions({ missingFields, onComplete, existingProfile = nul
     return q;
   }, [questions, currentIdx, answers, existingProfile]);
 
+  // Initialize multi-toggle defaults when reaching a multi_toggle question
+  const multiToggleQuestionKey = currentQuestion?.type === 'multi_toggle' ? currentQuestion.key : null;
+  const multiToggleGetDefaults = currentQuestion?.type === 'multi_toggle' ? currentQuestion.getDefaults : undefined;
+
+  useEffect(() => {
+    if (multiToggleQuestionKey && !multiToggleInitialized && multiToggleGetDefaults) {
+      const defaults = multiToggleGetDefaults(answers, existingProfile);
+      setMultiToggleSelection(defaults);
+      setMultiToggleInitialized(true);
+    }
+  }, [multiToggleQuestionKey, multiToggleInitialized, multiToggleGetDefaults, answers, existingProfile]);
+
   if (!currentQuestion) return null;
 
   const progress = ((currentIdx) / questions.length) * 100;
-
-  // Initialize multi-toggle defaults when reaching a multi_toggle question
-  if (currentQuestion.type === 'multi_toggle' && !multiToggleInitialized && currentQuestion.getDefaults) {
-    const defaults = currentQuestion.getDefaults(answers, existingProfile);
-    setMultiToggleSelection(defaults);
-    setMultiToggleInitialized(true);
-  }
 
   const selectAnswer = (value: string | number | string[]) => {
     const newAnswers = { ...answers, [currentQuestion.key]: value };
