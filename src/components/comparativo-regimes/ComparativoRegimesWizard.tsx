@@ -51,19 +51,19 @@ export function ComparativoRegimesWizard({ onSubmit, isLoading }: ComparativoReg
 
     setFormData(prev => {
       const next = { ...prev };
-      if (!prev.faturamento_anual && shared.faturamento_anual) {
+      if (!prev.faturamento_anual && shared.faturamento_anual != null) {
         next.faturamento_anual = Math.round(shared.faturamento_anual).toString();
         filled = true;
       }
-      if (!prev.folha_pagamento && shared.folha_anual) {
+      if (!prev.folha_pagamento && shared.folha_anual != null) {
         next.folha_pagamento = Math.round(shared.folha_anual).toString();
         filled = true;
       }
-      if (!prev.compras_insumos && shared.compras_insumos_anual) {
+      if (!prev.compras_insumos && shared.compras_insumos_anual != null) {
         next.compras_insumos = Math.round(shared.compras_insumos_anual).toString();
         filled = true;
       }
-      if (!prev.cnae_principal && shared.cnae_principal) {
+      if (!prev.cnae_principal && shared.cnae_principal != null) {
         next.cnae_principal = shared.cnae_principal;
         filled = true;
       }
