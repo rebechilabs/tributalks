@@ -259,7 +259,7 @@ export function ProductCatalogStep({ items, onChange, onSkip, onFinish, loading 
             className="w-full"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Adicionar
+            Salvar item
           </Button>
         </CardContent>
       </Card>
