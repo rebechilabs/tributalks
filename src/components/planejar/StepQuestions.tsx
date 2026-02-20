@@ -550,6 +550,13 @@ export function StepQuestions({ missingFields, onComplete, existingProfile = nul
     }
   }, [multiToggleQuestionKey, multiToggleInitialized, multiToggleGetDefaults, answers, existingProfile]);
 
+  // If no questions apply, auto-complete with current answers
+  useEffect(() => {
+    if (questions.length === 0) {
+      onComplete(answers);
+    }
+  }, [questions.length]);
+
   if (!currentQuestion) return null;
 
   const progress = ((currentIdx) / questions.length) * 100;
