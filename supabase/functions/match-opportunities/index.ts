@@ -868,12 +868,27 @@ serve(async (req) => {
     // STEP 3: Use authenticated user ID (ignore body user_id for security)
     const user_id = user.id
 
-    // 1. FETCH PROFILE
-    const { data: profile, error: profileError } = await supabase
+    // Parse body to get company_id
+    let body: Record<string, unknown> = {}
+    try {
+      body = await req.json()
+    } catch {
+      // No body or invalid JSON is OK
+    }
+    const company_id = body.company_id as string | undefined
+
+    // 1. FETCH PROFILE - use company_id if provided, otherwise get first profile
+    let profileQuery = supabase
       .from('company_profile')
       .select('*')
       .eq('user_id', user_id)
-      .single()
+
+    if (company_id) {
+      profileQuery = profileQuery.eq('id', company_id)
+    }
+
+    const { data: profiles, error: profileError } = await profileQuery.limit(1)
+    const profile = profiles?.[0] || null
 
     if (profileError || !profile) {
       return new Response(JSON.stringify({ 
