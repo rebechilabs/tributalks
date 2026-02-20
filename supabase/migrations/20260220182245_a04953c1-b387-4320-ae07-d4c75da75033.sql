@@ -1,0 +1,1 @@
+ALTER TABLE public.simpronto_simulations RENAME TO comparativo_regimes_simulations;

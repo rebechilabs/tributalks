@@ -23,7 +23,7 @@ export default function ComparativoRegimesPage() {
       if (!user?.id) return;
       
       const { error } = await supabase
-        .from('simpronto_simulations')
+        .from('comparativo_regimes_simulations')
         .insert({
           user_id: user.id,
           faturamento_anual: input.faturamento_anual,
