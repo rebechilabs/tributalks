@@ -46,11 +46,11 @@ const NEXT_STEPS: Record<ToolType, NextStep> = {
     icon: BarChart3,
   },
   dre: {
-    title: 'Descobrir oportunidades',
-    description: 'Com base nos seus dados financeiros, identifique benefícios fiscais.',
-    cta: 'Ver Oportunidades',
-    href: '/dashboard/planejar/oportunidades',
-    icon: Lightbulb,
+    title: 'Calcular seu Score Tributário',
+    description: 'Agora que você tem seu DRE, descubra a nota da saúde tributária da sua empresa.',
+    cta: 'Ver Score Tributário',
+    href: '/dashboard/entender/score',
+    icon: Trophy,
   },
   rtc: {
     title: 'Simular impacto no lucro',

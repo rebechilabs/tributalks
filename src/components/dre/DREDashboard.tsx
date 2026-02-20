@@ -12,6 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { NextStepCta } from '@/components/common/NextStepCta';
 import { toast } from 'sonner';
 
 interface DREData {
@@ -508,6 +509,8 @@ export function DREDashboard({ dreId }: DREDashboardProps) {
           </CardContent>
         </Card>
       </div>
+
+      <NextStepCta currentTool="dre" hasData={!!dre} className="mt-6" />
     </div>
   );
 }
