@@ -1,55 +1,34 @@
 
 
-# Manter Resultado do DRE Calculado
+# Corrigir campos em branco no Comparativo de Regimes
 
-## Resumo
+## Problema identificado
 
-Quando o usuario acessa a pagina do DRE (`/dashboard/entender/dre`), atualmente sempre aparece o formulario (wizard). A mudanca fara com que, se ja existir um DRE calculado, a pagina mostre os **resultados** (DREDashboard) ao inves do formulario. O formulario so aparecera se o usuario clicar em "Atualizar DRE" ou se nao houver nenhum DRE calculado.
+Os campos do Comparativo nao estao sendo preenchidos com os dados do DRE/perfil da empresa por causa de verificacoes "falsy" no JavaScript. Quando um valor e `0`, o JavaScript trata como `false`, e o sistema interpreta como "nao tem dado".
 
-## Como vai funcionar
+Exemplo: se `folha_mensal = 0` no banco, o codigo atual faz `0 ? 0 * 12 : null` que resulta em `null`.
 
-1. Usuario acessa a pagina do DRE
-2. Sistema verifica se ja existe um registro na tabela `company_dre`
-3. **Se existir**: mostra o DREDashboard (resultados) com botao "Atualizar DRE" que leva ao wizard
-4. **Se nao existir**: mostra o DREWizard normalmente
+## Mudancas necessarias
 
-## Mudancas
+### 1. `src/hooks/useSharedCompanyData.ts`
+Corrigir as verificacoes de valores numericos para usar `!= null` ao inves de checks falsy:
 
-### 1. `src/pages/DRE.tsx`
-- Adicionar verificacao se ja existe DRE calculado (consulta a tabela `company_dre`)
-- Se existir, mostrar `DREDashboard` ao inves de `DREWizard`
-- Adicionar estado local para permitir alternar para o wizard quando o usuario quiser editar
-- Botao "Atualizar DRE" (ja existe no DREDashboard) continuara levando ao formulario
+- `folha_anual`: trocar `c.folha_mensal ? c.folha_mensal * 12 : null` por `c.folha_mensal != null ? c.folha_mensal * 12 : null`
+- `compras_insumos_anual`: trocar `c.compras_insumos_mensal ? c.compras_insumos_mensal * 12 : null` por `c.compras_insumos_mensal != null ? c.compras_insumos_mensal * 12 : null`
 
-### 2. `src/components/dre/DREDashboard.tsx`
-- Adicionar prop opcional `onEdit` que, ao clicar em "Atualizar DRE", chama o callback ao inves de navegar
-- Isso permite que a pagina DRE alterne entre dashboard e wizard sem trocar de rota
+### 2. `src/components/comparativo-regimes/ComparativoRegimesWizard.tsx`
+Corrigir as condicoes do useEffect de preenchimento automatico (linhas 54-69) para usar `!= null` ao inves de checks falsy:
 
-### 3. `src/components/dre/DREWizard.tsx`
-- Adicionar prop opcional `onBack` para permitir voltar ao dashboard sem recarregar a pagina
+- `shared.faturamento_anual` -> `shared.faturamento_anual != null`
+- `shared.folha_anual` -> `shared.folha_anual != null`
+- `shared.compras_insumos_anual` -> `shared.compras_insumos_anual != null`
+- `shared.cnae_principal` -> `shared.cnae_principal != null`
+
+## Secao tecnica
+
+O problema e um padrao classico de JavaScript: `0` e um valor valido, mas e tratado como `false` em verificacoes booleanas. A correcao usa `!= null` que so retorna false para `null` e `undefined`, aceitando `0` como valor valido.
 
 ## O que NAO muda
-
-- A rota `/dashboard/dre-resultados` continua funcionando normalmente
-- Nenhuma logica de calculo e alterada
-- Os dados continuam sendo salvos e lidos da mesma tabela `company_dre`
-- O NextStepCta adicionado anteriormente permanece
-
-## Secao Tecnica
-
-O fluxo na pagina `DRE.tsx` ficara assim:
-
-```text
-DRE.tsx
-  |
-  |--> useEffect: busca company_dre do usuario
-  |
-  |--> hasDRE = true?
-  |      |-- SIM --> DREDashboard (com onEdit={() => setShowWizard(true)})
-  |      |-- NAO --> DREWizard (com onComplete={() => refetch + setShowWizard(false)})
-  |
-  |--> showWizard = true?
-         |-- SIM --> DREWizard (com onBack={() => setShowWizard(false)})
-```
-
-A consulta sera simples: `SELECT id FROM company_dre WHERE user_id = ? LIMIT 1`, reutilizando o hook `useAuth` ja existente para obter o usuario.
+- Nenhuma logica de calculo
+- Nenhuma tabela ou consulta ao banco
+- O restante do wizard e dashboard permanecem iguais
