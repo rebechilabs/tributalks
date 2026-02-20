@@ -135,9 +135,11 @@ export function SmartFormAssistant({
   const [showCard, setShowCard] = useState(true);
   const [hasShownInitial, setHasShownInitial] = useState(false);
 
-  // Mostra automaticamente se preencheu campos
+  const hasMissingRequired = missingFields.some(f => f.required);
+
+  // Só mostra automaticamente se há campos faltando
   useEffect(() => {
-    if (prefillData.length > 0 && !hasShownInitial) {
+    if (hasMissingRequired && !hasShownInitial) {
       setShowCard(true);
       setHasShownInitial(true);
       
@@ -146,8 +148,10 @@ export function SmartFormAssistant({
         const timer = setTimeout(() => setShowCard(false), 10000);
         return () => clearTimeout(timer);
       }
+    } else if (!hasMissingRequired) {
+      setShowCard(false);
     }
-  }, [prefillData.length, hasShownInitial, isMobile]);
+  }, [hasMissingRequired, hasShownInitial, isMobile]);
 
   // Mobile: FAB + Bottom Sheet
   if (isMobile) {
