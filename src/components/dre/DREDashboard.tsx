@@ -66,9 +66,10 @@ interface Recommendation {
 
 interface DREDashboardProps {
   dreId?: string;
+  onEdit?: () => void;
 }
 
-export function DREDashboard({ dreId }: DREDashboardProps) {
+export function DREDashboard({ dreId, onEdit }: DREDashboardProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [dre, setDre] = useState<DREData | null>(null);
@@ -265,7 +266,7 @@ export function DREDashboard({ dreId }: DREDashboardProps) {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => navigate('/dashboard/dre')}>
+              <Button variant="outline" onClick={() => onEdit ? onEdit() : navigate('/dashboard/dre')}>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Atualizar DRE
               </Button>
