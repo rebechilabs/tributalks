@@ -1,52 +1,26 @@
 
-
-# Melhorar clareza do seletor Produtos/Servicos no catalogo do DRE
+# Preencher Comparativo de Regimes com dados do DRE
 
 ## Problema
-O RadioGroup atual entre "Produtos (NCM)" e "Servicos (NBS)" da a impressao de que o usuario deve escolher um OU outro. Na verdade, ele pode adicionar ambos os tipos na mesma lista.
+O formulário do Comparativo de Regimes usa apenas o `useSharedCompanyData` (que lê da tabela `company_profile`), mas campos importantes como folha de pagamento, compras e insumos estão zerados ou nulos nessa tabela. Enquanto isso, o DRE (`company_dre`) tem dados reais que poderiam ser usados como fallback.
 
 ## Solucao
 
-### 1. Adicionar texto explicativo abaixo do RadioGroup
-Incluir uma mensagem como: "Voce pode adicionar produtos e servicos na mesma lista. Selecione o tipo e adicione quantos itens quiser de cada."
+Modificar o `ComparativoRegimesWizard.tsx` para buscar dados do DRE como fonte alternativa quando os campos do `company_profile` estiverem vazios/zerados.
 
-### 2. Trocar o label "O que voce vende?" por algo mais claro
-Novo label: "Que tipo de item deseja adicionar agora?"
-Isso deixa claro que e uma selecao temporaria, nao uma escolha definitiva.
+### Campos a preencher do DRE
 
-### 3. Mostrar indicadores visuais na lista de itens
-Quando ja houver itens de ambos os tipos na lista, exibir um resumo acima dela:
-"X produto(s) e Y servico(s) adicionados"
+| Campo do Formulario | Fonte primaria (company_profile) | Fallback DRE |
+|---|---|---|
+| Faturamento Anual | `faturamento_anual` | `calc_receita_bruta` (anualizar se mensal) |
+| Folha de Pagamento | `folha_mensal * 12` | `input_salarios_encargos + input_prolabore` (anualizar) |
+| Compras e Insumos | `compras_insumos_mensal * 12` | `input_custo_mercadorias + input_custo_materiais` (anualizar) |
+| CNAE | `cnae_principal` | (sem equivalente no DRE) |
 
-## Mudancas tecnicas
+### Detalhes tecnicos
 
-### `src/components/dre/ProductCatalogStep.tsx`
+1. **`ComparativoRegimesWizard.tsx`**: Adicionar query ao `company_dre` (mais recente, filtrado por `company_id`) dentro do `useEffect` de prefill. Quando o valor do `company_profile` for 0 ou null, usar o valor correspondente do DRE.
 
-**Linha 122** - Trocar o label:
-- De: `O que voce vende?`
-- Para: `Que tipo de item deseja adicionar agora?`
+2. O DRE armazena valores por periodo (mensal/trimestral/anual). Sera necessario verificar o `period_type` para anualizar corretamente (multiplicar por 12 se mensal, por 4 se trimestral).
 
-**Apos linha 143 (fechamento do RadioGroup)** - Adicionar texto explicativo:
-```typescript
-<p className="text-xs text-muted-foreground flex items-center gap-1">
-  <Package className="w-3 h-3 inline" />
-  +
-  <Briefcase className="w-3 h-3 inline" />
-  Voce pode adicionar produtos e servicos na mesma lista.
-</p>
-```
-
-**Linha 264 (label dos itens adicionados)** - Melhorar o resumo:
-Substituir o label generico por um que mostra a contagem por tipo:
-```typescript
-const prodCount = items.filter(i => i.tipo === 'produto').length;
-const servCount = items.filter(i => i.tipo === 'servico').length;
-
-// Exibir: "2 produto(s) e 1 servico(s) adicionados"
-```
-
-## O que NAO muda
-- O comportamento do RadioGroup continua o mesmo (alterna campos do formulario)
-- A estrutura de dados permanece identica
-- Nenhuma alteracao no banco de dados
-
+3. O banner de autopreenchimento ja existe e continuara funcionando -- so precisa indicar a origem correta via `DataSourceBadge`.
