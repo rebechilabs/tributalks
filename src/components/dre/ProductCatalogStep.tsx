@@ -119,7 +119,7 @@ export function ProductCatalogStep({ items, onChange, onSkip, onFinish, loading 
 
       {/* Tipo seletor */}
       <div className="space-y-3">
-        <Label>O que você vende?</Label>
+        <Label>Que tipo de item deseja adicionar agora?</Label>
         <RadioGroup 
           value={tipo} 
           onValueChange={(v) => setTipo(v as 'produto' | 'servico')}
@@ -140,6 +140,12 @@ export function ProductCatalogStep({ items, onChange, onSkip, onFinish, loading 
             </Label>
           </div>
         </RadioGroup>
+        <p className="text-xs text-muted-foreground flex items-center gap-1">
+          <Package className="w-3 h-3" />
+          +
+          <Briefcase className="w-3 h-3" />
+          Você pode adicionar produtos e serviços na mesma lista.
+        </p>
       </div>
 
       {/* Botão importar em lote */}
@@ -261,7 +267,16 @@ export function ProductCatalogStep({ items, onChange, onSkip, onFinish, loading 
       {/* Lista de itens adicionados */}
       {items.length > 0 && (
         <div className="space-y-2">
-          <Label className="text-sm text-muted-foreground">Itens adicionados ({items.length})</Label>
+          <Label className="text-sm text-muted-foreground">
+            {(() => {
+              const prodCount = items.filter(i => i.tipo === 'produto').length;
+              const servCount = items.filter(i => i.tipo === 'servico').length;
+              if (prodCount > 0 && servCount > 0) {
+                return `${prodCount} produto(s) e ${servCount} serviço(s) adicionados`;
+              }
+              return `Itens adicionados (${items.length})`;
+            })()}
+          </Label>
           <div className="space-y-2">
             {items.map((item) => (
               <div 
