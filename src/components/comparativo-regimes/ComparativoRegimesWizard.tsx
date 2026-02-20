@@ -20,6 +20,8 @@ import { ComparativoRegimesFormData, PerfilClientes, ComparativoRegimesInput } f
 import { DespesasOperacionaisSelector } from "./DespesasOperacionaisSelector";
 import { useSharedCompanyData } from "@/hooks/useSharedCompanyData";
 import { DataSourceBadge } from "@/components/common/DataSourceBadge";
+import { useCompany } from "@/contexts/CompanyContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ComparativoRegimesWizardProps {
   onSubmit: (data: ComparativoRegimesInput) => void;
@@ -42,36 +44,106 @@ export function ComparativoRegimesWizard({ onSubmit, isLoading }: ComparativoReg
   const [formData, setFormData] = useState<ComparativoRegimesFormData>(initialFormData);
   const [showPrefillBanner, setShowPrefillBanner] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
+  const [prefillOrigem, setPrefillOrigem] = useState<string | null>(null);
   const shared = useSharedCompanyData();
+  const { currentCompany } = useCompany();
 
-  // Pre-fill from shared company data (company_profile)
+  // Pre-fill from shared company data, with DRE fallback
   useEffect(() => {
     if (shared.isLoading) return;
-    let filled = false;
 
-    setFormData(prev => {
-      const next = { ...prev };
-      if (!prev.faturamento_anual && shared.faturamento_anual != null) {
-        next.faturamento_anual = Math.round(shared.faturamento_anual).toString();
-        filled = true;
-      }
-      if (!prev.folha_pagamento && shared.folha_anual != null) {
-        next.folha_pagamento = Math.round(shared.folha_anual).toString();
-        filled = true;
-      }
-      if (!prev.compras_insumos && shared.compras_insumos_anual != null) {
-        next.compras_insumos = Math.round(shared.compras_insumos_anual).toString();
-        filled = true;
-      }
-      if (!prev.cnae_principal && shared.cnae_principal != null) {
-        next.cnae_principal = shared.cnae_principal;
-        filled = true;
-      }
-      return next;
-    });
+    const fetchDreAndPrefill = async () => {
+      let dreData: any = null;
 
-    if (filled) setShowPrefillBanner(true);
-  }, [shared.isLoading, shared.faturamento_anual, shared.folha_anual, shared.compras_insumos_anual, shared.cnae_principal]);
+      // Fetch latest DRE if company exists
+      if (currentCompany?.id) {
+        const { data } = await supabase
+          .from('company_dre')
+          .select('calc_receita_bruta, input_salarios_encargos, input_prolabore, input_custo_mercadorias, input_custo_materiais, period_type')
+          .eq('company_id', currentCompany.id)
+          .order('period_year', { ascending: false })
+          .order('period_month', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        dreData = data;
+      }
+
+      const annualize = (value: number | null, periodType: string | null) => {
+        if (!value) return 0;
+        if (periodType === 'mensal') return value * 12;
+        if (periodType === 'trimestral') return value * 4;
+        return value; // anual
+      };
+
+      let filled = false;
+      let origem: string | null = null;
+
+      setFormData(prev => {
+        const next = { ...prev };
+
+        // Faturamento: profile first, DRE fallback
+        if (!prev.faturamento_anual) {
+          if (shared.faturamento_anual) {
+            next.faturamento_anual = Math.round(shared.faturamento_anual).toString();
+            origem = origem || shared.origem;
+            filled = true;
+          } else if (dreData?.calc_receita_bruta) {
+            next.faturamento_anual = Math.round(annualize(dreData.calc_receita_bruta, dreData.period_type)).toString();
+            origem = 'dre';
+            filled = true;
+          }
+        }
+
+        // Folha: profile first, DRE fallback
+        if (!prev.folha_pagamento) {
+          if (shared.folha_anual) {
+            next.folha_pagamento = Math.round(shared.folha_anual).toString();
+            origem = origem || shared.origem;
+            filled = true;
+          } else if (dreData) {
+            const folhaDre = (dreData.input_salarios_encargos || 0) + (dreData.input_prolabore || 0);
+            if (folhaDre > 0) {
+              next.folha_pagamento = Math.round(annualize(folhaDre, dreData.period_type)).toString();
+              origem = 'dre';
+              filled = true;
+            }
+          }
+        }
+
+        // Compras/Insumos: profile first, DRE fallback
+        if (!prev.compras_insumos) {
+          if (shared.compras_insumos_anual) {
+            next.compras_insumos = Math.round(shared.compras_insumos_anual).toString();
+            origem = origem || shared.origem;
+            filled = true;
+          } else if (dreData) {
+            const comprasDre = (dreData.input_custo_mercadorias || 0) + (dreData.input_custo_materiais || 0);
+            if (comprasDre > 0) {
+              next.compras_insumos = Math.round(annualize(comprasDre, dreData.period_type)).toString();
+              origem = 'dre';
+              filled = true;
+            }
+          }
+        }
+
+        // CNAE: only from profile
+        if (!prev.cnae_principal && shared.cnae_principal != null) {
+          next.cnae_principal = shared.cnae_principal;
+          origem = origem || shared.origem;
+          filled = true;
+        }
+
+        return next;
+      });
+
+      if (filled) {
+        setPrefillOrigem(origem);
+        setShowPrefillBanner(true);
+      }
+    };
+
+    fetchDreAndPrefill();
+  }, [shared.isLoading, shared.faturamento_anual, shared.folha_anual, shared.compras_insumos_anual, shared.cnae_principal, currentCompany?.id]);
 
   const formatarParaExibicao = (valor: string): string => {
     if (!valor) return '';
@@ -131,7 +203,7 @@ export function ComparativoRegimesWizard({ onSubmit, isLoading }: ComparativoReg
           <Sparkles className="h-4 w-4 text-yellow-500" />
           <AlertDescription className="text-yellow-600 dark:text-yellow-400 flex items-center gap-2">
             Campos preenchidos automaticamente.
-            <DataSourceBadge origem={shared.origem} />
+            <DataSourceBadge origem={prefillOrigem} />
             Ajuste se necessário.
           </AlertDescription>
         </Alert>
