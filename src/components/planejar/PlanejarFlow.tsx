@@ -187,8 +187,8 @@ export function PlanejarFlow() {
   }, [companyProfile?.id, user?.id, refetch]);
 
   const handleQuestionsComplete = useCallback(async (answers: Record<string, string | number | string[]>) => {
-    await saveAnswers(answers);
     setStep('processing');
+    await saveAnswers(answers);
   }, [saveAnswers]);
 
   const handleComplementaryComplete = useCallback(async (answers: Record<string, string | number | string[]>) => {
