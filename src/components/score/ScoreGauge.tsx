@@ -28,8 +28,8 @@ const statusLabels: Record<string, string> = {
 
 const sizeConfig = {
   sm: { container: 'w-24 h-24', text: 'text-xl', grade: 'text-xs', stroke: 8 },
-  md: { container: 'w-40 h-40', text: 'text-3xl', grade: 'text-sm', stroke: 10 },
-  lg: { container: 'w-56 h-56', text: 'text-5xl', grade: 'text-lg', stroke: 12 },
+  md: { container: 'w-32 h-32', text: 'text-2xl', grade: 'text-xs', stroke: 8 },
+  lg: { container: 'w-44 h-44', text: 'text-4xl', grade: 'text-sm', stroke: 10 },
 };
 
 export function ScoreGauge({ 

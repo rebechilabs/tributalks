@@ -144,6 +144,14 @@ export function useSmartPrefill({ tool }: SmartPrefillConfig): SmartPrefillResul
             source: 'profile',
             confidence: 'high',
           });
+        } else if (dre?.input_regime_tributario) {
+          filled.push({
+            key: 'regime',
+            label: 'Regime Tributário (DRE)',
+            value: dre.input_regime_tributario,
+            source: 'dre',
+            confidence: 'medium',
+          });
         } else {
           missingFields.push({
             key: 'regime',
