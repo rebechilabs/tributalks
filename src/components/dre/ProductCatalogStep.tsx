@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Package, Briefcase, Search, Plus, Trash2, Tag, ArrowRight, HelpCircle } from 'lucide-react';
+import { Package, Briefcase, Search, Plus, Trash2, Tag, ArrowRight, HelpCircle, Upload } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { NCMBatchImportModal } from './NCMBatchImportModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -47,6 +48,7 @@ interface ProductCatalogStepProps {
 export function ProductCatalogStep({ items, onChange, onSkip, onFinish, loading }: ProductCatalogStepProps) {
   const [tipo, setTipo] = useState<'produto' | 'servico'>('produto');
   const [ncmModalOpen, setNcmModalOpen] = useState(false);
+  const [batchModalOpen, setBatchModalOpen] = useState(false);
   const [nome, setNome] = useState('');
   const [ncmCode, setNcmCode] = useState('');
   const [ncmDescricao, setNcmDescricao] = useState('');
@@ -82,6 +84,10 @@ export function ProductCatalogStep({ items, onChange, onSkip, onFinish, loading 
     setNcmDescricao('');
     setNbsCategoria('');
     setPercentual('');
+  };
+
+  const handleBatchImport = (newItems: ProductCatalogItem[]) => {
+    onChange([...items, ...newItems]);
   };
 
   const handleRemoveItem = (id: string) => {
@@ -135,6 +141,19 @@ export function ProductCatalogStep({ items, onChange, onSkip, onFinish, loading 
           </div>
         </RadioGroup>
       </div>
+
+      {/* Botão importar em lote */}
+      {tipo === 'produto' && (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setBatchModalOpen(true)}
+          className="w-full"
+        >
+          <Upload className="w-4 h-4 mr-2" />
+          Importar NCMs em lote
+        </Button>
+      )}
 
       {/* Formulário de adição */}
       <Card className="bg-muted/30">
@@ -308,6 +327,14 @@ export function ProductCatalogStep({ items, onChange, onSkip, onFinish, loading 
         open={ncmModalOpen}
         onOpenChange={setNcmModalOpen}
         onSelect={handleNcmSelect}
+      />
+
+      {/* NCM Batch Import Modal */}
+      <NCMBatchImportModal
+        open={batchModalOpen}
+        onOpenChange={setBatchModalOpen}
+        onImport={handleBatchImport}
+        existingItems={items}
       />
     </div>
   );
