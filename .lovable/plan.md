@@ -1,34 +1,26 @@
 
 
-# Corrigir campos em branco no Comparativo de Regimes
+# Melhorar clareza do campo "% da Receita" no catálogo de produtos/serviços
 
-## Problema identificado
+## Problema
 
-Os campos do Comparativo nao estao sendo preenchidos com os dados do DRE/perfil da empresa por causa de verificacoes "falsy" no JavaScript. Quando um valor e `0`, o JavaScript trata como `false`, e o sistema interpreta como "nao tem dado".
+Na última etapa do DRE (ProductCatalogStep), o campo "% da Receita" aparece isolado ao lado do botão "Adicionar", sem contexto suficiente. O usuário não entende o que deve preencher ali.
 
-Exemplo: se `folha_mensal = 0` no banco, o codigo atual faz `0 ? 0 * 12 : null` que resulta em `null`.
+## Solução
 
-## Mudancas necessarias
+Tornar o campo mais descritivo e contextualizado:
 
-### 1. `src/hooks/useSharedCompanyData.ts`
-Corrigir as verificacoes de valores numericos para usar `!= null` ao inves de checks falsy:
+1. **Trocar o label** de "% da Receita" para "Quanto representa do faturamento?"
+2. **Adicionar um texto auxiliar (placeholder)** mais claro: "Ex: 30" ao invés de "0"
+3. **Adicionar tooltip** explicativo: "Informe o percentual aproximado que este item representa do seu faturamento total. Ex: se metade da receita vem deste produto, coloque 50."
+4. **Mover o campo para sua própria linha**, abaixo dos campos de nome/NCM/NBS e acima do botão Adicionar, dando mais destaque e separando-o visualmente
 
-- `folha_anual`: trocar `c.folha_mensal ? c.folha_mensal * 12 : null` por `c.folha_mensal != null ? c.folha_mensal * 12 : null`
-- `compras_insumos_anual`: trocar `c.compras_insumos_mensal ? c.compras_insumos_mensal * 12 : null` por `c.compras_insumos_mensal != null ? c.compras_insumos_mensal * 12 : null`
+## Mudanças técnicas
 
-### 2. `src/components/comparativo-regimes/ComparativoRegimesWizard.tsx`
-Corrigir as condicoes do useEffect de preenchimento automatico (linhas 54-69) para usar `!= null` ao inves de checks falsy:
+### `src/components/dre/ProductCatalogStep.tsx`
+- Separar o campo de percentual do botão "Adicionar" — cada um em sua própria linha
+- Atualizar o label para "Quanto representa do faturamento? (%)"
+- Adicionar placeholder "Ex: 30"
+- Adicionar um tooltip com ícone de ajuda (HelpCircle) explicando o que preencher
+- Manter o botão "Adicionar" em largura total abaixo do campo
 
-- `shared.faturamento_anual` -> `shared.faturamento_anual != null`
-- `shared.folha_anual` -> `shared.folha_anual != null`
-- `shared.compras_insumos_anual` -> `shared.compras_insumos_anual != null`
-- `shared.cnae_principal` -> `shared.cnae_principal != null`
-
-## Secao tecnica
-
-O problema e um padrao classico de JavaScript: `0` e um valor valido, mas e tratado como `false` em verificacoes booleanas. A correcao usa `!= null` que so retorna false para `null` e `undefined`, aceitando `0` como valor valido.
-
-## O que NAO muda
-- Nenhuma logica de calculo
-- Nenhuma tabela ou consulta ao banco
-- O restante do wizard e dashboard permanecem iguais
