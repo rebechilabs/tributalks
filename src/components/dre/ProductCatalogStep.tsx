@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Package, Briefcase, Search, Plus, Trash2, Tag, ArrowRight } from 'lucide-react';
+import { Package, Briefcase, Search, Plus, Trash2, Tag, ArrowRight, HelpCircle } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -202,28 +203,39 @@ export function ProductCatalogStep({ items, onChange, onSkip, onFinish, loading 
             </>
           )}
 
-          <div className="flex gap-4 items-end">
-            <div className="space-y-2 w-32">
-              <Label>% da Receita</Label>
-              <Input
-                type="number"
-                placeholder="0"
-                min="0"
-                max="100"
-                value={percentual}
-                onChange={(e) => setPercentual(e.target.value)}
-              />
+          <div className="space-y-2">
+            <div className="flex items-center gap-1.5">
+              <Label>Quanto representa do faturamento? (%)</Label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p>Informe o percentual aproximado que este item representa do seu faturamento total. Ex: se metade da receita vem deste produto, coloque 50.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
-            <Button 
-              type="button"
-              onClick={handleAddItem}
-              disabled={(tipo === 'produto' && !ncmCode) || (tipo === 'servico' && !nbsCategoria)}
-              className="flex-1"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Adicionar
-            </Button>
+            <Input
+              type="number"
+              placeholder="Ex: 30"
+              min="0"
+              max="100"
+              value={percentual}
+              onChange={(e) => setPercentual(e.target.value)}
+            />
           </div>
+
+          <Button 
+            type="button"
+            onClick={handleAddItem}
+            disabled={(tipo === 'produto' && !ncmCode) || (tipo === 'servico' && !nbsCategoria)}
+            className="w-full"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Adicionar
+          </Button>
         </CardContent>
       </Card>
 
