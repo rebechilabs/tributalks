@@ -265,6 +265,14 @@ function getDerivedValues(profile: CompanyProfile): Record<string, unknown> {
   derived.lucro_presumido = profile.regime_tributario === 'lucro_presumido' || profile.regime_tributario === 'presumido';
   derived.simples_nacional = profile.regime_tributario === 'simples';
   
+  // Infer vende_servicos/vende_produtos from segmento when not explicitly set
+  if (profile.segmento === 'servicos' && !profile.vende_servicos) {
+    derived.vende_servicos = true;
+  }
+  if ((profile.segmento === 'comercio' || profile.segmento === 'industria') && !profile.vende_produtos) {
+    derived.vende_produtos = true;
+  }
+
   // Derived activity flags - general
   derived.operacao_interestadual = profile.opera_outros_estados || profile.opera_todo_brasil || profile.operacao_interestadual;
   derived.centro_distribuicao_zfm = profile.zona_franca || profile.centro_distribuicao_zfm;
