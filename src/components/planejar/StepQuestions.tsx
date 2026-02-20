@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ClaraMessage } from './ClaraMessage';
@@ -550,9 +550,11 @@ export function StepQuestions({ missingFields, onComplete, existingProfile = nul
     }
   }, [multiToggleQuestionKey, multiToggleInitialized, multiToggleGetDefaults, answers, existingProfile]);
 
-  // If no questions apply, auto-complete with current answers
+  // If no questions apply, auto-complete with current answers (only once)
+  const autoCompletedRef = useRef(false);
   useEffect(() => {
-    if (questions.length === 0) {
+    if (questions.length === 0 && !autoCompletedRef.current) {
+      autoCompletedRef.current = true;
       onComplete(answers);
     }
   }, [questions.length]);
