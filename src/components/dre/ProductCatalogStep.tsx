@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Package, Briefcase, Search, Plus, Trash2, Tag, ArrowRight, HelpCircle, Upload } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Package, Briefcase, Search, Plus, Check, Trash2, Tag, ArrowRight, HelpCircle, Upload } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { NCMBatchImportModal } from './NCMBatchImportModal';
 import { Button } from '@/components/ui/button';
@@ -54,6 +54,8 @@ export function ProductCatalogStep({ items, onChange, onSkip, onFinish, loading 
   const [ncmDescricao, setNcmDescricao] = useState('');
   const [nbsCategoria, setNbsCategoria] = useState('');
   const [percentual, setPercentual] = useState('');
+  const [justSaved, setJustSaved] = useState(false);
+
 
   const handleNcmSelect = (ncm: string, descricao: string) => {
     setNcmCode(ncm);
@@ -77,6 +79,8 @@ export function ProductCatalogStep({ items, onChange, onSkip, onFinish, loading 
     };
 
     onChange([...items, newItem]);
+    setJustSaved(true);
+    setTimeout(() => setJustSaved(false), 2000);
     
     // Reset form
     setNome('');
@@ -255,11 +259,20 @@ export function ProductCatalogStep({ items, onChange, onSkip, onFinish, loading 
           <Button 
             type="button"
             onClick={handleAddItem}
-            disabled={(tipo === 'produto' && !ncmCode) || (tipo === 'servico' && !nbsCategoria)}
-            className="w-full"
+            disabled={justSaved || (tipo === 'produto' && !ncmCode) || (tipo === 'servico' && !nbsCategoria)}
+            className={`w-full transition-colors ${justSaved ? 'bg-green-600 hover:bg-green-600 text-white' : ''}`}
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Salvar item
+            {justSaved ? (
+              <>
+                <Check className="w-4 h-4 mr-2" />
+                Salvo!
+              </>
+            ) : (
+              <>
+                <Plus className="w-4 h-4 mr-2" />
+                Salvar item
+              </>
+            )}
           </Button>
         </CardContent>
       </Card>
