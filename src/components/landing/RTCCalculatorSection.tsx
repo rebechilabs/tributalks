@@ -78,14 +78,13 @@ export function RTCCalculatorSection() {
         {/* CTA */}
         <div className="text-center">
           <div className="inline-flex flex-col items-center gap-3 md:gap-4">
-            <a href={CONFIG.PAYMENT_LINKS.PROFESSIONAL_MENSAL} target="_blank" rel="noopener noreferrer">
-              <Button
-                size="lg"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 md:px-8 py-5 md:py-6 text-sm md:text-base"
-              >
-                Experimente Grátis
-              </Button>
-            </a>
+            <Button
+              size="lg"
+              disabled
+              className="bg-primary/50 text-primary-foreground font-semibold px-6 md:px-8 py-5 md:py-6 text-sm md:text-base cursor-not-allowed opacity-80"
+            >
+              Em breve
+            </Button>
             <a
               href="https://www.gov.br/receitafederal/pt-br/assuntos/reforma-tributaria-regulamentacao"
               target="_blank"

@@ -68,16 +68,15 @@
            </div>
  
            {/* CTA below demo */}
-           <div className="text-center mt-8">
-             <Button
-               onClick={onOpenDemo}
-               size="lg"
-               className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 py-6"
-             >
-               <Play className="w-5 h-5 mr-2" />
-               Iniciar Demo Interativa
-             </Button>
-           </div>
+            <div className="text-center mt-8">
+              <Button
+                disabled
+                size="lg"
+                className="bg-primary/50 text-primary-foreground font-bold px-8 py-6 cursor-not-allowed opacity-80"
+              >
+                Em breve
+              </Button>
+            </div>
          </motion.div>
        </div>
      </section>

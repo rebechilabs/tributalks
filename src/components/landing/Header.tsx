@@ -74,11 +74,9 @@ export function Header() {
                   >
                     Entrar
                   </Button>
-                  <a href={CONFIG.PAYMENT_LINKS.STARTER_MENSAL} target="_blank" rel="noopener noreferrer">
-                    <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold">
-                      Testar 7 dias grátis
-                    </Button>
-                  </a>
+                  <Button disabled className="bg-primary/50 text-primary-foreground font-bold cursor-not-allowed opacity-80">
+                    Em breve
+                  </Button>
                 </>
               )}
             </div>
@@ -133,16 +131,9 @@ export function Header() {
                     >
                       Entrar
                     </Button>
-                    <a 
-                      href={CONFIG.PAYMENT_LINKS.STARTER_MENSAL} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-bold">
-                        Testar 7 dias grátis
-                      </Button>
-                    </a>
+                    <Button disabled className="w-full bg-primary/50 text-primary-foreground font-bold cursor-not-allowed opacity-80">
+                      Em breve
+                    </Button>
                   </>
                 )}
                 </div>

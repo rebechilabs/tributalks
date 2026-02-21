@@ -46,14 +46,13 @@ import heroBg from "@/assets/hero-bg-cinematic.jpg";
              animate={{ opacity: 1, y: 0 }}
              transition={{ duration: 0.6, delay: 0.3 }}
            >
-             <Button
-               size="lg"
-               onClick={scrollToPlans}
-               className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg px-10 py-7 rounded-lg shadow-lg shadow-primary/30 group transition-all duration-300 hover:shadow-xl hover:shadow-primary/40"
-             >
-               Comece seus 7 dias grátis
-               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-             </Button>
+            <Button
+                size="lg"
+                disabled
+                className="bg-primary/50 text-primary-foreground font-bold text-lg px-10 py-7 rounded-lg cursor-not-allowed opacity-80"
+              >
+                Em breve
+              </Button>
            </motion.div>
          </div>
        </div>
