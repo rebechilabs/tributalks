@@ -11,12 +11,13 @@ import { ClaraFloatingButton } from "./ClaraFloatingButton";
 import { ClaraOnboardingTooltip } from "./ClaraProactive";
 import { ClaraActionsDrawer } from "@/components/clara/ClaraActionsDrawer";
 import { useClaraAutonomousActions } from "@/hooks/clara";
-import { ClaraSidePanel } from "./ClaraSidePanel";
+import { ClaraSidePanel, type ChatAttachment } from "./ClaraSidePanel";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
   agent?: string | null;
+  attachments?: { url: string; name: string; type: string }[];
 }
 
 interface ConversationStarter {
@@ -447,17 +448,60 @@ Você também pode me fazer qualquer pergunta sobre a Reforma Tributária!`;
     return null; // Not a command
   }, []);
 
-  const sendMessage = async (messageText?: string) => {
+  const sendMessage = async (messageText?: string, attachments?: ChatAttachment[]) => {
     const userMessage = messageText || input.trim();
-    if (!userMessage || isLoading) return;
+    if ((!userMessage && (!attachments || attachments.length === 0)) || isLoading) return;
 
     setInput("");
-    setMessages(prev => [...prev, { role: "user", content: userMessage }]);
+    
+    // Upload attachments if any
+    let uploadedAttachments: { url: string; name: string; type: string }[] = [];
+    if (attachments && attachments.length > 0) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          toast.error("Faça login para enviar arquivos.");
+          return;
+        }
+
+        for (const att of attachments) {
+          const filePath = `${user.id}/${Date.now()}_${att.name}`;
+          const { error: uploadError } = await supabase.storage
+            .from("clara-attachments")
+            .upload(filePath, att.file);
+          
+          if (uploadError) {
+            console.error("Upload error:", uploadError);
+            continue;
+          }
+
+          const { data: urlData } = supabase.storage
+            .from("clara-attachments")
+            .getPublicUrl(filePath);
+
+          uploadedAttachments.push({
+            url: urlData.publicUrl,
+            name: att.name,
+            type: att.type,
+          });
+        }
+      } catch (err) {
+        console.error("Error uploading attachments:", err);
+        toast.error("Erro ao enviar arquivos.");
+      }
+    }
+
+    const displayMessage = userMessage || `📎 ${uploadedAttachments.map(a => a.name).join(", ")}`;
+    setMessages(prev => [...prev, { 
+      role: "user", 
+      content: displayMessage, 
+      attachments: uploadedAttachments.length > 0 ? uploadedAttachments : undefined 
+    }]);
     setIsLoading(true);
 
     try {
       // Check for slash commands first
-      if (userMessage.startsWith("/")) {
+      if (userMessage && userMessage.startsWith("/")) {
         const commandResponse = await handleSlashCommand(userMessage);
         if (commandResponse) {
           setMessages(prev => [...prev, { role: "assistant", content: commandResponse }]);
@@ -466,12 +510,24 @@ Você também pode me fazer qualquer pergunta sobre a Reforma Tributária!`;
         }
       }
 
+      // Build message content with attachment info
+      let messageContent = userMessage || "";
+      if (uploadedAttachments.length > 0) {
+        const attachmentInfo = uploadedAttachments.map(a => 
+          `[Arquivo anexado: ${a.name} (${a.type}) - ${a.url}]`
+        ).join("\n");
+        messageContent = messageContent 
+          ? `${messageContent}\n\n${attachmentInfo}` 
+          : attachmentInfo;
+      }
+
       const { data, error } = await supabase.functions.invoke("clara-assistant", {
         body: { 
-          messages: [...messages, { role: "user", content: userMessage }],
+          messages: [...messages, { role: "user", content: messageContent }],
           toolSlug: currentTool,
           isGreeting: false,
           navigationContext: formatContextForAPI(claraContext),
+          attachments: uploadedAttachments.length > 0 ? uploadedAttachments : undefined,
         },
       });
 
