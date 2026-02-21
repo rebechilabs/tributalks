@@ -1,6 +1,6 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Send, Mic, MicOff, Volume2, VolumeX, X } from "lucide-react";
+import { Sparkles, Send, Mic, MicOff, Volume2, VolumeX, X, Paperclip, FileText, Image as ImageIcon, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -10,10 +10,19 @@ import { ClaraContextualSuggestions } from "./ClaraContextualSuggestions";
 import { ClaraActionButtons } from "./ClaraActionButton";
 import { AntiCopyGuard } from "./AntiCopyGuard";
 
+export interface ChatAttachment {
+  file: File;
+  preview?: string;
+  url?: string;
+  name: string;
+  type: string;
+}
+
 interface Message {
   role: "user" | "assistant";
   content: string;
   agent?: string | null;
+  attachments?: { url: string; name: string; type: string }[];
 }
 
 interface ClaraSidePanelProps {
@@ -22,7 +31,7 @@ interface ClaraSidePanelProps {
   messages: Message[];
   input: string;
   onInputChange: (value: string) => void;
-  onSend: (message?: string) => void;
+  onSend: (message?: string, attachments?: ChatAttachment[]) => void;
   onKeyPress: (e: React.KeyboardEvent) => void;
   isLoading: boolean;
   hasGreeted: boolean;
@@ -41,6 +50,18 @@ interface ClaraSidePanelProps {
   isProcessingCommand?: boolean;
   // Command handler for action buttons
   onCommand?: (command: string) => void;
+}
+
+const ACCEPTED_TYPES = "image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.xml";
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+function isImageType(type: string) {
+  return type.startsWith("image/");
+}
+
+function getFileIcon(type: string) {
+  if (isImageType(type)) return <ImageIcon className="w-4 h-4" />;
+  return <FileText className="w-4 h-4" />;
 }
 
 export function ClaraSidePanel({
@@ -67,6 +88,8 @@ export function ClaraSidePanel({
 }: ClaraSidePanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -87,6 +110,54 @@ export function ClaraSidePanel({
 
   const showStarters = messages.length === 1 && hasGreeted && !isLoading;
   const hasVoiceSupport = isSpeechRecognitionSupported || isSpeechSynthesisSupported;
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const newAttachments: ChatAttachment[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.size > MAX_FILE_SIZE) continue;
+      
+      const attachment: ChatAttachment = {
+        file,
+        name: file.name,
+        type: file.type,
+      };
+
+      if (isImageType(file.type)) {
+        attachment.preview = URL.createObjectURL(file);
+      }
+
+      newAttachments.push(attachment);
+    }
+
+    setAttachments(prev => [...prev, ...newAttachments].slice(0, 5));
+    // Reset file input
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => {
+      const removed = prev[index];
+      if (removed.preview) URL.revokeObjectURL(removed.preview);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const handleSendWithAttachments = () => {
+    if ((!input.trim() && attachments.length === 0) || isLoading) return;
+    onSend(input.trim() || undefined, attachments.length > 0 ? attachments : undefined);
+    setAttachments([]);
+  };
+
+  const handleKeyPressWithAttachments = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendWithAttachments();
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -157,6 +228,32 @@ export function ClaraSidePanel({
                         : "bg-muted text-foreground"
                     }`}
                   >
+                    {/* Attachments in message */}
+                    {msg.attachments && msg.attachments.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-2">
+                        {msg.attachments.map((att, j) => (
+                          <div key={j}>
+                            {isImageType(att.type) ? (
+                              <img
+                                src={att.url}
+                                alt={att.name}
+                                className="max-w-[180px] max-h-[120px] rounded object-cover"
+                              />
+                            ) : (
+                              <a
+                                href={att.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1.5 px-2 py-1 rounded bg-background/20 text-xs hover:underline"
+                              >
+                                <FileText className="w-3 h-3 shrink-0" />
+                                <span className="truncate max-w-[120px]">{att.name}</span>
+                              </a>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     {msg.role === "assistant" ? (
                       <AntiCopyGuard>
                         <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:my-1 [&>ul]:my-1 [&>ol]:my-1 [&_strong]:font-semibold">
@@ -204,15 +301,58 @@ export function ClaraSidePanel({
             </div>
           </ScrollArea>
 
+          {/* Attachment Previews */}
+          {attachments.length > 0 && (
+            <div className="px-3 pt-2 border-t border-border flex gap-2 flex-wrap">
+              {attachments.map((att, i) => (
+                <div key={i} className="relative group">
+                  {att.preview ? (
+                    <img src={att.preview} alt={att.name} className="w-14 h-14 rounded object-cover border border-border" />
+                  ) : (
+                    <div className="w-14 h-14 rounded border border-border bg-muted flex flex-col items-center justify-center gap-0.5 px-1">
+                      {getFileIcon(att.type)}
+                      <span className="text-[9px] text-muted-foreground truncate w-full text-center">{att.name.split('.').pop()}</span>
+                    </div>
+                  )}
+                  <button
+                    onClick={() => removeAttachment(i)}
+                    className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <XCircle className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Input */}
           <div className="p-3 border-t border-border shrink-0">
             <div className="flex gap-2">
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={ACCEPTED_TYPES}
+                multiple
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isLoading || isProcessingCommand}
+                className="shrink-0 text-muted-foreground hover:text-foreground"
+                title="Anexar arquivo"
+              >
+                <Paperclip className="w-4 h-4" />
+              </Button>
               <Input
                 ref={inputRef}
-                placeholder={isListening ? "Escutando..." : "Pergunte ou use /ajuda..."}
+                placeholder={isListening ? "Escutando..." : "Pergunte ou anexe arquivos..."}
                 value={input}
                 onChange={(e) => onInputChange(e.target.value)}
-                onKeyPress={onKeyPress}
+                onKeyPress={handleKeyPressWithAttachments}
                 disabled={isLoading || isListening || isProcessingCommand}
                 className={`text-sm ${isListening ? 'border-primary ring-2 ring-primary/30' : ''}`}
               />
@@ -229,8 +369,8 @@ export function ClaraSidePanel({
               )}
               <Button
                 size="icon"
-                onClick={() => onSend()}
-                disabled={!input.trim() || isLoading}
+                onClick={handleSendWithAttachments}
+                disabled={(!input.trim() && attachments.length === 0) || isLoading}
                 className="shrink-0"
               >
                 <Send className="w-4 h-4" />
